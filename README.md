@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Seve — Free ATS Resume Builder & Career Coach
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Seve** is a premium, 100% free single-page web application designed to help job seekers create professional, ATS-optimized resumes. It features a live-updating ATS Score Engine, job description tailoring tools, a step-by-step career coach AI agent, and multiple layout templates, all running entirely in the browser at **$0 hosting and API costs**.
 
-Currently, two official plugins are available:
+## ✨ Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. **Seve Career Coach Agent**: An interactive AI chat assistant that guides you step-by-step through the process of building, detailing, and scoring your resume.
+2. **ATS Scoring Engine**: Evaluates your resume in real-time out of 100 points based on:
+   - Section Completeness (20 pts)
+   - Keyword Match (25 pts)
+   - Formatting Safety (20 pts)
+   - Action Verbs (10 pts)
+   - Quantified Results (10 pts)
+   - Contact Info (5 pts)
+   - Date Consistency (5 pts)
+   - Length Appropriateness (5 pts)
+3. **One-Click Auto-Fix**: Instantly fixes ATS-breaking formatting errors, removes personal pronouns, and standardizes date formats to `MM/YYYY`.
+4. **Job Description Tailoring**: Paste a job description to extract top keywords, view missing terms in real-time, and get AI-generated bullet point rewrites to increase your ATS match rate.
+5. **Print-Perfect Templates**: Choose between:
+   - **Classic**: Traditional single column (Serif / Georgia) for maximum compatibility.
+   - **Modern**: Clean, accented layout (Sans-serif / Arial) for Tech/Marketing.
+   - **Executive**: Structured header and divider bars for senior leadership.
+   - Exports directly to a clean, text-readable PDF using custom `@media print` stylesheets.
+6. **100% Free / Local First**: No servers, no database, no signups. All data is saved securely in your browser's `localStorage` and never leaves your device.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend**: React + TypeScript + Vite
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **AI Engine**: Hybrid (local heuristic word-mapping generator + optional Google Gemini / Claude cloud API keys)
+- **PDF Generation**: Browser print-to-PDF via custom CSS print stylesheets
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/wacim-abdellli/seve.git
+   cd seve
+   ```
+2. Install npm dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the local development server:
+   ```bash
+   npm run dev
+   ```
+4. Open your browser and navigate to `http://localhost:5173` to start building!
+
+### Building for Production
+To build the static files for Vercel, Netlify, or GitHub Pages deployment:
+```bash
+npm run build
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+The compiled assets will be located in the `dist/` directory.
