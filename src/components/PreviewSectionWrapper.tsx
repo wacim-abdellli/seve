@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { FileEdit, Info, GripVertical } from 'lucide-react'
 
 interface PreviewSectionWrapperProps {
-  sectionId: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects'
+  sectionId: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
   activeSection?: string | null
   atsMode?: boolean
   atsRating?: 'safe' | 'warning' | 'danger'
   atsFeedback?: string
-  onEdit?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onEdit?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   onDragStart?: (e: React.DragEvent) => void
   onDragOver?: (e: React.DragEvent) => void
   onDrop?: (e: React.DragEvent) => void

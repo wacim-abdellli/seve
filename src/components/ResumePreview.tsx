@@ -28,11 +28,11 @@ interface ResumePreviewProps {
   selectedTemplate: Template
   onChangeTemplate?: (template: Template) => void
   activeSection?: string | null
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   onExportPdf?: () => void
   onPageCountChange?: (count: number) => void
-  sectionOrder?: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages')[]
-  onSectionOrderChange?: (order: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages')[]) => void
+  sectionOrder?: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer')[]
+  onSectionOrderChange?: (order: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer')[]) => void
   templateFontSize: number
   onChangeFontSize: (size: number) => void
   themeColor: string
@@ -47,7 +47,7 @@ const templatesList: { id: Template; label: string; colorDot: string }[] = [
   { id: 'creative', label: 'Creative', colorDot: 'bg-rose-500' },
 ]
 
-type SectionKey = 'summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages'
+type SectionKey = 'summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
 const themeColors = [
   { value: '#e11d48', label: 'Crimson', bgClass: 'bg-rose-500' },
@@ -170,7 +170,7 @@ export default function ResumePreview({
         /* Ignore parsing errors */
       }
     }
-    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills']
+    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
   })
 
   const sectionOrder = propsSectionOrder || localSectionOrder
@@ -472,11 +472,11 @@ export default function ResumePreview({
             {/* Layout Guides Overlay */}
             {showGuides && !isEmpty && (
               <div className="absolute inset-0 pointer-events-none z-50 no-print">
-                <div className="absolute inset-[20mm] border border-dashed border-zinc-400/30" />
+                <div className="absolute border border-dashed border-zinc-400/30" style={{ inset: '10.58mm' }} />
                 <div className="absolute top-0 bottom-0 left-1/2 w-px border-r border-dashed border-zinc-400/10" />
                 <div className="absolute top-1/2 bottom-0 left-0 right-0 h-px border-b border-dashed border-zinc-400/10" />
-                <div className="absolute top-[20mm] left-0 right-0 h-px bg-zinc-400/10" />
-                <div className="absolute bottom-[20mm] left-0 right-0 h-px bg-zinc-400/10" />
+                <div className="absolute left-0 right-0 h-px bg-zinc-400/10" style={{ top: '10.58mm' }} />
+                <div className="absolute left-0 right-0 h-px bg-zinc-400/10" style={{ bottom: '10.58mm' }} />
               </div>
             )}
 

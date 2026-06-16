@@ -9,7 +9,13 @@ import {
   FolderGit, 
   Plus, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Trophy,
+  Award,
+  Heart,
+  BookOpen,
+  Phone,
+  HandHeart
 } from 'lucide-react'
 
 interface BentoDashboardProps {
@@ -99,6 +105,36 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
           label: 'Languages'
         }
       }
+      case 'awards': {
+        const items = resumeData.awards || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Awards & Honors' }
+        return { percent: 100, status: 'complete', label: 'Awards & Honors' }
+      }
+      case 'certifications': {
+        const items = resumeData.certifications || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Certifications' }
+        return { percent: 100, status: 'complete', label: 'Certifications' }
+      }
+      case 'interests': {
+        const items = resumeData.interests || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Interests' }
+        return { percent: 100, status: 'complete', label: 'Interests' }
+      }
+      case 'publications': {
+        const items = resumeData.publications || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Publications' }
+        return { percent: 100, status: 'complete', label: 'Publications' }
+      }
+      case 'references': {
+        const items = resumeData.references || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'References' }
+        return { percent: 100, status: 'complete', label: 'References' }
+      }
+      case 'volunteer': {
+        const items = resumeData.volunteer || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Volunteer' }
+        return { percent: 100, status: 'complete', label: 'Volunteer' }
+      }
     }
   }
 
@@ -133,6 +169,12 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
     { id: 'education', icon: GraduationCap },
     { id: 'skills', icon: Wrench },
     { id: 'projects', icon: FolderGit },
+    { id: 'awards', icon: Trophy },
+    { id: 'certifications', icon: Award },
+    { id: 'interests', icon: Heart },
+    { id: 'publications', icon: BookOpen },
+    { id: 'references', icon: Phone },
+    { id: 'volunteer', icon: HandHeart },
   ]
 
   return (
@@ -251,6 +293,60 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
                           </ul>
                         ) : (
                           <span className="italic text-zinc-700">No key projects cataloged yet.</span>
+                        )
+                      )}
+
+                      {sec.id === 'awards' && (
+                        resumeData.awards && resumeData.awards.length > 0 ? (
+                          <span className="text-white font-semibold">{resumeData.awards[0].title}</span>
+                        ) : (
+                          <span className="italic text-zinc-700">No awards added.</span>
+                        )
+                      )}
+
+                      {sec.id === 'certifications' && (
+                        resumeData.certifications && resumeData.certifications.length > 0 ? (
+                          <span className="text-white font-semibold">{resumeData.certifications[0].title}</span>
+                        ) : (
+                          <span className="italic text-zinc-700">No certifications added.</span>
+                        )
+                      )}
+
+                      {sec.id === 'interests' && (
+                        resumeData.interests && resumeData.interests.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {resumeData.interests.slice(0, 3).map((i) => (
+                              <span key={i.id} className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                                {i.name}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="italic text-zinc-700">No interests added.</span>
+                        )
+                      )}
+
+                      {sec.id === 'publications' && (
+                        resumeData.publications && resumeData.publications.length > 0 ? (
+                          <span className="text-white font-semibold">{resumeData.publications[0].title}</span>
+                        ) : (
+                          <span className="italic text-zinc-700">No publications added.</span>
+                        )
+                      )}
+
+                      {sec.id === 'references' && (
+                        resumeData.references && resumeData.references.length > 0 ? (
+                          <span className="text-white font-semibold">{resumeData.references[0].name}</span>
+                        ) : (
+                          <span className="italic text-zinc-700">No references added.</span>
+                        )
+                      )}
+
+                      {sec.id === 'volunteer' && (
+                        resumeData.volunteer && resumeData.volunteer.length > 0 ? (
+                          <span className="text-white font-semibold">{resumeData.volunteer[0].organization}</span>
+                        ) : (
+                          <span className="italic text-zinc-700">No volunteer experience added.</span>
                         )
                       )}
                     </div>

@@ -7,7 +7,13 @@ import EducationForm from './form/EducationForm'
 import SkillsForm from './form/SkillsForm'
 import LanguagesForm from './form/LanguagesForm'
 import ProjectsForm from './form/ProjectsForm'
-import { User, FileText, Briefcase, GraduationCap, Wrench, Globe, FolderGit } from 'lucide-react'
+import AwardsForm from './form/AwardsForm'
+import CertificationsForm from './form/CertificationsForm'
+import InterestsForm from './form/InterestsForm'
+import PublicationsForm from './form/PublicationsForm'
+import ReferencesForm from './form/ReferencesForm'
+import VolunteerForm from './form/VolunteerForm'
+import { User, FileText, Briefcase, GraduationCap, Wrench, Globe, FolderGit, Trophy, Award, Heart, BookOpen, Phone, HandHeart } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 interface ResumeFormProps {
@@ -17,7 +23,7 @@ interface ResumeFormProps {
   activeSection?: Tab
 }
 
-type Tab = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects'
+type Tab = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
 export default function ResumeForm({ resumeData, apiKey, onChange, activeSection }: ResumeFormProps) {
   const [localActiveSubTab, setLocalActiveSubTab] = useState<Tab>('contact')
@@ -53,6 +59,18 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
         return !!(resumeData.languages && resumeData.languages.length > 0 && resumeData.languages[0].name.trim())
       case 'projects':
         return !!(resumeData.projects && resumeData.projects.length > 0 && resumeData.projects[0].name.trim())
+      case 'awards':
+        return !!(resumeData.awards && resumeData.awards.length > 0 && resumeData.awards[0].title.trim())
+      case 'certifications':
+        return !!(resumeData.certifications && resumeData.certifications.length > 0 && resumeData.certifications[0].title.trim())
+      case 'interests':
+        return !!(resumeData.interests && resumeData.interests.length > 0 && resumeData.interests[0].name.trim())
+      case 'publications':
+        return !!(resumeData.publications && resumeData.publications.length > 0 && resumeData.publications[0].title.trim())
+      case 'references':
+        return !!(resumeData.references && resumeData.references.length > 0 && resumeData.references[0].name.trim())
+      case 'volunteer':
+        return !!(resumeData.volunteer && resumeData.volunteer.length > 0 && resumeData.volunteer[0].organization.trim())
       default:
         return false
     }
@@ -66,6 +84,12 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
     { id: 'skills', label: 'Skills', icon: Wrench },
     { id: 'languages', label: 'Languages', icon: Globe },
     { id: 'projects', label: 'Projects', icon: FolderGit },
+    { id: 'awards', label: 'Awards', icon: Trophy },
+    { id: 'certifications', label: 'Certs', icon: Award },
+    { id: 'interests', label: 'Interests', icon: Heart },
+    { id: 'publications', label: 'Publications', icon: BookOpen },
+    { id: 'references', label: 'References', icon: Phone },
+    { id: 'volunteer', label: 'Volunteer', icon: HandHeart },
   ]
 
   const sectionMeta = {
@@ -76,6 +100,12 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
     skills: { title: 'Skills & Tech Stack', subtitle: 'Catalog your core and technical skills', icon: Wrench },
     languages: { title: 'Languages', subtitle: 'List the languages you speak and your proficiency', icon: Globe },
     projects: { title: 'Key Projects', subtitle: 'Showcase your independent or team projects', icon: FolderGit },
+    awards: { title: 'Awards & Honors', subtitle: 'List awards and honors you have received', icon: Trophy },
+    certifications: { title: 'Certifications', subtitle: 'Professional certifications and licenses', icon: Award },
+    interests: { title: 'Interests', subtitle: 'Personal interests and hobbies', icon: Heart },
+    publications: { title: 'Publications', subtitle: 'Articles, papers, or books you have published', icon: BookOpen },
+    references: { title: 'References', subtitle: 'Professional references or available upon request', icon: Phone },
+    volunteer: { title: 'Volunteer', subtitle: 'Volunteer work and community involvement', icon: HandHeart },
   }[activeSubTab]
 
   const completed = isSectionComplete(activeSubTab)
@@ -143,6 +173,42 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
           <ProjectsForm
             projects={resumeData.projects || []}
             onChange={(updated) => updateSection('projects', updated)}
+          />
+        )}
+        {activeSubTab === 'awards' && (
+          <AwardsForm
+            awards={resumeData.awards || []}
+            onChange={(updated) => updateSection('awards', updated)}
+          />
+        )}
+        {activeSubTab === 'certifications' && (
+          <CertificationsForm
+            certifications={resumeData.certifications || []}
+            onChange={(updated) => updateSection('certifications', updated)}
+          />
+        )}
+        {activeSubTab === 'interests' && (
+          <InterestsForm
+            interests={resumeData.interests || []}
+            onChange={(updated) => updateSection('interests', updated)}
+          />
+        )}
+        {activeSubTab === 'publications' && (
+          <PublicationsForm
+            publications={resumeData.publications || []}
+            onChange={(updated) => updateSection('publications', updated)}
+          />
+        )}
+        {activeSubTab === 'references' && (
+          <ReferencesForm
+            references={resumeData.references || []}
+            onChange={(updated) => updateSection('references', updated)}
+          />
+        )}
+        {activeSubTab === 'volunteer' && (
+          <VolunteerForm
+            volunteer={resumeData.volunteer || []}
+            onChange={(updated) => updateSection('volunteer', updated)}
           />
         )}
       </div>

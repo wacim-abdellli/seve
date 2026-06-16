@@ -10,6 +10,12 @@ import EducationForm from './form/EducationForm'
 import SkillsForm from './form/SkillsForm'
 import LanguagesForm from './form/LanguagesForm'
 import ProjectsForm from './form/ProjectsForm'
+import AwardsForm from './form/AwardsForm'
+import CertificationsForm from './form/CertificationsForm'
+import InterestsForm from './form/InterestsForm'
+import PublicationsForm from './form/PublicationsForm'
+import ReferencesForm from './form/ReferencesForm'
+import VolunteerForm from './form/VolunteerForm'
 
 interface SectionDrawerProps {
   section: SectionType
@@ -27,6 +33,12 @@ const sectionMeta = {
   skills: { title: 'Skills & Stack' },
   languages: { title: 'Languages' },
   projects: { title: 'Projects' },
+  awards: { title: 'Awards & Honors' },
+  certifications: { title: 'Certifications' },
+  interests: { title: 'Interests' },
+  publications: { title: 'Publications' },
+  references: { title: 'References' },
+  volunteer: { title: 'Volunteer' },
 }
 
 export default function SectionDrawer({
@@ -115,6 +127,42 @@ export default function SectionDrawer({
           <ProjectsForm
             projects={resumeData.projects || []}
             onChange={(updated) => onChange({ ...resumeData, projects: updated })}
+          />
+        )}
+        {section === 'awards' && (
+          <AwardsForm
+            awards={resumeData.awards || []}
+            onChange={(updated) => onChange({ ...resumeData, awards: updated })}
+          />
+        )}
+        {section === 'certifications' && (
+          <CertificationsForm
+            certifications={resumeData.certifications || []}
+            onChange={(updated) => onChange({ ...resumeData, certifications: updated })}
+          />
+        )}
+        {section === 'interests' && (
+          <InterestsForm
+            interests={resumeData.interests || []}
+            onChange={(updated) => onChange({ ...resumeData, interests: updated })}
+          />
+        )}
+        {section === 'publications' && (
+          <PublicationsForm
+            publications={resumeData.publications || []}
+            onChange={(updated) => onChange({ ...resumeData, publications: updated })}
+          />
+        )}
+        {section === 'references' && (
+          <ReferencesForm
+            references={resumeData.references || []}
+            onChange={(updated) => onChange({ ...resumeData, references: updated })}
+          />
+        )}
+        {section === 'volunteer' && (
+          <VolunteerForm
+            volunteer={resumeData.volunteer || []}
+            onChange={(updated) => onChange({ ...resumeData, volunteer: updated })}
           />
         )}
       </div>

@@ -8,11 +8,11 @@ interface MinimalistTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   themeColor?: string
 }
 
@@ -36,6 +36,13 @@ export default function MinimalistTemplate({
   )
   const skills = (data.skills || []).filter((s) => s?.trim())
   const projects = (data.projects || []).filter((p) => p.name?.trim())
+  const languages = (data.languages || []).filter((l) => l.name?.trim())
+  const awards = (data.awards || []).filter((a) => a.title?.trim())
+  const certifications = (data.certifications || []).filter((c) => c.title?.trim())
+  const interests = (data.interests || []).filter((i) => i.name?.trim())
+  const publications = (data.publications || []).filter((p) => p.title?.trim())
+  const references = (data.references || []).filter((r) => r.name?.trim())
+  const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
 
 
   // ATS Heuristics
@@ -104,12 +111,56 @@ export default function MinimalistTemplate({
     return { rating: 'safe' as const, feedback: 'Keywords match candidate database indexes.' }
   }
 
+  const getLanguagesAts = () => {
+    if (!languages || languages.length === 0) {
+      return { rating: 'warning' as const, feedback: 'Languages section shows global readiness.' }
+    }
+    return { rating: 'safe' as const, feedback: 'Languages listed.' }
+  }
+
+  const getAwardsAts = () => {
+    if (!awards || awards.length === 0) return { rating: 'safe' as const, feedback: 'No awards listed.' }
+    return { rating: 'safe' as const, feedback: 'Awards showcase distinct performance.' }
+  }
+
+  const getCertificationsAts = () => {
+    if (!certifications || certifications.length === 0) return { rating: 'warning' as const, feedback: 'Certifications add professional credibility.' }
+    return { rating: 'safe' as const, feedback: 'Certifications validate expertise.' }
+  }
+
+  const getInterestsAts = () => {
+    if (!interests || interests.length === 0) return { rating: 'safe' as const, feedback: 'No interests listed.' }
+    return { rating: 'safe' as const, feedback: 'Interests add personality.' }
+  }
+
+  const getPublicationsAts = () => {
+    if (!publications || publications.length === 0) return { rating: 'safe' as const, feedback: 'No publications listed.' }
+    return { rating: 'safe' as const, feedback: 'Publications demonstrate thought leadership.' }
+  }
+
+  const getReferencesAts = () => {
+    if (!references || references.length === 0) return { rating: 'safe' as const, feedback: 'No references listed.' }
+    return { rating: 'safe' as const, feedback: 'References available.' }
+  }
+
+  const getVolunteerAts = () => {
+    if (!volunteer || volunteer.length === 0) return { rating: 'safe' as const, feedback: 'No volunteer experience listed.' }
+    return { rating: 'safe' as const, feedback: 'Volunteer work shows community engagement.' }
+  }
+
   const contactAts = getContactAts()
   const summaryAts = getSummaryAts()
   const experienceAts = getExperienceAts()
   const projectsAts = getProjectsAts()
   const educationAts = getEducationAts()
   const skillsAts = getSkillsAts()
+  const languagesAts = getLanguagesAts()
+  const awardsAts = getAwardsAts()
+  const certificationsAts = getCertificationsAts()
+  const interestsAts = getInterestsAts()
+  const publicationsAts = getPublicationsAts()
+  const referencesAts = getReferencesAts()
+  const volunteerAts = getVolunteerAts()
 
   // Dynamic sections lookup mapping
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -257,11 +308,13 @@ export default function MinimalistTemplate({
       </PreviewSectionWrapper>
     ) : null,
 
-    languages: data.languages && data.languages.length > 0 ? (
+    languages: languages && languages.length > 0 ? (
       <PreviewSectionWrapper
         sectionId="languages"
         activeSection={activeSection}
         atsMode={atsMode}
+        atsRating={languagesAts.rating}
+        atsFeedback={languagesAts.feedback}
         onEdit={onEditSection}
         onDragStart={(e) => onDragStart?.(e, 'languages')}
         onDragOver={onDragOver}
@@ -272,11 +325,215 @@ export default function MinimalistTemplate({
             {SECTION_LABELS.languages}
           </h2>
           <div className="text-[10px] leading-relaxed text-slate-700 font-serif" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
-            {data.languages.map((lang, idx) => (
+            {languages.map((lang, idx) => (
               <span key={lang.id}>
                 {idx > 0 && ' · '}
                 <span>{lang.name} ({lang.proficiency})</span>
               </span>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    awards: awards && awards.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="awards"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={awardsAts.rating}
+        atsFeedback={awardsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'awards')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('awards')}
+      >
+        <div>
+          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+            {SECTION_LABELS.awards}
+          </h2>
+          <div className="space-y-2.5">
+            {awards.map((award) => (
+              <div key={award.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[10px] font-bold text-slate-950 font-sans">{award.title}</span>
+                  {award.date && <span className="text-[9px] text-slate-400 font-sans">{formatDate(award.date)}</span>}
+                </div>
+                {award.awarder && (
+                  <div className="text-[9.5px] text-slate-500 font-sans">{award.awarder}</div>
+                )}
+                {award.description && (
+                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{award.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    certifications: certifications && certifications.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="certifications"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={certificationsAts.rating}
+        atsFeedback={certificationsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'certifications')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('certifications')}
+      >
+        <div>
+          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+            {SECTION_LABELS.certifications}
+          </h2>
+          <div className="space-y-2.5">
+            {certifications.map((cert) => (
+              <div key={cert.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[10px] font-bold text-slate-950 font-sans">{cert.title}</span>
+                  {cert.date && <span className="text-[9px] text-slate-400 font-sans">{formatDate(cert.date)}</span>}
+                </div>
+                {cert.issuer && (
+                  <div className="text-[9.5px] text-slate-500 font-sans">{cert.issuer}</div>
+                )}
+                {cert.description && (
+                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{cert.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    interests: interests && interests.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="interests"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={interestsAts.rating}
+        atsFeedback={interestsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'interests')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('interests')}
+      >
+        <div>
+          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+            {SECTION_LABELS.interests}
+          </h2>
+          <div className="text-[10px] leading-relaxed text-slate-700 font-sans">
+            {interests.map((i, idx) => (
+              <span key={i.id}>
+                {idx > 0 && ', '}
+                <span>{i.name}{i.keywords && i.keywords.length > 0 ? ` (${i.keywords.join(', ')})` : ''}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    publications: publications && publications.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="publications"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={publicationsAts.rating}
+        atsFeedback={publicationsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'publications')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('publications')}
+      >
+        <div>
+          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+            {SECTION_LABELS.publications}
+          </h2>
+          <div className="space-y-2.5">
+            {publications.map((pub) => (
+              <div key={pub.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[10px] font-bold text-slate-950 font-sans">{pub.title}</span>
+                  {pub.date && <span className="text-[9px] text-slate-400 font-sans">{formatDate(pub.date)}</span>}
+                </div>
+                {pub.publisher && (
+                  <div className="text-[9.5px] italic text-slate-500 font-sans">{pub.publisher}</div>
+                )}
+                {pub.description && (
+                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{pub.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    references: references && references.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="references"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={referencesAts.rating}
+        atsFeedback={referencesAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'references')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('references')}
+      >
+        <div>
+          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+            {SECTION_LABELS.references}
+          </h2>
+          <div className="space-y-2.5">
+            {references.map((ref) => (
+              <div key={ref.id} className="space-y-0.5">
+                <div className="text-[10px] font-bold text-slate-950 font-sans">{ref.name}</div>
+                {ref.position && <div className="text-[9.5px] text-slate-500 font-sans">{ref.position}</div>}
+                {ref.phone && <div className="text-[9.5px] text-slate-500 font-sans">{ref.phone}</div>}
+                {ref.description && (
+                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{ref.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    volunteer: volunteer && volunteer.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="volunteer"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={volunteerAts.rating}
+        atsFeedback={volunteerAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'volunteer')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('volunteer')}
+      >
+        <div>
+          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+            {SECTION_LABELS.volunteer}
+          </h2>
+          <div className="space-y-2.5">
+            {volunteer.map((vol) => (
+              <div key={vol.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[10px] font-bold text-slate-950 font-sans">{vol.organization}</span>
+                  {vol.period && <span className="text-[9px] text-slate-400 font-sans">{vol.period}</span>}
+                </div>
+                {vol.location && (
+                  <div className="text-[9.5px] text-slate-500 font-sans">{vol.location}</div>
+                )}
+                {vol.description && (
+                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{vol.description}</p>
+                )}
+              </div>
             ))}
           </div>
         </div>

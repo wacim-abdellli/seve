@@ -202,6 +202,24 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       fullResumeText += ` ${proj.name} ${proj.description} ${proj.technologies.join(' ')}`
     })
   }
+  if (resume.awards) {
+    resume.awards.forEach((a) => { fullResumeText += ` ${a.title} ${a.awarder} ${a.description}` })
+  }
+  if (resume.certifications) {
+    resume.certifications.forEach((c) => { fullResumeText += ` ${c.title} ${c.issuer} ${c.description}` })
+  }
+  if (resume.interests) {
+    resume.interests.forEach((i) => { fullResumeText += ` ${i.name} ${i.keywords.join(' ')}` })
+  }
+  if (resume.publications) {
+    resume.publications.forEach((p) => { fullResumeText += ` ${p.title} ${p.publisher} ${p.description}` })
+  }
+  if (resume.references) {
+    resume.references.forEach((r) => { fullResumeText += ` ${r.name} ${r.position}` })
+  }
+  if (resume.volunteer) {
+    resume.volunteer.forEach((v) => { fullResumeText += ` ${v.organization} ${v.description}` })
+  }
   const lowerResume = fullResumeText.toLowerCase()
 
   // Detect Language
@@ -223,6 +241,13 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     education: resume.education && resume.education.length > 0,
     skills: resume.skills && resume.skills.length > 0,
     languages: resume.languages && resume.languages.length > 0,
+    projects: resume.projects && resume.projects.length > 0,
+    awards: resume.awards && resume.awards.length > 0,
+    certifications: resume.certifications && resume.certifications.length > 0,
+    interests: resume.interests && resume.interests.length > 0,
+    publications: resume.publications && resume.publications.length > 0,
+    references: resume.references && resume.references.length > 0,
+    volunteer: resume.volunteer && resume.volunteer.length > 0,
   }
 
   Object.entries(completenessChecks).forEach(([section, present]) => {

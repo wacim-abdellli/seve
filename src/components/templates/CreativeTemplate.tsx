@@ -3,7 +3,7 @@ import PreviewSectionWrapper from '../PreviewSectionWrapper'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
-import { User, Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit, Wrench, FileText } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit, Wrench, FileText, Award, BookOpen, Users, Heart } from 'lucide-react'
 
 const Linkedin = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -17,11 +17,11 @@ interface CreativeTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   themeColor?: string
 }
 
@@ -30,7 +30,7 @@ export default function CreativeTemplate({
   activeSection, 
   atsMode, 
   onEditSection,
-  sectionOrder = ['summary', 'experience', 'projects', 'education', 'skills'],
+  sectionOrder = ['summary', 'experience', 'projects', 'education', 'skills', 'awards', 'publications', 'references', 'volunteer'],
   onDragStart,
   onDragOver,
   onDrop,
@@ -45,6 +45,13 @@ export default function CreativeTemplate({
   )
   const skills = (data.skills || []).filter((s) => s?.trim())
   const projects = (data.projects || []).filter((p) => p.name?.trim())
+  const languages = (data.languages || []).filter((l) => l.name?.trim())
+  const awards = (data.awards || []).filter((a) => a.title?.trim())
+  const certifications = (data.certifications || []).filter((c) => c.title?.trim())
+  const interests = (data.interests || []).filter((i) => i.name?.trim())
+  const publications = (data.publications || []).filter((p) => p.title?.trim())
+  const references = (data.references || []).filter((r) => r.name?.trim())
+  const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
 
 
   // ATS Heuristics
@@ -90,12 +97,56 @@ export default function CreativeTemplate({
     return { rating: 'safe' as const, feedback: 'Keywords match candidate database indexes.' }
   }
 
+  const getLanguagesAts = () => {
+    if (!languages || languages.length === 0) {
+      return { rating: 'warning' as const, feedback: 'Languages section shows global readiness.' }
+    }
+    return { rating: 'safe' as const, feedback: 'Languages listed.' }
+  }
+
+  const getAwardsAts = () => {
+    if (!awards || awards.length === 0) return { rating: 'safe' as const, feedback: 'No awards listed.' }
+    return { rating: 'safe' as const, feedback: 'Awards showcase distinct performance.' }
+  }
+
+  const getCertificationsAts = () => {
+    if (!certifications || certifications.length === 0) return { rating: 'warning' as const, feedback: 'Certifications add professional credibility.' }
+    return { rating: 'safe' as const, feedback: 'Certifications validate expertise.' }
+  }
+
+  const getInterestsAts = () => {
+    if (!interests || interests.length === 0) return { rating: 'safe' as const, feedback: 'No interests listed.' }
+    return { rating: 'safe' as const, feedback: 'Interests add personality.' }
+  }
+
+  const getPublicationsAts = () => {
+    if (!publications || publications.length === 0) return { rating: 'safe' as const, feedback: 'No publications listed.' }
+    return { rating: 'safe' as const, feedback: 'Publications demonstrate thought leadership.' }
+  }
+
+  const getReferencesAts = () => {
+    if (!references || references.length === 0) return { rating: 'safe' as const, feedback: 'No references listed.' }
+    return { rating: 'safe' as const, feedback: 'References available.' }
+  }
+
+  const getVolunteerAts = () => {
+    if (!volunteer || volunteer.length === 0) return { rating: 'safe' as const, feedback: 'No volunteer experience listed.' }
+    return { rating: 'safe' as const, feedback: 'Volunteer work shows community engagement.' }
+  }
+
   const contactAts = getContactAts()
   const summaryAts = getSummaryAts()
   const experienceAts = getExperienceAts()
   const projectsAts = getProjectsAts()
   const educationAts = getEducationAts()
   const skillsAts = getSkillsAts()
+  const languagesAts = getLanguagesAts()
+  const awardsAts = getAwardsAts()
+  const certificationsAts = getCertificationsAts()
+  const interestsAts = getInterestsAts()
+  const publicationsAts = getPublicationsAts()
+  const referencesAts = getReferencesAts()
+  const volunteerAts = getVolunteerAts()
 
   // Left Column Content (Contact details, Skills)
   const leftColumnContent = (
@@ -176,21 +227,78 @@ export default function CreativeTemplate({
       )}
 
       {/* Languages list block */}
-      {data.languages && data.languages.length > 0 && (
-        <div className="space-y-3">
-          <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
-            <Globe className="w-3.5 h-3.5" style={{ color: themeColor }} />
-            <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.languages}</h3>
+      {languages && languages.length > 0 && (
+        <PreviewSectionWrapper
+          sectionId="languages"
+          activeSection={activeSection}
+          atsMode={atsMode}
+          atsRating={languagesAts.rating}
+          atsFeedback={languagesAts.feedback}
+          onEdit={onEditSection}
+        >
+          <div className="space-y-3">
+            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+              <Globe className="w-3.5 h-3.5" style={{ color: themeColor }} />
+              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.languages}</h3>
+            </div>
+            <div className="space-y-1 text-[9px] text-slate-700">
+              {languages.map((lang) => (
+                <div key={lang.id}>
+                  <span className="font-semibold text-slate-900">{lang.name}</span>
+                  <span className="text-slate-500"> — {lang.proficiency}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="space-y-1 text-[9px] text-slate-700">
-            {data.languages.map((lang) => (
-              <div key={lang.id}>
-                <span className="font-semibold text-slate-900">{lang.name}</span>
-                <span className="text-slate-500"> — {lang.proficiency}</span>
-              </div>
-            ))}
+        </PreviewSectionWrapper>
+      )}
+
+      {/* Interests list block */}
+      {interests && interests.length > 0 && (
+        <PreviewSectionWrapper
+          sectionId="interests"
+          activeSection={activeSection}
+          atsMode={atsMode}
+          atsRating={interestsAts.rating}
+          atsFeedback={interestsAts.feedback}
+          onEdit={onEditSection}
+        >
+          <div className="space-y-3">
+            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.interests}</h3>
+            </div>
+            <p className="text-[9px] leading-relaxed text-slate-700">
+              {interests.map((i) => i.name + (i.keywords.length > 0 ? ` (${i.keywords.join(', ')})` : '')).join(' · ')}
+            </p>
           </div>
-        </div>
+        </PreviewSectionWrapper>
+      )}
+
+      {/* Certifications list block */}
+      {certifications && certifications.length > 0 && (
+        <PreviewSectionWrapper
+          sectionId="certifications"
+          activeSection={activeSection}
+          atsMode={atsMode}
+          atsRating={certificationsAts.rating}
+          atsFeedback={certificationsAts.feedback}
+          onEdit={onEditSection}
+        >
+          <div className="space-y-3">
+            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.certifications}</h3>
+            </div>
+            <div className="space-y-1 text-[9px] text-slate-700">
+              {certifications.map((c) => (
+                <div key={c.id}>
+                  <span className="font-semibold text-slate-900">{c.title}</span>
+                  {c.issuer && <span className="text-slate-500"> — {c.issuer}</span>}
+                  {c.date && <span className="text-slate-400"> ({c.date})</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </PreviewSectionWrapper>
       )}
 
     </div>
@@ -357,6 +465,144 @@ export default function CreativeTemplate({
         </div>
       </PreviewSectionWrapper>
     ) : null,
+
+    awards: awards && awards.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="awards"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={awardsAts.rating}
+        atsFeedback={awardsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'awards')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('awards')}
+      >
+        <div className="mb-5">
+          <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-3">
+            <Award className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.awards}
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {awards.map((a) => (
+              <div key={a.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-sans">
+                  <span className="text-[9.5px] font-extrabold text-slate-900">{a.title}</span>
+                  {a.date && <span className="text-[9px] font-bold text-slate-500">{a.date}</span>}
+                </div>
+                {a.awarder && <div className="text-[8.5px] text-slate-500 italic">{a.awarder}</div>}
+                {a.description && <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{a.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    publications: publications && publications.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="publications"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={publicationsAts.rating}
+        atsFeedback={publicationsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'publications')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('publications')}
+      >
+        <div className="mb-5">
+          <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-3">
+            <BookOpen className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.publications}
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {publications.map((p) => (
+              <div key={p.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-sans">
+                  <span className="text-[9.5px] font-extrabold text-slate-900">{p.title}</span>
+                  {p.date && <span className="text-[9px] font-bold text-slate-500">{p.date}</span>}
+                </div>
+                {p.publisher && <div className="text-[8.5px] text-slate-500 italic">{p.publisher}</div>}
+                {p.description && <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{p.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    references: references && references.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="references"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={referencesAts.rating}
+        atsFeedback={referencesAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'references')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('references')}
+      >
+        <div className="mb-5">
+          <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-3">
+            <Users className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.references}
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {references.map((r) => (
+              <div key={r.id} className="space-y-0.5">
+                <div className="text-[9.5px] font-extrabold text-slate-900">{r.name}</div>
+                {r.position && <div className="text-[8.5px] text-slate-500 italic">{r.position}</div>}
+                {r.phone && <div className="text-[8.5px] text-slate-500">{r.phone}</div>}
+                {r.description && <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{r.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    volunteer: volunteer && volunteer.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="volunteer"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={volunteerAts.rating}
+        atsFeedback={volunteerAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'volunteer')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('volunteer')}
+      >
+        <div className="mb-5">
+          <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-3">
+            <Heart className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.volunteer}
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {volunteer.map((v) => (
+              <div key={v.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-sans">
+                  <span className="text-[9.5px] font-extrabold text-slate-900">{v.organization}</span>
+                  {v.period && <span className="text-[9px] font-bold text-slate-500">{v.period}</span>}
+                </div>
+                {v.location && <div className="text-[8.5px] text-slate-500 italic">{v.location}</div>}
+                {v.description && <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{v.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null
   }
 
   return (
@@ -385,7 +631,7 @@ export default function CreativeTemplate({
 
         {/* Right column (Main details area) */}
         <div className="flex-1 p-10 space-y-5">
-          {sectionOrder.filter(secId => secId !== 'skills').map((secId) => {
+          {sectionOrder.filter(secId => !['skills', 'languages', 'interests', 'certifications'].includes(secId)).map((secId) => {
             const component = sectionsMap[secId]
             return component ? <div key={secId}>{component}</div> : null
           })}

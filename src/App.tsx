@@ -35,7 +35,13 @@ import {
   GraduationCap as GraduationCapIcon,
   Code2,
   Globe,
-  FolderOpen
+  FolderOpen,
+  Trophy,
+  Award,
+  Heart,
+  BookOpen,
+  Phone,
+  HandHeart
 } from 'lucide-react'
 
 const INITIAL_RESUME_DATA: ResumeData = {
@@ -77,6 +83,18 @@ function getSectionStatus(resumeData: ResumeData): Record<string, boolean> {
     resumeData.languages.some(l => l.name?.trim()))
   const hasProjects = !!(resumeData.projects && resumeData.projects.length > 0 &&
     resumeData.projects.some(p => p.name?.trim()))
+  const hasAwards = !!(resumeData.awards && resumeData.awards.length > 0 &&
+    resumeData.awards.some(a => a.title?.trim()))
+  const hasCertifications = !!(resumeData.certifications && resumeData.certifications.length > 0 &&
+    resumeData.certifications.some(c => c.title?.trim()))
+  const hasInterests = !!(resumeData.interests && resumeData.interests.length > 0 &&
+    resumeData.interests.some(i => i.name?.trim()))
+  const hasPublications = !!(resumeData.publications && resumeData.publications.length > 0 &&
+    resumeData.publications.some(p => p.title?.trim()))
+  const hasReferences = !!(resumeData.references && resumeData.references.length > 0 &&
+    resumeData.references.some(r => r.name?.trim()))
+  const hasVolunteer = !!(resumeData.volunteer && resumeData.volunteer.length > 0 &&
+    resumeData.volunteer.some(v => v.organization?.trim()))
 
   return {
     contact: hasContact,
@@ -86,6 +104,12 @@ function getSectionStatus(resumeData: ResumeData): Record<string, boolean> {
     skills: hasSkills,
     languages: hasLanguages,
     projects: hasProjects,
+    awards: hasAwards,
+    certifications: hasCertifications,
+    interests: hasInterests,
+    publications: hasPublications,
+    references: hasReferences,
+    volunteer: hasVolunteer,
   }
 }
 
@@ -93,11 +117,18 @@ function calculateCompletion(resumeData: ResumeData): number {
   const status = getSectionStatus(resumeData)
   let score = 0
   if (status.contact) score += 20
-  if (status.summary) score += 20
+  if (status.summary) score += 15
   if (status.experience) score += 25
   if (status.education) score += 15
   if (status.skills) score += 15
   if (status.languages) score += 5
+  if (status.projects) score += 5
+  if (status.awards) score += 2
+  if (status.certifications) score += 2
+  if (status.interests) score += 1
+  if (status.publications) score += 2
+  if (status.references) score += 1
+  if (status.volunteer) score += 2
   return score
 }
 
@@ -109,6 +140,12 @@ const overviewSections = [
   { id: 'skills' as const, title: 'Skills & Stack', icon: Code2, colorClass: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/15 group-hover:text-emerald-300' },
   { id: 'languages' as const, title: 'Languages', icon: Globe, colorClass: 'bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/15 group-hover:text-indigo-300' },
   { id: 'projects' as const, title: 'Projects', icon: FolderOpen, colorClass: 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/15 group-hover:text-cyan-300' },
+  { id: 'awards' as const, title: 'Awards & Honors', icon: Trophy, colorClass: 'bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/15 group-hover:text-yellow-300' },
+  { id: 'certifications' as const, title: 'Certifications', icon: Award, colorClass: 'bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/15 group-hover:text-sky-300' },
+  { id: 'interests' as const, title: 'Interests', icon: Heart, colorClass: 'bg-pink-500/10 text-pink-400 group-hover:bg-pink-500/15 group-hover:text-pink-300' },
+  { id: 'publications' as const, title: 'Publications', icon: BookOpen, colorClass: 'bg-orange-500/10 text-orange-400 group-hover:bg-orange-500/15 group-hover:text-orange-300' },
+  { id: 'references' as const, title: 'References', icon: Phone, colorClass: 'bg-teal-500/10 text-teal-400 group-hover:bg-teal-500/15 group-hover:text-teal-300' },
+  { id: 'volunteer' as const, title: 'Volunteer', icon: HandHeart, colorClass: 'bg-violet-500/10 text-violet-400 group-hover:bg-violet-500/15 group-hover:text-violet-300' },
 ]
 
 const truncateText = (str: string, max: number) => {
@@ -146,6 +183,30 @@ const getSectionPreview = (section: string, data: ResumeData): string => {
       return projList.length === 0
         ? 'No projects added'
         : `${projList.length} project(s)`
+    case 'awards': {
+      const list = data.awards || []
+      return list.length === 0 ? 'No awards added' : list.map(x => x.title).filter(Boolean).join(', ')
+    }
+    case 'certifications': {
+      const list = data.certifications || []
+      return list.length === 0 ? 'No certifications added' : list.map(x => x.title).filter(Boolean).join(', ')
+    }
+    case 'interests': {
+      const list = data.interests || []
+      return list.length === 0 ? 'No interests added' : list.map(x => x.name).filter(Boolean).join(', ')
+    }
+    case 'publications': {
+      const list = data.publications || []
+      return list.length === 0 ? 'No publications added' : list.map(x => x.title).filter(Boolean).join(', ')
+    }
+    case 'references': {
+      const list = data.references || []
+      return list.length === 0 ? 'No references added' : list.map(x => x.name).filter(Boolean).join(', ')
+    }
+    case 'volunteer': {
+      const list = data.volunteer || []
+      return list.length === 0 ? 'No volunteer experience added' : list.map(x => x.organization).filter(Boolean).join(', ')
+    }
     default:
       return ''
   }
@@ -310,7 +371,7 @@ function App() {
   const [templateFontSize, setTemplateFontSize] = useState(10)
   const [activeWarnings, setActiveWarnings] = useState<string[] | null>(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
-  const [sectionOrder, setSectionOrder] = useState<('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages')[]>(() => {
+  const [sectionOrder, setSectionOrder] = useState<('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer')[]>(() => {
     let saved = localStorage.getItem('seve_section_order')
     if (!saved) {
       saved = localStorage.getItem('resumeai_section_order')
@@ -536,13 +597,16 @@ function App() {
   }
 
   const triggerNativePrint = () => {
+    // Allow React to commit the print portal to DOM before calling print
     setTimeout(() => {
       window.print()
-    }, 100)
+    }, 300)
   }
 
   const resetResume = () => {
     if (window.confirm('Are you sure you want to reset your resume? All your current data will be lost.')) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY)
+      localStorage.removeItem('resumeai_state')
       setState((prev) => ({
         ...prev,
         resumeData: INITIAL_RESUME_DATA,

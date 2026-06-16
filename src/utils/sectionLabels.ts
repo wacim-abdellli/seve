@@ -5,4 +5,10 @@ export const SECTION_LABELS = {
   skills:     'SKILLS',
   languages:  'LANGUAGES',
   projects:   'PROJECTS',
+  awards:     'AWARDS',
+  certifications: 'CERTIFICATIONS',
+  interests:  'INTERESTS',
+  publications: 'PUBLICATIONS',
+  references: 'REFERENCES',
+  volunteer:  'VOLUNTEER',
 } as const

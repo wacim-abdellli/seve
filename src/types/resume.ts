@@ -41,6 +41,52 @@ export interface Project {
   link?: string
 }
 
+export interface Award {
+  id: string
+  title: string
+  awarder: string
+  date: string
+  description: string
+}
+
+export interface Certification {
+  id: string
+  title: string
+  issuer: string
+  date: string
+  description: string
+}
+
+export interface Interest {
+  id: string
+  name: string
+  keywords: string[]
+}
+
+export interface Publication {
+  id: string
+  title: string
+  publisher: string
+  date: string
+  description: string
+}
+
+export interface Reference {
+  id: string
+  name: string
+  position: string
+  phone: string
+  description: string
+}
+
+export interface Volunteer {
+  id: string
+  organization: string
+  location: string
+  period: string
+  description: string
+}
+
 export interface ResumeData {
   contact: ContactInfo
   summary: string
@@ -49,6 +95,12 @@ export interface ResumeData {
   skills: string[]
   languages?: Language[]
   projects?: Project[]
+  awards?: Award[]
+  certifications?: Certification[]
+  interests?: Interest[]
+  publications?: Publication[]
+  references?: Reference[]
+  volunteer?: Volunteer[]
 }
 
 export interface AtsScore {

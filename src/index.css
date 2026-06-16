@@ -233,24 +233,40 @@ h1, h2, h3, h4, h5, h6 {
   .resume-print-wrapper {
     display: block !important;
     position: fixed !important;
-    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     z-index: 99999 !important;
     background: white !important;
+    overflow: visible !important;
   }
 
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 0mm !important;
   }
 
   html, body {
     height: auto !important;
     overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .resume-page {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 210mm !important;
-    padding: 14mm 18mm !important;
+    max-width: 210mm !important;
+    min-width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 10.58mm !important;
     margin: 0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -262,6 +278,8 @@ h1, h2, h3, h4, h5, h6 {
     color: #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
   }
 
   /* Strip all screen-only styles */
@@ -334,6 +352,14 @@ h1, h2, h3, h4, h5, h6 {
   .template-minimalist > div:first-child,
   .template-creative > div:first-child {
     padding: 0 !important;
+  }
+
+  /* Force all direct children of .resume-page to fill width */
+  .resume-page > * {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 
   /* All text dark in print */

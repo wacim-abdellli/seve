@@ -8,11 +8,11 @@ interface ClassicTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
   themeColor?: string
 }
 
@@ -36,6 +36,13 @@ export default function ClassicTemplate({
   )
   const skills = (data.skills || []).filter((s) => s?.trim())
   const projects = (data.projects || []).filter((p) => p.name?.trim())
+  const languages = (data.languages || []).filter((l) => l.name?.trim())
+  const awards = (data.awards || []).filter((a) => a.title?.trim())
+  const certifications = (data.certifications || []).filter((c) => c.title?.trim())
+  const interests = (data.interests || []).filter((i) => i.name?.trim())
+  const publications = (data.publications || []).filter((p) => p.title?.trim())
+  const references = (data.references || []).filter((r) => r.name?.trim())
+  const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
 
 
   // ATS Heuristics
@@ -104,12 +111,56 @@ export default function ClassicTemplate({
     return { rating: 'safe' as const, feedback: 'Keywords match candidate database indexes.' }
   }
 
+  const getLanguagesAts = () => {
+    if (!languages || languages.length === 0) {
+      return { rating: 'warning' as const, feedback: 'Languages section shows global readiness.' }
+    }
+    return { rating: 'safe' as const, feedback: 'Languages listed.' }
+  }
+
+  const getAwardsAts = () => {
+    if (!awards || awards.length === 0) return { rating: 'safe' as const, feedback: 'No awards listed.' }
+    return { rating: 'safe' as const, feedback: 'Awards showcase distinct performance.' }
+  }
+
+  const getCertificationsAts = () => {
+    if (!certifications || certifications.length === 0) return { rating: 'warning' as const, feedback: 'Certifications add professional credibility.' }
+    return { rating: 'safe' as const, feedback: 'Certifications validate expertise.' }
+  }
+
+  const getInterestsAts = () => {
+    if (!interests || interests.length === 0) return { rating: 'safe' as const, feedback: 'No interests listed.' }
+    return { rating: 'safe' as const, feedback: 'Interests add personality.' }
+  }
+
+  const getPublicationsAts = () => {
+    if (!publications || publications.length === 0) return { rating: 'safe' as const, feedback: 'No publications listed.' }
+    return { rating: 'safe' as const, feedback: 'Publications demonstrate thought leadership.' }
+  }
+
+  const getReferencesAts = () => {
+    if (!references || references.length === 0) return { rating: 'safe' as const, feedback: 'No references listed.' }
+    return { rating: 'safe' as const, feedback: 'References available.' }
+  }
+
+  const getVolunteerAts = () => {
+    if (!volunteer || volunteer.length === 0) return { rating: 'safe' as const, feedback: 'No volunteer experience listed.' }
+    return { rating: 'safe' as const, feedback: 'Volunteer work shows community engagement.' }
+  }
+
   const contactAts = getContactAts()
   const summaryAts = getSummaryAts()
   const experienceAts = getExperienceAts()
   const projectsAts = getProjectsAts()
   const educationAts = getEducationAts()
   const skillsAts = getSkillsAts()
+  const languagesAts = getLanguagesAts()
+  const awardsAts = getAwardsAts()
+  const certificationsAts = getCertificationsAts()
+  const interestsAts = getInterestsAts()
+  const publicationsAts = getPublicationsAts()
+  const referencesAts = getReferencesAts()
+  const volunteerAts = getVolunteerAts()
 
   // Dynamic sections lookup mapping
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -257,11 +308,13 @@ export default function ClassicTemplate({
       </PreviewSectionWrapper>
     ) : null,
 
-    languages: data.languages && data.languages.length > 0 ? (
+    languages: languages && languages.length > 0 ? (
       <PreviewSectionWrapper
         sectionId="languages"
         activeSection={activeSection}
         atsMode={atsMode}
+        atsRating={languagesAts.rating}
+        atsFeedback={languagesAts.feedback}
         onEdit={onEditSection}
         onDragStart={(e) => onDragStart?.(e, 'languages')}
         onDragOver={onDragOver}
@@ -272,7 +325,7 @@ export default function ClassicTemplate({
             {SECTION_LABELS.languages}
           </h2>
           <div className="text-[10px] leading-relaxed text-slate-800 font-serif">
-            {data.languages.map((lang, idx) => (
+            {languages.map((lang, idx) => (
               <span key={lang.id}>
                 {idx > 0 && ' · '}
                 <span>{lang.name} ({lang.proficiency})</span>
@@ -318,6 +371,192 @@ export default function ClassicTemplate({
                 </span>
               )
             })}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    awards: awards && awards.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="awards"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={awardsAts.rating}
+        atsFeedback={awardsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'awards')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('awards')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.awards}
+          </h2>
+          <div className="space-y-2">
+            {awards.map((a) => (
+              <div key={a.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-serif">
+                  <span className="text-[10.5px] font-extrabold text-slate-950">{a.title}</span>
+                  {a.date && <span className="text-[9.5px] font-bold text-slate-500">{a.date}</span>}
+                </div>
+                {a.awarder && <div className="text-[9.5px] text-slate-600">{a.awarder}</div>}
+                {a.description && <p className="text-[10px] leading-relaxed text-slate-800">{a.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    certifications: certifications && certifications.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="certifications"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={certificationsAts.rating}
+        atsFeedback={certificationsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'certifications')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('certifications')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.certifications}
+          </h2>
+          <div className="space-y-2">
+            {certifications.map((c) => (
+              <div key={c.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-serif">
+                  <span className="text-[10.5px] font-extrabold text-slate-950">{c.title}</span>
+                  {c.date && <span className="text-[9.5px] font-bold text-slate-500">{c.date}</span>}
+                </div>
+                {c.issuer && <div className="text-[9.5px] text-slate-600">{c.issuer}</div>}
+                {c.description && <p className="text-[10px] leading-relaxed text-slate-800">{c.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    interests: interests && interests.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="interests"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={interestsAts.rating}
+        atsFeedback={interestsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'interests')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('interests')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.interests}
+          </h2>
+          <div className="text-[10px] leading-relaxed text-slate-800 font-serif">
+            {interests.map((i, idx) => (
+              <span key={i.id}>
+                {idx > 0 && ' · '}
+                <span>{i.name}{i.keywords.length > 0 ? ` (${i.keywords.join(', ')})` : ''}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    publications: publications && publications.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="publications"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={publicationsAts.rating}
+        atsFeedback={publicationsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'publications')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('publications')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.publications}
+          </h2>
+          <div className="space-y-2">
+            {publications.map((p) => (
+              <div key={p.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-serif">
+                  <span className="text-[10.5px] font-extrabold text-slate-950">{p.title}</span>
+                  {p.date && <span className="text-[9.5px] font-bold text-slate-500">{p.date}</span>}
+                </div>
+                {p.publisher && <div className="text-[9.5px] text-slate-600 italic">{p.publisher}</div>}
+                {p.description && <p className="text-[10px] leading-relaxed text-slate-800">{p.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    references: references && references.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="references"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={referencesAts.rating}
+        atsFeedback={referencesAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'references')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('references')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.references}
+          </h2>
+          <div className="space-y-2">
+            {references.map((r) => (
+              <div key={r.id} className="space-y-0.5">
+                <div className="text-[10.5px] font-extrabold text-slate-950">{r.name}</div>
+                {r.position && <div className="text-[9.5px] text-slate-600">{r.position}</div>}
+                {r.phone && <div className="text-[9.5px] text-slate-500">{r.phone}</div>}
+                {r.description && <p className="text-[10px] leading-relaxed text-slate-800">{r.description}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    volunteer: volunteer && volunteer.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="volunteer"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={volunteerAts.rating}
+        atsFeedback={volunteerAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'volunteer')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('volunteer')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.volunteer}
+          </h2>
+          <div className="space-y-2">
+            {volunteer.map((v) => (
+              <div key={v.id} className="space-y-0.5">
+                <div className="flex justify-between items-baseline font-serif">
+                  <span className="text-[10.5px] font-extrabold text-slate-950">{v.organization}</span>
+                  {v.period && <span className="text-[9.5px] font-bold text-slate-500">{v.period}</span>}
+                </div>
+                {v.location && <div className="text-[9.5px] text-slate-600 italic">{v.location}</div>}
+                {v.description && <p className="text-[10px] leading-relaxed text-slate-800">{v.description}</p>}
+              </div>
+            ))}
           </div>
         </div>
       </PreviewSectionWrapper>
