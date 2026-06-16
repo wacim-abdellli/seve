@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { AtsScore, ResumeData } from '../types/resume'
-import { autoFix } from '../utils/atsEvaluator'
+import { autoFix, calculateLocalSemanticScore } from '../utils/atsEvaluator'
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -8,7 +8,8 @@ import {
   Target,
   Brain,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  PenLine
 } from 'lucide-react'
 import { useToast } from '../hooks/useToast'
 
@@ -18,6 +19,8 @@ interface AtsDashboardProps {
   onFix: (fixed: ResumeData) => void
   jobDescription: string
   onUpdateJobDescription: (jd: string) => void
+  onOpenSection?: (section: any) => void
+  apiKey?: string
 }
 
 // Module-level globals to keep the worker and state persistent across component unmounts/tab-switches
@@ -29,13 +32,17 @@ let globalLoadingFile = ''
 let globalHasRunAnalysis = false
 let globalIsAnalyzing = false
 let globalAnalysisStep = ''
+let globalAiAssessment: string | null = null
+let globalAiActionPoints: string[] = []
 
 export default function AtsDashboard({ 
   atsScore, 
   resumeData, 
   onFix,
   jobDescription,
-  onUpdateJobDescription
+  onUpdateJobDescription,
+  onOpenSection,
+  apiKey
 }: AtsDashboardProps) {
   const { total, grade, sections, passing, failing, language = 'en' } = atsScore
   const { showToast } = useToast()
@@ -49,11 +56,15 @@ export default function AtsDashboard({
   const [loadingFile, setLoadingFile] = useState(globalLoadingFile)
   const [aiError, setAiError] = useState<string | null>(null)
   const [isJdDirty, setIsJdDirty] = useState(false)
+  const [aiAssessment, setAiAssessment] = useState<string | null>(globalAiAssessment)
+  const [aiActionPoints, setAiActionPoints] = useState<string[]>(globalAiActionPoints)
 
   // ATS Auditor Scan States
   const [hasRunAnalysis, setHasRunAnalysis] = useState(globalHasRunAnalysis)
   const [isAnalyzing, setIsAnalyzing] = useState(globalIsAnalyzing)
   const [analysisStep, setAnalysisStep] = useState(globalAnalysisStep)
+  const [scanProgress, setScanProgress] = useState(0)
+  const [completedSteps, setCompletedSteps] = useState<string[]>([])
 
   // Animated score counter for traditional ATS Score
   useEffect(() => {
@@ -114,13 +125,46 @@ export default function AtsDashboard({
       } else if (type === 'result') {
         globalSemanticScore = resScore
         setSemanticScore(resScore)
+        
+        // Generate a high-quality local description for the worker result
+        let desc = ''
+        let pts: string[] = []
+        if (resScore >= 80) {
+          desc = language === 'fr' 
+            ? 'Excellent alignement. Les concepts et l\'expérience de votre CV répondent parfaitement aux attentes du poste.'
+            : 'Excellent semantic fit. Your resume concepts and experience map very well to the target job.'
+          pts = language === 'fr'
+            ? ['Votre expérience correspond très bien.', 'Pensez à insérer plus de réalisations quantifiées.']
+            : ['Your experience aligns beautifully.', 'Make sure to add more quantified achievements.']
+        } else if (resScore >= 60) {
+          desc = language === 'fr'
+            ? 'Adéquation modérée. L\'alignement sémantique est bon, mais des améliorations sont possibles.'
+            : 'Moderate semantic fit. The alignment is good, but some key sections could be improved.'
+          pts = language === 'fr'
+            ? ['Détaillez vos compétences clés du poste.', 'Utilisez des verbes d\'action au début de vos descriptions.']
+            : ['Detail your primary competencies for the job.', 'Use strong action verbs to start your bullet points.']
+        } else {
+          desc = language === 'fr'
+            ? 'Faible adéquation. Vos compétences actuelles et les mots-clés sémantiques divergent de l\'offre.'
+            : 'Low semantic fit. Try tailoring your experience description to focus on target role competencies.'
+          pts = language === 'fr'
+            ? ['Ajoutez les mots-clés clés demandés.', 'Décrivez vos responsabilités passées avec plus de détails.']
+            : ['Add key requested competencies.', 'Flesh out past roles with more descriptive details.']
+        }
+        
+        globalAiAssessment = desc
+        globalAiActionPoints = pts
+        setAiAssessment(desc)
+        setAiActionPoints(pts)
+
         globalAiStatus = 'ready'
         setAiStatus('ready')
         setIsJdDirty(false)
       } else if (type === 'error') {
-        setAiError(error)
-        globalAiStatus = 'error'
-        setAiStatus('error')
+        // Fall back to local similarity scorer if the worker fails
+        console.warn('Worker error: ' + error + '. Falling back to main-thread scorer.')
+        const resumeText = getResumeText()
+        runMainThreadFallbackScan(resumeText, jobDescription)
       }
     }
 
@@ -131,7 +175,7 @@ export default function AtsDashboard({
         globalWorker.onmessage = null
       }
     }
-  }, [])
+  }, [jobDescription, language])
 
   const handleAutoFix = () => {
     const fixedResume = autoFix(resumeData)
@@ -161,9 +205,152 @@ export default function AtsDashboard({
     return text
   }
 
+  // Fallback local semantic scan in main thread
+  const runMainThreadFallbackScan = (resumeText: string, jobDescription: string) => {
+    setAiStatus('computing')
+    globalAiStatus = 'computing'
+
+    setTimeout(() => {
+      try {
+        const scoreVal = calculateLocalSemanticScore(resumeText, jobDescription, language === 'fr' ? 'fr' : 'en')
+        globalSemanticScore = scoreVal
+        setSemanticScore(scoreVal)
+        
+        let desc = ''
+        let pts: string[] = []
+        if (scoreVal >= 80) {
+          desc = language === 'fr' 
+            ? 'Excellent alignement. Votre CV correspond très bien aux compétences cibles.'
+            : 'Excellent match. Your resume concepts map very well to the target role.'
+          pts = language === 'fr'
+            ? ['Conservez ce ciblage précis.', 'Pensez à ajouter plus de métriques.']
+            : ['Maintain this precise targeting.', 'Consider adding more quantified metrics.']
+        } else if (scoreVal >= 60) {
+          desc = language === 'fr'
+            ? 'Adéquation modérée. L\'alignement est bon, mais des améliorations sont possibles.'
+            : 'Moderate match. The alignment is good, but some key sections could be improved.'
+          pts = language === 'fr'
+            ? ['Ajoutez plus de détails sur vos projets techniques.', 'Utilisez des verbes d\'action plus forts.']
+            : ['Add more details to your technical project descriptions.', 'Incorporate stronger action verbs.']
+        } else {
+          desc = language === 'fr'
+            ? 'Faible adéquation. Essayez de reformuler vos expériences pour cibler ce poste.'
+            : 'Low match. Try rewriting your experience bullet points to focus on target role competencies.'
+          pts = language === 'fr'
+            ? ['Ajoutez les mots-clés manquants de l\'offre.', 'Détaillez vos responsabilités clés.']
+            : ['Add missing keywords directly from the job description.', 'Flesh out details of your primary responsibilities.']
+        }
+        
+        globalAiAssessment = desc
+        globalAiActionPoints = pts
+        setAiAssessment(desc)
+        setAiActionPoints(pts)
+        
+        globalAiStatus = 'ready'
+        setAiStatus('ready')
+        setIsJdDirty(false)
+      } catch (err: any) {
+        globalAiStatus = 'error'
+        setAiStatus('error')
+        setAiError(err.message || 'Local similarity calculation failed')
+      }
+    }, 800)
+  }
+
+  // Call Gemini Semantic Scan API
+  const callGeminiSemanticScan = async (resumeText: string, jobDescription: string, key: string) => {
+    setAiStatus('computing')
+    globalAiStatus = 'computing'
+    
+    try {
+      const promptText = `
+Analyze the semantic relevance and alignment between this resume and this job description.
+Assess how well the candidate's skills, experience, and accomplishments match the job requirements, competencies, and responsibilities.
+
+Provide:
+1. A semantic relevance score as an integer from 0 to 100.
+2. A brief, professional assessment paragraph (1-2 sentences) detailing the overall alignment.
+3. 2-3 specific action points for the candidate to improve their semantic match.
+
+Resume text:
+${resumeText}
+
+Target Job Description:
+${jobDescription}
+
+Respond STRICTLY in JSON format with the following keys:
+{
+  "score": 85,
+  "assessment": "...",
+  "actionPoints": ["...", "..."]
+}
+Do not return any markdown code block formatting or backticks around the JSON string. Just return the raw JSON object.
+`
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: promptText }]
+              }
+            ],
+            generationConfig: {
+              maxOutputTokens: 800,
+              temperature: 0.2,
+            }
+          })
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Gemini API call failed with status ' + response.status)
+      }
+
+      const data = await response.json()
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      const cleanJsonStr = rawText.replace(/```json|```/g, '').trim()
+      const result = JSON.parse(cleanJsonStr)
+      
+      if (typeof result.score === 'number') {
+        globalSemanticScore = result.score
+        setSemanticScore(result.score)
+        
+        globalAiAssessment = result.assessment
+        globalAiActionPoints = result.actionPoints
+        setAiAssessment(result.assessment)
+        setAiActionPoints(result.actionPoints)
+        
+        globalAiStatus = 'ready'
+        setAiStatus('ready')
+        setIsJdDirty(false)
+        showToast(language === 'fr' ? 'Analyse sémantique IA terminée !' : 'AI Semantic Scan complete!', 'success')
+      } else {
+        throw new Error('Invalid JSON format returned from Gemini')
+      }
+    } catch (e: any) {
+      console.error('Gemini Semantic Scan failed:', e)
+      showToast(language === 'fr' ? 'Scan IA en échec. Utilisation du scanner local...' : 'Gemini AI scan failed. Falling back to local scanner...', 'warning')
+      
+      // Fallback: try to run model or fall back to main thread calculation
+      if (globalWorker) {
+        globalWorker.postMessage({
+          type: 'compare',
+          resumeText,
+          jobDescription
+        })
+      } else {
+        runMainThreadFallbackScan(resumeText, jobDescription)
+      }
+    }
+  }
+
   // Trigger semantic analysis
   const runAiDeepScan = () => {
-    if (!globalWorker) return
     if (!jobDescription || !jobDescription.trim()) {
       showToast(
         language === 'fr' 
@@ -176,39 +363,81 @@ export default function AtsDashboard({
 
     setAiError(null)
     const resumeText = getResumeText()
-    globalWorker.postMessage({
-      type: 'compare',
-      resumeText,
-      jobDescription
-    })
+
+    if (apiKey && apiKey.trim() !== '') {
+      callGeminiSemanticScan(resumeText, jobDescription, apiKey)
+    } else {
+      // If no API key, check if worker is ready, otherwise run worker or main-thread fallback
+      if (globalWorker) {
+        setAiStatus('loading')
+        globalAiStatus = 'loading'
+        setDownloadProgress(0)
+        
+        // Timeout fallback after 12s in case CDN downloads are too slow or blocked
+        setTimeout(() => {
+          if (globalAiStatus === 'loading' || globalAiStatus === 'computing') {
+            console.warn('Web worker loading timed out. Switching to local JS scan.')
+            runMainThreadFallbackScan(resumeText, jobDescription)
+          }
+        }, 12000)
+
+        globalWorker.postMessage({
+          type: 'compare',
+          resumeText,
+          jobDescription
+        })
+      } else {
+        runMainThreadFallbackScan(resumeText, jobDescription)
+      }
+    }
   }
 
   const startAtsScan = () => {
     globalIsAnalyzing = true
     setIsAnalyzing(true)
-    globalAnalysisStep = language === 'fr' ? 'Analyse de la structure des sections...' : 'Analyzing resume sections & completeness...'
-    setAnalysisStep(globalAnalysisStep)
+    setScanProgress(0)
+    setCompletedSteps([])
     
-    const steps = [
-      { time: 600, text: language === 'fr' ? 'Recherche de caractères spéciaux et formatage...' : 'Scanning for ATS-breaking symbols & formatting...' },
-      { time: 1200, text: language === 'fr' ? 'Évaluation des verbes d\'action...' : 'Evaluating strong action verbs...' },
-      { time: 1800, text: language === 'fr' ? 'Calcul de la pertinence des mots-clés...' : 'Matching keyword density against job description...' },
-    ]
-
-    steps.forEach((step) => {
-      setTimeout(() => {
-        globalAnalysisStep = step.text
-        setAnalysisStep(step.text)
-      }, step.time)
-    })
-
-    setTimeout(() => {
-      globalIsAnalyzing = false
-      setIsAnalyzing(false)
-      globalHasRunAnalysis = true
-      setHasRunAnalysis(true)
-      showToast(language === 'fr' ? 'Audit ATS terminé !' : 'ATS Audit complete!', 'success')
-    }, 2450)
+    const duration = 2450 // 2.45s
+    const startTime = performance.now()
+    
+    const updateProgress = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const currentPercent = Math.round(progress * 100)
+      
+      setScanProgress(currentPercent)
+      
+      const steps: string[] = []
+      if (currentPercent >= 25) steps.push('structure')
+      if (currentPercent >= 50) steps.push('formatting')
+      if (currentPercent >= 75) steps.push('verbs')
+      if (currentPercent >= 100) steps.push('keywords')
+      setCompletedSteps(steps)
+      
+      if (currentPercent < 25) {
+        globalAnalysisStep = language === 'fr' ? 'Analyse de la structure des sections...' : 'Analyzing resume structure & completeness...'
+      } else if (currentPercent < 50) {
+        globalAnalysisStep = language === 'fr' ? 'Recherche de caractères spéciaux...' : 'Scanning layouts for special characters...'
+      } else if (currentPercent < 75) {
+        globalAnalysisStep = language === 'fr' ? 'Évaluation des verbes d\'action...' : 'Evaluating strong action verbs...'
+      } else {
+        globalAnalysisStep = language === 'fr' ? 'Corrélation des mots-clés...' : 'Correlating keywords against job description...'
+      }
+      setAnalysisStep(globalAnalysisStep)
+      
+      if (progress < 1) {
+        requestAnimationFrame(updateProgress)
+      } else {
+        globalIsAnalyzing = false
+        setIsAnalyzing(false)
+        globalHasRunAnalysis = true
+        setHasRunAnalysis(true)
+        showToast(language === 'fr' ? 'Audit ATS terminé !' : 'ATS Audit complete!', 'success')
+      }
+    }
+    
+    requestAnimationFrame(updateProgress)
   }
 
   // Reset the audit result when the resume data or job description changes, requiring a re-scan
@@ -356,36 +585,137 @@ export default function AtsDashboard({
 
   if (isAnalyzing) {
     return (
-      <div className="h-full flex items-center justify-center p-6 bg-zinc-950/20 font-sans select-none">
+      <div className="h-full flex items-center justify-center p-6 bg-zinc-950/20 font-sans select-none animate-fade-in">
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes scanner {
-            0% { transform: translateX(-150%); }
-            50% { transform: translateX(150%); }
-            100% { transform: translateX(-150%); }
+          @keyframes laser {
+            0% { top: 0%; opacity: 0.8; }
+            50% { top: 100%; opacity: 0.8; }
+            100% { top: 0%; opacity: 0.8; }
           }
-          .scanner-bar {
-            animation: scanner 2s infinite ease-in-out;
+          .laser-line {
+            animation: laser 2s infinite linear;
           }
         ` }} />
         <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-rose-500/5 blur-2xl pointer-events-none" />
-          <div className="w-16 h-16 rounded-2xl bg-zinc-950 flex items-center justify-center mx-auto text-rose-500 border border-zinc-850 relative">
-            <RefreshCw className="w-6 h-6 animate-spin text-rose-400" />
-            <div className="absolute inset-0 rounded-2xl border border-rose-500/10 animate-ping" />
-          </div>
+          {/* Top/Bottom subtle glows */}
+          <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-rose-500/10 blur-2xl pointer-events-none" />
+          <div className="absolute -left-12 -bottom-12 w-32 h-32 rounded-full bg-blue-500/10 blur-2xl pointer-events-none" />
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Auditing Resume...</h3>
-            <div className="min-h-[36px] flex items-center justify-center px-4">
-              <p className="text-[12px] text-zinc-400 font-medium animate-pulse leading-normal">
-                {analysisStep}
-              </p>
+          {/* Large circular percentage & scanning doc mockup */}
+          <div className="relative w-32 h-32 mx-auto flex items-center justify-center bg-zinc-950 border border-zinc-850 rounded-2xl overflow-hidden shadow-inner">
+            {/* Holographic doc outline */}
+            <div className="w-16 h-20 border border-zinc-800 bg-zinc-900/50 rounded p-2 flex flex-col justify-between relative">
+              {/* Laser beam line */}
+              <div className="absolute left-0 right-0 h-0.5 bg-rose-500 shadow-[0_0_8px_#f43f5e] laser-line" />
+              
+              <div className="w-full h-1 bg-zinc-700 rounded" />
+              <div className="space-y-1">
+                <div className="w-4/5 h-0.5 bg-zinc-800 rounded" />
+                <div className="w-full h-0.5 bg-zinc-800 rounded" />
+                <div className="w-2/3 h-0.5 bg-zinc-800 rounded" />
+              </div>
+              <div className="space-y-1">
+                <div className="w-full h-0.5 bg-zinc-800 rounded" />
+                <div className="w-3/4 h-0.5 bg-zinc-800 rounded" />
+              </div>
+            </div>
+
+            {/* Glowing progress overlay */}
+            <div className="absolute bottom-2 right-2 bg-rose-600/90 text-white text-[11px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-rose-600/30">
+              {scanProgress}%
             </div>
           </div>
 
-          {/* Simulated scanning animation line */}
-          <div className="h-1 bg-zinc-950 rounded-full overflow-hidden border border-zinc-850 p-0.5 max-w-[200px] mx-auto relative">
-            <div className="h-full rounded-full bg-rose-500 scanner-bar w-1/3" />
+          <div className="space-y-1.5">
+            <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">Smart ATS Analysis Engine</h3>
+            <p className="text-[11px] text-zinc-400 font-medium min-h-[16px] leading-relaxed">
+              {analysisStep}
+            </p>
+          </div>
+
+          {/* Detailed step checklist */}
+          <div className="space-y-2 text-left pt-2 border-t border-zinc-800/40">
+            {/* Step 1: Structure */}
+            <div className="flex items-center justify-between text-[11px] py-1">
+              <span className="text-zinc-400 font-medium">1. Section Completeness</span>
+              {completedSteps.includes('structure') ? (
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> PASS
+                </span>
+              ) : (
+                <span className="text-zinc-600 font-medium animate-pulse flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3 animate-spin text-zinc-600 shrink-0" /> Running
+                </span>
+              )}
+            </div>
+
+            {/* Step 2: Formatting */}
+            <div className="flex items-center justify-between text-[11px] py-1">
+              <span className="text-zinc-400 font-medium">2. Formatting & Characters</span>
+              {completedSteps.includes('formatting') ? (
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> PASS
+                </span>
+              ) : (
+                <span className="text-zinc-650 font-medium flex items-center gap-1">
+                  {scanProgress >= 25 ? (
+                    <span className="text-zinc-400 animate-pulse flex items-center gap-1">
+                      <RefreshCw className="w-3 h-3 animate-spin text-rose-500 shrink-0" /> Running
+                    </span>
+                  ) : (
+                    'Pending'
+                  )}
+                </span>
+              )}
+            </div>
+
+            {/* Step 3: Verbs */}
+            <div className="flex items-center justify-between text-[11px] py-1">
+              <span className="text-zinc-400 font-medium">3. Action Verb Analytics</span>
+              {completedSteps.includes('verbs') ? (
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> PASS
+                </span>
+              ) : (
+                <span className="text-zinc-650 font-medium flex items-center gap-1">
+                  {scanProgress >= 50 ? (
+                    <span className="text-zinc-400 animate-pulse flex items-center gap-1">
+                      <RefreshCw className="w-3 h-3 animate-spin text-rose-500 shrink-0" /> Running
+                    </span>
+                  ) : (
+                    'Pending'
+                  )}
+                </span>
+              )}
+            </div>
+
+            {/* Step 4: Keywords */}
+            <div className="flex items-center justify-between text-[11px] py-1">
+              <span className="text-zinc-400 font-medium">4. Keyword Correlation</span>
+              {completedSteps.includes('keywords') ? (
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> PASS
+                </span>
+              ) : (
+                <span className="text-zinc-655 font-medium flex items-center gap-1">
+                  {scanProgress >= 75 ? (
+                    <span className="text-zinc-400 animate-pulse flex items-center gap-1">
+                      <RefreshCw className="w-3 h-3 animate-spin text-rose-500 shrink-0" /> Running
+                    </span>
+                  ) : (
+                    'Pending'
+                  )}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="h-1 bg-zinc-950 rounded-full overflow-hidden border border-zinc-805 p-0.5 relative">
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-rose-650 to-rose-400 transition-all duration-75 ease-out" 
+              style={{ width: `${scanProgress}%` }}
+            />
           </div>
         </div>
       </div>
@@ -394,7 +724,7 @@ export default function AtsDashboard({
 
   if (!hasRunAnalysis) {
     return (
-      <div className="h-full flex items-center justify-center p-6 bg-zinc-950/20 font-sans select-none">
+      <div className="h-full flex items-center justify-center p-6 bg-zinc-950/20 font-sans select-none animate-fade-in">
         <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden group">
           <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-rose-500/5 blur-2xl group-hover:bg-rose-500/10 transition-all duration-300 pointer-events-none" />
           
@@ -404,7 +734,7 @@ export default function AtsDashboard({
           
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-white uppercase tracking-wider">Smart ATS Auditor</h2>
-            <p className="text-[12px] text-zinc-400 leading-relaxed font-light">
+            <p className="text-[12px] text-zinc-400 leading-relaxed font-light font-sans">
               Run a comprehensive 8-point audit on your resume. We will scan layout formatting safety, action verb density, date consistency, and match keywords against your target job.
             </p>
           </div>
@@ -422,7 +752,7 @@ export default function AtsDashboard({
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-6">
+    <div className="h-full overflow-y-auto p-6 space-y-6 animate-fade-in">
 
       {/* Header with score hero */}
       <div className="flex flex-col sm:flex-row items-center gap-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
@@ -462,7 +792,7 @@ export default function AtsDashboard({
               {language}
             </span>
           </div>
-          <p className="text-[13px] text-zinc-400 max-w-sm leading-relaxed mx-auto sm:mx-0">
+          <p className="text-[13px] text-zinc-400 max-w-sm leading-relaxed mx-auto sm:mx-0 font-sans">
             {total >= 80 ? content.advicePass : content.adviceFail}
           </p>
         </div>
@@ -470,7 +800,7 @@ export default function AtsDashboard({
         {/* Auto-fix button — TOP RIGHT */}
         <button
           onClick={handleAutoFix}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-[13px] font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-200 active:scale-95 flex-shrink-0"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-[13px] font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-200 active:scale-95 flex-shrink-0 cursor-pointer"
         >
           <Sparkles className="w-4 h-4" />
           {content.autoFixBtn}
@@ -480,7 +810,7 @@ export default function AtsDashboard({
       {/* Local AI Deep Scan Section */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 relative overflow-hidden group shadow-xl">
         {/* Background glow decoration */}
-        <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full bg-violet-600/10 blur-3xl pointer-events-none group-hover:bg-violet-600/15 transition-all duration-300" />
+        <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full bg-violet-650/10 blur-3xl pointer-events-none group-hover:bg-violet-650/15 transition-all duration-300" />
         
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
@@ -499,12 +829,12 @@ export default function AtsDashboard({
         {/* Idle Mode */}
         {aiStatus === 'idle' && semanticScore === null && (
           <div className="space-y-4">
-            <p className="text-[12px] text-zinc-400 leading-relaxed max-w-xl">
+            <p className="text-[12px] text-zinc-400 leading-relaxed max-w-xl font-sans">
               {content.aiDescIdle}
             </p>
             <button
               onClick={runAiDeepScan}
-              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-medium px-4 py-2 rounded-xl transition-all duration-150 active:scale-95 shadow-md shadow-violet-600/25"
+              className="flex items-center gap-2 bg-violet-650 hover:bg-violet-500 text-white text-[12px] font-medium px-4 py-2 rounded-xl transition-all duration-150 active:scale-95 shadow-md shadow-violet-600/25 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               {content.aiBtnRun}
@@ -550,7 +880,7 @@ export default function AtsDashboard({
             {/* Pulsing bars to indicate computing activity */}
             <div className="flex gap-1 justify-center sm:justify-start pt-1.5 pl-0.5">
               <div className="w-1.5 h-3 bg-violet-500/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-1.5 h-4 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-1.5 h-4 bg-violet-505 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
               <div className="w-1.5 h-3 bg-violet-500/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
@@ -561,7 +891,7 @@ export default function AtsDashboard({
           <div className="space-y-4">
             
             {/* Score block */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
               
               {/* Score Display */}
               <div className="sm:col-span-4 flex items-center gap-3">
@@ -578,16 +908,26 @@ export default function AtsDashboard({
                 </div>
               </div>
 
-              {/* Explanatory text */}
-              <div className="sm:col-span-8">
-                <p className="text-[12px] text-zinc-400 leading-relaxed">
-                  {getSemanticTier(semanticScore).desc}
+              {/* Explanatory text & recommendations */}
+              <div className="sm:col-span-8 space-y-3">
+                <p className="text-[12px] text-zinc-400 leading-relaxed font-sans">
+                  {aiAssessment || getSemanticTier(semanticScore).desc}
                 </p>
+                {aiActionPoints && aiActionPoints.length > 0 && (
+                  <div className="space-y-1.5 p-3 rounded-lg bg-zinc-950/40 border border-zinc-800/50 font-sans">
+                    <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Key Recommendations:</p>
+                    <ul className="list-disc pl-4 text-[11px] text-zinc-550 space-y-1">
+                      {aiActionPoints.map((pt, i) => (
+                        <li key={i} className="leading-normal">{pt}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Gauge visual meter */}
-            <div className="h-1.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+            <div className="h-1.5 bg-zinc-955 rounded-full overflow-hidden border border-zinc-800">
               <div 
                 className={`h-full rounded-full ${getSemanticTier(semanticScore).barBg} transition-all duration-700 ease-out`}
                 style={{ width: `${semanticScore}%` }}
@@ -605,7 +945,7 @@ export default function AtsDashboard({
               
               <button
                 onClick={runAiDeepScan}
-                className="flex items-center gap-1.5 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-[11px] font-medium px-3 py-1.5 rounded-xl transition-all duration-150 active:scale-95 bg-zinc-950/40"
+                className="flex items-center gap-1.5 border border-zinc-800 hover:border-zinc-700 text-zinc-350 hover:text-white text-[11px] font-medium px-3 py-1.5 rounded-xl transition-all duration-150 active:scale-95 bg-zinc-950/40 cursor-pointer"
               >
                 <RefreshCw className="w-3 h-3" />
                 {content.aiBtnRerun}
@@ -617,9 +957,9 @@ export default function AtsDashboard({
 
         {/* Error State */}
         {aiStatus === 'error' && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-rose-400">
-              <XCircle className="w-4 h-4" />
+          <div className="space-y-3 animate-fade-in">
+            <div className="flex items-center gap-2 text-rose-455">
+              <XCircle className="w-4 h-4 text-rose-400" />
               <p className="text-[12px] font-semibold">AI Scan Failed</p>
             </div>
             <p className="text-[11px] text-zinc-500 font-mono leading-relaxed bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
@@ -627,7 +967,7 @@ export default function AtsDashboard({
             </p>
             <button
               onClick={runAiDeepScan}
-              className="bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-medium px-3 py-1.5 rounded-lg transition-all"
+              className="bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-medium px-3 py-1.5 rounded-lg transition-all cursor-pointer"
             >
               Try Again
             </button>
@@ -637,13 +977,13 @@ export default function AtsDashboard({
       </div>
 
       {/* 8 category score bars */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg">
         <h3 className="text-[13px] font-semibold text-white mb-4">{content.scoreBreakdown}</h3>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
           {categories.map(cat => (
             <div key={cat.key}>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-[12px] text-zinc-400">{cat.label}</span>
+                <span className="text-[12px] text-zinc-400 font-sans">{cat.label}</span>
                 <span className="text-[12px] font-mono text-white">
                   {cat.score}/{cat.max}
                 </span>
@@ -666,44 +1006,79 @@ export default function AtsDashboard({
       </div>
 
       {/* Action Items and Passes — 2 col */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 
         {/* Failing — left */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+        <div className="md:col-span-7 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <XCircle className="w-4 h-4 text-red-400" />
             <h3 className="text-[13px] font-semibold text-white">
               {content.actionItems} ({failing.length})
             </h3>
           </div>
-          <div className="space-y-2">
-            {failing.map(item => (
-              <div key={item.issue} className="bg-red-500/5 border border-red-500/20 rounded-xl p-3">
-                <p className="text-[12px] font-medium text-red-300">{item.issue}</p>
-                <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{item.fix}</p>
-              </div>
-            ))}
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            {failing.map((item, index) => {
+              // Map section to a human-readable category badge
+              let category = 'General'
+              if (item.section === 'contact') category = 'Contact Info'
+              else if (item.section === 'skills') category = 'Skills & Stack'
+              else if (item.section === 'summary') category = 'Profile Summary'
+              else if (item.section === 'experience') category = 'Work Experience'
+              else if (item.section === 'education') category = 'Education History'
+              else if (item.section === 'languages') category = 'Languages'
+              else if (item.section === 'projects') category = 'Projects'
+              else if (item.section === 'awards') category = 'Awards'
+              else if (item.section === 'certifications') category = 'Certifications'
+              else if (item.section === 'volunteer') category = 'Volunteer'
+
+              return (
+                <div key={index} className="bg-zinc-950/40 border border-zinc-850 hover:border-zinc-800 rounded-xl p-4 flex flex-col justify-between gap-3 transition-all duration-200 group">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/10 select-none">
+                        {category}
+                      </span>
+                    </div>
+                    <p className="text-[13px] font-bold text-white leading-snug">{item.issue}</p>
+                    <p className="text-[11.5px] text-zinc-450 leading-relaxed font-sans font-light mt-1.5">{item.fix}</p>
+                  </div>
+                  
+                  {item.section && onOpenSection && (
+                    <div className="flex justify-end pt-1">
+                      <button
+                        onClick={() => onOpenSection(item.section)}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-400 hover:text-rose-300 transition-colors bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/10 cursor-pointer"
+                      >
+                        <PenLine className="w-3 h-3" />
+                        Fix in Editor
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
             {failing.length === 0 && (
-              <p className="text-[12px] text-zinc-500 text-center py-4">
-                {content.noIssues}
-              </p>
+              <div className="text-center py-12 text-zinc-550 space-y-2 font-sans">
+                <p className="text-2xl">🎉</p>
+                <p className="text-[12px] font-medium text-zinc-400">{content.noIssues}</p>
+              </div>
             )}
           </div>
         </div>
 
         {/* Passing — right */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+        <div className="md:col-span-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <h3 className="text-[13px] font-semibold text-white">
               {content.checksPassed} ({passing.length})
             </h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
             {passing.map(item => (
-              <div key={item} className="flex items-center gap-2.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-3 py-2.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <p className="text-[12px] text-emerald-300 font-medium">
+              <div key={item} className="flex items-start gap-2.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-3 py-2.5 transition-colors duration-150">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[12px] text-emerald-300 font-medium leading-snug font-sans">
                   {item}
                 </p>
               </div>
@@ -713,9 +1088,9 @@ export default function AtsDashboard({
       </div>
 
       {/* Job Description Tailor Box */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg">
         <div className="flex items-center gap-2 mb-3">
-          <Target className="w-4 h-4 text-blue-400" />
+          <Target className="w-4 h-4 text-blue-450 text-blue-400" />
           <h3 className="text-[13px] font-semibold text-white">{content.targetJd}</h3>
           <span className="ml-auto text-[11px] text-zinc-500">{content.jdPoints}</span>
         </div>
@@ -723,13 +1098,13 @@ export default function AtsDashboard({
           value={jobDescription}
           onChange={e => onUpdateJobDescription(e.target.value)}
           placeholder={content.jdPlaceholder}
-          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[13px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/10 resize-none h-28 transition-all duration-150"
+          className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-[13px] text-zinc-300 placeholder:text-zinc-650 focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/10 resize-none h-28 transition-all duration-150 font-sans"
         />
         {jobDescription && (
           <div className="mt-3 flex flex-wrap gap-2">
             {extractedKeywords.map(kw => (
               <span key={kw.word}
-                className={`text-[11px] px-2 py-1 rounded-full font-medium ${
+                className={`text-[11px] px-2 py-1 rounded-full font-medium font-sans select-none transition-all ${
                   kw.matched 
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                     : 'bg-red-500/10 text-red-400 border border-red-500/20'

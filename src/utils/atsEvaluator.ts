@@ -230,7 +230,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
   const langPronounRegex = lang === 'fr' ? FR_PRONOUNS_REGEX : EN_PRONOUNS_REGEX
 
   const passing: string[] = []
-  const failing: { issue: string; fix: string }[] = []
+  const failing: { issue: string; fix: string; section?: string }[] = []
 
   // 1. Section Completeness (Max 20 pts)
   let sectionCompleteness = 0
@@ -257,6 +257,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       failing.push({
         issue: dict.missingSection(section),
         fix: dict.missingSectionFix(section),
+        section: section,
       })
     }
   })
@@ -296,6 +297,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
         failing.push({
           issue: dict.lowKeywordMatch(matchedKeywordsCount, totalKeywords),
           fix: dict.lowKeywordMatchFix(sampleMissing),
+          section: 'skills',
         })
       }
     }
@@ -317,6 +319,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     failing.push({
       issue: dict.specialChars,
       fix: dict.specialCharsFix,
+      section: 'experience',
     })
   } else {
     passing.push(dict.noSpecialChars)
@@ -329,6 +332,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     failing.push({
       issue: dict.pronouns,
       fix: dict.pronounsFix,
+      section: 'summary',
     })
   } else {
     passing.push(dict.noPronouns)
@@ -341,6 +345,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     failing.push({
       issue: dict.missingHeadings,
       fix: dict.missingHeadingsFix,
+      section: 'experience',
     })
   }
 
@@ -365,6 +370,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     failing.push({
       issue: dict.inconsistentDates,
       fix: dict.inconsistentDatesFix,
+      section: 'experience',
     })
   }
 
@@ -392,12 +398,14 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       failing.push({
         issue: dict.weakActionVerbs(goodBullets, totalBullets),
         fix: dict.weakActionVerbsFix,
+        section: 'experience',
       })
     }
   } else if (completenessChecks.experience) {
     failing.push({
       issue: dict.noBullets,
       fix: dict.noBulletsFix,
+      section: 'experience',
     })
   }
 
@@ -421,6 +429,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       failing.push({
         issue: dict.lackMetrics(quantifiedBullets, totalBullets),
         fix: dict.lackMetricsFix,
+        section: 'experience',
       })
     }
   }
@@ -448,6 +457,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     failing.push({
       issue: dict.contactIncomplete,
       fix: dict.contactIncompleteFix(missing.join(', ')),
+      section: 'contact',
     })
   }
 
@@ -470,12 +480,14 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       failing.push({
         issue: dict.lengthShort(wordCount),
         fix: dict.lengthShortFix,
+        section: 'summary',
       })
     } else if (wordCount > 750) {
       lengthAppropriateness = 3
       failing.push({
         issue: dict.lengthLong(wordCount, '700'),
         fix: () => dict.lengthLongFix('1 page (700)'),
+        section: 'summary',
       } as any)
     } else {
       passing.push(dict.lengthOptimal('1 page'))
@@ -486,13 +498,15 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       failing.push({
         issue: dict.lengthShort(wordCount),
         fix: dict.lengthShortFix,
+        section: 'summary',
       })
     } else if (wordCount > 1300) {
       lengthAppropriateness = 2
       failing.push({
         issue: dict.lengthLong(wordCount, '1200'),
         fix: () => dict.lengthLongFix('2 pages (1200)'),
-      } as any)
+        section: 'summary',
+        } as any)
     } else {
       passing.push(dict.lengthOptimal('1-2 pages'))
     }
@@ -524,10 +538,39 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     passing,
     failing: failing.map(item => ({
       issue: item.issue,
-      fix: typeof item.fix === 'function' ? (item.fix as any)() : item.fix
+      fix: typeof item.fix === 'function' ? (item.fix as any)() : item.fix,
+      section: item.section
     })),
     language: lang
   }
+}
+
+const WEAK_TO_STRONG_EN: Record<string, string> = {
+  helped: 'Collaborated',
+  assisted: 'Facilitated',
+  made: 'Created',
+  did: 'Executed',
+  worked: 'Engineered',
+  managed: 'Led',
+  went: 'Navigated',
+  had: 'Acquired',
+  saw: 'Monitored',
+  took: 'Spearheaded',
+  gave: 'Delivered',
+  talked: 'Presented',
+  got: 'Secured',
+}
+
+const WEAK_TO_STRONG_FR: Record<string, string> = {
+  aidé: 'Collaboré',
+  assisté: 'Facilité',
+  fait: 'Créé',
+  faisais: 'Conçu',
+  travaillé: 'Développé',
+  eu: 'Obtenu',
+  donné: 'Présenté',
+  parlé: 'Communiqué',
+  pris: 'Dirigé',
 }
 
 export function autoFix(resume: ResumeData): ResumeData {
@@ -539,66 +582,265 @@ export function autoFix(resume: ResumeData): ResumeData {
     testText += ` ${exp.bullets.join(' ')}`
   })
   const lang = detectLanguage(testText)
-  const pronounRegex = lang === 'fr' ? FR_PRONOUNS_REGEX : EN_PRONOUNS_REGEX
 
-  const removePronouns = (text: string): string => {
+  const removePronounsAndEnhance = (text: string): string => {
     if (!text) return ''
-    return text
-      .replace(new RegExp(pronounRegex.source, 'gi'), '')
-      .replace(/\s{2,}/g, ' ')
+    let cleaned = text.trim()
+    
+    if (lang === 'en') {
+      // "I led..." -> "Led..."
+      cleaned = cleaned.replace(/^(?:i|we)\s+([a-z]+)/i, (_, verb) => {
+        return verb.charAt(0).toUpperCase() + verb.slice(1).toLowerCase()
+      })
+      cleaned = cleaned.replace(/^(?:i|we)\s+(?:am|was|were)\s+responsible\s+for/i, 'Managed')
+      cleaned = cleaned.replace(/^responsible\s+for/i, 'Led and managed')
+      cleaned = cleaned.replace(/^(?:i|we)\s+(?:am|was|were)\s+in\s+charge\s+of/i, 'Directed')
+      cleaned = cleaned.replace(/^in\s+charge\s+of/i, 'Directed')
+      
+      cleaned = cleaned.replace(/\bmy\s+team\b/gi, 'the team')
+      cleaned = cleaned.replace(/\bour\s+team\b/gi, 'the team')
+      cleaned = cleaned.replace(/\bmy\s+role\b/gi, 'the role')
+      cleaned = cleaned.replace(/\bour\s+role\b/gi, 'the role')
+      cleaned = cleaned.replace(/\bmy\s+responsibility\b/gi, 'responsibility')
+      cleaned = cleaned.replace(/\bour\s+responsibility\b/gi, 'responsibility')
+      cleaned = cleaned.replace(/\bmy\s+project\b/gi, 'the project')
+      cleaned = cleaned.replace(/\bour\s+project\b/gi, 'the project')
+      cleaned = cleaned.replace(/\bmy\s+clients?\b/gi, 'clients')
+      cleaned = cleaned.replace(/\bour\s+clients?\b/gi, 'clients')
+      
+      cleaned = cleaned.replace(/\b(?:i|me|we|us)\b/gi, '')
+    } else {
+      // French
+      cleaned = cleaned.replace(/^j'ai\s+([a-z\u00C0-\u00FF]+)/i, (_, verb) => {
+        return verb.charAt(0).toUpperCase() + verb.slice(1).toLowerCase()
+      })
+      cleaned = cleaned.replace(/^nous\s+avons\s+([a-z\u00C0-\u00FF]+)/i, (_, verb) => {
+        return verb.charAt(0).toUpperCase() + verb.slice(1).toLowerCase()
+      })
+      cleaned = cleaned.replace(/^je\s+gérais/i, 'Gestion de')
+      cleaned = cleaned.replace(/^j'étais\s+responsable\s+de/i, 'Responsable de')
+      cleaned = cleaned.replace(/^responsable\s+de/i, 'Pilotage de')
+      cleaned = cleaned.replace(/^je\s+travaillais\s+sur/i, 'Développement de')
+      
+      cleaned = cleaned.replace(/\bmon\s+équipe\b/gi, "l'équipe")
+      cleaned = cleaned.replace(/\bnotre\s+équipe\b/gi, "l'équipe")
+      cleaned = cleaned.replace(/\bmon\s+projet\b/gi, 'le projet')
+      cleaned = cleaned.replace(/\bnotre\s+projet\b/gi, 'le projet')
+      cleaned = cleaned.replace(/\bmes\s+clients?\b/gi, 'les clients')
+      cleaned = cleaned.replace(/\bnos\s+clients?\b/gi, 'les clients')
+      
+      cleaned = cleaned.replace(/\b(?:je|moi|nous|on)\b/gi, '')
+    }
+
+    cleaned = cleaned
+      .replace(/\s+/g, ' ')
+      .replace(/\s+,\s*/g, ', ')
+      .replace(/,\s*,/g, ',')
+      .replace(/^,\s*/, '')
       .trim()
+
+    if (cleaned.length > 0) {
+      cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    }
+    return cleaned
+  }
+
+  const replaceWeakVerbs = (bullet: string): string => {
+    const cleanBullet = bullet.trim()
+    if (!cleanBullet) return ''
+    const parts = cleanBullet.split(/\s+/)
+    const firstWord = parts[0]?.toLowerCase()
+    if (!firstWord) return cleanBullet
+
+    const map = lang === 'en' ? WEAK_TO_STRONG_EN : WEAK_TO_STRONG_FR
+    if (map[firstWord]) {
+      parts[0] = map[firstWord]
+      return parts.join(' ')
+    }
+
+    if (parts.length > 1) {
+      const firstTwo = `${parts[0].toLowerCase()} ${parts[1].toLowerCase()}`
+      if (map[firstTwo]) {
+        parts.shift()
+        parts[0] = map[firstTwo]
+        return parts.join(' ')
+      }
+    }
+    return cleanBullet
+  }
+
+  const injectMetricPlaceholder = (bullet: string): string => {
+    const hasMetric = /\b\d+\b|%|\$|million|billion|thousand|k\b/i.test(bullet) || (lang === 'fr' && /millions|milliards|k\b/i.test(bullet))
+    if (hasMetric) return bullet
+
+    let placeholder = ''
+    const lower = bullet.toLowerCase()
+    if (lang === 'en') {
+      if (lower.includes('team') || lower.includes('people') || lower.includes('developer') || lower.includes('engineer')) {
+        placeholder = ' [managing a team of 5+ members]'
+      } else if (lower.includes('cost') || lower.includes('budget') || lower.includes('save') || lower.includes('saving')) {
+        placeholder = ' [reducing costs by 15%]'
+      } else if (lower.includes('time') || lower.includes('speed') || lower.includes('fast') || lower.includes('perform') || lower.includes('efficien')) {
+        placeholder = ' [improving performance by 20%]'
+      } else if (lower.includes('revenue') || lower.includes('sale') || lower.includes('growth') || lower.includes('custom') || lower.includes('user')) {
+        placeholder = ' [increasing user engagement by 25%]'
+      } else {
+        placeholder = ' [achieving 15% efficiency gains]'
+      }
+    } else {
+      if (lower.includes('équipe') || lower.includes('membres') || lower.includes('développeur') || lower.includes('ingénieur')) {
+        placeholder = ' [encadrant une équipe de 5+ personnes]'
+      } else if (lower.includes('coût') || lower.includes('budget') || lower.includes('écon')) {
+        placeholder = ' [réduisant les coûts de 15%]'
+      } else if (lower.includes('temps') || lower.includes('vitesse') || lower.includes('rapide') || lower.includes('efficac') || lower.includes('perf')) {
+        placeholder = ' [améliorant la performance de 20%]'
+      } else if (lower.includes('revenu') || lower.includes('vente') || lower.includes('croissance') || lower.includes('client') || lower.includes('utilisat')) {
+        placeholder = ' [augmentant le nombre d\'utilisateurs de 25%]'
+      } else {
+        placeholder = ' [générant un gain d\'efficacité de 15%]'
+      }
+    }
+
+    return bullet.trim() + placeholder
   }
 
   const standardizeDate = (date: string): string => {
     if (!date) return ''
+    const clean = date.trim().toLowerCase()
+    if (/^(present|current|actuel|aujourd'hui|présent)$/i.test(clean)) {
+      return lang === 'fr' ? 'Présent' : 'Present'
+    }
+
     const months: Record<string, string> = {
-      // English
       january:'01', february:'02', march:'03', april:'04', may:'05', june:'06',
       july:'07', august:'08', september:'09', october:'10', november:'11', december:'12',
       jan:'01', feb:'02', mar:'03', apr:'04', jun:'06', jul:'07', aug:'08',
       sep:'09', oct:'10', nov:'11', dec:'12',
-      // French
       janvier: '01', février: '02', mars: '03', avril: '04', mai: '05', juin: '06',
       juillet: '07', août: '08', septembre: '09', octobre: '10', novembre: '11', décembre: '12',
       janv: '01', févr: '02', avr: '04', juil: '07', aoû: '08', sept: '09', déc: '12'
     }
-    
-    const longMatch = date.trim().match(
-      /(\w+)\s+(20\d{2}|19\d{2})/i
-    )
-    if (longMatch) {
-      const m = months[longMatch[1].toLowerCase()]
-      if (m) return `${m}/${longMatch[2]}`
+
+    const wordYearMatch = clean.match(/([a-z\u00C0-\u00FF]+)\s*,?\s*(\d{4})/i)
+    if (wordYearMatch && wordYearMatch[1] && wordYearMatch[2]) {
+      const m = months[wordYearMatch[1]]
+      if (m) return `${m}/${wordYearMatch[2]}`
     }
-    if (/^\d{2}\/\d{4}$/.test(date.trim())) return date.trim()
+
+    const numYearMatch = clean.match(/(\d{1,2})[\/\-\s](\d{4})/)
+    if (numYearMatch) {
+      const month = numYearMatch[1].padStart(2, '0')
+      return `${month}/${numYearMatch[2]}`
+    }
+
+    const justYear = clean.match(/^(\d{4})$/)
+    if (justYear) {
+      return `01/${justYear[1]}`
+    }
+
     return date
   }
 
   const cleanSpecialChars = (text: string): string => {
     if (!text) return ''
-    return text.replace(/[★✓►◆•‣⁃■●▪▲▼◇○◎●★☆]/g, '-')
+    return text.replace(/[★✓►◆•‣⁃■●▪▲▼◇○◎●★☆]/g, '').trim()
   }
 
-  fixed.summary = removePronouns(fixed.summary)
+  if (fixed.contact) {
+    fixed.contact.fullName = cleanSpecialChars(fixed.contact.fullName)
+    fixed.contact.email = cleanSpecialChars(fixed.contact.email)
+    fixed.contact.phone = cleanSpecialChars(fixed.contact.phone)
+    fixed.contact.linkedin = cleanSpecialChars(fixed.contact.linkedin)
+    fixed.contact.location = cleanSpecialChars(fixed.contact.location)
+    if (fixed.contact.website) {
+      fixed.contact.website = cleanSpecialChars(fixed.contact.website)
+    }
+  }
+
+  fixed.summary = cleanSpecialChars(removePronounsAndEnhance(fixed.summary))
 
   fixed.experience = fixed.experience.map(exp => ({
     ...exp,
+    jobTitle: cleanSpecialChars(exp.jobTitle),
+    company: cleanSpecialChars(exp.company),
+    location: cleanSpecialChars(exp.location),
     startDate: standardizeDate(exp.startDate),
     endDate: standardizeDate(exp.endDate),
-    bullets: exp.bullets.map(b => cleanSpecialChars(removePronouns(b))),
+    bullets: exp.bullets.map(b => injectMetricPlaceholder(replaceWeakVerbs(cleanSpecialChars(removePronounsAndEnhance(b))))),
   }))
 
   fixed.education = fixed.education.map(edu => ({
     ...edu,
+    degree: cleanSpecialChars(edu.degree),
+    school: cleanSpecialChars(edu.school),
+    location: cleanSpecialChars(edu.location),
     graduationDate: standardizeDate(edu.graduationDate),
   }))
 
   if (fixed.projects) {
     fixed.projects = fixed.projects.map(proj => ({
       ...proj,
-      description: removePronouns(proj.description),
+      name: cleanSpecialChars(proj.name),
+      description: cleanSpecialChars(removePronounsAndEnhance(proj.description)),
+      technologies: proj.technologies.map(cleanSpecialChars),
     }))
+  }
+
+  if (fixed.skills) {
+    fixed.skills = fixed.skills.map(cleanSpecialChars)
   }
 
   return fixed
 }
+
+export function calculateLocalSemanticScore(resumeText: string, jobDescription: string, lang: 'en' | 'fr'): number {
+  const resumeWords = getWords(resumeText)
+  const jdWords = getWords(jobDescription)
+  
+  const langStopwords = lang === 'fr' ? FR_STOPWORDS : STOPWORDS
+  const cleanResume = resumeWords.filter(w => !langStopwords.has(w))
+  
+  const resumeFreq: Record<string, number> = {}
+  cleanResume.forEach(w => {
+    resumeFreq[w] = (resumeFreq[w] || 0) + 1
+  })
+  
+  const uniqueJd = new Set(jdWords.filter(w => !langStopwords.has(w)))
+  let matchCount = 0
+  const totalJdWords = uniqueJd.size
+  
+  if (totalJdWords === 0) return 0
+  
+  const CONCEPT_MAPS: Record<string, string[]> = {
+    javascript: ['js', 'typescript', 'ts', 'react', 'vue', 'angular', 'node', 'frontend'],
+    react: ['javascript', 'frontend', 'redux', 'nextjs', 'next.js', 'vue'],
+    typescript: ['js', 'javascript', 'backend', 'frontend', 'angular', 'nest'],
+    python: ['django', 'flask', 'fastapi', 'backend', 'data', 'pytorch', 'tensorflow', 'machine learning'],
+    java: ['spring', 'springboot', 'backend', 'maven', 'hibernate'],
+    docker: ['kubernetes', 'k8s', 'devops', 'aws', 'ci/cd', 'cloud'],
+    aws: ['cloud', 'azure', 'gcp', 's3', 'ec2', 'devops'],
+    sql: ['database', 'postgres', 'postgresql', 'mysql', 'mongodb', 'nosql', 'query'],
+    design: ['figma', 'ui', 'ux', 'photoshop', 'illustrator', 'product design'],
+    management: ['agile', 'scrum', 'leader', 'product', 'project', 'team'],
+  }
+  
+  uniqueJd.forEach(word => {
+    if (resumeFreq[word]) {
+      matchCount += 1
+    } else {
+      const mapped = CONCEPT_MAPS[word]
+      if (mapped) {
+        const hasMatch = mapped.some(mWord => resumeFreq[mWord])
+        if (hasMatch) {
+          matchCount += 0.5
+        }
+      }
+    }
+  })
+  
+  const rawRatio = matchCount / totalJdWords
+  let score = Math.round(rawRatio * 70 + 25)
+  score = Math.max(0, Math.min(100, score))
+  return score
+}
+

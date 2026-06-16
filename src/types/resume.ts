@@ -117,7 +117,7 @@ export interface AtsScore {
     lengthAppropriateness: number
   }
   passing: string[]
-  failing: { issue: string; fix: string }[]
+  failing: { issue: string; fix: string; section?: string }[]
 }
 
 export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative'

@@ -942,6 +942,11 @@ function App() {
                         onFix={updateResumeData}
                         jobDescription={state.jobDescription}
                         onUpdateJobDescription={(jd) => setState(prev => ({ ...prev, jobDescription: jd }))}
+                        onOpenSection={(sec) => {
+                          setActiveMode('studio')
+                          setActiveStudioSection(sec)
+                        }}
+                        apiKey={state.apiKey}
                       />
                     </div>
                   </div>
