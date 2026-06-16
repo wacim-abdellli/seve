@@ -1,10 +1,17 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   PenLine, 
   Eye, 
   ShieldCheck, 
-  Bot
+  Bot,
+  ChevronDown,
+  CheckCircle,
+  Circle,
+  Sparkles
 } from 'lucide-react'
+import type { ResumeData } from '../types/resume'
+import { getSectionStatus } from '../utils/completionHelper'
 
 export type SectionType = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
@@ -12,13 +19,38 @@ interface SectionSidebarProps {
   activeMode: 'studio' | 'preview' | 'analyze' | 'ai'
   onModeChange: (mode: 'studio' | 'preview' | 'analyze' | 'ai') => void
   resumeCompletion: number
+  resumeData: ResumeData
+  onOpenSection: (section: SectionType) => void
 }
 
 export default function SectionSidebar({
   activeMode,
   onModeChange,
   resumeCompletion,
+  resumeData,
+  onOpenSection,
 }: SectionSidebarProps) {
+  const [showChecklist, setShowChecklist] = useState(false)
+  const status = getSectionStatus(resumeData)
+
+  const coreSections = [
+    { id: 'contact' as const, label: 'Contact Info', score: '+20%', desc: 'Missing name, email, or phone' },
+    { id: 'summary' as const, label: 'Profile Summary', score: '+15%', desc: 'Write a professional summary' },
+    { id: 'experience' as const, label: 'Work Experience', score: '+25%', desc: 'Add work experience & achievements' },
+    { id: 'education' as const, label: 'Education History', score: '+15%', desc: 'Add school or degree' },
+    { id: 'skills' as const, label: 'Skills & Stack', score: '+15%', desc: 'Add at least 3 skills' },
+  ]
+
+  const optionalSections = [
+    { id: 'languages' as const, label: 'Languages', score: '+5%', desc: 'Add languages spoken' },
+    { id: 'projects' as const, label: 'Projects', score: '+5%', desc: 'Add side projects' },
+    { id: 'certifications' as const, label: 'Certifications', score: '+2%', desc: 'Add professional certificates' },
+    { id: 'volunteer' as const, label: 'Volunteer', score: '+2%', desc: 'Add volunteer experience' },
+    { id: 'publications' as const, label: 'Publications', score: '+2%', desc: 'Add research or articles' },
+    { id: 'awards' as const, label: 'Awards & Honors', score: '+2%', desc: 'Add honors & awards' },
+    { id: 'references' as const, label: 'References', score: '+1%', desc: 'Add references' },
+    { id: 'interests' as const, label: 'Interests', score: '+1%', desc: 'Add personal interests' },
+  ]
 
   const modes = [
     { id: 'studio' as const, label: 'Edit Resume', icon: PenLine },
@@ -26,8 +58,6 @@ export default function SectionSidebar({
     { id: 'analyze' as const, label: 'ATS Check', icon: ShieldCheck },
     { id: 'ai' as const, label: 'AI Coach', icon: Bot },
   ]
-
-
 
   return (
     <aside className="w-[260px] h-full bg-zinc-950 border-r border-zinc-800 flex flex-col justify-between flex-shrink-0 no-print select-none font-sans overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -92,20 +122,118 @@ export default function SectionSidebar({
           <div className="flex flex-col gap-4">
             {/* Progress Area */}
             <div className="px-4">
-              <div className="flex justify-between items-center pb-1">
-                <span className="text-[10px] text-zinc-500 font-semibold tracking-widest uppercase">
-                  RESUME COMPLETION
-                </span>
-                <span className="text-white font-bold text-xs">
-                  {resumeCompletion}%
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-500" 
-                  style={{ width: `${resumeCompletion}%` }}
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowChecklist(!showChecklist)}
+                className="w-full text-left group hover:bg-zinc-900/40 p-2.5 -mx-2.5 rounded-xl transition-all cursor-pointer flex flex-col gap-1.5 focus:outline-none"
+              >
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-[10px] text-zinc-500 font-semibold tracking-widest uppercase flex items-center gap-1 group-hover:text-zinc-350 transition-colors">
+                    RESUME COMPLETION
+                    <ChevronDown size={10} className={`text-zinc-650 group-hover:text-zinc-400 transition-transform ${showChecklist ? 'rotate-180' : ''}`} />
+                  </span>
+                  <span className="text-white font-bold text-xs">
+                    {resumeCompletion}%
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-500" 
+                    style={{ width: `${resumeCompletion}%` }}
+                  />
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {showChecklist && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-3 mt-2 space-y-3"
+                  >
+                    <div className="flex justify-between items-center border-b border-zinc-800/60 pb-1.5">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Completion Checklist</span>
+                      <span className="text-[8px] text-zinc-600 font-medium">Click to Fill</span>
+                    </div>
+
+                    <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1 scrollbar-none">
+                      {/* Core Requirements */}
+                      <div className="space-y-1.5">
+                        <h4 className="text-[8.5px] font-bold text-zinc-500 uppercase tracking-widest mb-1 flex items-center justify-between">
+                          <span>CORE (REQUIRED)</span>
+                          <span className="text-[8px] font-normal text-zinc-650 italic">Required for 90%</span>
+                        </h4>
+                        {coreSections.map((sec) => {
+                          const isComplete = status[sec.id]
+                          return (
+                            <button
+                              key={sec.id}
+                              type="button"
+                              onClick={() => onOpenSection(sec.id)}
+                              className="w-full text-left flex items-start gap-2 p-1.5 hover:bg-zinc-800/50 rounded-lg transition-all group/item cursor-pointer"
+                            >
+                              {isComplete ? (
+                                <CheckCircle className="w-3.5 h-3.5 text-rose-500 mt-0.5 flex-shrink-0" />
+                              ) : (
+                                <Circle className="w-3.5 h-3.5 text-zinc-700 mt-0.5 flex-shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-center">
+                                  <span className={`text-[11px] font-medium leading-none transition-colors ${isComplete ? 'text-zinc-300 group-hover/item:text-white' : 'text-zinc-500 group-hover/item:text-zinc-350'}`}>
+                                    {sec.label}
+                                  </span>
+                                  {!isComplete && (
+                                    <span className="text-[8.5px] font-mono text-zinc-650 group-hover/item:text-rose-400">
+                                      {sec.score}
+                                    </span>
+                                  )}
+                                </div>
+                                {!isComplete && (
+                                  <p className="text-[9px] text-zinc-655 mt-0.5 leading-normal">
+                                    {sec.desc}
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* Optional/Bonus */}
+                      <div className="space-y-1.5 pt-2 border-t border-zinc-800/60">
+                        <h4 className="text-[8.5px] font-bold text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                          <Sparkles size={9} className="text-zinc-500" />
+                          <span>OPTIONAL (BONUS)</span>
+                        </h4>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {optionalSections.map((sec) => {
+                            const isComplete = status[sec.id]
+                            return (
+                              <button
+                                key={sec.id}
+                                type="button"
+                                onClick={() => onOpenSection(sec.id)}
+                                className="text-left flex items-center gap-1.5 p-1 hover:bg-zinc-800/50 rounded-md transition-all group/item cursor-pointer truncate"
+                              >
+                                {isComplete ? (
+                                  <CheckCircle className="w-3 h-3 text-rose-500 flex-shrink-0" />
+                                ) : (
+                                  <Circle className="w-3 h-3 text-zinc-700 flex-shrink-0" />
+                                )}
+                                <span className={`text-[10px] font-medium leading-none truncate transition-colors ${isComplete ? 'text-zinc-300 group-hover/item:text-white' : 'text-zinc-500 group-hover/item:text-zinc-350'}`}>
+                                  {sec.label}
+                                </span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Helper Card */}
