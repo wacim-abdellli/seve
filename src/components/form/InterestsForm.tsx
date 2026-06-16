@@ -68,13 +68,13 @@ export default function InterestsForm({ interests, onChange }: InterestsFormProp
             <input
               value={interest.name}
               onChange={(e) => handleChange(interest.id, 'name', e.target.value)}
-              placeholder="Interest name (e.g. Photography, Hiking)"
+              placeholder="e.g. Long-Distance Running"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={interest.keywords.join(', ')}
               onChange={(e) => handleChange(interest.id, 'keywords', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-              placeholder="Keywords (comma-separated, e.g. Landscape, Portrait)"
+              placeholder="e.g. completed 2 marathons, trail running"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
           </div>

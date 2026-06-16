@@ -78,7 +78,7 @@ export default function SummaryForm({ summary, apiKey, onChange }: SummaryFormPr
       <textarea
         value={summary}
         onChange={e => onChange(e.target.value)}
-        placeholder="Write a 3-sentence professional summary highlighting your experience, key skills, and what makes you unique..."
+        placeholder="e.g. Senior Software Engineer with 8+ years of experience leading cross-functional teams and building high-scale distributed systems. Expert in React, Node.js, and cloud architecture (AWS). Boosted platform performance by 40%."
         className="w-full h-48 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-[14px] text-zinc-200 leading-relaxed placeholder:text-zinc-650 resize-none focus:outline-none focus:border-rose-500/40 focus:ring-1 focus:ring-rose-500/10 transition-all"
       />
 

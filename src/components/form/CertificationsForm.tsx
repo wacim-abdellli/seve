@@ -70,25 +70,25 @@ export default function CertificationsForm({ certifications, onChange }: Certifi
             <input
               value={cert.title}
               onChange={(e) => handleChange(cert.id, 'title', e.target.value)}
-              placeholder="Certification title (e.g. AWS Solutions Architect)"
+              placeholder="e.g. AWS Certified Solutions Architect – Professional"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={cert.issuer}
               onChange={(e) => handleChange(cert.id, 'issuer', e.target.value)}
-              placeholder="Issuing organization (e.g. Amazon Web Services)"
+              placeholder="e.g. Amazon Web Services"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={cert.date}
               onChange={(e) => handleChange(cert.id, 'date', e.target.value)}
-              placeholder="Date obtained (e.g. 2024)"
+              placeholder="e.g. 03/2024"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
               value={cert.description}
               onChange={(e) => handleChange(cert.id, 'description', e.target.value)}
-              placeholder="Brief description or credential ID"
+              placeholder="e.g. Credential ID: AWS-10293, validating advanced high-scale cloud system design capabilities."
               rows={2}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />

@@ -70,25 +70,25 @@ export default function AwardsForm({ awards, onChange }: AwardsFormProps) {
             <input
               value={award.title}
               onChange={(e) => handleChange(award.id, 'title', e.target.value)}
-              placeholder="Award title (e.g. Employee of the Month)"
+              placeholder="e.g. Employee of the Month"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={award.awarder}
               onChange={(e) => handleChange(award.id, 'awarder', e.target.value)}
-              placeholder="Awarded by (e.g. Company Name)"
+              placeholder="e.g. Google"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={award.date}
               onChange={(e) => handleChange(award.id, 'date', e.target.value)}
-              placeholder="Date (e.g. 2024)"
+              placeholder="e.g. 05/2024"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
               value={award.description}
               onChange={(e) => handleChange(award.id, 'description', e.target.value)}
-              placeholder="Brief description of the award"
+              placeholder="e.g. Recognized for leading the resolution of high-severity production incidents, saving $120k+ in potential SLA breach penalties."
               rows={2}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />

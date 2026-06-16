@@ -70,25 +70,25 @@ export default function VolunteerForm({ volunteer, onChange }: VolunteerFormProp
             <input
               value={vol.organization}
               onChange={(e) => handleChange(vol.id, 'organization', e.target.value)}
-              placeholder="Organization name"
+              placeholder="e.g. Girls Who Code"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={vol.location}
               onChange={(e) => handleChange(vol.id, 'location', e.target.value)}
-              placeholder="Location (e.g. Remote, New York)"
+              placeholder="e.g. New York, NY or Remote"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={vol.period}
               onChange={(e) => handleChange(vol.id, 'period', e.target.value)}
-              placeholder="Period (e.g. 2022 - 2024)"
+              placeholder="e.g. 2022 - 2024 or 06/2023 - Present"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
               value={vol.description}
               onChange={(e) => handleChange(vol.id, 'description', e.target.value)}
-              placeholder="Describe your volunteer work and impact"
+              placeholder="e.g. Taught introductory web development (HTML/CSS/JS) to 40+ high school students, facilitating projects and career mentorship."
               rows={2}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />

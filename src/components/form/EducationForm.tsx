@@ -232,7 +232,7 @@ export default function EducationForm({ education, onChange }: EducationFormProp
                               value={edu.graduationDate}
                               onChange={(e) => handleChange(edu.id, 'graduationDate', e.target.value)}
                               className="drawer-input !bg-zinc-950"
-                              placeholder="MM/YYYY"
+                              placeholder="e.g. 05/2024"
                             />
                           </div>
                           <div className="space-y-1">

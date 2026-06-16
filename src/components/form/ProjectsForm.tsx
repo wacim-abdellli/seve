@@ -107,7 +107,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
             <input
               value={project.link || ''}
               onChange={(e) => handleChange(project.id, 'link', e.target.value)}
-              placeholder="github.com/username/project"
+              placeholder="e.g. github.com/username/project"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-650 focus:outline-none focus:border-rose-500/40 transition-all"
             />
 
@@ -133,7 +133,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
                 </div>
               )}
               <input
-                placeholder="Add technology + Enter"
+                placeholder="e.g. React (Press Enter to add)"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
@@ -141,7 +141,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
                     e.currentTarget.value = ''
                   }
                 }}
-                className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-zinc-650 focus:outline-none focus:border-rose-500/40 transition-all"
+                className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-zinc-655 focus:outline-none focus:border-rose-500/40 transition-all"
               />
             </div>
 
@@ -149,7 +149,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
             <textarea
               value={project.description}
               onChange={(e) => handleChange(project.id, 'description', e.target.value)}
-              placeholder="Describe what you built, how you built it, and the impact..."
+              placeholder="e.g. Developed a serverless task scheduler processing 10k concurrent requests. Reduced latency by 15% using Redis caching."
               rows={3}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white leading-relaxed placeholder:text-zinc-600 resize-none focus:outline-none focus:border-rose-500/40 transition-all"
             />

@@ -70,25 +70,25 @@ export default function ReferencesForm({ references, onChange }: ReferencesFormP
             <input
               value={ref.name}
               onChange={(e) => handleChange(ref.id, 'name', e.target.value)}
-              placeholder="Reference name"
+              placeholder="e.g. Sarah Jenkins"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={ref.position}
               onChange={(e) => handleChange(ref.id, 'position', e.target.value)}
-              placeholder="Position (e.g. Former Manager at Acme Corp)"
+              placeholder="e.g. Director of Engineering at Google"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={ref.phone}
               onChange={(e) => handleChange(ref.id, 'phone', e.target.value)}
-              placeholder="Phone number"
+              placeholder="e.g. sjenkins@google.com or +1 (555) 019-2834"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
               value={ref.description}
               onChange={(e) => handleChange(ref.id, 'description', e.target.value)}
-              placeholder="Notes or recommendation quote"
+              placeholder="e.g. Direct manager for 3 years, supervised several key product launches."
               rows={2}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />

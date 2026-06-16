@@ -351,7 +351,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                           <label className="text-[11px] text-zinc-500">Job Title *</label>
                           <input
                             type="text"
-                            placeholder="Job Title"
+                            placeholder="e.g. Senior Software Engineer"
                             className="drawer-input !bg-zinc-950"
                             value={exp.jobTitle}
                             onChange={(e) => handleChange(exp.id, 'jobTitle', e.target.value)}
@@ -363,7 +363,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                           <label className="text-[11px] text-zinc-500">Company / Org *</label>
                           <input
                             type="text"
-                            placeholder="Company / Org"
+                            placeholder="e.g. Google"
                             className="drawer-input !bg-zinc-950"
                             value={exp.company}
                             onChange={(e) => handleChange(exp.id, 'company', e.target.value)}
@@ -375,7 +375,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                           <label className="text-[11px] text-zinc-500">Location</label>
                           <input
                             type="text"
-                            placeholder="Location"
+                            placeholder="e.g. Mountain View, CA"
                             className="drawer-input !bg-zinc-950"
                             value={exp.location}
                             onChange={(e) => handleChange(exp.id, 'location', e.target.value)}
@@ -388,7 +388,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                             <label className="text-[11px] text-zinc-500">Start Date *</label>
                             <input
                               type="text"
-                              placeholder="01/2022"
+                              placeholder="e.g. 09/2021"
                               className="drawer-input !bg-zinc-950"
                               value={exp.startDate}
                               onChange={(e) => handleChange(exp.id, 'startDate', e.target.value)}
@@ -398,7 +398,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                             <label className="text-[11px] text-zinc-500">End Date *</label>
                             <input
                               type="text"
-                              placeholder="Present"
+                              placeholder="e.g. Present"
                               disabled={exp.current}
                               className="drawer-input !bg-zinc-950"
                               value={exp.current ? 'Present' : exp.endDate}
@@ -465,7 +465,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                                   }}
                                   rows={2}
                                   className="flex-1 min-w-0 bg-transparent text-[13px] text-zinc-300 resize-none outline-none leading-relaxed placeholder:text-zinc-600 overflow-hidden"
-                                  placeholder="Led the team to..."
+                                  placeholder="e.g. Led a team of 4 engineers to design and deploy a real-time messaging pipeline, increasing performance by 25%."
                                 />
 
                                 {/* Hover Actions */}

@@ -52,7 +52,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
           value={contact.fullName}
           onChange={(e) => handleFieldChange('fullName', e.target.value)}
           className="drawer-input"
-          placeholder="Jane Doe"
+          placeholder="e.g. Jane Doe"
         />
       </div>
 
@@ -66,7 +66,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
           value={contact.location}
           onChange={(e) => handleFieldChange('location', e.target.value)}
           className="drawer-input"
-          placeholder="New York, NY"
+          placeholder="e.g. New York, NY"
         />
       </div>
 
@@ -80,7 +80,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
           value={contact.email}
           onChange={(e) => handleFieldChange('email', e.target.value)}
           className="drawer-input"
-          placeholder="jane.doe@email.com"
+          placeholder="e.g. jane.doe@email.com"
         />
         {emailError && <span className="text-[10px] font-bold text-rose-500 mt-0.5 block">{emailError}</span>}
       </div>
@@ -95,7 +95,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
           value={contact.phone}
           onChange={(e) => handleFieldChange('phone', e.target.value)}
           className="drawer-input"
-          placeholder="+1 (555) 019-2834"
+          placeholder="e.g. +1 (555) 019-2834"
         />
         {phoneError && <span className="text-[10px] font-bold text-rose-500 mt-0.5 block">{phoneError}</span>}
       </div>
@@ -110,7 +110,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
           value={contact.linkedin}
           onChange={(e) => handleFieldChange('linkedin', e.target.value)}
           className="drawer-input"
-          placeholder="linkedin.com/in/janedoe"
+          placeholder="e.g. linkedin.com/in/janedoe"
         />
         {linkedinError && <span className="text-[10px] font-bold text-rose-500 mt-0.5 block">{linkedinError}</span>}
       </div>
@@ -125,7 +125,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
           value={contact.website || ''}
           onChange={(e) => handleFieldChange('website', e.target.value)}
           className="drawer-input"
-          placeholder="janedoe.dev"
+          placeholder="e.g. janedoe.dev"
         />
       </div>
     </div>

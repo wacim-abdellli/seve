@@ -70,25 +70,25 @@ export default function PublicationsForm({ publications, onChange }: Publication
             <input
               value={pub.title}
               onChange={(e) => handleChange(pub.id, 'title', e.target.value)}
-              placeholder="Publication title"
+              placeholder="e.g. Optimizing Large Scale Distributed Databases"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={pub.publisher}
               onChange={(e) => handleChange(pub.id, 'publisher', e.target.value)}
-              placeholder="Publisher or venue (e.g. IEEE, Medium)"
+              placeholder="e.g. IEEE Transactions on Cloud Computing"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={pub.date}
               onChange={(e) => handleChange(pub.id, 'date', e.target.value)}
-              placeholder="Publication date (e.g. 2024)"
+              placeholder="e.g. 11/2023 or 2023"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
               value={pub.description}
               onChange={(e) => handleChange(pub.id, 'description', e.target.value)}
-              placeholder="Brief description or abstract"
+              placeholder="e.g. Authored research on optimizing database queries, reducing average latency by 18%."
               rows={2}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />
