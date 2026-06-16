@@ -173,7 +173,26 @@ export default function ResumePreview({
     return ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
   })
 
-  const sectionOrder = propsSectionOrder || localSectionOrder
+  const baseOrder = propsSectionOrder || localSectionOrder
+  const activeSectionKeys: SectionKey[] = [
+    'summary', 'experience', 'projects', 'education', 'skills',
+    'languages', 'awards', 'certifications', 'publications', 'volunteer',
+    'interests', 'references'
+  ]
+  const sectionsWithData = activeSectionKeys.filter(key => {
+    if (key === 'summary') return resumeData.summary && resumeData.summary.trim() !== ''
+    if (key === 'skills') return resumeData.skills && resumeData.skills.length > 0
+    const val = resumeData[key]
+    return Array.isArray(val) && val.length > 0
+  })
+
+  const sectionOrder = [...baseOrder]
+  sectionsWithData.forEach(sec => {
+    if (!sectionOrder.includes(sec)) {
+      sectionOrder.push(sec)
+    }
+  })
+
   const setSectionOrder = (newOrder: SectionKey[]) => {
     if (onSectionOrderChange) {
       onSectionOrderChange(newOrder)

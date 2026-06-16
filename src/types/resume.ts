@@ -129,11 +129,20 @@ export interface Message {
   timestamp: Date
 }
 
-export interface AppState {
+export interface ResumeProfile {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
   resumeData: ResumeData
-  atsScore: AtsScore
   selectedTemplate: Template
   jobDescription: string
-  apiKey: string
   agentMessages: Message[]
 }
+
+export interface AppState {
+  resumes: Record<string, ResumeProfile>
+  selectedResumeId: string
+  apiKey: string
+}
+

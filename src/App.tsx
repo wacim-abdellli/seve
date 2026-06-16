@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { AppState, ResumeData, Message } from './types/resume'
+import type { AppState, ResumeData, Message, ResumeProfile } from './types/resume'
 import { evaluateResume } from './utils/atsEvaluator'
 import ResumePreview from './components/ResumePreview'
 import AtsDashboard from './components/AtsDashboard'
@@ -21,6 +21,7 @@ import ExecutiveTemplate from './components/templates/ExecutiveTemplate'
 import MinimalistTemplate from './components/templates/MinimalistTemplate'
 import CreativeTemplate from './components/templates/CreativeTemplate'
 import { calculateCompletion, getSectionStatus } from './utils/completionHelper'
+import ResumeManager from './components/ResumeManager'
 
 import { 
   Download, 
@@ -263,30 +264,20 @@ function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarning
 function App() {
   const [view, setView] = useState<'landing' | 'workspace' | 'privacy'>('landing')
   
-  const [state, setState] = useState<Omit<AppState, 'atsScore'>>(() => {
+  const [state, setState] = useState<AppState>(() => {
     let saved = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (!saved) {
       saved = localStorage.getItem('resumeai_state')
     }
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (parsed.agentMessages) {
-          parsed.agentMessages = parsed.agentMessages.map((m: Message) => ({
-            ...m,
-            timestamp: new Date(m.timestamp),
-          }))
-        }
-        return parsed
-      } catch (e) {
-        console.error('Failed to parse saved state, resetting', e)
-      }
-    }
-    return {
+    const defaultResumeId = 'default-resume'
+    const createDefaultResume = (): ResumeProfile => ({
+      id: defaultResumeId,
+      title: 'My Resume',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       resumeData: INITIAL_RESUME_DATA,
       selectedTemplate: 'classic',
       jobDescription: '',
-      apiKey: '',
       agentMessages: [
         {
           id: 'welcome',
@@ -295,10 +286,189 @@ function App() {
           timestamp: new Date(),
         },
       ],
+    })
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        // Detect new format vs old format
+        if (parsed.resumes && parsed.selectedResumeId) {
+          // New format: reconstruct Dates for agentMessages
+          const resumes: Record<string, ResumeProfile> = {}
+          for (const key in parsed.resumes) {
+            const profile = parsed.resumes[key]
+            resumes[key] = {
+              ...profile,
+              agentMessages: (profile.agentMessages || []).map((m: any) => ({
+                ...m,
+                timestamp: new Date(m.timestamp),
+              })),
+            }
+          }
+          return {
+            resumes,
+            selectedResumeId: parsed.selectedResumeId,
+            apiKey: parsed.apiKey || '',
+          }
+        } else if (parsed.resumeData) {
+          // Old format: migrate to new format
+          const migratedProfile: ResumeProfile = {
+            id: defaultResumeId,
+            title: 'My Resume',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            resumeData: parsed.resumeData,
+            selectedTemplate: parsed.selectedTemplate || 'classic',
+            jobDescription: parsed.jobDescription || '',
+            agentMessages: (parsed.agentMessages || []).map((m: any) => ({
+              ...m,
+              timestamp: new Date(m.timestamp),
+            })),
+          }
+          return {
+            resumes: {
+              [defaultResumeId]: migratedProfile,
+            },
+            selectedResumeId: defaultResumeId,
+            apiKey: parsed.apiKey || '',
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse saved state, resetting', e)
+      }
+    }
+
+    return {
+      resumes: {
+        [defaultResumeId]: createDefaultResume(),
+      },
+      selectedResumeId: defaultResumeId,
+      apiKey: '',
     }
   })
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
+
+  const activeResumeId = state.selectedResumeId
+  const activeResume = state.resumes[activeResumeId] || Object.values(state.resumes)[0]
+
+  const resumeData = activeResume?.resumeData || INITIAL_RESUME_DATA
+  const selectedTemplate = activeResume?.selectedTemplate || 'classic'
+  const jobDescription = activeResume?.jobDescription || ''
+  const agentMessages = activeResume?.agentMessages || []
+
+  const updateActiveResume = (updater: (prev: ResumeProfile) => ResumeProfile) => {
+    setState((prev) => {
+      const active = prev.resumes[prev.selectedResumeId] || Object.values(prev.resumes)[0]
+      if (!active) return prev
+      const updatedProfile = updater(active)
+      return {
+        ...prev,
+        resumes: {
+          ...prev.resumes,
+          [updatedProfile.id]: {
+            ...updatedProfile,
+            updatedAt: new Date().toISOString()
+          }
+        }
+      }
+    })
+  }
+
+  const handleSelectResume = (id: string) => {
+    setState((prev) => ({
+      ...prev,
+      selectedResumeId: id,
+    }))
+  }
+
+  const handleCreateResume = (title: string) => {
+    const newId = crypto.randomUUID()
+    const newProfile: ResumeProfile = {
+      id: newId,
+      title,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      resumeData: INITIAL_RESUME_DATA,
+      selectedTemplate: 'classic',
+      jobDescription: '',
+      agentMessages: [
+        {
+          id: 'welcome',
+          role: 'agent',
+          content: `Hello! I am Aria, your AI Career Coach. I've created your new resume "${title}". Let's get started on building a market-disrupting resume. Tell me about your target job title, or copy-paste the job description here!`,
+          timestamp: new Date(),
+        },
+      ],
+    }
+    setState((prev) => ({
+      ...prev,
+      resumes: {
+        ...prev.resumes,
+        [newId]: newProfile,
+      },
+      selectedResumeId: newId,
+    }))
+  }
+
+  const handleDuplicateResume = (id: string) => {
+    const source = state.resumes[id]
+    if (!source) return
+    const newId = crypto.randomUUID()
+    const duplicatedProfile: ResumeProfile = {
+      ...source,
+      id: newId,
+      title: `${source.title} (Copy)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      agentMessages: (source.agentMessages || []).map(m => ({ ...m, id: crypto.randomUUID() }))
+    }
+    setState((prev) => ({
+      ...prev,
+      resumes: {
+        ...prev.resumes,
+        [newId]: duplicatedProfile,
+      },
+      selectedResumeId: newId,
+    }))
+  }
+
+  const handleRenameResume = (id: string, newTitle: string) => {
+    setState((prev) => {
+      const target = prev.resumes[id]
+      if (!target) return prev
+      return {
+        ...prev,
+        resumes: {
+          ...prev.resumes,
+          [id]: {
+            ...target,
+            title: newTitle,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      }
+    })
+  }
+
+  const handleDeleteResume = (id: string) => {
+    setState((prev) => {
+      const nextResumes = { ...prev.resumes }
+      delete nextResumes[id]
+      
+      let nextSelectedId = prev.selectedResumeId
+      if (nextSelectedId === id) {
+        nextSelectedId = Object.keys(nextResumes)[0] || ''
+      }
+      
+      return {
+        ...prev,
+        resumes: nextResumes,
+        selectedResumeId: nextSelectedId,
+      }
+    })
+  }
   const [activeMode, setActiveMode] = useState<'studio' | 'preview' | 'analyze' | 'ai'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
   const [pageCount, setPageCount] = useState(1)
@@ -318,7 +488,7 @@ function App() {
         }
       } catch {}
     }
-    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills']
+    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
   })
   
   const openDrawer = (sec: SectionType) => {
@@ -389,11 +559,54 @@ function App() {
         }
 
         if (data) {
-          setState((prev) => ({
-            ...prev,
-            resumeData: data.resume_data,
-            selectedTemplate: data.selected_template || prev.selectedTemplate,
-          }))
+          let loadedState: Partial<AppState> = {}
+          const resumeDataVal = data.resume_data
+          if (resumeDataVal && resumeDataVal.resumes && resumeDataVal.selectedResumeId) {
+            // New database format
+            const resumes: Record<string, ResumeProfile> = {}
+            for (const key in resumeDataVal.resumes) {
+              const profile = resumeDataVal.resumes[key]
+              resumes[key] = {
+                ...profile,
+                agentMessages: (profile.agentMessages || []).map((m: any) => ({
+                  ...m,
+                  timestamp: new Date(m.timestamp),
+                })),
+              }
+            }
+            loadedState = {
+              resumes,
+              selectedResumeId: resumeDataVal.selectedResumeId,
+            }
+          } else if (resumeDataVal && resumeDataVal.contact) {
+            // Old database format: migrate
+            const defaultId = 'default-resume'
+            const migratedProfile: ResumeProfile = {
+              id: defaultId,
+              title: 'My Resume',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              resumeData: resumeDataVal,
+              selectedTemplate: data.selected_template || 'classic',
+              jobDescription: '',
+              agentMessages: [],
+            }
+            loadedState = {
+              resumes: {
+                [defaultId]: migratedProfile,
+              },
+              selectedResumeId: defaultId,
+            }
+          }
+
+          if (loadedState.resumes) {
+            setState((prev) => ({
+              ...prev,
+              resumes: loadedState.resumes!,
+              selectedResumeId: loadedState.selectedResumeId!,
+            }))
+          }
+
           if (data.updated_at) {
             setLastSynced(new Date(data.updated_at).toLocaleString())
           }
@@ -419,8 +632,11 @@ function App() {
           .from('resumes')
           .upsert({
             user_id: user.id,
-            resume_data: state.resumeData,
-            selected_template: state.selectedTemplate,
+            resume_data: {
+              resumes: state.resumes,
+              selectedResumeId: state.selectedResumeId,
+            },
+            selected_template: activeResume?.selectedTemplate || 'classic',
             updated_at: updatedTime
           }, {
             onConflict: 'user_id'
@@ -440,12 +656,12 @@ function App() {
     }, 1000)
 
     return () => clearTimeout(handler)
-  }, [state.resumeData, state.selectedTemplate, user])
+  }, [state.resumes, state.selectedResumeId, user])
 
   // Recalculate ATS Score whenever resumeData or jobDescription changes
   const atsScore = useMemo(() => {
-    return evaluateResume(state.resumeData, state.jobDescription)
-  }, [state.resumeData, state.jobDescription])
+    return evaluateResume(resumeData, jobDescription)
+  }, [resumeData, jobDescription])
 
   const handleSendMessage = (role: 'agent' | 'user', content: string) => {
     const newMsg: Message = {
@@ -454,21 +670,21 @@ function App() {
       content,
       timestamp: new Date(),
     }
-    setState((prev) => ({
+    updateActiveResume((prev) => ({
       ...prev,
       agentMessages: [...prev.agentMessages, newMsg],
     }))
   }
 
   const updateResumeData = (updated: ResumeData) => {
-    setState((prev) => ({
+    updateActiveResume((prev) => ({
       ...prev,
       resumeData: updated,
     }))
   }
 
   const handleImportResume = (imported: ResumeData) => {
-    setState((prev) => ({
+    updateActiveResume((prev) => ({
       ...prev,
       resumeData: imported,
     }))
@@ -478,7 +694,7 @@ function App() {
     const warnings: string[] = []
     
     // 1. Duplicate bullets
-    const experience = state.resumeData.experience || []
+    const experience = resumeData.experience || []
     let hasDuplicateBullets = false
     for (const exp of experience) {
       const bullets = exp.bullets || []
@@ -502,13 +718,13 @@ function App() {
     }
 
     // 3. Short summary
-    const summary = state.resumeData.summary || ""
+    const summary = resumeData.summary || ""
     if (summary.trim() && summary.trim().length < 50) {
       warnings.push("Professional summary is very short (under 50 characters).")
     }
 
     // 4. Incomplete education entries
-    const education = state.resumeData.education || []
+    const education = resumeData.education || []
     let hasIncompleteEdu = false
     for (const edu of education) {
       const hasSchool = !!edu.school?.trim()
@@ -538,17 +754,15 @@ function App() {
   }
 
   const resetResume = () => {
-    if (window.confirm('Are you sure you want to reset your resume? All your current data will be lost.')) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY)
-      localStorage.removeItem('resumeai_state')
-      setState((prev) => ({
+    if (window.confirm('Are you sure you want to reset this resume version? All your current data for this version will be lost.')) {
+      updateActiveResume((prev) => ({
         ...prev,
         resumeData: INITIAL_RESUME_DATA,
         agentMessages: [
           {
             id: 'welcome_reset',
             role: 'agent',
-            content: "Workspace reset successfully! Let's start fresh. Tell me your target job role.",
+            content: "Resume version reset successfully! Let's start fresh. Tell me your target job role.",
             timestamp: new Date(),
           },
         ],
@@ -604,6 +818,17 @@ function App() {
               Studio v2
             </div>
           </div>
+
+          <div className="w-px h-5 bg-border hidden sm:block" />
+
+          {/* Resume Version Switcher Trigger */}
+          <button
+            onClick={() => setIsResumeManagerOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 max-w-[180px] sm:max-w-[220px]"
+          >
+            <FolderOpen size={13} className="text-rose-500 shrink-0" />
+            <span className="truncate">{activeResume?.title || 'My Resume'}</span>
+          </button>
         </div>
 
         {/* Center: Unified state capsule */}
@@ -663,8 +888,8 @@ function App() {
           <SectionSidebar
             activeMode={activeMode}
             onModeChange={setActiveMode}
-            resumeCompletion={calculateCompletion(state.resumeData)}
-            resumeData={state.resumeData}
+            resumeCompletion={calculateCompletion(resumeData)}
+            resumeData={resumeData}
             onOpenSection={openDrawer}
           />
         </div>
@@ -719,8 +944,8 @@ function App() {
                     {/* Section Cards */}
                     <div className="flex-1 overflow-y-auto form-panel">
                       {overviewSections.map((section) => {
-                        const isComplete = getSectionStatus(state.resumeData)[section.id]
-                        const previewText = getSectionPreview(section.id, state.resumeData)
+                        const isComplete = getSectionStatus(resumeData)[section.id]
+                        const previewText = getSectionPreview(section.id, resumeData)
                         const Icon = section.icon
                         
                         return (
@@ -787,8 +1012,8 @@ function App() {
                     {/* Section Cards */}
                     <div className="flex-1 overflow-y-auto form-panel">
                       {overviewSections.map((section) => {
-                        const isComplete = getSectionStatus(state.resumeData)[section.id]
-                        const previewText = getSectionPreview(section.id, state.resumeData)
+                        const isComplete = getSectionStatus(resumeData)[section.id]
+                        const previewText = getSectionPreview(section.id, resumeData)
                         const Icon = section.icon
                         
                         return (
@@ -836,9 +1061,9 @@ function App() {
                   <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
                     <div className="w-full max-w-3xl">
                       <ResumePreview 
-                        resumeData={state.resumeData}
-                        selectedTemplate={state.selectedTemplate}
-                        onChangeTemplate={(t) => setState(prev => ({ ...prev, selectedTemplate: t }))}
+                        resumeData={resumeData}
+                        selectedTemplate={selectedTemplate}
+                        onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
                         activeSection={activeStudioSection}
                         onEditSection={(section) => {
                           setActiveStudioSection(section)
@@ -875,8 +1100,8 @@ function App() {
                     <div className="flex items-center gap-3">
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Style Template:</label>
                       <select
-                        value={state.selectedTemplate}
-                        onChange={(e) => setState(prev => ({ ...prev, selectedTemplate: e.target.value as any }))}
+                        value={selectedTemplate}
+                        onChange={(e) => updateActiveResume(prev => ({ ...prev, selectedTemplate: e.target.value as any }))}
                         className="h-8 rounded-md border border-input bg-zinc-950 px-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-ring"
                       >
                         <option value="classic">Classic (Serif)</option>
@@ -899,9 +1124,9 @@ function App() {
                   <div className="flex-1 overflow-y-auto bg-zinc-950/20 p-6 flex justify-center items-start min-w-0">
                     <div className="w-full max-w-3xl">
                       <ResumePreview 
-                        resumeData={state.resumeData}
-                        selectedTemplate={state.selectedTemplate}
-                        onChangeTemplate={(t) => setState(prev => ({ ...prev, selectedTemplate: t }))}
+                        resumeData={resumeData}
+                        selectedTemplate={selectedTemplate}
+                        onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
                         activeSection={activeStudioSection}
                         onEditSection={(section) => {
                           setActiveStudioSection(section)
@@ -938,10 +1163,10 @@ function App() {
                     <div className="max-w-[880px] mx-auto">
                       <AtsDashboard
                         atsScore={atsScore}
-                        resumeData={state.resumeData}
+                        resumeData={resumeData}
                         onFix={updateResumeData}
-                        jobDescription={state.jobDescription}
-                        onUpdateJobDescription={(jd) => setState(prev => ({ ...prev, jobDescription: jd }))}
+                        jobDescription={jobDescription}
+                        onUpdateJobDescription={(jd) => updateActiveResume(prev => ({ ...prev, jobDescription: jd }))}
                         onOpenSection={(sec) => {
                           setActiveMode('studio')
                           setActiveStudioSection(sec)
@@ -956,12 +1181,12 @@ function App() {
               {/* 4. AI TOOLS MODE VIEW */}
               {activeMode === 'ai' && (
                 <AiToolsPanel
-                  resumeData={state.resumeData}
+                  resumeData={resumeData}
                   onUpdateResumeData={updateResumeData}
-                  agentMessages={state.agentMessages}
+                  agentMessages={agentMessages}
                   onSendMessage={handleSendMessage}
-                  jobDescription={state.jobDescription}
-                  onUpdateJobDescription={(jd) => setState(prev => ({ ...prev, jobDescription: jd }))}
+                  jobDescription={jobDescription}
+                  onUpdateJobDescription={(jd) => updateActiveResume(prev => ({ ...prev, jobDescription: jd }))}
                   apiKey={state.apiKey}
                   onUpdateApiKey={(key) => setState(prev => ({ ...prev, apiKey: key }))}
                 />
@@ -988,7 +1213,7 @@ function App() {
             {/* Drawer */}
             <SectionDrawer
               section={activeStudioSection}
-              resumeData={state.resumeData}
+              resumeData={resumeData}
               apiKey={state.apiKey}
               onChange={updateResumeData}
               onClose={closeDrawer}
@@ -1004,9 +1229,9 @@ function App() {
             key="settings-modal"
             apiKey={state.apiKey}
             onUpdateApiKey={(key) => setState(prev => ({ ...prev, apiKey: key }))}
-            selectedTemplate={state.selectedTemplate}
-            onUpdateTemplate={(template) => setState(prev => ({ ...prev, selectedTemplate: template }))}
-            resumeData={state.resumeData}
+            selectedTemplate={selectedTemplate}
+            onUpdateTemplate={(template) => updateActiveResume(prev => ({ ...prev, selectedTemplate: template }))}
+            resumeData={resumeData}
             onImportResume={handleImportResume}
             onClose={() => setIsSettingsOpen(false)}
             user={user}
@@ -1017,10 +1242,26 @@ function App() {
         )}
       </AnimatePresence>
 
+      {/* Resume Manager Modal Component */}
+      <AnimatePresence>
+        {isResumeManagerOpen && (
+          <ResumeManager
+            resumes={state.resumes}
+            selectedResumeId={state.selectedResumeId}
+            onSelect={handleSelectResume}
+            onCreate={handleCreateResume}
+            onDuplicate={handleDuplicateResume}
+            onRename={handleRenameResume}
+            onDelete={handleDeleteResume}
+            onClose={() => setIsResumeManagerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Print Portal */}
       {createPortal(
         <div className="resume-print-wrapper hidden print:block">
-          <div className={`resume-page template-${state.selectedTemplate}`}>
+          <div className={`resume-page template-${selectedTemplate}`}>
           <style dangerouslySetInnerHTML={{ __html: `
             .resume-page {
               font-size: ${templateFontSize}pt !important;
@@ -1062,37 +1303,37 @@ function App() {
               font-size: ${(templateFontSize / 10) * 12}px !important;
             }
           ` }} />
-          {state.selectedTemplate === 'classic' && (
+          {selectedTemplate === 'classic' && (
             <ClassicTemplate 
-              data={state.resumeData} 
+              data={resumeData} 
               sectionOrder={sectionOrder}
               themeColor={themeColor}
             />
           )}
-          {state.selectedTemplate === 'modern' && (
+          {selectedTemplate === 'modern' && (
             <ModernTemplate 
-              data={state.resumeData} 
+              data={resumeData} 
               sectionOrder={sectionOrder}
               themeColor={themeColor}
             />
           )}
-          {state.selectedTemplate === 'executive' && (
+          {selectedTemplate === 'executive' && (
             <ExecutiveTemplate 
-              data={state.resumeData} 
+              data={resumeData} 
               sectionOrder={sectionOrder}
               themeColor={themeColor}
             />
           )}
-          {state.selectedTemplate === 'minimalist' && (
+          {selectedTemplate === 'minimalist' && (
             <MinimalistTemplate 
-              data={state.resumeData} 
+              data={resumeData} 
               sectionOrder={sectionOrder}
               themeColor={themeColor}
             />
           )}
-          {state.selectedTemplate === 'creative' && (
+          {selectedTemplate === 'creative' && (
             <CreativeTemplate 
-              data={state.resumeData} 
+              data={resumeData} 
               sectionOrder={sectionOrder}
               themeColor={themeColor}
             />
