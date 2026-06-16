@@ -499,7 +499,8 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
   }
 
   // Total Score (Max 100)
-  const total = sectionCompleteness + keywordMatch + formattingSafety + actionVerbs + quantifiedResults + contactInfo + dateConsistency + lengthAppropriateness
+  const cappedSectionCompleteness = Math.min(20, sectionCompleteness)
+  const total = Math.min(100, cappedSectionCompleteness + keywordMatch + formattingSafety + actionVerbs + quantifiedResults + contactInfo + dateConsistency + lengthAppropriateness)
 
   let grade: string
   if (total >= 90) grade = 'Excellent (A)'
@@ -511,7 +512,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     total,
     grade,
     sections: {
-      sectionCompleteness,
+      sectionCompleteness: cappedSectionCompleteness,
       keywordMatch,
       formattingSafety,
       actionVerbs,
