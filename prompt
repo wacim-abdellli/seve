@@ -1,20 +1,9 @@
-OBJECTIVE:
-
-We are removing @react-pdf/renderer as the primary PDF generation system.
-
-First perform an audit and report:
-
-All files using @react-pdf/renderer.
-All files under src/pdf/.
-All PDF export buttons and handlers.
-How ResumePreview.tsx is rendered.
-Existing @media print styles.
-
-DO NOT modify code yet.
-
-Return:
-
-file paths
-dependencies
-export flow diagram
-migration plan
+[plugin:vite:css] [postcss] It looks like you're trying to use `tailwindcss` directly as a PostCSS plugin. The PostCSS plugin has moved to a separate package, so to continue using Tailwind CSS with PostCSS you'll need to install `@tailwindcss/postcss` and update your PostCSS configuration.
+C:/Users/pc/Desktop/resumeTN/reactive-resume-src/reactive-resume-main/apps/web/src/index.css:undefined:null
+    at ft (C:\Users\pc\Desktop\resumeTN\reactive-resume-src\reactive-resume-main\node_modules\.pnpm\tailwindcss@4.3.0\node_modules\tailwindcss\dist\lib.js:38:1643)
+    at LazyResult.runOnRoot (C:\Users\pc\Desktop\resumeTN\reactive-resume-src\reactive-resume-main\node_modules\.pnpm\postcss@8.5.15\node_modules\postcss\lib\lazy-result.js:361:16)
+    at LazyResult.runAsync (C:\Users\pc\Desktop\resumeTN\reactive-resume-src\reactive-resume-main\node_modules\.pnpm\postcss@8.5.15\node_modules\postcss\lib\lazy-result.js:290:26)
+    at LazyResult.async (C:\Users\pc\Desktop\resumeTN\reactive-resume-src\reactive-resume-main\node_modules\.pnpm\postcss@8.5.15\node_modules\postcss\lib\lazy-result.js:192:30)
+    at LazyResult.then (C:\Users\pc\Desktop\resumeTN\reactive-resume-src\reactive-resume-main\node_modules\.pnpm\postcss@8.5.15\node_modules\postcss\lib\lazy-result.js:449:17)
+Click outside, press Esc key, or fix the code to dismiss.
+You can also disable this overlay by setting server.hmr.overlay to false in vite.config.ts.

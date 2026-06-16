@@ -1,5 +1,8 @@
 import type { ResumeData } from '../../types/resume'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { formatDate } from '../../utils/dateUtils'
+import { getFullName } from '../../utils/contactUtils'
 import { User, Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit, Wrench, FileText } from 'lucide-react'
 
 const Linkedin = (props: React.SVGProps<SVGSVGElement>) => (
@@ -14,11 +17,11 @@ interface CreativeTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   themeColor?: string
 }
 
@@ -163,44 +166,31 @@ export default function CreativeTemplate({
           <div className="space-y-3">
             <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
               <Wrench className="w-3.5 h-3.5" style={{ color: themeColor }} />
-              <h3 className="text-[9.5px] font-black uppercase tracking-wider text-slate-900">Skills</h3>
+              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.skills}</h3>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {skills.map((skill) => {
-                const parts = skill.split(':')
-                if (parts.length > 1 && parts[0].trim().length < 30) {
-                  return (
-                    <span 
-                      key={skill} 
-                      className="text-[8.5px] font-bold px-2 py-0.5 rounded uppercase tracking-wide border"
-                      style={{ 
-                        backgroundColor: `${themeColor}10`, 
-                        borderColor: `${themeColor}30`, 
-                        color: themeColor 
-                      }}
-                    >
-                      <strong className="font-extrabold text-slate-950 mr-1">{parts[0].trim()}:</strong>
-                      {parts.slice(1).join(':')}
-                    </span>
-                  )
-                }
-                return (
-                  <span 
-                    key={skill} 
-                    className="text-[8.5px] font-bold px-2 py-0.5 rounded uppercase tracking-wide border"
-                    style={{ 
-                      backgroundColor: `${themeColor}10`, 
-                      borderColor: `${themeColor}30`, 
-                      color: themeColor 
-                    }}
-                  >
-                    {skill}
-                  </span>
-                )
-              })}
-            </div>
+            <p className="text-[9px] leading-relaxed text-slate-700">
+              {skills.join(' · ')}
+            </p>
           </div>
         </PreviewSectionWrapper>
+      )}
+
+      {/* Languages list block */}
+      {data.languages && data.languages.length > 0 && (
+        <div className="space-y-3">
+          <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+            <Globe className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.languages}</h3>
+          </div>
+          <div className="space-y-1 text-[9px] text-slate-700">
+            {data.languages.map((lang) => (
+              <div key={lang.id}>
+                <span className="font-semibold text-slate-900">{lang.name}</span>
+                <span className="text-slate-500"> — {lang.proficiency}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
     </div>
@@ -223,8 +213,8 @@ export default function CreativeTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-2.5">
             <FileText className="w-3.5 h-3.5" style={{ color: themeColor }} />
-            <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-900 font-sans">
-              Summary
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.summary}
             </h2>
           </div>
           <p className="text-[9.5px] leading-relaxed text-justify text-slate-755">{summary}</p>
@@ -247,19 +237,19 @@ export default function CreativeTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-3">
             <Briefcase className="w-3.5 h-3.5" style={{ color: themeColor }} />
-            <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-900 font-sans">
-              Experience
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.experience}
             </h2>
           </div>
           <div className="space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-0.5">
+              <div key={exp.id} className="space-y-0.5 exp-entry">
                 <div className="flex justify-between items-baseline font-sans">
                   <div className="text-[9.5px] font-extrabold text-slate-900">
                     {exp.jobTitle} &mdash; <span className="font-bold" style={{ color: themeColor }}>{exp.company}</span>
                   </div>
                   <div className="text-[9px] font-bold text-slate-500 font-mono">
-                    {exp.startDate} &ndash; {exp.current ? 'Present' : exp.endDate}
+                    {formatDate(exp.startDate)} &ndash; {exp.current ? 'Present' : formatDate(exp.endDate)}
                   </div>
                 </div>
                 {exp.location && (
@@ -294,24 +284,31 @@ export default function CreativeTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-3">
             <FolderGit className="w-3.5 h-3.5" style={{ color: themeColor }} />
-            <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-900 font-sans">
-              Projects
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.projects}
             </h2>
           </div>
           <div className="space-y-3">
             {projects
               .filter(proj => proj.name?.trim())
               .map((proj) => (
-              <div key={proj.id} className="space-y-0.5">
-                <div className="flex justify-between items-baseline font-sans">
-                  <div className="text-[9.5px] font-bold text-slate-900">
-                    {proj.name} {proj.link && <span className="font-normal text-[8px] text-slate-500 lowercase">({proj.link})</span>}
+               <div key={proj.id} className="proj-entry" style={{ marginBottom: '8pt' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontWeight: '700', fontSize: '9.5pt', color: '#0f172a' }}>
+                      {proj.name}
+                    </span>
+                    {proj.link && (
+                      <span style={{ fontSize: '8pt', color: '#666666', fontStyle: 'italic' }}>
+                        {proj.link}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-[8.5px] font-bold" style={{ color: themeColor }}>
+                  <p style={{ fontSize: '9pt', color: '#555555', fontStyle: 'italic', margin: '1pt 0 2pt 0' }}>
                     {proj.technologies.join(' · ')}
-                  </div>
-                </div>
-                <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{proj.description}</p>
+                  </p>
+                  <p style={{ fontSize: '9.5pt', color: '#111111', lineHeight: '1.45', margin: '0' }}>
+                    {proj.description}
+                  </p>
               </div>
             ))}
           </div>
@@ -334,8 +331,8 @@ export default function CreativeTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-2.5">
             <GraduationCap className="w-3.5 h-3.5" style={{ color: themeColor }} />
-            <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-900 font-sans">
-              Education
+            <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans section-heading">
+              {SECTION_LABELS.education}
             </h2>
           </div>
           <div className="space-y-2">
@@ -346,7 +343,7 @@ export default function CreativeTemplate({
                   <span className="text-[9.5px] font-bold text-slate-900">
                     {edu.school || 'Institution Name'}
                   </span>
-                  <span className="font-bold text-[8.5px]" style={{ color: themeColor }}>{edu.graduationDate}</span>
+                  <span className="font-bold text-[8.5px]" style={{ color: themeColor }}>{formatDate(edu.graduationDate)}</span>
                 </div>
                 {/* Degree / details */}
                 <div className="text-[9px] text-slate-500 mt-0.5">
@@ -369,18 +366,17 @@ export default function CreativeTemplate({
       <div className="flex w-full">
         
         {/* Left column (Off-white sidebar) */}
-        <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0" style={{ backgroundColor: `${themeColor}05`, borderRightWidth: 1, borderRightColor: `${themeColor}15` }}>
+        <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0 left-column" style={{ backgroundColor: `${themeColor}05`, borderRightWidth: 1, borderRightColor: `${themeColor}15` }}>
           
           {/* Circular name abbreviation visual header */}
           <div className="space-y-3.5 text-left pt-2 pb-4">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-base font-black tracking-wide shadow-md" style={{ background: `linear-gradient(to top right, ${themeColor}, ${themeColor}bb)`, boxShadow: `0 4px 12px ${themeColor}20` }}>
-              {contact.fullName ? contact.fullName.split(' ').map(n => n.charAt(0)).slice(0,2).join('').toUpperCase() : 'ME'}
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-base font-black tracking-wide shadow-md print:shadow-none avatar-circle no-print" style={{ background: `linear-gradient(to top right, ${themeColor}, ${themeColor}bb)`, boxShadow: `0 4px 12px ${themeColor}20` }}>
+              {getFullName(contact) ? getFullName(contact).split(' ').map(n => n.charAt(0)).slice(0,2).join('').toUpperCase() : 'ME'}
             </div>
             <div>
               <h1 className="text-sm font-extrabold text-slate-900 leading-tight tracking-tight">
-                {contact.fullName || 'YOUR NAME'}
+                {getFullName(contact) || 'YOUR NAME'}
               </h1>
-              <span className="text-[8px] font-black tracking-widest uppercase block mt-1" style={{ color: themeColor }}>Candidate Profile</span>
             </div>
           </div>
 

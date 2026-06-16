@@ -11,7 +11,6 @@ import ModeRail from './components/ModeRail'
 import SectionSidebar from './components/SectionSidebar'
 import type { SectionType } from './components/SectionSidebar'
 import AiToolsPanel from './components/AiToolsPanel'
-import { downloadResumePdf } from './utils/pdfGenerator'
 import { supabase } from './utils/supabaseClient'
 import type { User } from '@supabase/supabase-js'
 import SectionDrawer from './components/SectionDrawer'
@@ -35,6 +34,7 @@ import {
   Briefcase as BriefcaseIcon,
   GraduationCap as GraduationCapIcon,
   Code2,
+  Globe,
   FolderOpen
 } from 'lucide-react'
 
@@ -51,6 +51,7 @@ const INITIAL_RESUME_DATA: ResumeData = {
   experience: [],
   education: [],
   skills: [],
+  languages: [],
   projects: [],
 }
 
@@ -67,10 +68,15 @@ function getSectionStatus(resumeData: ResumeData): Record<string, boolean> {
   const hasSummary = !!resumeData.summary?.trim()
   const hasExperience =
     resumeData.experience.length > 0 &&
+    !!resumeData.experience.some(e => e.jobTitle?.trim() && e.company?.trim()) &&
     (resumeData.experience[0].bullets?.length ?? 0) >= 2
-  const hasEducation = resumeData.education.length > 0
+  const hasEducation = resumeData.education.length > 0 &&
+    !!resumeData.education.some(e => e.school?.trim() || e.degree?.trim())
   const hasSkills = (resumeData.skills?.length ?? 0) >= 3
-  const hasProjects = !!(resumeData.projects && resumeData.projects.length > 0)
+  const hasLanguages = !!(resumeData.languages && resumeData.languages.length > 0 &&
+    resumeData.languages.some(l => l.name?.trim()))
+  const hasProjects = !!(resumeData.projects && resumeData.projects.length > 0 &&
+    resumeData.projects.some(p => p.name?.trim()))
 
   return {
     contact: hasContact,
@@ -78,6 +84,7 @@ function getSectionStatus(resumeData: ResumeData): Record<string, boolean> {
     experience: hasExperience,
     education: hasEducation,
     skills: hasSkills,
+    languages: hasLanguages,
     projects: hasProjects,
   }
 }
@@ -89,7 +96,8 @@ function calculateCompletion(resumeData: ResumeData): number {
   if (status.summary) score += 20
   if (status.experience) score += 25
   if (status.education) score += 15
-  if (status.skills) score += 20
+  if (status.skills) score += 15
+  if (status.languages) score += 5
   return score
 }
 
@@ -99,6 +107,7 @@ const overviewSections = [
   { id: 'experience' as const, title: 'Work Experience', icon: BriefcaseIcon, colorClass: 'bg-rose-500/10 text-rose-400 group-hover:bg-rose-500/15 group-hover:text-rose-300' },
   { id: 'education' as const, title: 'Education History', icon: GraduationCapIcon, colorClass: 'bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/15 group-hover:text-amber-300' },
   { id: 'skills' as const, title: 'Skills & Stack', icon: Code2, colorClass: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/15 group-hover:text-emerald-300' },
+  { id: 'languages' as const, title: 'Languages', icon: Globe, colorClass: 'bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/15 group-hover:text-indigo-300' },
   { id: 'projects' as const, title: 'Projects', icon: FolderOpen, colorClass: 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/15 group-hover:text-cyan-300' },
 ]
 
@@ -126,6 +135,12 @@ const getSectionPreview = (section: string, data: ResumeData): string => {
       return data.skills.length === 0
         ? 'No skills added yet'
         : data.skills.slice(0, 4).join(', ') + (data.skills.length > 4 ? '...' : '')
+    case 'languages': {
+      const langList = data.languages || []
+      return langList.length === 0
+        ? 'No languages added'
+        : langList.map(l => l.name).join(', ') + (langList.length > 3 ? '...' : '')
+    }
     case 'projects':
       const projList = data.projects || []
       return projList.length === 0
@@ -140,6 +155,70 @@ interface ExportWarningModalProps {
   warnings: string[]
   onClose: () => void
   onExportAnyway: () => void
+}
+
+interface PrintSettingsModalProps {
+  onClose: () => void
+  onContinue: () => void
+}
+
+function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl animate-scale-in">
+        <div className="flex items-center gap-3 text-blue-500 mb-4">
+          <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 5.13-.251m-5.13.251a41.146 41.146 0 0 0-3.613.691m11.744-1.089a41.146 41.146 0 0 1 3.614.691m-11.744-1.09A41.975 41.975 0 0 1 12 12.75c2.025 0 4.248.168 6.23.42M15 8.25V6.75A2.25 2.25 0 0 0 12.75 4.5h-1.5A2.25 2.25 0 0 0 9 6.75v1.5m6 0H9" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-extrabold tracking-tight text-white uppercase">Print Settings</h3>
+            <p className="text-[11px] text-zinc-400">Adjust your browser print settings for best results</p>
+          </div>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          <div className="flex gap-3 p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/40 text-[12px] leading-relaxed">
+            <span className="text-emerald-400 shrink-0 font-bold">1.</span>
+            <div>
+              <p className="text-white font-semibold text-[13px]">Set Margins to <span className="text-amber-400">None</span></p>
+              <p className="text-zinc-400 mt-0.5">In the print dialog, go to <strong>More settings → Margins → None</strong></p>
+            </div>
+          </div>
+          <div className="flex gap-3 p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/40 text-[12px] leading-relaxed">
+            <span className="text-emerald-400 shrink-0 font-bold">2.</span>
+            <div>
+              <p className="text-white font-semibold text-[13px]">Enable Background Graphics</p>
+              <p className="text-zinc-400 mt-0.5">Check <strong>More settings → Background graphics</strong></p>
+            </div>
+          </div>
+          <div className="flex gap-3 p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/40 text-[12px] leading-relaxed">
+            <span className="text-emerald-400 shrink-0 font-bold">3.</span>
+            <div>
+              <p className="text-white font-semibold text-[13px]">Select A4 Paper Size</p>
+              <p className="text-zinc-400 mt-0.5">Choose <strong>A4</strong> under <strong>Paper size</strong> (or your local standard)</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 h-10 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onContinue}
+            className="flex-1 h-10 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-xs shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
+          >
+            Continue to Print
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarningModalProps) {
@@ -230,7 +309,8 @@ function App() {
   const [pageCount, setPageCount] = useState(1)
   const [templateFontSize, setTemplateFontSize] = useState(10)
   const [activeWarnings, setActiveWarnings] = useState<string[] | null>(null)
-  const [sectionOrder, setSectionOrder] = useState<('summary' | 'experience' | 'projects' | 'education' | 'skills')[]>(() => {
+  const [showPrintModal, setShowPrintModal] = useState(false)
+  const [sectionOrder, setSectionOrder] = useState<('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages')[]>(() => {
     let saved = localStorage.getItem('seve_section_order')
     if (!saved) {
       saved = localStorage.getItem('resumeai_section_order')
@@ -243,7 +323,7 @@ function App() {
         }
       } catch {}
     }
-    return ['summary', 'experience', 'projects', 'education', 'skills']
+    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills']
   })
   
   const openDrawer = (sec: SectionType) => {
@@ -255,7 +335,6 @@ function App() {
 
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [isSaving, setIsSaving] = useState(false)
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSynced, setLastSynced] = useState<string | null>(null)
@@ -400,7 +479,7 @@ function App() {
     }))
   }
 
-  const handlePrint = async () => {
+  const handlePrint = () => {
     const warnings: string[] = []
     
     // 1. Duplicate bullets
@@ -453,19 +532,7 @@ function App() {
       return
     }
 
-    triggerDirectDownload()
-  }
-
-  const triggerDirectDownload = async () => {
-    try {
-      setIsGeneratingPdf(true)
-      await downloadResumePdf(state.resumeData, state.selectedTemplate, templateFontSize, sectionOrder, themeColor)
-    } catch (error: any) {
-      console.error('Failed to generate PDF:', error)
-      alert(`Failed to generate PDF: ${error?.message || error}\n\nPlease check that your data is correct and try again.`)
-    } finally {
-      setIsGeneratingPdf(false)
-    }
+    setShowPrintModal(true)
   }
 
   const triggerNativePrint = () => {
@@ -785,7 +852,6 @@ function App() {
                           setMobileView('edit')
                         }}
                         onExportPdf={handlePrint}
-                        isGeneratingPdf={isGeneratingPdf}
                         onPageCountChange={setPageCount}
                         sectionOrder={sectionOrder}
                         onSectionOrderChange={setSectionOrder}
@@ -829,11 +895,10 @@ function App() {
                       
                       <button
                         onClick={handlePrint}
-                        disabled={isGeneratingPdf}
-                        className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                        className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 cursor-pointer"
                       >
-                        {!isGeneratingPdf && <Download size={13} />}
-                        {isGeneratingPdf ? 'Compiling...' : 'Download PDF'}
+                        <Download size={13} />
+                        Export PDF
                       </button>
                     </div>
                   </div>
@@ -850,7 +915,6 @@ function App() {
                           setActiveMode('studio')
                         }}
                         onExportPdf={handlePrint}
-                        isGeneratingPdf={isGeneratingPdf}
                         onPageCountChange={setPageCount}
                         sectionOrder={sectionOrder}
                         onSectionOrderChange={setSectionOrder}
@@ -958,44 +1022,45 @@ function App() {
       {/* Print Portal */}
       {createPortal(
         <div className="resume-print-wrapper hidden print:block">
+          <div className={`resume-page template-${state.selectedTemplate}`}>
           <style dangerouslySetInnerHTML={{ __html: `
-            .resume-print-wrapper {
+            .resume-page {
               font-size: ${templateFontSize}pt !important;
             }
-            .resume-print-wrapper .text-\\[10px\\] {
+            .resume-page .text-\\[10px\\] {
               font-size: ${(templateFontSize / 10) * 10}px !important;
             }
-            .resume-print-wrapper .text-\\[10\\.5px\\] {
+            .resume-page .text-\\[10\\.5px\\] {
               font-size: ${(templateFontSize / 10) * 10.5}px !important;
             }
-            .resume-print-wrapper .text-\\[9\\.5px\\] {
+            .resume-page .text-\\[9\\.5px\\] {
               font-size: ${(templateFontSize / 10) * 9.5}px !important;
             }
-            .resume-print-wrapper .text-\\[9px\\] {
+            .resume-page .text-\\[9px\\] {
               font-size: ${(templateFontSize / 10) * 9}px !important;
             }
-            .resume-print-wrapper .text-\\[8\\.5px\\] {
+            .resume-page .text-\\[8\\.5px\\] {
               font-size: ${(templateFontSize / 10) * 8.5}px !important;
             }
-            .resume-print-wrapper .text-\\[8px\\] {
+            .resume-page .text-\\[8px\\] {
               font-size: ${(templateFontSize / 10) * 8}px !important;
             }
-            .resume-print-wrapper .text-2xl {
+            .resume-page .text-2xl {
               font-size: ${(templateFontSize / 10) * 24}px !important;
             }
-            .resume-print-wrapper .text-xl {
+            .resume-page .text-xl {
               font-size: ${(templateFontSize / 10) * 20}px !important;
             }
-            .resume-print-wrapper .text-lg {
+            .resume-page .text-lg {
               font-size: ${(templateFontSize / 10) * 18}px !important;
             }
-            .resume-print-wrapper .text-base {
+            .resume-page .text-base {
               font-size: ${(templateFontSize / 10) * 16}px !important;
             }
-            .resume-print-wrapper .text-sm {
+            .resume-page .text-sm {
               font-size: ${(templateFontSize / 10) * 14}px !important;
             }
-            .resume-print-wrapper .text-xs {
+            .resume-page .text-xs {
               font-size: ${(templateFontSize / 10) * 12}px !important;
             }
           ` }} />
@@ -1034,6 +1099,7 @@ function App() {
               themeColor={themeColor}
             />
           )}
+          </div>
         </div>,
         document.body
       )}
@@ -1045,6 +1111,17 @@ function App() {
           onClose={() => setActiveWarnings(null)}
           onExportAnyway={() => {
             setActiveWarnings(null)
+            setShowPrintModal(true)
+          }}
+        />
+      )}
+
+      {/* Print Settings Modal */}
+      {showPrintModal && (
+        <PrintSettingsModal
+          onClose={() => setShowPrintModal(false)}
+          onContinue={() => {
+            setShowPrintModal(false)
             triggerNativePrint()
           }}
         />

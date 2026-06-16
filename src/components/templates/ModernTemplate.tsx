@@ -1,15 +1,18 @@
 import type { ResumeData } from '../../types/resume'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { formatDate } from '../../utils/dateUtils'
+import { getFullName } from '../../utils/contactUtils'
 
 interface ModernTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   themeColor?: string
 }
 
@@ -125,8 +128,8 @@ export default function ModernTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-4 rounded-sm animate-pulse" style={{ backgroundColor: themeColor }} />
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-950">
-              Professional Summary
+            <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">
+              {SECTION_LABELS.summary}
             </h2>
           </div>
           <p className="text-[10px] leading-relaxed text-justify text-slate-750">{summary}</p>
@@ -149,19 +152,19 @@ export default function ModernTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: themeColor }} />
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-950">
-              Work Experience
+            <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">
+              {SECTION_LABELS.experience}
             </h2>
           </div>
           <div className="space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div key={exp.id} className="space-y-1 exp-entry">
                 <div className="flex justify-between items-baseline">
                   <div className="text-[10.5px] font-bold text-slate-950">
-                    {exp.jobTitle} <span className="font-semibold" style={{ color: themeColor }}>@ {exp.company}</span>
+                    {exp.jobTitle} <span className="font-semibold" style={{ color: themeColor }}>— {exp.company}</span>
                   </div>
                   <div className="text-[9.5px] font-bold text-slate-500">
-                    {exp.startDate} – {exp.current ? 'Present' : exp.endDate}
+                    {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
                   </div>
                 </div>
                 {exp.location && (
@@ -196,13 +199,13 @@ export default function ModernTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: themeColor }} />
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-950">
-              Key Projects
+            <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">
+              {SECTION_LABELS.projects}
             </h2>
           </div>
           <div className="space-y-3.5">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5">
+              <div key={proj.id} className="space-y-0.5 proj-entry">
                 <div className="flex justify-between items-baseline">
                   <div className="text-[10.5px] font-bold text-slate-950">
                     {proj.name} {proj.link && <span className="text-[9px] font-normal text-slate-500 lowercase">({proj.link})</span>}
@@ -234,8 +237,8 @@ export default function ModernTemplate({
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: themeColor }} />
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-950">
-              Education History
+            <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">
+              {SECTION_LABELS.education}
             </h2>
           </div>
           <div className="space-y-4">
@@ -249,7 +252,7 @@ export default function ModernTemplate({
                       {edu.school || 'Institution Name'}
                     </span>
                     <span className="text-[9.5px] font-bold text-slate-500">
-                      {edu.graduationDate}
+                      {formatDate(edu.graduationDate)}
                     </span>
                   </div>
                   
@@ -262,6 +265,40 @@ export default function ModernTemplate({
                 </div>
               ))}
           </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    languages: data.languages && data.languages.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="languages"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'languages')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('languages')}
+      >
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: themeColor }} />
+            <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">
+              {SECTION_LABELS.languages}
+            </h2>
+          </div>
+          <p style={{
+            fontSize: '10pt',
+            color: '#111111',
+            lineHeight: '1.7',
+            letterSpacing: '0.01em'
+          }}>
+            {data.languages.map((lang, idx) => (
+              <span key={lang.id}>
+                {idx > 0 && ' · '}
+                <span>{lang.name} ({lang.proficiency})</span>
+              </span>
+            ))}
+          </p>
         </div>
       </PreviewSectionWrapper>
     ) : null,
@@ -281,44 +318,18 @@ export default function ModernTemplate({
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: themeColor }} />
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-950">
-              Skills & Expertise
+            <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">
+              {SECTION_LABELS.skills}
             </h2>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {skills.map((skill) => {
-              const parts = skill.split(':')
-              if (parts.length > 1 && parts[0].trim().length < 30) {
-                return (
-                  <span
-                    key={skill}
-                    className="text-[9px] px-2.5 py-1 rounded-md border font-bold uppercase tracking-wider"
-                    style={{ 
-                      backgroundColor: `${themeColor}10`, 
-                      borderColor: `${themeColor}25`, 
-                      color: themeColor 
-                    }}
-                  >
-                    <strong className="font-extrabold text-slate-950 mr-1">{parts[0].trim()}:</strong>
-                    {parts.slice(1).join(':')}
-                  </span>
-                )
-              }
-              return (
-                <span
-                  key={skill}
-                  className="text-[9px] px-2.5 py-1 rounded-md border font-bold uppercase tracking-wider"
-                  style={{ 
-                    backgroundColor: `${themeColor}10`, 
-                    borderColor: `${themeColor}25`, 
-                    color: themeColor 
-                  }}
-                >
-                  {skill}
-                </span>
-              )
-            })}
-          </div>
+          <p style={{
+            fontSize: '10pt',
+            color: '#111111',
+            lineHeight: '1.7',
+            letterSpacing: '0.01em'
+          }}>
+            {skills.join(' · ')}
+          </p>
         </div>
       </PreviewSectionWrapper>
     ) : null
@@ -338,7 +349,7 @@ export default function ModernTemplate({
       >
         <div className="mb-5 relative pb-3 border-b-2" style={{ borderBottomColor: themeColor }}>
           <h1 className="text-3xl font-extrabold text-slate-950 tracking-tight mb-1.5">
-            {contact.fullName || 'YOUR NAME'}
+            {getFullName(contact) || 'YOUR NAME'}
           </h1>
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold tracking-wide uppercase" style={{ color: themeColor }}>
             {contact.location && <span>{contact.location}</span>}

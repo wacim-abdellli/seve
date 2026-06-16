@@ -37,6 +37,10 @@ export default defineConfig({
 		__APP_VERSION__: appVersion,
 	},
 
+	css: {
+		postcss: false, // @tailwindcss/vite handles all CSS processing
+	},
+
 	build: {
 		chunkSizeWarningLimit: 10 * 1024, // 10 MB
 		rolldownOptions: {

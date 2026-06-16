@@ -8,6 +8,7 @@ import SummaryForm from './form/SummaryForm'
 import ExperienceForm from './form/ExperienceForm'
 import EducationForm from './form/EducationForm'
 import SkillsForm from './form/SkillsForm'
+import LanguagesForm from './form/LanguagesForm'
 import ProjectsForm from './form/ProjectsForm'
 
 interface SectionDrawerProps {
@@ -24,6 +25,7 @@ const sectionMeta = {
   experience: { title: 'Work Experience' },
   education: { title: 'Education History' },
   skills: { title: 'Skills & Stack' },
+  languages: { title: 'Languages' },
   projects: { title: 'Projects' },
 }
 
@@ -101,6 +103,12 @@ export default function SectionDrawer({
             skills={resumeData.skills}
             jobTitle={resumeData.experience[0]?.jobTitle || ''}
             onChange={(updated) => onChange({ ...resumeData, skills: updated })}
+          />
+        )}
+        {section === 'languages' && (
+          <LanguagesForm
+            languages={resumeData.languages || []}
+            onChange={(updated) => onChange({ ...resumeData, languages: updated })}
           />
         )}
         {section === 'projects' && (

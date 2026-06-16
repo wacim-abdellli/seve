@@ -192,6 +192,11 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     fullResumeText += ` ${edu.degree} ${edu.school} ${edu.location}`
   })
   fullResumeText += ` ${resume.skills.join(' ')}`
+  if (resume.languages) {
+    resume.languages.forEach((lang) => {
+      fullResumeText += ` ${lang.name} ${lang.proficiency}`
+    })
+  }
   if (resume.projects) {
     resume.projects.forEach((proj) => {
       fullResumeText += ` ${proj.name} ${proj.description} ${proj.technologies.join(' ')}`
@@ -217,6 +222,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
     experience: resume.experience && resume.experience.length > 0,
     education: resume.education && resume.education.length > 0,
     skills: resume.skills && resume.skills.length > 0,
+    languages: resume.languages && resume.languages.length > 0,
   }
 
   Object.entries(completenessChecks).forEach(([section, present]) => {
@@ -229,7 +235,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
       })
     }
   })
-  if (sectionCompleteness === 20) {
+  if (sectionCompleteness >= 20) {
     passing.push(dict.allSectionsPresent)
   }
 

@@ -89,6 +89,16 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
           label: 'Projects'
         }
       }
+      case 'languages': {
+        const items = resumeData.languages || []
+        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Languages' }
+        const percent = Math.min(100, Math.round((items.length / 3) * 100))
+        return {
+          percent,
+          status: items.length >= 3 ? 'complete' : 'partial',
+          label: 'Languages'
+        }
+      }
     }
   }
 

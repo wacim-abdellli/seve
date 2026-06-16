@@ -4,7 +4,7 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"build": "rm -rf dist && vite build",
+		"build": "vite build",
 		"dev": "vite dev",
 		"serve": "vite preview",
 		"start": "vite preview",

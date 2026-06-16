@@ -224,50 +224,128 @@ h1, h2, h3, h4, h5, h6 {
 }
 /* Print CSS Stylesheet */
 @media print {
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
-  html, body {
-    background: #ffffff !important;
-    background-image: none !important;
-    color: #000000 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Hide everything on body except the print portal wrapper */
-  body > :not(.resume-print-wrapper) {
+  /* Hide everything except resume */
+  body > *:not(.resume-print-wrapper) {
     display: none !important;
-    opacity: 0 !important;
     visibility: hidden !important;
   }
 
   .resume-print-wrapper {
     display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    box-shadow: none !important;
-    border: none !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    background: white !important;
   }
 
-  /* Page breaks optimization for ATS structures */
-  .section-heading, h2, h3, h4 {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .resume-page {
+    width: 210mm !important;
+    padding: 14mm 18mm !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    transform: none !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Strip all screen-only styles */
+  .resume-page * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Name — never transform case */
+  .resume-name,
+  .resume-page h1 {
+    text-transform: none !important;
+  }
+
+  /* Force bullets */
+  .resume-page ul {
+    list-style: disc !important;
+    padding-left: 14pt !important;
+    margin: 3pt 0 5pt 0 !important;
+  }
+  .resume-page li {
+    display: list-item !important;
+    list-style: disc !important;
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+    margin-bottom: 2pt !important;
+    color: #111111 !important;
+  }
+
+  /* Hide UI elements */
+  .no-print,
+  .avatar-circle,
+  .skill-tag,
+  [class*="badge"],
+  [class*="pill"] {
+    display: none !important;
+  }
+
+  /* Page break rules */
+  h2, h3 {
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
-
-  .bullet-item, .job-entry, .edu-entry, ul, li, p {
+  [class*="exp-entry"],
+  [class*="edu-entry"],
+  [class*="proj-entry"] {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+  }
+
+  /* Sidebar backgrounds → light grey */
+  .template-executive [class*="left"],
+  .template-executive [class*="sidebar"],
+  .template-twocolumn [class*="left"],
+  .template-twocolumn [class*="sidebar"],
+  .template-creative [class*="left"],
+  .template-creative [class*="sidebar"] {
+    background: #f2f2f2 !important;
+    background-color: #f2f2f2 !important;
+  }
+
+  /* Remove template's own padding — .resume-page handles it */
+  .template-classic > div:first-child,
+  .template-modern > div:first-child,
+  .template-executive > div:first-child,
+  .template-minimalist > div:first-child,
+  .template-creative > div:first-child {
+    padding: 0 !important;
+  }
+
+  /* All text dark in print */
+  .resume-page,
+  .resume-page * {
+    color: #111111 !important;
+  }
+
+  /* Exception: keep accent colors for modern template */
+  .template-modern .section-heading {
+    color: #1e3a5f !important;
+    border-left-color: #1e3a5f !important;
   }
 }
 

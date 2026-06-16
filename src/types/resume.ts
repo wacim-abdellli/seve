@@ -27,6 +27,12 @@ export interface Education {
   gpa?: string
 }
 
+export interface Language {
+  id: string
+  name: string
+  proficiency: string
+}
+
 export interface Project {
   id: string
   name: string
@@ -41,6 +47,7 @@ export interface ResumeData {
   experience: Experience[]
   education: Education[]
   skills: string[]
+  languages?: Language[]
   projects?: Project[]
 }
 

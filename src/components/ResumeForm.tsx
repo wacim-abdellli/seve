@@ -5,8 +5,9 @@ import SummaryForm from './form/SummaryForm'
 import ExperienceForm from './form/ExperienceForm'
 import EducationForm from './form/EducationForm'
 import SkillsForm from './form/SkillsForm'
+import LanguagesForm from './form/LanguagesForm'
 import ProjectsForm from './form/ProjectsForm'
-import { User, FileText, Briefcase, GraduationCap, Wrench, FolderGit } from 'lucide-react'
+import { User, FileText, Briefcase, GraduationCap, Wrench, Globe, FolderGit } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 interface ResumeFormProps {
@@ -16,7 +17,7 @@ interface ResumeFormProps {
   activeSection?: Tab
 }
 
-type Tab = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects'
+type Tab = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects'
 
 export default function ResumeForm({ resumeData, apiKey, onChange, activeSection }: ResumeFormProps) {
   const [localActiveSubTab, setLocalActiveSubTab] = useState<Tab>('contact')
@@ -48,6 +49,8 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
         return resumeData.education.length > 0 && !!resumeData.education[0].school.trim()
       case 'skills':
         return resumeData.skills.length >= 3
+      case 'languages':
+        return !!(resumeData.languages && resumeData.languages.length > 0 && resumeData.languages[0].name.trim())
       case 'projects':
         return !!(resumeData.projects && resumeData.projects.length > 0 && resumeData.projects[0].name.trim())
       default:
@@ -61,6 +64,7 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
     { id: 'experience', label: 'Experience', icon: Briefcase },
     { id: 'education', label: 'Education', icon: GraduationCap },
     { id: 'skills', label: 'Skills', icon: Wrench },
+    { id: 'languages', label: 'Languages', icon: Globe },
     { id: 'projects', label: 'Projects', icon: FolderGit },
   ]
 
@@ -70,6 +74,7 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
     experience: { title: 'Work Experience', subtitle: 'Detail your professional employment history', icon: Briefcase },
     education: { title: 'Education History', subtitle: 'List your academic credentials and details', icon: GraduationCap },
     skills: { title: 'Skills & Tech Stack', subtitle: 'Catalog your core and technical skills', icon: Wrench },
+    languages: { title: 'Languages', subtitle: 'List the languages you speak and your proficiency', icon: Globe },
     projects: { title: 'Key Projects', subtitle: 'Showcase your independent or team projects', icon: FolderGit },
   }[activeSubTab]
 
@@ -128,6 +133,12 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
           />
         )}
 
+        {activeSubTab === 'languages' && (
+          <LanguagesForm
+            languages={resumeData.languages || []}
+            onChange={(updated) => updateSection('languages', updated)}
+          />
+        )}
         {activeSubTab === 'projects' && (
           <ProjectsForm
             projects={resumeData.projects || []}

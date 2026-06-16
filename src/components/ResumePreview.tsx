@@ -28,12 +28,11 @@ interface ResumePreviewProps {
   selectedTemplate: Template
   onChangeTemplate?: (template: Template) => void
   activeSection?: string | null
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   onExportPdf?: () => void
-  isGeneratingPdf?: boolean
   onPageCountChange?: (count: number) => void
-  sectionOrder?: ('summary' | 'experience' | 'projects' | 'education' | 'skills')[]
-  onSectionOrderChange?: (order: ('summary' | 'experience' | 'projects' | 'education' | 'skills')[]) => void
+  sectionOrder?: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages')[]
+  onSectionOrderChange?: (order: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages')[]) => void
   templateFontSize: number
   onChangeFontSize: (size: number) => void
   themeColor: string
@@ -48,7 +47,7 @@ const templatesList: { id: Template; label: string; colorDot: string }[] = [
   { id: 'creative', label: 'Creative', colorDot: 'bg-rose-500' },
 ]
 
-type SectionKey = 'summary' | 'experience' | 'projects' | 'education' | 'skills'
+type SectionKey = 'summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages'
 
 const themeColors = [
   { value: '#e11d48', label: 'Crimson', bgClass: 'bg-rose-500' },
@@ -66,7 +65,6 @@ export default function ResumePreview({
   activeSection,
   onEditSection,
   onExportPdf,
-  isGeneratingPdf,
   onPageCountChange,
   sectionOrder: propsSectionOrder,
   onSectionOrderChange,
@@ -172,7 +170,7 @@ export default function ResumePreview({
         /* Ignore parsing errors */
       }
     }
-    return ['summary', 'experience', 'projects', 'education', 'skills']
+    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills']
   })
 
   const sectionOrder = propsSectionOrder || localSectionOrder
@@ -399,17 +397,12 @@ export default function ResumePreview({
                 <div className="w-px h-4 bg-zinc-800 mx-1 flex-shrink-0" />
                 <button 
                   onClick={onExportPdf}
-                  disabled={isGeneratingPdf}
-                  className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg bg-red-650 hover:bg-red-500 text-white font-semibold shadow-lg transition-colors cursor-pointer disabled:opacity-50 disabled:bg-red-800"
+                  className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg bg-red-650 hover:bg-red-500 text-white font-semibold shadow-lg transition-colors cursor-pointer"
                   type="button"
                 >
-                  {isGeneratingPdf ? (
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Download className="w-3.5 h-3.5" />
-                  )}
-                  <span className="hidden min-[1440px]:inline">{isGeneratingPdf ? 'Exporting...' : 'Export'}</span>
-                  <span className="inline min-[1440px]:hidden">{isGeneratingPdf ? '...' : 'PDF'}</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden min-[1440px]:inline">Export</span>
+                  <span className="inline min-[1440px]:hidden">PDF</span>
                 </button>
               </>
             )}

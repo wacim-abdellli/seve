@@ -1,15 +1,18 @@
 import type { ResumeData } from '../../types/resume'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { formatDate } from '../../utils/dateUtils'
+import { getFullName } from '../../utils/contactUtils'
 
 interface ExecutiveTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   themeColor?: string
 }
 
@@ -123,8 +126,8 @@ export default function ExecutiveTemplate({
         onDrop={() => onDrop?.('summary')}
       >
         <div className="space-y-2">
-          <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 font-serif">
-            Executive Summary
+          <h2 className="text-[11px] font-black tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 font-serif section-heading">
+            {SECTION_LABELS.summary}
           </h2>
           <p className="text-[10px] leading-relaxed text-justify text-slate-770">{summary}</p>
         </div>
@@ -144,18 +147,18 @@ export default function ExecutiveTemplate({
         onDrop={() => onDrop?.('experience')}
       >
         <div className="space-y-3">
-          <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 font-serif">
-            Professional Experience
+          <h2 className="text-[11px] font-black tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 font-serif section-heading">
+            {SECTION_LABELS.experience}
           </h2>
           <div className="space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div key={exp.id} className="space-y-1 exp-entry">
                 <div className="flex justify-between items-baseline font-sans">
-                  <div className="text-[10.5px] font-bold text-slate-900 uppercase">
-                    {exp.jobTitle} <span className="font-normal text-slate-500 capitalize">— {exp.company}</span>
+                  <div className="text-[10.5px] font-bold text-slate-900">
+                    {exp.jobTitle} <span className="font-normal text-slate-500">— {exp.company}</span>
                   </div>
                   <div className="text-[9.5px] font-bold text-slate-600 shrink-0 ml-4 font-mono">
-                    {exp.startDate} – {exp.current ? 'Present' : exp.endDate}
+                    {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
                   </div>
                 </div>
                 {exp.location && (
@@ -188,15 +191,15 @@ export default function ExecutiveTemplate({
         onDrop={() => onDrop?.('projects')}
       >
         <div className="space-y-3">
-          <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 font-serif">
-            Key Initiatives
+          <h2 className="text-[11px] font-black tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 font-serif section-heading">
+            {SECTION_LABELS.projects}
           </h2>
           <div className="space-y-3.5">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5 font-sans">
+              <div key={proj.id} className="space-y-0.5 font-sans proj-entry">
                 <div className="flex justify-between items-baseline">
-                  <div className="text-[10.5px] font-bold text-slate-900 uppercase">
-                    {proj.name} {proj.link && <span className="font-normal text-[8.5px] text-slate-400 lowercase">({proj.link})</span>}
+                  <div className="text-[10.5px] font-bold text-slate-900">
+                    {proj.name} {proj.link && <span className="font-normal text-[8.5px] text-slate-400">({proj.link})</span>}
                   </div>
                   <div className="text-[9.5px] font-semibold text-slate-500">
                     {proj.technologies.join(', ')}
@@ -217,7 +220,7 @@ export default function ExecutiveTemplate({
   return (
     <div className="flex min-h-[1070px] print:min-h-0 overflow-hidden rounded-sm text-slate-800 font-sans select-text max-w-full">
       {/* Left Sidebar (32% width) - Deep Navy/Slate Panel */}
-      <div className="w-[32%] bg-[#0f172a] text-slate-100 p-5 flex flex-col gap-6 shrink-0 no-print-background-hack">
+      <div className="w-[32%] bg-[#0f172a] text-slate-100 p-5 flex flex-col gap-6 shrink-0 sidebar-column no-print-background-hack">
         
         {/* Contact Header */}
         <PreviewSectionWrapper
@@ -229,38 +232,38 @@ export default function ExecutiveTemplate({
           onEdit={onEditSection}
         >
           <div className="space-y-3">
-            <h1 className="text-xl font-black tracking-tight text-white uppercase leading-tight">
-              {contact.fullName || 'YOUR NAME'}
+            <h1 className="text-xl font-black tracking-tight text-white leading-tight resume-name">
+              {getFullName(contact) || 'YOUR NAME'}
             </h1>
             <div className="h-0.5 w-12 rounded" style={{ backgroundColor: themeColor }} />
             <div className="space-y-2 text-[9.5px] text-slate-300 font-light leading-relaxed break-all">
               {contact.location && (
                 <div>
-                  <span className="font-bold text-slate-400 block uppercase text-[8px] tracking-wide">Location</span>
+                  <span className="font-bold text-slate-400 block text-[8px] tracking-wide sidebar-label">Location</span>
                   {contact.location}
                 </div>
               )}
               {contact.email && (
                 <div>
-                  <span className="font-bold text-slate-400 block uppercase text-[8px] tracking-wide">Email</span>
+                  <span className="font-bold text-slate-400 block text-[8px] tracking-wide sidebar-label">Email</span>
                   {contact.email}
                 </div>
               )}
               {contact.phone && (
                 <div>
-                  <span className="font-bold text-slate-400 block uppercase text-[8px] tracking-wide">Phone</span>
+                  <span className="font-bold text-slate-400 block text-[8px] tracking-wide sidebar-label">Phone</span>
                   {contact.phone}
                 </div>
               )}
               {contact.linkedin && (
                 <div>
-                  <span className="font-bold text-slate-400 block uppercase text-[8px] tracking-wide">LinkedIn</span>
+                  <span className="font-bold text-slate-400 block text-[8px] tracking-wide sidebar-label">LinkedIn</span>
                   {contact.linkedin}
                 </div>
               )}
               {contact.website && (
                 <div>
-                  <span className="font-bold text-slate-400 block uppercase text-[8px] tracking-wide">Website</span>
+                  <span className="font-bold text-slate-400 block text-[8px] tracking-wide sidebar-label">Website</span>
                   {contact.website}
                 </div>
               )}
@@ -282,8 +285,8 @@ export default function ExecutiveTemplate({
             onDrop={() => onDrop?.('education')}
           >
             <div className="space-y-3 pt-2 border-t border-slate-800">
-              <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Education
+              <h2 className="text-[10px] font-black tracking-wider text-slate-400 section-heading">
+                {SECTION_LABELS.education}
               </h2>
               <div className="space-y-3">
                 {education
@@ -291,14 +294,15 @@ export default function ExecutiveTemplate({
                   .map((edu) => (
                     <div key={edu.id} className="edu-entry space-y-0.5 text-[9.5px]">
                       <div className="flex justify-between items-baseline font-sans">
-                        <span className="font-bold text-white uppercase">
+                        <span className="font-bold text-white">
                           {edu.school || 'Institution Name'}
                         </span>
-                        <span className="font-semibold text-[8.5px]" style={{ color: themeColor }}>{edu.graduationDate}</span>
+                        <span className="font-semibold text-[8.5px]" style={{ color: themeColor }}>{formatDate(edu.graduationDate)}</span>
                       </div>
                       <div className="text-slate-300">
                         <span className="italic">{edu.degree}</span>
                         {edu.location && ` · ${edu.location}`}
+                        {edu.gpa && parseFloat(edu.gpa) >= 3.5 && ` · GPA: ${edu.gpa}`}
                       </div>
                     </div>
                   ))}
@@ -321,42 +325,36 @@ export default function ExecutiveTemplate({
             onDrop={() => onDrop?.('skills')}
           >
             <div className="space-y-3 pt-2 border-t border-slate-800 flex-1">
-              <h2 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Competencies
+              <h2 className="text-[10px] font-black tracking-wider text-slate-400 section-heading">
+                {SECTION_LABELS.skills}
               </h2>
-              <div className="flex flex-wrap gap-1.5 font-sans">
-                {skills.map((skill) => {
-                  const parts = skill.split(':')
-                  if (parts.length > 1 && parts[0].trim().length < 30) {
-                    return (
-                      <span
-                        key={skill}
-                        className="bg-slate-850/60 text-slate-300 border border-slate-800 px-2 py-0.5 rounded text-[8.5px] font-semibold uppercase tracking-wider"
-                        style={{ borderColor: `${themeColor}20`, backgroundColor: `${themeColor}05` }}
-                      >
-                        <strong className="font-extrabold text-white mr-1" style={{ color: themeColor }}>{parts[0].trim()}:</strong>
-                        {parts.slice(1).join(':')}
-                      </span>
-                    )
-                  }
-                  return (
-                    <span
-                      key={skill}
-                      className="bg-slate-850/60 text-slate-300 border border-slate-800 px-2 py-0.5 rounded text-[8.5px] font-semibold uppercase tracking-wider"
-                      style={{ borderColor: `${themeColor}20`, backgroundColor: `${themeColor}05` }}
-                    >
-                      {skill}
-                    </span>
-                  )
-                })}
-              </div>
+              <p className="text-[9.5px] leading-relaxed text-slate-300">
+                {skills.join(' · ')}
+              </p>
             </div>
           </PreviewSectionWrapper>
+        )}
+
+        {/* Languages in Sidebar */}
+        {data.languages && data.languages.length > 0 && (
+          <div className="space-y-3 pt-2 border-t border-slate-800">
+            <h2 className="text-[10px] font-black tracking-wider text-slate-400 section-heading">
+              {SECTION_LABELS.languages}
+            </h2>
+            <div className="space-y-1 text-[9.5px] text-slate-300">
+              {data.languages.map((lang) => (
+                <div key={lang.id}>
+                  <span className="font-semibold text-white">{lang.name}</span>
+                  <span className="text-slate-400"> — {lang.proficiency}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
       {/* Right Canvas (68% width) - Main White Page */}
-      <div className="flex-1 bg-white p-10 flex flex-col gap-6">
+      <div className="flex-1 bg-white p-10 flex flex-col gap-6 main-column">
         {rightSectionOrder.map((secId) => {
           const component = rightSectionsMap[secId]
           return component ? <div key={secId}>{component}</div> : null

@@ -1,15 +1,18 @@
 import type { ResumeData } from '../../types/resume'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { formatDate } from '../../utils/dateUtils'
+import { getFullName } from '../../utils/contactUtils'
 
 interface ClassicTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   themeColor?: string
 }
 
@@ -123,8 +126,8 @@ export default function ClassicTemplate({
         onDrop={() => onDrop?.('summary')}
       >
         <div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
-            Professional Summary
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.summary}
           </h2>
           <p className="text-[10px] leading-relaxed text-justify text-slate-800">{summary}</p>
         </div>
@@ -144,18 +147,18 @@ export default function ClassicTemplate({
         onDrop={() => onDrop?.('experience')}
       >
         <div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest border-b pb-0.5 mb-2.5 font-serif text-slate-950" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
-            Work History
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2.5 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.experience}
           </h2>
           <div className="space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div key={exp.id} className="space-y-1 exp-entry">
                 <div className="flex justify-between items-baseline font-serif">
                   <div className="text-[10.5px] font-extrabold text-slate-950">
                     {exp.jobTitle} &mdash; <span className="font-medium text-slate-700">{exp.company}</span>
                   </div>
                   <div className="text-[9.5px] font-bold text-slate-500 font-mono">
-                    {exp.startDate} &ndash; {exp.current ? 'Present' : exp.endDate}
+                    {formatDate(exp.startDate)} &ndash; {exp.current ? 'Present' : formatDate(exp.endDate)}
                   </div>
                 </div>
                 {exp.location && (
@@ -188,12 +191,12 @@ export default function ClassicTemplate({
         onDrop={() => onDrop?.('projects')}
       >
         <div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest border-b pb-0.5 mb-2.5 font-serif text-slate-950" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
-            Key Projects
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2.5 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.projects}
           </h2>
           <div className="space-y-3.5">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5 font-serif">
+              <div key={proj.id} className="space-y-0.5 font-serif proj-entry">
                 <div className="flex justify-between items-baseline">
                   <div className="text-[10.5px] font-extrabold text-slate-950">
                     {proj.name} {proj.link && <span className="font-normal text-[8.5px] text-slate-500 lowercase">({proj.link})</span>}
@@ -223,8 +226,8 @@ export default function ClassicTemplate({
         onDrop={() => onDrop?.('education')}
       >
         <div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest border-b pb-0.5 mb-2.5 font-serif text-slate-950" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
-            Academic Credentials
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2.5 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.education}
           </h2>
           <div className="space-y-4">
             {education
@@ -237,7 +240,7 @@ export default function ClassicTemplate({
                       {edu.school || 'Institution Name'}
                     </span>
                     <span className="text-[9.5px] font-bold text-slate-500 font-mono">
-                      {edu.graduationDate}
+                      {formatDate(edu.graduationDate)}
                     </span>
                   </div>
                   
@@ -249,6 +252,32 @@ export default function ClassicTemplate({
                   </div>
                 </div>
               ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    languages: data.languages && data.languages.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="languages"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'languages')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('languages')}
+      >
+        <div>
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.languages}
+          </h2>
+          <div className="text-[10px] leading-relaxed text-slate-800 font-serif">
+            {data.languages.map((lang, idx) => (
+              <span key={lang.id}>
+                {idx > 0 && ' · '}
+                <span>{lang.name} ({lang.proficiency})</span>
+              </span>
+            ))}
           </div>
         </div>
       </PreviewSectionWrapper>
@@ -267,8 +296,8 @@ export default function ClassicTemplate({
         onDrop={() => onDrop?.('skills')}
       >
         <div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
-            Skills & Core Competencies
+          <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2 font-serif text-slate-950 section-heading" style={{ borderBottomColor: themeColor || '#0a0a0b' }}>
+            {SECTION_LABELS.skills}
           </h2>
           <div className="text-[10px] leading-relaxed text-justify text-slate-800 font-serif">
             {skills.map((skill, idx) => {
@@ -308,10 +337,10 @@ export default function ClassicTemplate({
         onEdit={onEditSection}
       >
         <div className="text-center">
-          <h1 className="text-2xl font-extrabold font-serif uppercase tracking-widest text-slate-950 mb-2">
-            {contact.fullName || 'YOUR NAME'}
+          <h1 className="text-2xl font-extrabold font-serif tracking-widest text-slate-950 mb-2 resume-name">
+            {getFullName(contact) || 'YOUR NAME'}
           </h1>
-          <div className="text-[10px] text-slate-650 uppercase tracking-wider flex justify-center flex-wrap gap-x-2.5 gap-y-1">
+          <div className="text-[10px] text-slate-650 tracking-wider flex justify-center flex-wrap gap-x-2.5 gap-y-1">
             {contact.location && <span>{contact.location}</span>}
             {contact.email && <span>• {contact.email}</span>}
             {contact.phone && <span>• {contact.phone}</span>}

@@ -6,7 +6,7 @@ import {
   Bot
 } from 'lucide-react'
 
-export type SectionType = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects'
+export type SectionType = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects'
 
 interface SectionSidebarProps {
   activeMode: 'studio' | 'preview' | 'analyze' | 'ai'

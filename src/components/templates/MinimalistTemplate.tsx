@@ -1,15 +1,18 @@
 import type { ResumeData } from '../../types/resume'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { formatDate } from '../../utils/dateUtils'
+import { getFullName } from '../../utils/contactUtils'
 
 interface MinimalistTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'projects') => void
+  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects') => void
   themeColor?: string
 }
 
@@ -149,13 +152,13 @@ export default function MinimalistTemplate({
           </h2>
           <div className="space-y-4">
             {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1">
+              <div key={exp.id} className="space-y-1 exp-entry">
                 <div className="flex justify-between items-baseline font-serif">
                   <div className="text-[10.5px] font-bold text-slate-950">
                     {exp.jobTitle} <span className="font-normal text-slate-500">— {exp.company}</span>
                   </div>
                   <div className="text-[9.5px] font-bold text-slate-500 font-mono">
-                    {exp.startDate} – {exp.current ? 'Present' : exp.endDate}
+                    {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
                   </div>
                 </div>
                 {exp.location && (
@@ -193,7 +196,7 @@ export default function MinimalistTemplate({
           </h2>
           <div className="space-y-3.5">
             {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5 font-serif">
+              <div key={proj.id} className="space-y-0.5 font-serif proj-entry">
                 <div className="flex justify-between items-baseline">
                   <div className="text-[10.5px] font-bold text-slate-950">
                     {proj.name} {proj.link && <span className="font-normal text-[8.5px] text-slate-500 lowercase">({proj.link})</span>}
@@ -237,7 +240,7 @@ export default function MinimalistTemplate({
                       {edu.school || 'Institution Name'}
                     </span>
                     <span className="text-[9.5px] font-bold text-slate-500 font-mono">
-                      {edu.graduationDate}
+                      {formatDate(edu.graduationDate)}
                     </span>
                   </div>
                   
@@ -249,6 +252,32 @@ export default function MinimalistTemplate({
                   </div>
                 </div>
               ))}
+          </div>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    languages: data.languages && data.languages.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="languages"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'languages')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('languages')}
+      >
+        <div>
+          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-1.5 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
+            {SECTION_LABELS.languages}
+          </h2>
+          <div className="text-[10px] leading-relaxed text-slate-700 font-serif" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
+            {data.languages.map((lang, idx) => (
+              <span key={lang.id}>
+                {idx > 0 && ' · '}
+                <span>{lang.name} ({lang.proficiency})</span>
+              </span>
+            ))}
           </div>
         </div>
       </PreviewSectionWrapper>
@@ -270,7 +299,7 @@ export default function MinimalistTemplate({
           <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-1.5 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
             Skills
           </h2>
-          <div className="text-[10px] leading-relaxed text-justify text-slate-700 font-serif">
+          <div className="text-[10px] leading-relaxed text-justify text-slate-700 font-serif" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
             {skills.map((skill, idx) => {
               const parts = skill.split(':')
               if (parts.length > 1 && parts[0].trim().length < 30) {
@@ -309,7 +338,7 @@ export default function MinimalistTemplate({
       >
         <div className="text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: themeColor || '#111111' }}>
           <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-slate-950 mb-1">
-            {contact.fullName || 'YOUR NAME'}
+            {getFullName(contact) || 'YOUR NAME'}
           </h1>
           <div className="text-[9.5px] text-slate-500 uppercase tracking-widest flex flex-wrap gap-x-3 gap-y-1">
             {contact.location && <span>{contact.location}</span>}
