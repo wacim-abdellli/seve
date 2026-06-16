@@ -1,0 +1,118 @@
+name: reactive_resume
+
+services:
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    networks:
+      - data_network
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    networks:
+      - data_network
+    # Not exposed on the host by default. Redis can contain agent stream data
+    # including user chat content; keep it internal to the Docker network.
+    # Uncomment the ports block below if you need host access for tooling.
+    # ports:
+    #   - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      start_period: 5s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    restart: unless-stopped
+    command: server -s3 -filer -dir=/data -ip=0.0.0.0
+    networks:
+      - storage_network
+    environment:
+      - AWS_ACCESS_KEY_ID=seaweedfs
+      - AWS_SECRET_ACCESS_KEY=seaweedfs
+    ports:
+      - "8333:8333"
+    volumes:
+      - seaweedfs_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8888"]
+      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  seaweedfs_create_bucket:
+    image: quay.io/minio/mc:latest
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+        sleep 5;
+        mc alias set seaweedfs http://seaweedfs:8333 seaweedfs seaweedfs;
+        mc mb seaweedfs/reactive-resume;
+        exit 0;
+      "
+    networks:
+      - storage_network
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+
+  reactive_resume:
+    # image: ghcr.io/amruthpillai/reactive-resume:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - data_network
+      - storage_network
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env.example
+        required: false
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+      seaweedfs_create_bucket:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  seaweedfs_data:
+
+networks:
+  data_network:
+  storage_network:

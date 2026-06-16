@@ -1,0 +1,16 @@
+packages:
+  - apps/*
+  - packages/*
+  - tooling
+patchedDependencies:
+  '@react-pdf/textkit@6.3.0': patches/@react-pdf__textkit@6.3.0.patch
+minimumReleaseAge: 0
+allowBuilds:
+  bcrypt: true
+  esbuild: true
+  lefthook: true
+  msgpackr-extract: true
+  msw: true
+  sharp: true
+overrides:
+  postcss@<8.5.10: ^8.5.14

@@ -1,0 +1,31 @@
+{
+	"biome.enabled": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit",
+		"source.organizeImports.biome": "explicit"
+	},
+	"editor.defaultFormatter": "biomejs.biome",
+	"files.readonlyInclude": {
+		"**/locales/**.po": true,
+		"**/routeTree.gen.ts": true,
+		"pnpm-lock.yaml": true
+	},
+	"files.watcherExclude": {
+		"**/locales/**.po": true,
+		"**/routeTree.gen.ts": true,
+		"pnpm-lock.yaml": true
+	},
+	"search.exclude": {
+		"**/locales/**.po": true,
+		"**/routeTree.gen.ts": true,
+		"pnpm-lock.yaml": true
+	},
+	"tailwindCSS.classFunctions": ["cn", "cva"],
+	"tailwindCSS.experimental.classRegex": [
+		["class:\\s*?[\"'`]([^\"'`]*).*?,"],
+		["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+		["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+	],
+	"tailwindCSS.experimental.configFile": "src/styles/globals.css",
+	"typescript.experimental.useTsgo": true
+}

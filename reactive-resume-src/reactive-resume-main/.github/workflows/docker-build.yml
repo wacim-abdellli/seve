@@ -1,0 +1,272 @@
+name: Build Docker Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ${{ github.repository }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  mode:
+    runs-on: ubuntu-latest
+
+    outputs:
+      nightly: ${{ steps.mode.outputs.nightly }}
+      release: ${{ steps.mode.outputs.release }}
+      matrix: ${{ steps.mode.outputs.matrix }}
+
+    steps:
+      - name: Determine publishing mode
+        id: mode
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "nightly=true" >> "$GITHUB_OUTPUT"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo 'matrix={"include":[{"platform":"linux/amd64","runner":"ubuntu-latest","arch":"amd64"}]}' >> "$GITHUB_OUTPUT"
+          else
+            echo "nightly=false" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo 'matrix={"include":[{"platform":"linux/amd64","runner":"ubuntu-latest","arch":"amd64"},{"platform":"linux/arm64","runner":"ubuntu-24.04-arm","arch":"arm64"}]}' >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: mode
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.mode.outputs.matrix) }}
+
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ghcr.io/${{ env.IMAGE }}
+            docker.io/${{ env.IMAGE }}
+          tags: |
+            type=sha,prefix=sha-,suffix=-${{ matrix.arch }}
+
+      - name: Build and Push by Digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          sbom: true
+          push: true
+          provenance: mode=max
+          platforms: ${{ matrix.platform }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha,scope=${{ env.IMAGE }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ env.IMAGE }}-${{ matrix.arch }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs:
+      - mode
+      - build
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: package.json
+          sparse-checkout-cone-mode: false
+
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse version components
+        id: semver
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+
+          echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
+          echo "minor=$MINOR" >> "$GITHUB_OUTPUT"
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ghcr.io/${{ env.IMAGE }}
+            docker.io/${{ env.IMAGE }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=nightly,enable=${{ needs.mode.outputs.nightly == 'true' }}
+            type=raw,value=nightly-{{date 'YYYYMMDDHHmmss' tz='UTC'}},enable=${{ needs.mode.outputs.nightly == 'true' }}
+            type=raw,value=latest,enable=${{ needs.mode.outputs.release == 'true' }}
+            type=raw,value=v${{ steps.version.outputs.version }},enable=${{ needs.mode.outputs.release == 'true' }}
+            type=raw,value=v${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }},enable=${{ needs.mode.outputs.release == 'true' }}
+            type=raw,value=v${{ steps.semver.outputs.major }},enable=${{ needs.mode.outputs.release == 'true' }}
+
+      - name: Create manifest list and push
+        id: manifest
+        working-directory: /tmp/digests
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ needs.mode.outputs.nightly }}" == "true" ]]; then
+            FINAL_TAG="nightly"
+          else
+            FINAL_TAG="v${{ steps.version.outputs.version }}"
+          fi
+
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            --annotation "index:org.opencontainers.image.licenses=MIT" \
+            --annotation "index:org.opencontainers.image.title=Reactive Resume" \
+            --annotation "index:org.opencontainers.image.description=A free and open-source resume builder." \
+            --annotation "index:org.opencontainers.image.vendor=Amruth Pillai" \
+            --annotation "index:org.opencontainers.image.url=https://rxresu.me" \
+            --annotation "index:org.opencontainers.image.documentation=https://docs.rxresu.me" \
+            --annotation "index:org.opencontainers.image.source=https://github.com/amruthpillai/reactive-resume" \
+            --annotation "index:org.opencontainers.image.version=${{ steps.version.outputs.version }}" \
+            $(printf 'ghcr.io/${{ env.IMAGE }}@sha256:%s ' *) \
+            $(printf 'docker.io/${{ env.IMAGE }}@sha256:%s ' *)
+
+          # Get the digest of the multi-arch manifest
+          GHCR_DIGEST=$(docker buildx imagetools inspect ghcr.io/${{ env.IMAGE }}:${FINAL_TAG} --format '{{json .Manifest.Digest}}' | tr -d '"')
+          DOCKER_DIGEST=$(docker buildx imagetools inspect docker.io/${{ env.IMAGE }}:${FINAL_TAG} --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "final_tag=$FINAL_TAG" >> "$GITHUB_OUTPUT"
+          echo "ghcr_digest=$GHCR_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "docker_digest=$DOCKER_DIGEST" >> "$GITHUB_OUTPUT"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign images with Cosign
+        run: |
+          # Sign GHCR image
+          cosign sign --yes ghcr.io/${{ env.IMAGE }}@${{ steps.manifest.outputs.ghcr_digest }}
+
+          # Sign Docker Hub image
+          cosign sign --yes docker.io/${{ env.IMAGE }}@${{ steps.manifest.outputs.docker_digest }}
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ghcr.io/${{ env.IMAGE }}:${{ steps.manifest.outputs.final_tag }}
+          docker buildx imagetools inspect docker.io/${{ env.IMAGE }}:${{ steps.manifest.outputs.final_tag }}
+
+      - name: Redeploy Stack
+        if: ${{ needs.mode.outputs.release == 'true' }}
+        uses: appleboy/ssh-action@v1
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          script: |
+            cd docker
+            ./manage_stack.sh up reactive_resume
+
+      - name: Purge Cloudflare cache
+        if: ${{ needs.mode.outputs.release == 'true' }}
+        env:
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          response=$(curl -fsS --max-time 10 --retry 3 --retry-delay 5 --retry-connrefused -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}')
+
+          if [ "$(jq -r '.success' <<< "$response")" != "true" ]; then
+            echo "$response" | jq .
+            exit 1
+          fi
+
+          echo "Cloudflare cache purged successfully."

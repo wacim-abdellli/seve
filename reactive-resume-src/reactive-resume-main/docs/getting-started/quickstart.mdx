@@ -1,0 +1,237 @@
+---
+title: "Quickstart"
+description: "Get started with Reactive Resume in minutes — use our hosted version or deploy your own instance"
+---
+
+## Options
+
+Reactive Resume offers flexibility in how you want to use it. Choose the option that best fits your needs:
+
+<CardGroup cols={2}>
+  <Card title="Use the Cloud Version" icon="cloud" href="#use-the-cloud-version">
+    The fastest way to get started. **Recommended for most users.**
+  </Card>
+  <Card title="Self-Host with Docker" icon="docker" href="#self-host-with-docker">
+    Deploy your own instance with complete control. **Requires some technical knowledge.**
+  </Card>
+</CardGroup>
+
+---
+
+## Using the Cloud Version
+
+The easiest way to use Reactive Resume is through our cloud version at [rxresu.me](https://rxresu.me). **This service is completely free and will always remain free.**
+
+<Steps>
+	<Step title="Create an Account">
+		Visit [rxresu.me](https://rxresu.me) and sign up for free using your email, or sign in with your GitHub or Google
+		account.
+	</Step>
+
+    <Step title="Create Your First Resume">
+    	Click the **Create Resume** button on your dashboard. Give your resume a name and select a template to get started.
+    </Step>
+
+    <Step title="Fill in Your Details">
+    	Use our intuitive builder to add your: - Personal information - Work experience - Education - Skills - Projects -
+    	And more...
+    </Step>
+
+    <Step title="Export & Share">
+    	When you're ready, export your resume as a PDF or share it via a unique public link.
+    </Step>
+
+</Steps>
+
+<Tip>Your resume updates in real-time as you type. The preview panel shows exactly how your final PDF will look.</Tip>
+
+---
+
+## Self-Host with Docker
+
+For users who prefer complete control over their data, you can deploy Reactive Resume on your own infrastructure using Docker.
+
+<Info>
+  **From v5.1.0 onwards** — PDF generation now runs entirely client-side via `@react-pdf/renderer`. Self-hosted deployments no longer require Browserless, Chromium, or any external print service as a dependency. The `PRINTER_*` and `BROWSERLESS_*` environment variables are no longer read and can be removed from your `.env`.
+</Info>
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- [Docker](https://docs.docker.com/get-docker/) (v20.10 or higher)
+- [Docker Compose](https://docs.docker.com/compose/install/) (v2.0 or higher)
+
+<Info>
+  There is <strong>no difference in features</strong> between the cloud-hosted version and the self-hosted option. Both
+  provide the same privacy, customization, and functionality. Choose whichever deployment type suits your needs!
+</Info>
+
+### Quick Deployment
+
+<Steps>
+	<Step title="Clone the Repository">
+		```bash
+		git clone https://github.com/amruthpillai/reactive-resume.git
+		cd reactive-resume
+		```
+	</Step>
+
+    <Step title="Configure Environment Variables">
+    	Create a `.env` file in the root directory with the following variables:
+
+```bash .env
+# Application
+APP_URL=http://localhost:3000
+
+# Database
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+
+# Authentication (generate a secure secret)
+AUTH_SECRET=your-secure-secret-key-here
+
+# Storage (S3-compatible via SeaweedFS)
+S3_ACCESS_KEY_ID=seaweedfs
+S3_SECRET_ACCESS_KEY=seaweedfs
+S3_ENDPOINT=http://seaweedfs:8333
+S3_BUCKET=reactive-resume
+S3_FORCE_PATH_STYLE=true
+
+# AI features (optional; ENCRYPTION_SECRET for saved providers, plus REDIS_URL for the agent)
+REDIS_URL=redis://redis:6379
+ENCRYPTION_SECRET=your-secure-encryption-secret-here
+```
+
+    	<Warning>
+		For production deployments, always use strong, unique values for `AUTH_SECRET`, `ENCRYPTION_SECRET`, and
+		database credentials.
+    	</Warning>
+    </Step>
+
+    <Step title="Start the Services">
+    	```bash
+    	docker compose up -d
+    	```
+
+    	This starts:
+    	- **PostgreSQL** — Database for storing user data and resumes
+	- **Redis** — Required for the AI Agent workspace
+    	- **SeaweedFS** — S3-compatible storage for file uploads
+    	- **Reactive Resume** — The main application
+    </Step>
+
+    <Step title="Access Your Instance">
+    	Once all services are running, access your Reactive Resume instance at:
+
+    	```text
+    	http://localhost:3000
+    	```
+    </Step>
+
+</Steps>
+
+### Docker Compose Services
+
+Here's what each service in the stack does:
+
+| Service           | Port | Description                                          |
+| ----------------- | ---- | ---------------------------------------------------- |
+| `postgres`        | 5432 | PostgreSQL database for storing all application data |
+| `redis`           | 6379 | Redis instance required by the AI Agent workspace    |
+| `seaweedfs`       | 8333 | S3-compatible object storage for file uploads        |
+| `reactive_resume` | 3000 | The main Reactive Resume application                 |
+
+<Note>
+  Saved AI provider management requires `ENCRYPTION_SECRET`, and the AI Agent workspace requires both `REDIS_URL` and
+  `ENCRYPTION_SECRET`. Other Reactive Resume features can run without them. Agent attachments and other private objects
+  require S3-compatible storage; local storage rejects private objects.
+</Note>
+
+### Health Checks
+
+All services include built-in health checks. You can verify everything is running correctly:
+
+```bash
+docker compose ps
+```
+
+You should see all services with a `healthy` status.
+
+---
+
+## Environment Variables Reference
+
+Here's a complete list of environment variables you can configure:
+
+### Required Variables
+
+| Variable       | Description                    | Example                               |
+| -------------- | ------------------------------ | ------------------------------------- |
+| `DATABASE_URL` | PostgreSQL connection string   | `postgresql://user:pass@host:5432/db` |
+| `AUTH_SECRET`  | Secret key for authentication  | Generate with `openssl rand -hex 32`  |
+| `APP_URL`      | Public URL of your Application | `https://rxresu.me`                   |
+
+### Optional Variables
+
+| Variable                              | Description                                                 | Default                |
+| ------------------------------------- | ----------------------------------------------------------- | ---------------------- |
+| `GOOGLE_CLIENT_ID`                    | Google OAuth Client ID                                      | —                      |
+| `GOOGLE_CLIENT_SECRET`                | Google OAuth Client Secret                                  | —                      |
+| `GITHUB_CLIENT_ID`                    | GitHub OAuth Client ID                                      | —                      |
+| `GITHUB_CLIENT_SECRET`                | GitHub OAuth Client Secret                                  | —                      |
+| `LINKEDIN_CLIENT_ID`                  | LinkedIn OAuth Client ID                                    | —                      |
+| `LINKEDIN_CLIENT_SECRET`              | LinkedIn OAuth Client Secret                                | —                      |
+| `OAUTH_PROVIDER_NAME`                 | Custom OAuth Provider Name                                  | —                      |
+| `OAUTH_CLIENT_ID`                     | Custom OAuth Client ID                                      | —                      |
+| `OAUTH_CLIENT_SECRET`                 | Custom OAuth Client Secret                                  | —                      |
+| `OAUTH_DISCOVERY_URL`                 | OIDC Discovery URL (use this OR manual URLs below)          | —                      |
+| `OAUTH_AUTHORIZATION_URL`             | OAuth Authorization URL (manual config)                     | —                      |
+| `OAUTH_TOKEN_URL`                     | OAuth Token URL (manual config)                             | —                      |
+| `OAUTH_USER_INFO_URL`                 | OAuth User Info URL (manual config)                         | —                      |
+| `OAUTH_SCOPES`                        | OAuth Scopes (space-separated)                              | `openid profile email` |
+| `BETTER_AUTH_API_KEY`                 | Better Auth dashboard API key                               | —                      |
+| `SMTP_HOST`                           | SMTP Server Host (for email features)                       | —                      |
+| `SMTP_PORT`                           | SMTP Server Port                                            | `587`                  |
+| `SMTP_USER`                           | SMTP Username                                               | —                      |
+| `SMTP_PASS`                           | SMTP Password                                               | —                      |
+| `SMTP_FROM`                           | Default FROM address for emails                             | —                      |
+| `SMTP_SECURE`                         | Use secure SMTP connection (`true` or `false`)              | `false`                |
+| `S3_ACCESS_KEY_ID`                    | S3 Access Key                                               | —                      |
+| `S3_SECRET_ACCESS_KEY`                | S3 Secret Key                                               | —                      |
+| `S3_REGION`                           | S3 Region                                                   | `us-east-1`            |
+| `S3_ENDPOINT`                         | S3-compatible Endpoint URL                                  | —                      |
+| `S3_BUCKET`                           | S3 Bucket Name                                              | —                      |
+| `S3_FORCE_PATH_STYLE`                 | Use path-style URLs for S3 (set `true` for MinIO/SeaweedFS) | `false`                |
+| `REDIS_URL`                           | Redis connection string for the AI Agent workspace          | —                      |
+| `ENCRYPTION_SECRET`                   | Encryption secret for saved AI provider credentials         | —                      |
+| `FLAG_DISABLE_SIGNUPS`                | Disables new user signups                                   | `false`                |
+| `FLAG_DISABLE_EMAIL_AUTH`             | Disables email/password login (SSO only)                    | `false`                |
+| `FLAG_DISABLE_IMAGE_PROCESSING`       | Disables image processing                                   | `false`                |
+| `FLAG_ALLOW_UNSAFE_OAUTH_REDIRECT_URI` | Allows arbitrary dynamic OAuth redirect URIs                | `false`                |
+| `FLAG_ALLOW_UNSAFE_AI_BASE_URL`       | Allows unsafe/private/non-public AI provider base URLs      | `false`                |
+
+> **Note:** Some variables are only required for using related features (OAuth, SMTP, S3, etc.) and can be left unset if unused.
+
+> **AI features:** Saved AI provider management requires `ENCRYPTION_SECRET`, and the AI Agent workspace requires both `REDIS_URL` and `ENCRYPTION_SECRET`. Live web research depends on the selected AI provider/model supporting native web search. Keep `FLAG_ALLOW_UNSAFE_AI_BASE_URL` disabled unless this is a trusted self-hosted deployment; public HTTPS provider URLs are the safe default.
+
+> **OAuth redirect safety:** Keep `FLAG_ALLOW_UNSAFE_OAUTH_REDIRECT_URI` disabled unless this is a trusted self-hosted deployment. Enabling it allows dynamic OAuth clients to register any parseable redirect URI, including custom schemes, private hosts, and non-loopback `http://` URLs, which can enable phishing or token exfiltration on public or multi-tenant instances.
+
+> **Health check behavior:** `/api/health` reports status for database and storage. A failure in either dependency returns HTTP `503`.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Setup" icon="code" href="/contributing/development">
+    Set up a development environment to contribute or customize Reactive Resume.
+  </Card>
+  <Card title="Project Architecture" icon="folder-open" href="/contributing/architecture">
+    Learn about the project structure and architecture.
+  </Card>
+</CardGroup>
+
+<Note>
+  **Having trouble?** Check our [GitHub Issues](https://github.com/amruthpillai/reactive-resume/issues) or reach out via
+  [email](mailto:hello@amruthpillai.com).
+</Note>

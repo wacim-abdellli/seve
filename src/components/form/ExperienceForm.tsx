@@ -1,6 +1,19 @@
 import { useState } from 'react'
 import type { Experience } from '../../types/resume'
+import { useToast } from '../../hooks/useToast'
 import { generateContent } from '../../utils/aiService'
+import { 
+  GripVertical, 
+  Trash2, 
+  Sparkles, 
+  Plus, 
+  Wrench, 
+  RefreshCw,
+  X,
+  ChevronDown
+} from 'lucide-react'
+import BulletWorkshopModal from '../BulletWorkshopModal'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ExperienceFormProps {
   experience: Experience[]
@@ -9,7 +22,16 @@ interface ExperienceFormProps {
 }
 
 export default function ExperienceForm({ experience, apiKey, onChange }: ExperienceFormProps) {
+  const { showToast } = useToast()
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [loadingBulletIdx, setLoadingBulletIdx] = useState<{ expId: string; bulletIdx: number } | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(experience[0]?.id || null)
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [isWorkshopOpen, setIsWorkshopOpen] = useState(false)
+  const [workshopExpId, setWorkshopExpId] = useState<string | null>(null)
+  const [workshopBulletIdx, setWorkshopBulletIdx] = useState<number | null>(null)
+  const [starOpenId, setStarOpenId] = useState<string | null>(null)
+  const [starFields, setStarFields] = useState<Record<string, { s: string; t: string; a: string; r: string }>>({}) 
 
   const handleAdd = () => {
     const newEntry: Experience = {
@@ -23,13 +45,19 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
       bullets: [''],
     }
     onChange([...experience, newEntry])
+    setExpandedId(newEntry.id)
   }
 
-  const handleRemove = (id: string) => {
-    onChange(experience.filter((exp) => exp.id !== id))
+  const handleRemove = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const updated = experience.filter((exp) => exp.id !== id)
+    onChange(updated)
+    if (expandedId === id) {
+      setExpandedId(updated[0]?.id || null)
+    }
   }
 
-  const handleChange = (id: string, field: keyof Experience, value: any) => {
+  const handleChange = <K extends keyof Experience>(id: string, field: K, value: Experience[K]) => {
     onChange(
       experience.map((exp) => {
         if (exp.id === id) {
@@ -76,220 +104,511 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
     )
   }
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
-    const nextIndex = direction === 'up' ? index - 1 : index + 1
-    if (nextIndex < 0 || nextIndex >= experience.length) return
+  const handleDragStart = (index: number) => {
+    setDraggedIdx(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (index: number) => {
+    if (draggedIdx === null || draggedIdx === index) return
     const updated = [...experience]
-    const temp = updated[index]
-    updated[index] = updated[nextIndex]
-    updated[nextIndex] = temp
+    const [removed] = updated.splice(draggedIdx, 1)
+    updated.splice(index, 0, removed)
     onChange(updated)
   }
 
-  const handleAiBullets = async (expId: string, jobTitle: string) => {
-    if (!jobTitle.trim()) {
-      alert('Please fill in the Job Title first to generate relevant bullets.')
+  const handleDragEnd = () => {
+    setDraggedIdx(null)
+  }
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id)
+  }
+
+  const handleAiBullets = async (expId: string, title: string) => {
+    if (!apiKey || !apiKey.trim()) {
+      showToast('Google Gemini API Key is required. Please set it in Settings (gear icon).', 'warning')
+      return
+    }
+    if (!title.trim()) {
+      showToast('Please provide a job title first.', 'warning')
       return
     }
     setLoadingId(expId)
     try {
-      const prompt = `Generate 3 strong ATS-optimized resume bullet points for the job title: "${jobTitle}". Start each bullet with a strong action verb and include quantifiable metrics.`
-      const result = await generateContent(prompt, apiKey, 'bullet')
+      const prompt = `Generate 3 professional resume bullet achievements for the role: ${title}. Use strong action verbs, omit pronouns, and include placeholder metrics (e.g. [X]%).`
+      const res = await generateContent(prompt, apiKey, 'bullet')
       
-      // Split bullets by line or standard bullets
-      const parsedBullets = result
+      const parsedBullets = res
         .split('\n')
-        .map((line) => line.trim().replace(/^•|-|\*|\d+\.\s*/, '').trim())
-        .filter((line) => line.length > 0)
-      
-      onChange(
-        experience.map((exp) => {
-          if (exp.id === expId) {
-            // Keep non-empty existing bullets, append generated ones
-            const existing = exp.bullets.filter((b) => b.trim() !== '')
-            return {
-              ...exp,
-              bullets: existing.length ? [...existing, ...parsedBullets] : parsedBullets,
+        .map(line => line.replace(/^[-*•\d.]+\s*/, '').trim())
+        .filter(line => line.length > 0)
+        .slice(0, 3)
+
+      if (parsedBullets.length > 0) {
+        onChange(
+          experience.map(exp => {
+            if (exp.id === expId) {
+              return { 
+                ...exp, 
+                bullets: parsedBullets 
+              }
             }
-          }
-          return exp
-        })
-      )
-    } catch (e) {
-      console.error('AI Bullets error:', e)
+            return exp
+          })
+        )
+        showToast('AI summary bullets generated!', 'success')
+      }
+    } catch (err: any) {
+      console.error(err)
+      if (err.message === 'API_KEY_REQUIRED') {
+        showToast('Google Gemini API Key is required. Please set it in Settings.', 'warning')
+      } else {
+        showToast('AI Bullet generation failed.', 'error')
+      }
     } finally {
       setLoadingId(null)
     }
   }
 
+  const handleAiImproveBullet = async (expId: string, idx: number, currentText: string) => {
+    if (!apiKey || !apiKey.trim()) {
+      showToast('Google Gemini API Key is required. Please set it in Settings (gear icon).', 'warning')
+      return
+    }
+    if (!currentText.trim()) return
+    setLoadingBulletIdx({ expId, bulletIdx: idx })
+    try {
+      const prompt = `Optimize this resume bullet point for ATS. Start with a strong action verb, remove pronouns, and make it concise: "${currentText}"`
+      const res = await generateContent(prompt, apiKey, 'improve')
+      if (res.trim()) {
+        handleBulletChange(expId, idx, res.trim())
+        showToast('Bullet point optimized!', 'success')
+      }
+    } catch (err: any) {
+      console.error(err)
+      if (err.message === 'API_KEY_REQUIRED') {
+        showToast('Google Gemini API Key is required. Please set it in Settings.', 'warning')
+      } else {
+        showToast('AI optimization failed.', 'error')
+      }
+    } finally {
+      setLoadingBulletIdx(null)
+    }
+  }
+
+  const handleOpenWorkshop = (expId: string, bIdx: number) => {
+    setWorkshopExpId(expId)
+    setWorkshopBulletIdx(bIdx)
+    setIsWorkshopOpen(true)
+  }
+
+  const handleApplyWorkshop = (improvedText: string) => {
+    if (workshopExpId !== null && workshopBulletIdx !== null) {
+      handleBulletChange(workshopExpId, workshopBulletIdx, improvedText)
+      setIsWorkshopOpen(false)
+      setWorkshopExpId(null)
+      setWorkshopBulletIdx(null)
+      showToast('Workshop improvement applied!', 'success')
+    }
+  }
+
+  const getStarFields = (expId: string) => {
+    return starFields[expId] || { s: '', t: '', a: '', r: '' }
+  }
+
+  const updateStarField = (expId: string, field: 's' | 't' | 'a' | 'r', value: string) => {
+    setStarFields(prev => ({
+      ...prev,
+      [expId]: { ...getStarFields(expId), [field]: value }
+    }))
+  }
+
+  const handleInjectStar = (expId: string) => {
+    const f = getStarFields(expId)
+    if (!f.a.trim()) {
+      showToast('Fill in at least the Action (A) field to inject a bullet.', 'warning')
+      return
+    }
+    const parts: string[] = []
+    const actionVerb = f.a.trim().charAt(0).toUpperCase() + f.a.trim().slice(1)
+    parts.push(actionVerb)
+    if (f.t.trim()) parts[0] += ` to ${f.t.trim().toLowerCase()}`
+    if (f.s.trim()) parts.push(`within ${f.s.trim().toLowerCase()}`)
+    if (f.r.trim()) {
+      const result = f.r.trim().charAt(0).toUpperCase() + f.r.trim().slice(1)
+      parts.push(result.startsWith('result') || result.startsWith('Result') ? result : `resulting in ${result.toLowerCase()}`)
+    }
+    const composed = parts.join(', ') + '.'
+    onChange(
+      experience.map(exp => {
+        if (exp.id === expId) {
+          const existing = exp.bullets.filter(b => b.trim())
+          return { ...exp, bullets: [...existing, composed] }
+        }
+        return exp
+      })
+    )
+    setStarFields(prev => ({ ...prev, [expId]: { s: '', t: '', a: '', r: '' } }))
+    setStarOpenId(null)
+    showToast('STAR achievement bullet injected!', 'success')
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-        <h3 className="text-lg font-medium text-white">Work Experience</h3>
-        <button
-          type="button"
+    <div className="flex flex-col gap-4">
+      {/* Top bar */}
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+        <span className="text-[13px] text-zinc-400">
+          {experience.length} position(s)
+        </span>
+        <button 
           onClick={handleAdd}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-3 py-1.5 text-xs transition-all font-medium"
+          className="flex items-center gap-1.5 text-[12px] text-rose-455 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/15 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+          type="button"
         >
-          + Add Job
+          <Plus className="w-3.5 h-3.5" />
+          <span>Add Position</span>
         </button>
       </div>
 
       {experience.length === 0 ? (
-        <p className="text-sm text-slate-500 text-center py-4">No experience added yet. Add a role to get started.</p>
+        <div className="border border-dashed border-zinc-800 p-8 rounded-xl text-center bg-zinc-950/20">
+          <p className="text-xs text-zinc-500 font-light">No experiences listed. Add a position to start.</p>
+        </div>
       ) : (
-        <div className="space-y-6">
-          {experience.map((exp, idx) => (
-            <div key={exp.id} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 space-y-4 shadow-sm relative">
-              {/* Row controls */}
-              <div className="absolute top-4 right-4 flex items-center gap-1.5 no-print">
-                <button
-                  type="button"
-                  onClick={() => handleMove(idx, 'up')}
-                  disabled={idx === 0}
-                  className="bg-slate-700 hover:bg-slate-600 disabled:opacity-30 text-slate-300 w-7 h-7 rounded flex items-center justify-center text-xs"
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleMove(idx, 'down')}
-                  disabled={idx === experience.length - 1}
-                  className="bg-slate-700 hover:bg-slate-600 disabled:opacity-30 text-slate-300 w-7 h-7 rounded flex items-center justify-center text-xs"
-                >
-                  ▼
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(exp.id)}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 w-7 h-7 rounded flex items-center justify-center text-xs ml-2"
-                >
-                  ✕
-                </button>
-              </div>
+        <div className="flex flex-col gap-3">
+          {experience.map((exp, idx) => {
+            const isExpanded = expandedId === exp.id
+            const isDragging = idx === draggedIdx
 
-              {/* Form entries */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-24">
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">Job Title *</label>
-                  <input
-                    type="text"
-                    value={exp.jobTitle}
-                    onChange={(e) => handleChange(exp.id, 'jobTitle', e.target.value)}
-                    placeholder="Senior React Developer"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">Company *</label>
-                  <input
-                    type="text"
-                    value={exp.company}
-                    onChange={(e) => handleChange(exp.id, 'company', e.target.value)}
-                    placeholder="Acme Corp"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">Location</label>
-                  <input
-                    type="text"
-                    value={exp.location}
-                    onChange={(e) => handleChange(exp.id, 'location', e.target.value)}
-                    placeholder="San Francisco, CA"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">Start Date *</label>
-                    <input
-                      type="text"
-                      value={exp.startDate}
-                      onChange={(e) => handleChange(exp.id, 'startDate', e.target.value)}
-                      placeholder="05/2021"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">End Date *</label>
-                    <input
-                      type="text"
-                      value={exp.current ? 'Present' : exp.endDate}
-                      disabled={exp.current}
-                      onChange={(e) => handleChange(exp.id, 'endDate', e.target.value)}
-                      placeholder="Present"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Role Check */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id={`current-${exp.id}`}
-                  checked={exp.current}
-                  onChange={(e) => handleChange(exp.id, 'current', e.target.checked)}
-                  className="rounded border-slate-600 text-indigo-600 bg-slate-700 focus:ring-indigo-500 focus:ring-offset-slate-800"
-                />
-                <label htmlFor={`current-${exp.id}`} className="text-xs text-slate-300 cursor-pointer">
-                  I currently work here
-                </label>
-              </div>
-
-              {/* Bullet Points Manager */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wide">Key Achievements & Responsibilities</h4>
-                  <button
-                    type="button"
-                    onClick={() => handleAiBullets(exp.id, exp.jobTitle)}
-                    disabled={loadingId !== null}
-                    className="bg-slate-700 hover:bg-slate-600 text-indigo-400 text-[10px] rounded px-2.5 py-1 font-semibold flex items-center gap-1"
+            return (
+              <div
+                key={exp.id}
+                draggable
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(idx)}
+                onDragEnd={handleDragEnd}
+                className="flex flex-col gap-2"
+                style={{ opacity: isDragging ? 0.3 : 1 }}
+              >
+                {/* Collapsed/Header Card view */}
+                <div
+                  onClick={() => toggleExpand(exp.id)}
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-1 cursor-pointer hover:border-zinc-700 transition-colors flex items-center gap-3 select-none"
+                >
+                  <div 
+                    className="cursor-grab text-zinc-650 hover:text-zinc-400 flex-shrink-0"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {loadingId === exp.id ? (
-                      <span className="w-2.5 h-2.5 border border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                    ) : null}
-                    AI Generate Bullets
-                  </button>
+                    <GripVertical size={16} />
+                  </div>
+
+                  {/* Company avatar */}
+                  <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 text-[12px] font-bold text-white border border-zinc-700">
+                    {exp.company ? exp.company[0].toUpperCase() : '?'}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-white truncate">
+                      {exp.jobTitle || <span className="text-zinc-500 italic">Untitled Position</span>}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 truncate">
+                      {exp.company || 'No Company'} · {exp.startDate || 'MM/YYYY'}–{exp.current ? 'Present' : exp.endDate || 'MM/YYYY'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button 
+                      onClick={(e) => handleRemove(exp.id, e)}
+                      className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                      type="button"
+                      title="Delete Entry"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <ChevronDown className={`w-4 h-4 text-zinc-650 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  {exp.bullets.map((b, bIdx) => (
-                    <div key={bIdx} className="flex gap-2 items-start">
-                      <span className="text-slate-500 mt-2 text-xs font-mono">•</span>
-                      <textarea
-                        value={b}
-                        rows={1}
-                        onChange={(e) => handleBulletChange(exp.id, bIdx, e.target.value)}
-                        placeholder="Led development of key features, improving metric by X%..."
-                        className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none h-14"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveBullet(exp.id, bIdx)}
-                        className="bg-slate-700 hover:bg-slate-600 text-slate-400 w-8 h-8 rounded-lg flex items-center justify-center mt-3 text-xs"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                {/* Expanded Fields inside Drawer Card */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden bg-zinc-900 border border-zinc-800 rounded-xl px-4 pb-4"
+                    >
+                      <div className="pt-4 space-y-4 border-t border-zinc-800 mt-2">
+                        
+                        {/* Job Title */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-zinc-500">Job Title *</label>
+                          <input
+                            type="text"
+                            placeholder="Job Title"
+                            className="drawer-input !bg-zinc-950"
+                            value={exp.jobTitle}
+                            onChange={(e) => handleChange(exp.id, 'jobTitle', e.target.value)}
+                          />
+                        </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleAddBullet(exp.id)}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 font-medium pl-6"
-                >
-                  + Add Bullet Point
-                </button>
+                        {/* Company */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-zinc-500">Company / Org *</label>
+                          <input
+                            type="text"
+                            placeholder="Company / Org"
+                            className="drawer-input !bg-zinc-950"
+                            value={exp.company}
+                            onChange={(e) => handleChange(exp.id, 'company', e.target.value)}
+                          />
+                        </div>
+
+                        {/* Location */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-zinc-500">Location</label>
+                          <input
+                            type="text"
+                            placeholder="Location"
+                            className="drawer-input !bg-zinc-950"
+                            value={exp.location}
+                            onChange={(e) => handleChange(exp.id, 'location', e.target.value)}
+                          />
+                        </div>
+
+                        {/* Dates row */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] text-zinc-500">Start Date *</label>
+                            <input
+                              type="text"
+                              placeholder="01/2022"
+                              className="drawer-input !bg-zinc-950"
+                              value={exp.startDate}
+                              onChange={(e) => handleChange(exp.id, 'startDate', e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] text-zinc-500">End Date *</label>
+                            <input
+                              type="text"
+                              placeholder="Present"
+                              disabled={exp.current}
+                              className="drawer-input !bg-zinc-950"
+                              value={exp.current ? 'Present' : exp.endDate}
+                              onChange={(e) => handleChange(exp.id, 'endDate', e.target.value)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Currently working checkbox */}
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={exp.current}
+                            onChange={() => handleChange(exp.id, 'current', !exp.current)}
+                            className="accent-rose-500 w-4 h-4 cursor-pointer"
+                          />
+                          <span className="text-[12px] text-zinc-400">
+                            Currently working here
+                          </span>
+                        </label>
+
+                        {/* Bullets header */}
+                        <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60">
+                          <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">
+                            Achievements
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleAiBullets(exp.id, exp.jobTitle)}
+                            disabled={loadingId === exp.id}
+                            className="flex items-center gap-1.5 text-[11px] text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-lg hover:bg-rose-500/15 transition-colors cursor-pointer"
+                          >
+                            {loadingId === exp.id ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Sparkles className="w-3 h-3" />
+                            )}
+                            <span>AI Write</span>
+                          </button>
+                        </div>
+
+                        {/* Bullets list */}
+                        <div className="space-y-2">
+                          {exp.bullets.map((b, bIdx) => {
+                            const isBulletImproving = 
+                              loadingBulletIdx?.expId === exp.id && loadingBulletIdx?.bulletIdx === bIdx
+
+                            return (
+                              <div
+                                key={bIdx}
+                                className="flex items-start gap-2 bg-zinc-950 border border-zinc-850 rounded-lg p-3 hover:border-zinc-700 transition-colors group relative"
+                              >
+                                <span className="text-zinc-650 mt-0.5 flex-shrink-0 text-sm">•</span>
+                                <textarea
+                                  value={b}
+                                  onChange={(e) => handleBulletChange(exp.id, bIdx, e.target.value)}
+                                  onInput={(e) => {
+                                    e.currentTarget.style.height = 'auto'
+                                    e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`
+                                  }}
+                                  onFocus={(e) => {
+                                    e.currentTarget.style.height = 'auto'
+                                    e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`
+                                  }}
+                                  rows={2}
+                                  className="flex-1 min-w-0 bg-transparent text-[13px] text-zinc-300 resize-none outline-none leading-relaxed placeholder:text-zinc-600 overflow-hidden"
+                                  placeholder="Led the team to..."
+                                />
+
+                                {/* Hover Actions */}
+                                <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAiImproveBullet(exp.id, bIdx, b)}
+                                    disabled={isBulletImproving || !b.trim()}
+                                    className="p-1 text-zinc-550 hover:text-blue-400 rounded transition-colors cursor-pointer"
+                                    title="AI Improve Bullet"
+                                  >
+                                    {isBulletImproving ? (
+                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenWorkshop(exp.id, bIdx)}
+                                    className="p-1 text-zinc-550 hover:text-amber-400 rounded transition-colors cursor-pointer"
+                                    title="AI Bullet Workshop"
+                                  >
+                                    <Wrench className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveBullet(exp.id, bIdx)}
+                                    className="p-1 text-zinc-550 hover:text-rose-400 rounded transition-colors cursor-pointer"
+                                    title="Remove Bullet"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {/* Add bullet point action */}
+                        <button
+                          type="button"
+                          onClick={() => handleAddBullet(exp.id)}
+                          className="w-full py-2 border border-dashed border-zinc-800 rounded-lg text-[12px] text-zinc-600 hover:text-zinc-400 hover:border-zinc-700 transition-colors cursor-pointer"
+                        >
+                          + Add bullet
+                        </button>
+
+                        {/* STAR Builder Segment */}
+                        <div className="border-t border-zinc-800/80 pt-3 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setStarOpenId(starOpenId === exp.id ? null : exp.id)}
+                            className="text-xs text-zinc-550 hover:text-white font-bold transition-colors cursor-pointer"
+                          >
+                            {starOpenId === exp.id ? 'Close STAR Builder' : 'Open STAR Achievement Builder'}
+                          </button>
+
+                          {starOpenId === exp.id && (
+                            <div className="mt-3 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 flex flex-col gap-3">
+                              <h5 className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">STAR Framework</h5>
+                              <div className="grid grid-cols-1 gap-3">
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] text-zinc-500">Situation (S)</label>
+                                  <input
+                                    type="text"
+                                    value={getStarFields(exp.id).s}
+                                    onChange={(e) => updateStarField(exp.id, 's', e.target.value)}
+                                    placeholder="e.g. During a major system outage..."
+                                    className="drawer-input px-3 py-2 text-xs !bg-zinc-950"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] text-zinc-500">Task (T)</label>
+                                  <input
+                                    type="text"
+                                    value={getStarFields(exp.id).t}
+                                    onChange={(e) => updateStarField(exp.id, 't', e.target.value)}
+                                    placeholder="e.g. To migrate the legacy database..."
+                                    className="drawer-input px-3 py-2 text-xs !bg-zinc-950"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] text-zinc-500">Action (A) *</label>
+                                  <input
+                                    type="text"
+                                    value={getStarFields(exp.id).a}
+                                    onChange={(e) => updateStarField(exp.id, 'a', e.target.value)}
+                                    placeholder="e.g. Engineered a failover replica..."
+                                    className="drawer-input px-3 py-2 text-xs !bg-zinc-950"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] text-zinc-500">Result (R)</label>
+                                  <input
+                                    type="text"
+                                    value={getStarFields(exp.id).r}
+                                    onChange={(e) => updateStarField(exp.id, 'r', e.target.value)}
+                                    placeholder="e.g. Saving $40k yearly and 0% downtime..."
+                                    className="drawer-input px-3 py-2 text-xs !bg-zinc-950"
+                                  />
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleInjectStar(exp.id)}
+                                className="bg-rose-950/20 hover:bg-rose-900/30 border border-rose-900/40 text-rose-400 text-xs px-3 py-2 rounded-lg font-bold transition-colors w-fit mt-1 self-end cursor-pointer"
+                              >
+                                Inject Composed Bullet
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
+
+      {/* Inline Bullet Workshop Card inside Experience Drawer */}
+      <AnimatePresence>
+        {isWorkshopOpen && workshopExpId && (
+          <BulletWorkshopModal
+            isOpen={isWorkshopOpen}
+            isInline={true}
+            onClose={() => {
+              setIsWorkshopOpen(false)
+              setWorkshopExpId(null)
+              setWorkshopBulletIdx(null)
+            }}
+            bulletText={experience.find(exp => exp.id === workshopExpId)?.bullets[workshopBulletIdx || 0] || ''}
+            jobTitle={experience.find(exp => exp.id === workshopExpId)?.jobTitle || ''}
+            onApply={handleApplyWorkshop}
+            apiKey={apiKey}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

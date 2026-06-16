@@ -1,0 +1,504 @@
+---
+title: "Self-Hosting with Docker"
+description: "A comprehensive guide to self-host Reactive Resume with Docker (Postgres only), including a detailed environment variable reference and troubleshooting tips."
+---
+
+<Info>
+  **From v5.1.0 onwards** — PDF generation now runs entirely client-side via `@react-pdf/renderer`. New deployments no longer require Browserless, Chromium, or any external print service as a dependency. The `PRINTER_*` and `BROWSERLESS_*` environment variables are no longer read and can be removed from your `.env`.
+</Info>
+
+## Overview
+
+Reactive Resume can be self-hosted using Docker in a matter of minutes, and this guide will walk you through the process. Here are some of the services you'll need to get started:
+
+<CardGroup cols={2}>
+  <Card title="PostgreSQL">Stores accounts, resumes, and application data.</Card>
+  <Card title="Email (optional)">
+    SMTP for verification emails, password reset, etc. If not configured, emails are logged to the server console.
+  </Card>
+  <Card title="Storage (optional)">
+    Use S3-compatible storage, or local persistent storage via <code>/app/data</code>.
+  </Card>
+</CardGroup>
+
+You can pull the latest app image from:
+
+- Docker Hub: `amruthpillai/reactive-resume:latest`
+- GitHub Container Registry: `ghcr.io/amruthpillai/reactive-resume:latest`
+
+## Minimum requirements
+
+<CardGroup cols={1}>
+  <Card title="Docker + Docker Compose">Docker Engine + Docker Compose plugin (or Docker Desktop).</Card>
+  <Card title="Compute">1 vCPU / 1 GB RAM minimum (2 GB recommended if Postgres runs on the same host).</Card>
+  <Card title="Storage">Enough for Postgres + uploads (start with 10-20 GB and scale as needed).</Card>
+</CardGroup>
+
+## Quickstart using Docker Compose
+
+Create a new folder (for example `reactive-resume/`) with:
+
+- `compose.yml`
+- `.env`
+- a persistent data directory for uploads (for example `./data`)
+
+<Steps>
+  <Step title="Create your .env">
+    Start by creating a `.env` file next to your `compose.yml`.
+
+```bash .env
+# --- Server ---
+TZ="Etc/UTC"
+APP_URL="http://localhost:3000"
+
+# --- Database (PostgreSQL) ---
+DATABASE_URL="postgresql://postgres:postgres@postgres:5432/postgres"
+
+# --- Authentication ---
+# Generated using `openssl rand -hex 32`
+AUTH_SECRET=""
+# Better Auth dashboard API key (optional)
+BETTER_AUTH_API_KEY=""
+
+# Social Auth (Google, optional)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# Social Auth (GitHub, optional)
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+
+# Social Auth (LinkedIn, optional)
+LINKEDIN_CLIENT_ID=""
+LINKEDIN_CLIENT_SECRET=""
+
+# Custom OAuth Provider
+OAUTH_PROVIDER_NAME=""
+OAUTH_CLIENT_ID=""
+OAUTH_CLIENT_SECRET=""
+# Use EITHER discovery URL (preferred for OIDC-compliant providers):
+OAUTH_DISCOVERY_URL=""
+# OR manual URLs (all three required if not using discovery):
+OAUTH_AUTHORIZATION_URL=""
+OAUTH_TOKEN_URL=""
+OAUTH_USER_INFO_URL=""
+# Custom scopes (space-separated, defaults to "openid profile email")
+OAUTH_SCOPES=""
+
+# --- Email (optional) ---
+# If all keys are disabled, the app logs the email to be sent to the console instead.
+SMTP_HOST=""
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASS=""
+SMTP_FROM="Reactive Resume <noreply@rxresu.me>"
+SMTP_SECURE="false"
+
+# --- Storage (optional) ---
+# If all S3 keys are disabled, the app uses local filesystem storage instead.
+# Make sure to mount this directory to a volume or the host filesystem to ensure data integrity.
+S3_ACCESS_KEY_ID=""
+S3_SECRET_ACCESS_KEY=""
+S3_REGION="us-east-1"
+S3_ENDPOINT=""
+S3_BUCKET=""
+# Set to "true" for path-style URLs (https://endpoint/bucket), common with MinIO, SeaweedFS, etc.
+# Set to "false" for virtual-hosted-style URLs (https://bucket.endpoint), common with AWS S3, Cloudflare R2, etc.
+S3_FORCE_PATH_STYLE="false"
+
+# --- AI features (optional) ---
+# ENCRYPTION_SECRET is required for saved AI providers. REDIS_URL is also required for the AI Agent workspace.
+# The rest of Reactive Resume can run without these.
+REDIS_URL=""
+# Generated using `openssl rand -hex 32`
+ENCRYPTION_SECRET=""
+
+# --- Feature Flags ---
+FLAG_DISABLE_SIGNUPS="false"
+FLAG_DISABLE_EMAIL_AUTH="false"
+FLAG_DISABLE_IMAGE_PROCESSING="false"
+# Allows any parseable dynamic OAuth redirect URI. Keep false unless this is a trusted self-hosted deployment.
+FLAG_ALLOW_UNSAFE_OAUTH_REDIRECT_URI="false"
+# Allows unsafe/private/non-public AI provider base URLs. Keep false unless this is a trusted self-hosted deployment.
+FLAG_ALLOW_UNSAFE_AI_BASE_URL="false"
+```
+
+  </Step>
+
+  <Step title="Generate AUTH_SECRET">
+    Generate a strong secret and paste it into `AUTH_SECRET`.
+    <CodeGroup>
+        ```bash Linux/macOS
+        openssl rand -hex 32
+        ```
+
+        ```bash Linux/macOS (alternative)
+        head -c 32 /dev/urandom | hexdump -v -e '/1 "%02x"'
+        ```
+
+        ```powershell Windows
+        [byte[]]$bytes = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); $bytes | ForEach-Object { "{0:x2}" -f $_ } | Out-String -Stream | ForEach-Object { $_.Trim() } | Write-Host -NoNewline
+        ```
+
+    </CodeGroup>
+
+  </Step>
+
+  <Step title="Create compose.yml">
+    This setup runs Postgres and Reactive Resume on a private Docker network.
+
+    <CodeGroup>
+
+```yaml compose.yml
+services:
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  reactive-resume:
+    image: amruthpillai/reactive-resume:latest
+    # image: ghcr.io/amruthpillai/reactive-resume:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      # Used when S3 is not configured; keeps uploads persistent
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+```
+
+    </CodeGroup>
+
+    <Tip>
+      Prefer pulling from Docker Hub? Keep <code>amruthpillai/reactive-resume:latest</code>. Prefer GHCR? Swap it to <code>ghcr.io/amruthpillai/reactive-resume:latest</code>.
+    </Tip>
+
+    <Note>
+      In Docker, the Reactive Resume server listens on <code>PORT</code> and serves both the API and the built web app.
+      The default image uses <code>PORT=3000</code>, so the example maps <code>3000:3000</code>. If you change
+      <code>PORT</code>, update the container-side port mapping and health check to match.
+    </Note>
+
+  </Step>
+
+  <Step title="Start the stack">
+    <CodeGroup>
+
+```bash
+docker compose up -d
+```
+
+```bash
+docker compose ps
+```
+
+```bash
+docker compose logs -f reactive-resume
+```
+
+    </CodeGroup>
+
+    Reactive Resume should now be available at your `APP_URL` (for the example above: `http://localhost:3000`).
+
+  </Step>
+</Steps>
+
+## How startup works (database migrations)
+
+<Info>
+  On every start, the server <b>automatically runs database migrations</b> before serving traffic. If migrations fail
+  (usually due to a DB connection issue), the container will exit with an error.
+</Info>
+
+## Environment variables
+
+<CardGroup cols={2}>
+  <Card title="Required">
+    <ul>
+      <li>
+        <code>APP_URL</code>
+      </li>
+      <li>
+        <code>DATABASE_URL</code>
+      </li>
+      <li>
+        <code>AUTH_SECRET</code>
+      </li>
+    </ul>
+  </Card>
+  <Card title="Optional">
+    <ul>
+      <li>
+        SMTP (<code>SMTP_&#42;</code>)
+      </li>
+      <li>
+        Social auth (<code>GOOGLE_&#42;</code>, <code>GITHUB_&#42;</code>, <code>LINKEDIN_&#42;</code>,{" "}
+        <code>OAUTH_&#42;</code>)
+      </li>
+      <li>
+        S3 storage (<code>S3_&#42;</code>)
+      </li>
+      <li>
+        AI providers and AI Agent workspace (<code>ENCRYPTION_SECRET</code>, <code>REDIS_URL</code>)
+      </li>
+      <li>
+        Feature flags (<code>FLAG_&#42;</code>)
+      </li>
+    </ul>
+  </Card>
+</CardGroup>
+
+<AccordionGroup>
+  <Accordion title="Server">
+    - **`TZ`**: Sets the container timezone (affects logs and server-side timestamps). Recommended: `Etc/UTC`.
+    - **`APP_URL`**: Canonical/public URL for your instance (used for absolute URLs, redirects, and auth flows). If behind a reverse proxy, set this to your public HTTPS URL (for example, `https://resume.example.com`).
+    - **`PORT`**: Port the production Docker container listens on. Defaults to `3000` in the official image. If you change it, update your Compose port mapping and health check from `3000` to the new container port.
+    - **`SERVER_PORT`**: Used only for local development when the Vite web app and Hono server run as separate processes. It is ignored by the production Docker image.
+  </Accordion>
+
+<Accordion title="Database (PostgreSQL)">
+  - **`DATABASE_URL`**: Postgres connection string in the format `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`. - In
+  Docker Compose, set `HOST` to the Postgres service name (e.g. `postgres`), not `localhost`. - If your password
+  contains special characters (`@`, `#`, `:`), URL-encode it. - For managed Postgres, add provider-specific params (for
+  example `?sslmode=require`) when needed.
+</Accordion>
+
+  <Accordion title="Authentication">
+    **`AUTH_SECRET`**: Secret used to secure authentication. Changing it invalidates existing sessions.
+
+    Generate with:
+
+    <CodeGroup>
+
+```bash
+openssl rand -hex 32
+```
+
+    </CodeGroup>
+
+    **`GOOGLE_CLIENT_ID`** / **`GOOGLE_CLIENT_SECRET`** (optional): Enables Google sign-in.
+
+    **`GITHUB_CLIENT_ID`** / **`GITHUB_CLIENT_SECRET`** (optional): Enables GitHub sign-in.
+
+    **`LINKEDIN_CLIENT_ID`** / **`LINKEDIN_CLIENT_SECRET`** (optional): Enables LinkedIn sign-in.
+
+    **`BETTER_AUTH_API_KEY`** (optional): Enables Better Auth dashboard integrations.
+
+    **Custom OAuth provider** (optional):
+    - **`OAUTH_PROVIDER_NAME`**: Display name in the UI
+    - **`OAUTH_CLIENT_ID`** / **`OAUTH_CLIENT_SECRET`**: Required for any custom OAuth provider
+    - **`OAUTH_SCOPES`**: Space-separated scopes (defaults to `openid profile email`)
+
+    Configure endpoints using **one** of these methods:
+    - **Option A — OIDC Discovery (preferred)**: Set `OAUTH_DISCOVERY_URL` to your provider's `.well-known/openid-configuration` URL
+    - **Option B — Manual URLs**: Set all three: `OAUTH_AUTHORIZATION_URL`, `OAUTH_TOKEN_URL`, and `OAUTH_USER_INFO_URL`
+
+  </Accordion>
+
+  <Accordion title="Email (SMTP, optional)">
+    If SMTP is not configured, the app logs emails to the server console instead of sending them.
+
+    - Email delivery is enabled only when **all** of `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` are set.
+    - **`SMTP_HOST`**: SMTP host (if empty, email sending is disabled).
+    - **`SMTP_PORT`**: Defaults to `587` in the app.
+    - **`SMTP_USER`** / **`SMTP_PASS`**: SMTP credentials.
+    - **`SMTP_FROM`**: Default from address (for example, `Reactive Resume <noreply@rxresu.me>`).
+    - **`SMTP_SECURE`**: `"true"` or `"false"` (string). Match your provider settings.
+
+  </Accordion>
+
+<Accordion title="Storage (S3 or local)">
+  - **Default (local)**: If all `S3_*` values are empty, uploads are stored under `/app/data` in the official image.
+  - Mount local uploads to persistent storage (for example `./data:/app/data`) or uploads can be lost on container recreation.
+  - **`LOCAL_STORAGE_PATH`** (optional): Overrides the local data directory. Defaults to `/app/data` in the official Docker image and `<workspace>/data` in development. The container validates this path is writable at startup and refuses to start otherwise.
+  - **Rootless Docker**: `/app/data` remains the container path. Prefer the named volume from the example Compose file, or make sure a bind-mounted host directory is writable by the container's `node` user mapping.
+  - **S3/S3-compatible**: Configure `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`, `S3_ENDPOINT`, and `S3_BUCKET`.
+  - **Agent attachments/private objects**: The AI Agent workspace requires S3-compatible storage for private objects. Local storage rejects private objects.
+  - **`S3_FORCE_PATH_STYLE`** controls bucket addressing (defaults to `"false"`):
+    - `"true"` for path-style URLs (`https://endpoint/bucket`) common with MinIO/SeaweedFS.
+    - `"false"` for virtual-hosted-style URLs (`https://bucket.endpoint`) common with AWS S3 / Cloudflare R2.
+</Accordion>
+
+<Accordion title="AI features (optional)">
+  Saved AI provider management is usable only when **`ENCRYPTION_SECRET`** is configured. The AI Agent workspace also requires **`REDIS_URL`**. The rest of Reactive Resume can run without them.
+
+  - **`REDIS_URL`**: Redis connection string used by the AI Agent workspace.
+  - **`ENCRYPTION_SECRET`**: Secret used to encrypt saved AI provider credentials. Generate with `openssl rand -hex 32`.
+  - Live web research depends on the selected AI provider/model supporting native web search. The app does not run its own URL crawler.
+
+  If you use the Postgres-only Compose example above and want the AI Agent workspace, add a Redis service or use managed Redis, then set `REDIS_URL`.
+</Accordion>
+
+<Accordion title="Feature Flags">
+  - **`FLAG_DISABLE_SIGNUPS`**: Disables new signups (web app and server). Useful for private instances.
+  - **`FLAG_DISABLE_EMAIL_AUTH`**: Disables email/password login entirely. Also disables email verification, forgot password, and reset password flows. Users can still sign up via social auth (Google/GitHub/LinkedIn/Custom OAuth), unless FLAG_DISABLE_SIGNUPS is also set to true. Useful when only SSO is required.
+  - **`FLAG_DISABLE_IMAGE_PROCESSING`**: Disables image processing. This is useful if you are using a machine with limited resources, like a Raspberry Pi.
+  - **`FLAG_ALLOW_UNSAFE_OAUTH_REDIRECT_URI`**: Allows dynamic OAuth client registration to use any parseable redirect URI, including custom schemes, private hosts, and non-loopback `http://` URLs. **Warning: enabling this on a public or multi-tenant deployment can enable phishing or token exfiltration.** Only enable on trusted, self-hosted deployments.
+  - **`FLAG_ALLOW_UNSAFE_AI_BASE_URL`**: Allows AI providers to be configured with unsafe, private, or non-public base URLs, including `http://` and private/loopback addresses (for example, a local Ollama instance at `http://192.168.1.10:11434`). Public HTTPS provider URLs remain the safe default. **Warning: enabling this on a multi-tenant deployment is an SSRF risk.** Only enable on trusted, self-hosted deployments.
+</Accordion>
+</AccordionGroup>
+
+## Updating your installation
+
+To update your Reactive Resume installation to the latest available version, follow these steps:
+
+1. **Back up your database and uploads first** (highly recommended before every update).
+
+2. **Pull the latest images** for all services defined in your Docker Compose file.
+
+   ```bash
+   docker compose pull
+   ```
+
+3. **Restart the containers** to run the new images.
+
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Check migration/startup logs** after deploy.
+
+   ```bash
+   docker compose logs -f reactive-resume
+   ```
+
+5. **(Optional) Remove old, unused Docker images** to free up disk space.
+   ```bash
+   docker image prune -f
+   ```
+
+This process updates app services and automatically runs DB migrations on startup. If migration fails, restore from backup and fix configuration before retrying.
+
+## Backups (recommended)
+
+Regular backups are essential to protect your data. Reactive Resume stores data in two places: the PostgreSQL database and file uploads (either local storage or S3).
+
+### Database backups
+
+Your PostgreSQL database contains all user accounts, resumes, and application data. For self-hosted deployments, you can use `pg_dump` to create periodic backups of your database and store them in a secure location. Many hosting providers also offer automated backup solutions for managed PostgreSQL instances, which handle scheduling, retention, and restoration for you.
+
+### Upload backups
+
+If you're using local storage (the `./data` directory), include this directory in your regular backup routine. A simple approach is to use `rsync` or a similar tool to copy the directory to a remote server or cloud storage.
+
+If you're using S3-compatible storage, consider enabling versioning on your bucket to protect against accidental deletions. Most S3 providers also support lifecycle rules for automatic cleanup of old versions and cross-region replication for disaster recovery.
+
+## Health Checks
+
+Reactive Resume exposes a health check endpoint at `/api/health` that verifies the application and its dependencies. It checks **database** and **storage**; if either is unhealthy, the endpoint returns HTTP `503`.
+
+### How it works
+
+The Docker Compose configuration includes a health check that periodically calls the `/api/health` endpoint:
+
+```yaml
+healthcheck:
+  test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+```
+
+When the health check fails, Docker marks the container as **unhealthy**. This status is visible when running `docker compose ps` or `docker ps`.
+
+### Reverse proxy integration
+
+Most reverse proxies (such as **Traefik**, **Caddy**, or **nginx** with upstream health checks) can use Docker's health status to make routing decisions:
+
+- **Healthy containers** receive traffic as normal
+- **Unhealthy containers** are automatically removed from the load balancer pool
+
+This is particularly useful in high-availability setups where you have multiple instances of Reactive Resume. If one instance becomes unhealthy (for example, it loses database or storage connectivity), the reverse proxy will stop routing traffic to it until it recovers.
+
+<Tip>
+  If you're using **Traefik**, it automatically respects Docker health checks when using the Docker provider. Unhealthy
+  containers are excluded from routing without any additional configuration.
+</Tip>
+
+### Manually checking health
+
+You can manually verify the health of your Reactive Resume instance:
+
+```bash
+# From outside the container
+curl -f http://localhost:3000/api/health
+
+# Check Docker's health status
+docker compose ps
+```
+
+A healthy response returns HTTP 200. Any other response (or a connection failure) indicates a problem that should be investigated in the JSON response body and container logs.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The app container exits immediately">
+    - **Common cause**: database migrations failed (often a bad `DATABASE_URL`).
+    - **What to do**:
+      Check logs for migration errors and database connectivity details:
+      ```bash
+      docker compose logs -f reactive-resume
+      ```
+  </Accordion>
+
+<Accordion title="Can't sign in / redirects loop / cookies don't stick">
+  - **Common cause**: `APP_URL` doesn't match the URL you're actually using (especially behind a reverse proxy), or
+  you're serving HTTPS while `APP_URL` is `http://...`. - **Fix**: set `APP_URL` to your canonical public HTTPS URL and
+  restart the container.
+</Accordion>
+
+<Accordion title="PDF export fails or downloads an empty file">
+  - **Common cause**: PDFs are now rendered in the browser via `@react-pdf/renderer`, so failures usually come from a
+  blocked download, an extreme browser memory limit, or a custom CSP that strips inline workers. - **Checks**: confirm
+  the browser is up to date, the page hasn't been opened in a restricted iframe, and that no extension is intercepting
+  the download. There is no server-side printer to inspect.
+</Accordion>
+
+<Accordion title="/api/health returns 503 even though Postgres is up">
+  - **Common cause**: storage health failed (not only database). - **Fix**: inspect the endpoint response payload and
+  check the `storage` field: http://127.0.0.1:3000/api/health
+</Accordion>
+
+<Accordion title="Uploads disappear after restart">
+  - **Cause**: local upload storage wasn't mounted to a persistent volume. - **Fix**: add a volume mount like
+  `./data:/app/data` and redeploy.
+</Accordion>
+
+<Accordion title="Emails aren't being delivered">
+  - **Expected behavior**: if SMTP isn't fully configured, the app logs emails to the console. - **Fix**: set
+  `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`, then verify `SMTP_PORT` and `SMTP_SECURE`.
+</Accordion>
+
+<Accordion title="Dynamic OAuth redirect URI is rejected">
+  - **Common cause**: redirect URI is not the app origin or a local loopback callback. - **Fix**: use an app-origin or loopback redirect URI, or enable `FLAG_ALLOW_UNSAFE_OAUTH_REDIRECT_URI` only on a trusted self-hosted deployment that needs arbitrary redirect URIs.
+</Accordion>
+
+  <Accordion title="S3 storage error: ENOTFOUND bucket.endpoint">
+    - **Common cause**: The S3 client is using virtual-hosted-style addressing (prepending the bucket name to the endpoint), but your S3-compatible storage expects path-style addressing.
+    - **Symptom**: Error message like `getaddrinfo ENOTFOUND mybucket.s3-server.com` when your endpoint is `s3-server.com`.
+    - **Fix**: Set `S3_FORCE_PATH_STYLE="true"` in your environment. This is required for most self-hosted S3-compatible services like MinIO, SeaweedFS, etc.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,35 @@
+{
+	"name": "@reactive-resume/ai",
+	"version": "0.0.0",
+	"type": "module",
+	"private": true,
+	"exports": {
+		"./types": "./src/types.ts",
+		"./prompts": "./src/prompts.ts",
+		"./tools/resume-tool-contracts": "./src/tools/resume-tool-contracts.ts",
+		"./tools/patch-resume": "./src/tools/patch-resume.ts",
+		"./tools/patch-proposal": "./src/tools/patch-proposal.ts",
+		"./resume/extraction-template": "./src/resume/extraction-template.ts",
+		"./resume/sanitize": "./src/resume/sanitize.ts"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit",
+		"test": "vitest run --passWithNoTests",
+		"test:coverage": "vitest run --coverage --passWithNoTests",
+		"test:ci": "vitest run --coverage --reporter=default --reporter=github-actions --reporter=json --reporter=junit --outputFile.json=reports/vitest-results.json --outputFile.junit=reports/vitest-junit.xml --passWithNoTests",
+		"test:agent": "vitest run --reporter=agent --reporter=json --outputFile.json=reports/vitest-results.json --passWithNoTests"
+	},
+	"dependencies": {
+		"@reactive-resume/resume": "workspace:*",
+		"@reactive-resume/schema": "workspace:*",
+		"@reactive-resume/utils": "workspace:*",
+		"deepmerge-ts": "^7.1.5",
+		"jsonrepair": "^3.14.0",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@reactive-resume/config": "workspace:*",
+		"@typescript/native-preview": "7.0.0-dev.20260605.1",
+		"typescript": "^6.0.3"
+	}
+}

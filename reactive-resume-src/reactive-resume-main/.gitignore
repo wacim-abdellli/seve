@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build Outputs
+dist
+.vercel
+.wrangler
+
+# Environment Variables
+.env*
+!.env.example
+
+# IDEs and Editors
+*~
+*.swp
+*.swo
+.DS_Store
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Log Files
+logs
+*.log*
+
+# Turborepo
+.turbo
+
+# TanStack Start
+.tanstack
+
+# Testing
+coverage
+reports
+
+# Cache
+tmp
+temp
+.cache
+
+# AI
+.codex
+.agents
+.claude
+.cursor
+.codegraph
+.superpowers
+
+# Local Storage Data
+/data
+/apps/web/data
+
+# Git Hooks
+.vite-hooks/

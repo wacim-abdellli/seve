@@ -1,0 +1,79 @@
+---
+title: "Setting up two-factor authentication"
+description: "Learn how to enable two-factor authentication (2FA) to add an extra layer of security to your Reactive Resume account"
+---
+
+<Steps>
+  <Step title="Ensure you have a password set">
+    In order to see the option to set up two-factor authentication, you need to set a password. If you haven't set a password yet, possibly because you created your account through signing in with Google or GitHub, you will not be able to follow along this guide.
+
+    <Warning>
+      Two-factor authentication requires a password to be set on your account. If you signed up using a social provider (Google or GitHub), you'll need to set a password first from the Authentication settings page.
+    </Warning>
+
+  </Step>
+
+  <Step title="Sign in to the dashboard">
+    Head over to [https://rxresu.me](https://rxresu.me) and sign in with your account credentials.
+
+    <Tip>
+      If you haven't created an account yet, follow the guide on [Creating an Account](/guides/creating-an-account).
+    </Tip>
+
+  </Step>
+
+<Step title="Navigate to Authentication settings">
+  Once you're in the dashboard, look for the sidebar navigation on the left. Under the <Badge>Settings</Badge> section,
+  click on the <Badge>Authentication</Badge> link.
+</Step>
+
+<Step title="Click on Enable 2FA">
+  On the Authentication page, find the <Badge>Two-Factor Authentication</Badge> section and click on the{" "}
+  <Badge>Enable 2FA</Badge> button.
+</Step>
+
+  <Step title="Enter your password">
+    You will be asked to re-enter your password to authenticate that it's really you. Enter your password and click continue.
+
+    <Info>
+      This password verification step ensures that only authorized users can enable two-factor authentication on your account.
+    </Info>
+
+  </Step>
+
+  <Step title="Scan the QR code">
+    After entering your password, you should be shown a QR code. Scan it with your authenticator device and enter the 6-digit code that the app provides to continue.
+
+    <Tip>
+      Popular authenticator apps you can use include:
+      - **Google Authenticator** - Available on iOS and Android
+      - **Microsoft Authenticator** - Available on iOS and Android
+      - **Authy** - Available on iOS, Android, and desktop
+      - **1Password** - Available on multiple platforms
+      - **LastPass Authenticator** - Available on iOS and Android
+    </Tip>
+
+    <Info>
+      You can also copy the secret key above the QR code and paste it into your authenticator app if you prefer manual entry.
+    </Info>
+
+  </Step>
+
+  <Step title="Save your backup codes">
+    Once verified, you'll be prompted to save backup codes. You can use each code only once, and they're useful if you ever happen to lose access to your authenticator device.
+
+    <Warning>
+      Make sure to copy and store these backup codes in a safe place. If you lose your authenticator device and don't have backup codes, you may lose access to your account.
+    </Warning>
+
+  </Step>
+
+  <Step title="Sign in with 2FA">
+    The next time you sign in, you will be asked for a one-time code from your authenticator app. Enter the 6-digit code displayed in your authenticator app to complete the sign-in process.
+
+    <Tip>
+      If you've lost access to your authenticator device, you can use one of your backup codes to sign in. Remember that each backup code can only be used once.
+    </Tip>
+
+  </Step>
+</Steps>

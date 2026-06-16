@@ -61,7 +61,7 @@ export interface AtsScore {
   failing: { issue: string; fix: string }[]
 }
 
-export type Template = 'classic' | 'modern' | 'executive'
+export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative'
 
 export interface Message {
   id: string

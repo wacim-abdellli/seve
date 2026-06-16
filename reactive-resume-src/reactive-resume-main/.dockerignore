@@ -1,0 +1,32 @@
+# VCS and editor state
+.git
+.gitignore
+.cursor
+.DS_Store
+.vite-hooks
+
+# Local configuration and runtime state
+.env*
+/data
+
+# Dependency and package-manager caches
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build, test, and framework output
+dist
+**/dist
+.nitro
+.output
+.vercel
+.netlify
+.tanstack
+.turbo
+**/.turbo
+coverage
+reports
+
+# Generated service-worker assets are rebuilt during the web build.
+public/sw.js
+public/workbox-*.js

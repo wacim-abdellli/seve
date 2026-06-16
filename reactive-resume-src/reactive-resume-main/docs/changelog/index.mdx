@@ -1,0 +1,723 @@
+---
+title: "Changelog"
+description: "List of all notable changes and updates to Reactive Resume"
+rss: true
+---
+
+<Update label="v5.1.8" description="1st June 2026">
+## Highlights
+
+- **Section heading icons for PDF templates.** Resume section titles can now show customizable Phosphor icons in PDF output. Pick icons from the builder, hide individual section icons, or use the new page setting to hide heading icons separately from item-level icons. [b932711f0](https://github.com/amruthpillai/reactive-resume/commit/b932711f0)
+- **Multicolor text highlights.** The rich text editor now includes a highlight color picker with presets and custom colors. Dark highlights automatically switch marked text to white for readability, and highlight colors carry through PDF and DOCX exports. [e96a51f31](https://github.com/amruthpillai/reactive-resume/commit/e96a51f31)
+- **MCP PDF downloads.** MCP clients can now create short-lived authenticated PDF download URLs for resumes, making agent workflows able to retrieve generated PDF exports directly. [0df7f2113](https://github.com/amruthpillai/reactive-resume/commit/0df7f2113)
+
+## Resume Builder & Editing
+
+- Added per-section icon pickers for summary, built-in sections, and custom section dialogs, with sensible default icons for existing resumes and a `"none"` option for hiding a specific section icon. [b932711f0](https://github.com/amruthpillai/reactive-resume/commit/b932711f0)
+- Added a **Hide Section Icons** page option and clarified the existing **Hide Icons** setting so section heading icons and item-level icons can be controlled independently. [b932711f0](https://github.com/amruthpillai/reactive-resume/commit/b932711f0)
+- Replaced the single-color rich text highlight toggle with a full highlight color picker, including preset colors, custom colors, and a clear action. [e96a51f31](https://github.com/amruthpillai/reactive-resume/commit/e96a51f31)
+- Synced new builder, section icon, and rich text editor labels across locale catalogs. [b932711f0](https://github.com/amruthpillai/reactive-resume/commit/b932711f0), [1507d869c](https://github.com/amruthpillai/reactive-resume/commit/1507d869c), [e96a51f31](https://github.com/amruthpillai/reactive-resume/commit/e96a51f31)
+
+## Resume Rendering & Exports
+
+- Added section heading icon rendering to shared PDF templates, including heading-size scaling, default icon fallbacks for legacy resume data, and support for custom sections. [b932711f0](https://github.com/amruthpillai/reactive-resume/commit/b932711f0)
+- Preserved custom highlight colors in PDF and DOCX exports, including automatic white text on dark highlight colors. [e96a51f31](https://github.com/amruthpillai/reactive-resume/commit/e96a51f31)
+- Fixed experience entries with role progression so the main position and period still render in the header without repeating the period below it. [9ce5bacd2](https://github.com/amruthpillai/reactive-resume/commit/9ce5bacd2)
+- Fixed Custom Styles font size rules for resume icons and level indicators so those values affect actual icon dimensions in PDFs and builder previews. [1414fecad](https://github.com/amruthpillai/reactive-resume/commit/1414fecad), [e00ff8cec](https://github.com/amruthpillai/reactive-resume/commit/e00ff8cec)
+- Fixed the Glalie template contact-list border so it stays square instead of inheriting the picture border radius. [c1d11236a](https://github.com/amruthpillai/reactive-resume/commit/c1d11236a)
+
+## MCP, API & Maintenance
+
+- Added the `download_resume_pdf` MCP tool, returning a signed PDF download URL that expires after 10 minutes. [0df7f2113](https://github.com/amruthpillai/reactive-resume/commit/0df7f2113)
+- Added the authenticated `/api/resumes/:id/pdf` download route used by MCP PDF downloads, with no-store caching, token validation, ownership checks, and safer PDF generation errors. [0df7f2113](https://github.com/amruthpillai/reactive-resume/commit/0df7f2113), [a8c70d784](https://github.com/amruthpillai/reactive-resume/commit/a8c70d784), [152279473](https://github.com/amruthpillai/reactive-resume/commit/152279473)
+- Made MCP server cards, OpenAPI output, schema JSON, and server metadata use runtime-safe app version handling in development. [d09ad2cdc](https://github.com/amruthpillai/reactive-resume/commit/d09ad2cdc)
+- Updated the release Docker workflow to purge Cloudflare cache after publishing a release image, so cached release artifacts refresh after deployment. [6852f586e](https://github.com/amruthpillai/reactive-resume/commit/6852f586e)
+
+**Full Changelog**: [v5.1.7...v5.1.8](https://github.com/amruthpillai/reactive-resume/compare/v5.1.7...v5.1.8)
+</Update>
+
+<Update label="v5.1.7" description="27th May 2026">
+## Highlights
+
+- **Custom Styles replaces Custom CSS.** Reactive Resume now has a structured Custom Styles panel in the builder for fine-grained resume styling without raw CSS. Because v5 renders resumes through React PDF instead of browser HTML/CSS, Custom Styles uses safe, semantic rules that work consistently in the live preview, exported PDFs, public resumes, and server-side generation. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147), [c6a654191](https://github.com/amruthpillai/reactive-resume/commit/c6a654191), [16f4d2c07](https://github.com/amruthpillai/reactive-resume/commit/16f4d2c07)
+
+<img
+  src="/images/guides/using-custom-styles/screenshot-1.webp"
+  alt="Custom Styles section in the right sidebar with target scope, style slot, style controls, and applied rules"
+/>
+
+- **Better live resume sync.** The builder now handles local edits, Agent updates, MCP changes, and API updates more reliably by saving the latest resume draft and merging server metadata without losing in-progress changes. [dd1e37e57](https://github.com/amruthpillai/reactive-resume/commit/dd1e37e57)
+- **More accessible links across the app and exports.** Link handling was refreshed across web UI, dialogs, PDF preview/rendering, email, and shared UI components for improved accessibility behavior. [8da780c86](https://github.com/amruthpillai/reactive-resume/commit/8da780c86)
+
+## Custom Styles
+
+- Added a new **Custom Styles** section to the builder's right sidebar with target scope, style slot, style controls, and applied-rule management. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147), [c6a654191](https://github.com/amruthpillai/reactive-resume/commit/c6a654191)
+- Added style rule metadata to resume data so styling can be saved with the resume and preserved during imports from Reactive Resume v4 JSON. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147)
+- Added target scopes for **All sections**, **Section type**, and **Specific section**, allowing broad defaults or precise overrides for duplicate and custom sections. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147)
+- Added semantic style slots for section containers, headings, item containers, primary and secondary text, links, icons, level indicators, rich-text paragraphs, lists, list rows, list content, inline links, bold text, and highlights. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147), [c6a654191](https://github.com/amruthpillai/reactive-resume/commit/c6a654191)
+- Added structured controls for color, typography, spacing, borders, opacity, text decoration, alignment, and transforms, with empty fields falling back to the selected template. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147)
+- Added shared PDF style-rule resolution so Custom Styles layer on top of every template and apply consistently to rich text, lists, contact items, level indicators, and template-owned section rendering. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147), [c6a654191](https://github.com/amruthpillai/reactive-resume/commit/c6a654191)
+- Added focused tests for style rule schema validation, PDF style resolution, rich-text style inheritance, and the Custom Styles builder UI. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147), [c6a654191](https://github.com/amruthpillai/reactive-resume/commit/c6a654191)
+
+## Builder, Accessibility & Agent Updates
+
+- Reworked resume draft saving so the builder queues full draft saves, retries failed saves, and avoids overwriting newer local edits when server responses arrive out of order. [dd1e37e57](https://github.com/amruthpillai/reactive-resume/commit/dd1e37e57)
+- Added a resume update subscription for Agent threads so resume previews can refresh when external Agent changes land. [dd1e37e57](https://github.com/amruthpillai/reactive-resume/commit/dd1e37e57)
+- Improved import, picture, information, resume analysis, homepage, Agent, and shared UI link behavior for better accessibility and safer rendering. [8da780c86](https://github.com/amruthpillai/reactive-resume/commit/8da780c86)
+- Added safer PDF text style handling for links and rich text so invalid or unsupported link styles do not leak into React PDF output. [8da780c86](https://github.com/amruthpillai/reactive-resume/commit/8da780c86)
+- Improved combobox behavior and tests used by Custom Styles and other builder controls. [c6a654191](https://github.com/amruthpillai/reactive-resume/commit/c6a654191), [b49158263](https://github.com/amruthpillai/reactive-resume/commit/b49158263)
+
+## Docs, Localization & Maintenance
+
+- Added a full **Using Custom Styles** guide with screenshots, target-scope guidance, style-slot reference tables, practical examples, and notes on when to use Custom Styles instead of the broader Design, Typography, Layout, and Page settings. [16f4d2c07](https://github.com/amruthpillai/reactive-resume/commit/16f4d2c07)
+- Added an architecture decision record explaining why structured Style Rules are the supported replacement for raw Custom CSS in the React PDF rendering model. [b04eef147](https://github.com/amruthpillai/reactive-resume/commit/b04eef147)
+- Added a Custom Styles header-target design note for future styling scope decisions. [7bff6644d](https://github.com/amruthpillai/reactive-resume/commit/7bff6644d)
+- Synced missing translations for Custom Styles and related builder text across locale catalogs. [b49158263](https://github.com/amruthpillai/reactive-resume/commit/b49158263)
+- Removed React Doctor from package scripts, refreshed task dependencies in `turbo.json`, and cleaned up related workspace dependency entries. [8461aa65](https://github.com/amruthpillai/reactive-resume/commit/8461aa65)
+
+**Full Changelog**: [v5.1.6...v5.1.7](https://github.com/amruthpillai/reactive-resume/compare/v5.1.6...v5.1.7)
+</Update>
+
+<Update label="v5.1.6" description="26th May 2026">
+## Highlights
+
+- **Right-to-left PDF support across all templates.** Resumes in RTL locales now mirror layout, alignment, and rich text direction consistently across every PDF template, not just Rhyhorn. [24c882fa9](https://github.com/amruthpillai/reactive-resume/commit/24c882fa9), [266bc291e](https://github.com/amruthpillai/reactive-resume/commit/266bc291e)
+- **More reliable social login for upgraded accounts.** OAuth sign-in now reconciles existing email-based accounts with legacy GitHub-linked profiles, so migrated users can sign back in without creating duplicate accounts. [86fff7237](https://github.com/amruthpillai/reactive-resume/commit/86fff7237)
+
+## Resume Rendering & Exports
+
+- Added shared RTL layout helpers and a single `rtl` flag on the PDF render provider, then migrated every template page to mirrored layout styles. [24c882fa9](https://github.com/amruthpillai/reactive-resume/commit/24c882fa9)
+- Fixed plain rich text rendering in PDFs by routing paragraph content through dedicated `PdfText` renderers. [24c882fa9](https://github.com/amruthpillai/reactive-resume/commit/24c882fa9)
+- Mapped legacy `Times New Roman` font selections to the PDF-compatible `Times-Roman` family so older resumes keep rendering correctly. [24c882fa9](https://github.com/amruthpillai/reactive-resume/commit/24c882fa9)
+- Reduced the default vertical gap between list items in PDF templates for tighter, more readable bullet and numbered lists. [17cddbad6](https://github.com/amruthpillai/reactive-resume/commit/17cddbad6)
+- Fixed color parsing for 3-digit hex values such as `#abc`, which previously failed to convert correctly in the builder. [273e17c0d](https://github.com/amruthpillai/reactive-resume/commit/273e17c0d)
+
+## Authentication
+
+- Added OAuth profile reconciliation that matches returning users by normalized email and legacy GitHub username/display name before creating a new account. [86fff7237](https://github.com/amruthpillai/reactive-resume/commit/86fff7237)
+
+## AI & Agent Workflows
+
+- Fixed Agent thread deletion to remove attachments and mark the thread deleted before storage cleanup, preventing inconsistent database state when storage cleanup fails partway through. [7557ab13a](https://github.com/amruthpillai/reactive-resume/commit/7557ab13a)
+
+## Docs & Maintenance
+
+- Updated the Docker quick-start guide to use a shallow clone for faster setup. Thanks to [@umairkhurshid](https://github.com/umairkhurshid). [75e944613](https://github.com/amruthpillai/reactive-resume/commit/75e944613)
+- Centralized RTL locale detection in `@reactive-resume/utils/locale` and removed duplicate web-side helpers. [c66560ee1](https://github.com/amruthpillai/reactive-resume/commit/c66560ee1)
+- Ran React Doctor lint passes, refreshed translations, and added dynamic imports where appropriate. [39e88dd36](https://github.com/amruthpillai/reactive-resume/commit/39e88dd36)
+- Updated workspace dependencies. [3596102c6](https://github.com/amruthpillai/reactive-resume/commit/3596102c6), [6ec4da791](https://github.com/amruthpillai/reactive-resume/commit/6ec4da791), [7eea6675c](https://github.com/amruthpillai/reactive-resume/commit/7eea6675c)
+
+**Full Changelog**: [v5.1.5...v5.1.6](https://github.com/amruthpillai/reactive-resume/compare/v5.1.5...v5.1.6)
+</Update>
+
+<Update label="v5.1.5" description="19th May 2026">
+<Note>
+  **Self-hosters, please review your environment before upgrading.** The production image now runs a dedicated Hono
+  server from `apps/server/dist/index.mjs`. Remove `OAUTH_DYNAMIC_CLIENT_REDIRECT_HOSTS`,
+  `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_API_TOKEN` from your environment if they are still set.
+
+  Local development now uses `PORT=3000` for Vite and `SERVER_PORT=3001` for the Hono server. This should not affect
+  production deployments.
+</Note>
+
+## Highlights
+
+- **Dedicated Hono server runtime.** Reactive Resume now builds a separate `apps/server` app that mounts auth, RPC, MCP, OpenAPI, uploads, schema JSON, SEO endpoints, health checks, and the built web app from one Node.js process. [ecc1fd9a8](https://github.com/amruthpillai/reactive-resume/commit/ecc1fd9a8), [9033da082](https://github.com/amruthpillai/reactive-resume/commit/9033da082)
+- **Clearer self-hosting runtime model.** The Docker image now builds both `web` and `server`, runs `node apps/server/dist/index.mjs`, and keeps `/api/health` pointed at the production server port. [ecc1fd9a8](https://github.com/amruthpillai/reactive-resume/commit/ecc1fd9a8)
+- **Safer Agent restore behavior.** Agent edits now store a resume snapshot before applying a patch, so restoring an action can roll the draft back to the exact prior state and mark later agent patches as rolled back. [d961e6535](https://github.com/amruthpillai/reactive-resume/commit/d961e6535)
+
+## Self-Hosting & Environment
+
+- Added `SERVER_PORT` for local development. Vite serves the web app on `PORT` and proxies API, MCP, upload, well-known, and schema routes to the Hono server on `SERVER_PORT`.
+- Updated the production Dockerfile to copy `apps/web/dist`, `apps/server/dist`, server package dependencies, and migrations into the runtime image. The production start command is now `node apps/server/dist/index.mjs`.
+- Updated `compose.yml` to use the published image by default and load app configuration through `.env` instead of embedding the main app environment block inline.
+- Updated `compose.dev.yml` to expose both `3000` and `3001`, add an app profile, and health-check the Hono server port.
+- Startup checks now run from the server process, including database migrations and local storage writability validation when S3-compatible storage is not configured.
+- Removed `OAUTH_DYNAMIC_CLIENT_REDIRECT_HOSTS`. Dynamic OAuth client registration now allows the app origin and loopback callbacks by default.
+- Added `FLAG_ALLOW_UNSAFE_OAUTH_REDIRECT_URI` for trusted self-hosted deployments that intentionally need arbitrary redirect URIs, including custom schemes, private hosts, or non-loopback `http://` callbacks. Keep this disabled on public or multi-tenant instances. [445359ebe](https://github.com/amruthpillai/reactive-resume/commit/445359ebe)
+- Removed the documented `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` override path. Auth metadata, JWKS, and OAuth callback URLs are now derived from `APP_URL` and `AUTH_SECRET`.
+- Removed Cloudflare URL extraction environment variables. Live Agent web research now depends on the selected AI provider and model supporting native web search.
+- Renamed the Crowdin token example from `CROWDIN_PERSONAL_TOKEN` to `CROWDIN_API_TOKEN`.
+
+## App Runtime & Architecture
+
+- Moved API/auth/MCP/OpenAPI/static route ownership out of the web app and into `apps/server`.
+- Changed the web app build to a Vite/TanStack Router SPA output under `apps/web/dist`, with the Hono server serving the built app and static fallback responses.
+- Added `robots.txt`, `sitemap.xml`, `llms.txt`, structured data helpers, and server-owned SEO responses. [8fcf0ec64](https://github.com/amruthpillai/reactive-resume/commit/8fcf0ec64)
+- Added package-boundary rules to Turborepo and per-workspace `turbo.json` files to enforce browser, server, domain, adapter, and infra ownership.
+- Split focused domains into new packages: `@reactive-resume/docx`, `@reactive-resume/mcp`, and `@reactive-resume/resume`.
+- Moved development-only scripts from `packages/scripts` to `tooling` so workspace packages contain app/runtime code rather than private repo tooling.
+- Reorganized API implementation into feature-owned modules under `packages/api/src/features/*`.
+
+## AI & Agent Workflows
+
+- Replaced stored inverse JSON patches with `snapshot_data` on agent actions. Legacy actions without snapshots remain non-restorable.
+- Added a migration that adds `agent_actions.snapshot_data` and drops `agent_actions.inverse_operations`.
+- Updated Agent UI and docs from "Revert" language to "Restore" language to clarify that restoring an older action rolls back that action and later applied agent patches.
+- Updated Agent tool documentation to describe provider-native `web_search` behavior instead of app-owned URL fetching.
+- Kept unsafe/private AI provider base URLs behind `FLAG_ALLOW_UNSAFE_AI_BASE_URL`, with public HTTPS provider URLs remaining the default safe path.
+
+## Resume Rendering & Exports
+
+- Moved browser PDF preview code into `apps/web/src/features/resume/preview` and public resume viewer code into `apps/web/src/features/resume/public`.
+- Added direct PDF.js canvas preview and thumbnail rendering through legacy PDF.js entrypoints, with tests that prevent browser preview code from importing the modern PDF.js runtime. [7cade6980](https://github.com/amruthpillai/reactive-resume/commit/7cade6980)
+- Added explicit `@reactive-resume/pdf/browser` and `@reactive-resume/pdf/server` generation adapters.
+- Simplified shared sidebar summary handling for PDF templates and added focused coverage for featured summary behavior. [17f351171](https://github.com/amruthpillai/reactive-resume/commit/17f351171)
+
+## Docs & Maintenance
+
+- Added new use-case docs for free, open-source, self-hosted, privacy-focused, export/share, AI, and API/MCP resume workflows.
+- Rewrote contributor architecture docs around the new monorepo runtime, package ownership model, and boundary checks.
+- Updated self-hosting Docker and SSO docs for the Hono runtime, removed environment variables, OAuth redirect safety, provider-native Agent web research, and local development ports.
+- Added and updated architecture notes, plans, and specs for the Hono migration, monorepo reorganization, Docker tagging, manifest-only PWA behavior, unsafe OAuth redirect policy, and Agent snapshot restore design.
+- Updated Knip configuration so server runtime dependencies that are imported by the built server bundle are treated as intentional dependencies.
+
+**Full Changelog**: [v5.1.4...v5.1.5](https://github.com/amruthpillai/reactive-resume/compare/v5.1.4...v5.1.5)
+</Update>
+
+<Update label="v5.1.4" description="14th May 2026">
+<Note>
+  **Self-hosters using AI features:** saved AI providers now require `ENCRYPTION_SECRET`, and the new AI Agent
+  workspace also requires `REDIS_URL`. Agent attachments require S3-compatible storage for private objects; local
+  filesystem storage still works for the rest of the app, but rejects private agent attachments.
+</Note>
+
+## Highlights
+
+- **New AI Agent workspace.** Added a dedicated full-screen Agent workspace for working on isolated AI draft copies of resumes. Threads include a sidebar, chat, tool activity, file attachments, and a read-only resume preview with PDF download support. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+
+<img src="/images/guides/using-ai-agent/screenshot-2.webp" alt="AI Agent workspace showing thread sidebar, chat, and resume preview" />
+
+- **Reviewable and reversible agent edits.** Agent-applied resume patches now appear as expandable tool activity, with raw JSON Patch details, operation summaries, revert support, and clear conflict handling when the resume has changed. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+
+<img src="/images/guides/ai-agent-tools/screenshot-1.webp" alt="AI Agent chat showing an applied patch with raw JSON details" />
+
+- **Public resumes now render with PDF.js.** Public resume pages now use the PDF.js-based viewer path, improving parity between the public page, builder preview, and exported PDF. [#3061](https://github.com/amruthpillai/reactive-resume/pull/3061)
+
+## AI & Agent Workflows
+
+- Added server-side AI provider management with encrypted credentials, provider testing, and provider/model capability checks. This replaces the old local AI store and keeps AI configuration centralized. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+- Added Agent tools for reading resume drafts, using provider-native web search when supported, reading supported attachments, asking follow-up questions, and applying JSON Patch updates to the AI draft. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+- Added archive and delete actions for Agent threads, including read-only archived states, in-flight run cleanup when archiving, and ownership checks before destructive deletion. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+- Added attachment upload rate limits, private S3 ACLs for Agent attachments, runtime validation for streamed messages, transactional patch/action writes, and a unique message sequence index for safer Agent runs. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+- Added `FLAG_ALLOW_UNSAFE_AI_BASE_URL` for trusted self-hosted deployments that need private or local AI provider URLs, while still restricting provider URLs to `http` or `https`. Thanks to [@SirSKillz](https://github.com/SirSKillz). [#3059](https://github.com/amruthpillai/reactive-resume/pull/3059)
+
+## Resume Rendering & Fonts
+
+- Restored legacy local font names from v5.0.x by mapping them to metric-compatible bundled web fonts, preventing upgraded resumes from unexpectedly changing line breaks, page counts, or overall layout. Thanks to [@JamesGoslings](https://github.com/JamesGoslings). [#3057](https://github.com/amruthpillai/reactive-resume/pull/3057)
+- Added metric-compatible aliases for `Times New Roman`, `Cambria`, `Arial`, `Garamond`, and `Calibri`, including Carlito as the Calibri-compatible target. [#3057](https://github.com/amruthpillai/reactive-resume/pull/3057)
+- Improved resume preview spacing normalization and added focused coverage for the public PDF viewer and preview helpers. [#3061](https://github.com/amruthpillai/reactive-resume/pull/3061), [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+
+## Self-Hosting, Docs & Maintenance
+
+- Added a development Dockerfile plus improved Compose development services and health checks for running Reactive Resume with local dependencies. [1294d3354](https://github.com/amruthpillai/reactive-resume/commit/1294d3354)
+- Updated self-hosting documentation for Redis, encrypted AI provider credentials, provider-native web research, private Agent attachments, S3 path-style storage, and unsafe AI base URL behavior. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062), [#3059](https://github.com/amruthpillai/reactive-resume/pull/3059)
+- Added new and refreshed guides for the AI Agent workspace, Agent tools, AI setup, builder dock, dashboard management, importing, exporting, public sharing, and private notes. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062), [affa1d664](https://github.com/amruthpillai/reactive-resume/commit/affa1d664)
+- Removed a stale Custom CSS documentation link now that custom CSS is no longer part of the v5.1 renderer flow. [#3056](https://github.com/amruthpillai/reactive-resume/pull/3056)
+- Added a Reactive Resume design system reference and updated dependencies across the workspace. [#3062](https://github.com/amruthpillai/reactive-resume/pull/3062)
+
+**Full Changelog**: [v5.1.3...v5.1.4](https://github.com/amruthpillai/reactive-resume/compare/v5.1.3...v5.1.4)
+</Update>
+
+<Update label="v5.1.3" description="13th May 2026">
+## Highlights
+
+- **New Scizor resume template.** Added the new **Scizor** layout to the template lineup, including builder support, schema/docs updates, and localization strings. [00dafd0c6](https://github.com/amruthpillai/reactive-resume/commit/00dafd0c6), [5f63dc876](https://github.com/amruthpillai/reactive-resume/commit/5f63dc876)
+
+<img src="/images/templates/scizor.webp" alt="Scizor template preview" style={{ aspectRatio: "210/297" }} />
+
+- **Smarter page settings in the builder.** Empty sections are now hidden from page settings to reduce noise and make layout management easier. [#3052](https://github.com/amruthpillai/reactive-resume/pull/3052)
+- **Faster, smoother preview loading.** Improved resume preview loading behavior and added focused tests for preview components. [92a0e3ddb](https://github.com/amruthpillai/reactive-resume/commit/92a0e3ddb)
+
+## Resume Builder & PDF Export Fixes
+
+- Increased header name line height in PDF templates to prevent descender clipping. [#3050](https://github.com/amruthpillai/reactive-resume/pull/3050)
+- Improved CJK rendering reliability across PDF output, including better handling of hyphenation callbacks and italic fallback behavior. [62b0a1d53](https://github.com/amruthpillai/reactive-resume/commit/62b0a1d53), [83a407bc1](https://github.com/amruthpillai/reactive-resume/commit/83a407bc1), [33103536a](https://github.com/amruthpillai/reactive-resume/commit/33103536a), [64ac3ff32](https://github.com/amruthpillai/reactive-resume/commit/64ac3ff32)
+- Fixed split-row right-side content promotion behavior to preserve layout consistency in exports. [#3039](https://github.com/amruthpillai/reactive-resume/pull/3039)
+- Improved rich text and section data handling by filtering invalid or empty items and tightening schema validation for safer rendering. [334ea48bc](https://github.com/amruthpillai/reactive-resume/commit/334ea48bc), [0713cf20d](https://github.com/amruthpillai/reactive-resume/commit/0713cf20d), [4ebe9e5a6](https://github.com/amruthpillai/reactive-resume/commit/4ebe9e5a6)
+
+## Quality, Docs & Maintenance
+
+- Expanded automated coverage significantly, including monorepo-wide unit/component tests and an additional ~500 tests across core packages. [6a01207b6](https://github.com/amruthpillai/reactive-resume/commit/6a01207b6), [#3038](https://github.com/amruthpillai/reactive-resume/pull/3038)
+- Migrated the test environment from jsdom to happy-dom for faster and more stable test runs. [7a60a42a0](https://github.com/amruthpillai/reactive-resume/commit/7a60a42a0)
+- Updated documentation and defaults, including AGENTS guidance and export format notes. [#3054](https://github.com/amruthpillai/reactive-resume/pull/3054), [71aadbd73](https://github.com/amruthpillai/reactive-resume/commit/71aadbd73), [a93e7bd19](https://github.com/amruthpillai/reactive-resume/pull/3024)
+- Synced translation catalogs from Crowdin and added template-specific translation updates for Scizor. [#3053](https://github.com/amruthpillai/reactive-resume/pull/3053), [e574d4005](https://github.com/amruthpillai/reactive-resume/pull/3037), [#3026](https://github.com/amruthpillai/reactive-resume/pull/3026), [#3023](https://github.com/amruthpillai/reactive-resume/pull/3023), [c5787fe15](https://github.com/amruthpillai/reactive-resume/commit/c5787fe15)
+- Updated dependencies and repository cleanup tasks, including PostCSS refresh and Knip fixes. [e35ff8391](https://github.com/amruthpillai/reactive-resume/commit/e35ff8391), [3cd228bd8](https://github.com/amruthpillai/reactive-resume/commit/3cd228bd8), [978cbaf1f](https://github.com/amruthpillai/reactive-resume/commit/978cbaf1f), [0daf868cd](https://github.com/amruthpillai/reactive-resume/commit/0daf868cd)
+
+**Full Changelog**: [v5.1.2...v5.1.3](https://github.com/amruthpillai/reactive-resume/compare/v5.1.2...v5.1.3)
+</Update>
+
+<Update label="v5.1.2" description="10th May 2026">
+<Note>
+  **Self-hosters using local storage:** the official Docker image now sets `LOCAL_STORAGE_PATH=/app/data` and validates that the directory is writable at startup. If you override the container environment, keep `LOCAL_STORAGE_PATH` pointed at an absolute writable path.
+</Note>
+
+## Highlights
+
+- **AI Resume Assistant.** Added a chat window inside the resume builder for targeted resume edits. The assistant can draft JSON Patch proposals, show before/after previews, and lets you accept or reject each change before anything is applied. [#3022](https://github.com/amruthpillai/reactive-resume/pull/3022)
+- **Better CJK PDF output.** Added automatic CJK fallback font registration so Chinese, Japanese, and Korean text renders correctly in both the live PDF preview and exported PDFs. [#3016](https://github.com/amruthpillai/reactive-resume/pull/3016)
+
+## Resume Builder & Exports
+
+- Added a builder dock shortcut for the AI assistant, with a draggable and resizable desktop window plus a mobile sheet layout. [#3022](https://github.com/amruthpillai/reactive-resume/pull/3022)
+- Added review controls for AI-generated proposals, including proposal queues, raw JSON Patch inspection, accept/reject actions, and stale-proposal handling when the resume changes. [#3022](https://github.com/amruthpillai/reactive-resume/pull/3022)
+- Fixed rich text PDF rendering when text blocks contain top-level inline content around lists or paragraphs. [42e83cc6](https://github.com/amruthpillai/reactive-resume/commit/42e83cc6)
+- Kept Latin-only PDF output unchanged while applying fallback fonts only when CJK glyphs are needed. [#3016](https://github.com/amruthpillai/reactive-resume/pull/3016)
+
+## Sharing & Imports
+
+- Fixed public resume URLs returning a server error when the owner-only dashboard title was redacted to an empty string for viewers. [#3012](https://github.com/amruthpillai/reactive-resume/pull/3012)
+- Improved v4 JSON imports so custom section content, hidden items, and skill/language levels migrate correctly into v5 resumes. [#3013](https://github.com/amruthpillai/reactive-resume/pull/3013)
+
+## Self-Hosting
+
+- Fixed Docker local-storage health checks by resolving the data directory through `LOCAL_STORAGE_PATH` instead of relying on the runtime working directory. [#3004](https://github.com/amruthpillai/reactive-resume/pull/3004)
+- Added startup validation for the local storage directory so misconfigured volume permissions fail early with a clearer error. [#3004](https://github.com/amruthpillai/reactive-resume/pull/3004)
+- Updated `.env.example`, the Dockerfile, Compose configuration, and Docker self-hosting docs for the new local storage path behavior. [#3004](https://github.com/amruthpillai/reactive-resume/pull/3004)
+
+## Maintenance & Localization
+
+- Synced translation catalogs from Crowdin. [#3005](https://github.com/amruthpillai/reactive-resume/pull/3005)
+- Updated dependencies and lockfile entries needed for the AI assistant, PDF rich text normalization, and related test coverage.
+
+**Full Changelog**: [v5.1.1...v5.1.2](https://github.com/amruthpillai/reactive-resume/compare/v5.1.1...v5.1.2)
+</Update>
+
+<Update label="v5.1.1" description="8th May 2026">
+## Highlights
+
+- **Free-form resume pages.** Added a new **Free-form** page format for resumes that should keep A4 width while allowing content to flow beyond a fixed page height. This is useful for long-form web-style resumes while preserving predictable export sizing. [#2991](https://github.com/amruthpillai/reactive-resume/issues/2991)
+- **PDF downloads through the API.** Added an authenticated `GET /resumes/{id}/pdf` endpoint so API clients can generate and download a resume PDF directly. The OpenAPI spec has been updated with the new route. [5042ad9d](https://github.com/amruthpillai/reactive-resume/commit/5042ad9d)
+
+## Resume Builder & Exports
+
+- Fixed nested lists in PDF rendering so rich text with sub-lists exports correctly. [#2993](https://github.com/amruthpillai/reactive-resume/issues/2993)
+- Fixed inline item links in exported PDFs and made resume links consistently underlined. [#2978](https://github.com/amruthpillai/reactive-resume/issues/2978)
+- Added italic font registration for PDF generation and falls back to **IBM Plex Serif** when a selected font is unavailable. [6d54ffa8](https://github.com/amruthpillai/reactive-resume/commit/6d54ffa8), [4c771307](https://github.com/amruthpillai/reactive-resume/commit/4c771307)
+- Improved header name line height across templates for cleaner PDF output. [#2976](https://github.com/amruthpillai/reactive-resume/issues/2976)
+- Added prose styles to the rich text editor so formatted content is easier to read while editing. [#2984](https://github.com/amruthpillai/reactive-resume/issues/2984)
+- Added a preview control to toggle page stacking and adjusted the default preview zoom for a better builder canvas experience.
+
+## Fixes
+
+- Fixed a runtime error when enabling two-factor authentication. [#2981](https://github.com/amruthpillai/reactive-resume/issues/2981)
+- Fixed excessive re-renders in the Experience section when editing role progression. [#2983](https://github.com/amruthpillai/reactive-resume/issues/2983)
+- Removed route preloading to avoid unwanted route work while navigating the app. [#2949](https://github.com/amruthpillai/reactive-resume/issues/2949)
+- Relaxed resume data parsing to accept compatible objects with additional fields. [#2793](https://github.com/amruthpillai/reactive-resume/issues/2793)
+- Updated dialog layout behavior so tall dialogs scroll correctly on smaller screens.
+- Updated the sample resume picture URL to point to a valid bundled image.
+
+## Self-Hosting
+
+- Automatically loads `.env` from the workspace root for server-side code, improving local and self-hosted configuration behavior. [#2987](https://github.com/amruthpillai/reactive-resume/issues/2987)
+- Restored the local storage path to `/app/data` in the official container image and clarified the Docker storage documentation. [#2990](https://github.com/amruthpillai/reactive-resume/issues/2990)
+
+## Maintenance & Localization
+
+- Synced translation catalogs from Crowdin. [#2995](https://github.com/amruthpillai/reactive-resume/pull/2995), [#2997](https://github.com/amruthpillai/reactive-resume/pull/2997)
+- Removed unused dependencies, stale generated cache artifacts, and obsolete tests from the repository.
+
+**Full Changelog**: [v5.1.0...v5.1.1](https://github.com/amruthpillai/reactive-resume/compare/v5.1.0...v5.1.1)
+</Update>
+
+<Update label="v5.1.0" description="7th May 2026">
+<Note>
+  **Self-hosters, please read before upgrading.**
+
+  - **No more Browserless / Chromium dependency.** From v5.1.0 onwards, you do **not** need to run a `printer`, Browserless, or headless Chrome service alongside Reactive Resume. PDF generation is now performed entirely in your browser via `@react-pdf/renderer`. The `BROWSERLESS_TOKEN`, `PRINTER_ENDPOINT`, `PRINTER_APP_URL`, and `FLAG_DEBUG_PRINTER` environment variables are no longer read and can be removed from your `.env`.
+  - **Database migrations.** This release ships several new schema migrations to bring the resume model up to date. They run automatically on container start, but you should **back up your PostgreSQL database before upgrading** in case rollback is needed.
+  - **Custom CSS has been removed.** Because the resume PDF is no longer produced by a headless browser, raw CSS no longer applies to the exported document. A first-class template-customization story is on the roadmap for a future release.
+</Note>
+
+## Highlights
+
+- **PDF generation moved fully client-side.** `@react-pdf/renderer` now produces the exported PDF directly in your browser, and the in-builder live preview is rendered with `pdfjs`, so what you see in the preview is exactly what you'll download.
+- **All resume templates re-ported.** Azurill, Bronzor, Chikorita, Ditgar, Ditto, Gengar, Glalie, Kakuna, Lapras, Leafish, Meowth, Onyx, Pikachu, Rhyhorn, and Scizor have all been re-implemented on the new renderer with section-by-section parity.
+
+## Resume Builder
+
+- **Pixel-accurate live preview.** The builder preview is now rendered with `pdfjs` against the same document tree used for export, eliminating the long-standing "looks fine in the preview but breaks in the PDF" class of bugs.
+- **TanStack Form everywhere.** All 35 form-bearing surfaces in the app — login, register, forgot-password, resume sections, settings, and dialogs — have been migrated to TanStack Form. `react-hook-form` and `@hookform/*` packages have been removed.
+- **TanStack Query is the single source of truth for resume state.** The previous standalone Zustand resume store has been retired; optimistic updates, refetching, and error recovery now flow through one cache, behaving consistently across tabs and reloads.
+- **Native page format and margins.** Page size and margin controls are now expressed directly to `@react-pdf/renderer`, replacing the Puppeteer-specific `printMarginTemplates` workaround.
+
+## Self-Hosting
+
+- **One-service deployment.** Self-hosted Compose files no longer need a `printer:` service block. The minimum stack is now just Reactive Resume + PostgreSQL (with optional S3-compatible storage and SMTP).
+- **`/api/health` simplified.** The health endpoint now reports `database` and `storage` only, returning HTTP `503` if either dependency is unhealthy. There is no longer a `printer` field to monitor.
+- **Updated documentation.** The Self-Hosting, Quickstart, Development, Architecture, and Legal pages have all been refreshed to describe the simplified single-service deployment.
+
+## Authentication & AI
+
+- **Better Auth retained end-to-end** with all nine plugins — passkeys, two-factor authentication, OAuth (Google / GitHub / LinkedIn / custom), API keys, dynamic OAuth client registration, dashboard, sentinel, and admin. Existing sessions and logins carry over after the upgrade.
+- **AI features carry over** (Resume Analysis, AI Chat with JSON Patch tool calls, PDF / DOCX import) with the same provider matrix (OpenAI, Google Gemini, Anthropic, Ollama, OpenRouter). The AI router and service layer have been cleanly decoupled from the jobs / tailor flow for a more modular surface.
+
+## Removed
+
+- **Custom CSS option** in the resume builder. With rendering bound to `@react-pdf/renderer`, raw CSS no longer applies to the exported PDF. A structured customization API will return in a future release.
+- **`PRINTER_*` and `BROWSERLESS_*` environment variables**, the `printer/{resumeId}` route, the `getByIdForPrinter` server function, and the printer-token signing code are all gone.
+
+## Maintenance
+
+- Removed dead printer-token utilities and the legacy public RPC surface for printer-only resume reads.
+- Tightened the boundary between server-only and client-only code: server modules (database, storage, auth) are lazy-imported so they no longer leak into the client bundle.
+- Reverse-proxy timeout guidance in the nginx example has been simplified now that no long-running PDF generation request flows through the proxy.
+
+**Full Changelog**: [v5.0.20...v5.1.0](https://github.com/amruthpillai/reactive-resume/compare/v5.0.20...v5.1.0)
+</Update>
+
+<Update label="v5.0.20" description="27th April 2026">
+## Features & Improvements
+- Added the new **Meowth** resume template (compact ATS-friendly layout with an inline three-column entry header), thanks to [@JamesGoslings](https://github.com/JamesGoslings). [#2923](https://github.com/amruthpillai/reactive-resume/pull/2923)
+- Added support for custom icon colors on section items, thanks to [@Ruzenie](https://github.com/Ruzenie). [#2928](https://github.com/amruthpillai/reactive-resume/pull/2928)
+- Improved account-related email UX with better templates for password reset and email verification. [b87f2007](https://github.com/amruthpillai/reactive-resume/commit/b87f2007)
+- Consolidated separate settings pages into a single **Integrations** page for a more streamlined configuration flow. [5d8126d4](https://github.com/amruthpillai/reactive-resume/commit/5d8126d4)
+
+## Fixes
+- Added a targeted Chinese localization fix for the `Skills` section title (`zh-CN`). [#2931](https://github.com/amruthpillai/reactive-resume/pull/2931)
+- Allowed MCP localhost loopback only for local MCP clients, improving local integration behavior while keeping external access restrictions intact. [623ca5c6](https://github.com/amruthpillai/reactive-resume/commit/623ca5c6)
+
+## Maintenance & Localization
+- Updated dependencies and lockfile, including cleanup of unused exports (Knip). [e1bccbcc](https://github.com/amruthpillai/reactive-resume/commit/e1bccbcc)
+- Synced translation catalogs from Crowdin. [#2922](https://github.com/amruthpillai/reactive-resume/pull/2922), [#2925](https://github.com/amruthpillai/reactive-resume/pull/2925), [#2926](https://github.com/amruthpillai/reactive-resume/pull/2926), [#2932](https://github.com/amruthpillai/reactive-resume/pull/2932), [#2934](https://github.com/amruthpillai/reactive-resume/pull/2934), [#2935](https://github.com/amruthpillai/reactive-resume/pull/2935)
+- Updated docs to list **Meowth** alongside existing templates. [#2929](https://github.com/amruthpillai/reactive-resume/pull/2929)
+
+**Full Changelog**: [v5.0.19...v5.0.20](https://github.com/amruthpillai/reactive-resume/compare/v5.0.19...v5.0.20)
+</Update>
+
+<Update label="v5.0.19" description="25th April 2026">
+## Highlights
+- Added **OpenRouter** as an AI provider, thanks to [@iagodemacedo](https://github.com/iagodemacedo). [#2906](https://github.com/amruthpillai/reactive-resume/pull/2906)
+- Added Chinese font options, thanks to [@Platinum1154](https://github.com/Platinum1154). [#2905](https://github.com/amruthpillai/reactive-resume/pull/2905)
+- Added text color support to the rich text editor, including DOCX export handling for colored text, thanks to [@Platinum1154](https://github.com/Platinum1154). [#2903](https://github.com/amruthpillai/reactive-resume/pull/2903)
+- Fixed MCP tool names for Claude Desktop compatibility. [#2885](https://github.com/amruthpillai/reactive-resume/pull/2885)
+- Improved Docker-based local development support and refreshed self-hosting setup guidance. [849aad64](https://github.com/amruthpillai/reactive-resume/commit/849aad64), [c0387298](https://github.com/amruthpillai/reactive-resume/commit/c0387298)
+
+## Fixes & Security
+- Thank you to [@shaxbozaka](https://github.com/shaxbozaka) for running a security audit on Reactive Resume and helping make the app more secure.
+- Hardened auth, OAuth, AI URL validation, printer/export endpoints, resume access controls, Browserless configuration, and public route exposure. [a42dbcd4](https://github.com/amruthpillai/reactive-resume/commit/a42dbcd4)
+- Removed the public RPC surface for the printer-only resume fetch endpoint by moving it behind a server function, further shrinking the attack surface for `getByIdForPrinter`, thanks to [@shaxbozaka](https://github.com/shaxbozaka).
+- Corrected Computer Modern Sans italic font file mappings, thanks to [@russellbrenner](https://github.com/russellbrenner). [#2881](https://github.com/amruthpillai/reactive-resume/pull/2881)
+- Improved email handling and user lookup in OAuth configuration, thanks to [@VedantBhawsar](https://github.com/VedantBhawsar). [#2874](https://github.com/amruthpillai/reactive-resume/pull/2874)
+- Aligned role period text in experience items, thanks to [@JamesGoslings](https://github.com/JamesGoslings). [#2908](https://github.com/amruthpillai/reactive-resume/pull/2908)
+- Reduced resume preview wheel zoom sensitivity, thanks to [@GoldenSection0618](https://github.com/GoldenSection0618). [#2911](https://github.com/amruthpillai/reactive-resume/pull/2911)
+- Prevented orphaned section headings at page breaks, thanks to [@5queezer](https://github.com/5queezer). [#2851](https://github.com/amruthpillai/reactive-resume/pull/2851)
+- Added top margin handling for subsequent PDF pages, based on feedback from [@trigger-xyz](https://github.com/trigger-xyz). [bbc38d2f](https://github.com/amruthpillai/reactive-resume/commit/bbc38d2f)
+
+## Maintenance & Localization
+- Updated dependencies and lockfile, including security-focused package pins and Vite+ version pins. [c6e8df0a](https://github.com/amruthpillai/reactive-resume/commit/c6e8df0a), [847d69b6](https://github.com/amruthpillai/reactive-resume/commit/847d69b6), [9b3916d4](https://github.com/amruthpillai/reactive-resume/commit/9b3916d4)
+- Added `SECURITY.md`. [9e1e593d](https://github.com/amruthpillai/reactive-resume/commit/9e1e593d)
+- Added focused tests for auth, printer/export, URL validation, form edge cases, rich text DOCX output, font handling, and CSS sanitization hardening. [d0af9f4b](https://github.com/amruthpillai/reactive-resume/commit/d0af9f4b)
+- Synced translation catalogs from Crowdin and moved syncing to GitHub Actions. [#2886](https://github.com/amruthpillai/reactive-resume/pull/2886), [#2918](https://github.com/amruthpillai/reactive-resume/pull/2918)
+
+## New Contributors
+- [@russellbrenner](https://github.com/russellbrenner), [@VedantBhawsar](https://github.com/VedantBhawsar), [@JamesGoslings](https://github.com/JamesGoslings), [@GoldenSection0618](https://github.com/GoldenSection0618), [@iagodemacedo](https://github.com/iagodemacedo), and [@Platinum1154](https://github.com/Platinum1154)
+
+**Full Changelog**: [v5.0.17...v5.0.19](https://github.com/amruthpillai/reactive-resume/compare/v5.0.17...v5.0.19)
+</Update>
+
+<Update label="v5.0.18" description="14th April 2026">
+## Features & Improvements
+- Re-enabled **Passkeys** across authentication flows, including passkey sign-in on the login page and passkey management in account settings.
+
+## Maintenance
+- Updated dependencies and lockfile.
+- Synced translation catalogs from Crowdin.
+</Update>
+
+<Update label="v5.0.17" description="9th April 2026">
+## Features & Improvements
+- Added **Resume Analysis** in the resume builder right sidebar: run an on-demand AI review for an overall score (0 to 100), a dimension scorecard, strengths, and prioritized suggestions. Results are saved per resume and reload after refresh.
+- When AI features are disabled, the analysis section shows a short notice with a link to **AI Settings** so you can enable your provider and model first.
+- Improved the **MCP server** experience: updated tools, resources, and prompts; added an MCP server card at `/.well-known/mcp/server-card.json` for compatible clients; refreshed the **Using the MCP server** guide.
+
+## Fixes
+- Fixed [#2865](https://github.com/amruthpillai/reactive-resume/issues/2865), incorrect spacing between resume section items in shared layouts.
+- Fixed [#2868](https://github.com/amruthpillai/reactive-resume/issues/2868) affecting resume item presentation and linked titles in shared item components.
+
+## Maintenance & CI
+- Downgraded the Cosign installer action to v3 in the Docker build workflow for more reliable image signing.
+- Synced translation catalogs from Crowdin. [#2864](https://github.com/amruthpillai/reactive-resume/pull/2864)
+- Dependency and lockfile updates (including changes bundled with MCP and analysis work).
+</Update>
+
+<Update label="v5.0.16" description="4th April 2026">
+## Features & Improvements
+- Updated shared resume item layouts (Experience, Education, Awards, Certifications, Publications, References, Volunteer) for better alignment and spacing consistency.
+- Generated printer pages now set a meaningful document title from the resume owner's name (`<Name> - Resume`) for cleaner PDF metadata and tab titles. [#2863](https://github.com/amruthpillai/reactive-resume/pull/2863)
+
+## Fixes
+- Fixed [#2733](https://github.com/amruthpillai/reactive-resume/issues/2733), where date ranges could appear on a separate line unexpectedly in resume items. [#2862](https://github.com/amruthpillai/reactive-resume/pull/2862)
+- Adjusted Experience section form field ordering/labels so `Location`, `Position`, and `Period` are mapped and displayed correctly.
+
+## Maintenance & Localization
+- Synced translation catalogs across all supported locales.
+- Updated dependencies and lockfile, including AI SDK, TipTap, TanStack Query, and Vite+ package aliases.
+</Update>
+
+<Update label="v5.0.15" description="1st April 2026">
+## Features & Improvements
+- Added **LinkedIn sign-in** support for self-hosted instances, including sign-in on the auth page and account linking in settings.
+- Improved the sign-in experience by showing loading placeholders while social login providers are being fetched.
+- Resume builder panel sizes are now persisted more reliably, making the layout feel more consistent between sessions.
+- Added clearer labels for resume sorting and filtering controls on the dashboard.
+
+## Fixes
+- Improved autosave reliability in the resume builder:
+  - Unsaved edits are flushed before page unload.
+  - You now get a clear persistent warning if changes fail to save (for example, due to network issues).
+- Strengthened authentication defaults by increasing the minimum password length requirement to 8 characters.
+- Improved reliability around resume deletion and server-side error handling for create/update operations.
+- Fixed a rare language mix-up during printing/export when multiple print jobs run at the same time, so each PDF/screenshot now reliably uses the correct locale.
+- Improved print stability under heavy usage by reusing in-progress PDF and screenshot generation requests for the same resume instead of starting duplicate jobs.
+- Hardened printer token signing and token/session/API-key verification paths for better security.
+- Improved resilience in AI tailoring output parsing and JSON Resume import normalization.
+- Printer service now provides descriptive error messages ("Failed to generate PDF" / "Failed to capture screenshot") instead of generic internal server errors.
+- Job descriptions in the job detail sheet now render HTML formatting (headings, lists, bold text) instead of showing raw tags.
+- Fixed the "Tailor Resume" button being incorrectly disabled when AI is not configured — the dialog already supports plain resume duplication as a fallback.
+- Fixed the tailor resume flow to open the resume builder in a new tab while keeping the job listing open for reference, instead of navigating away and auto-opening the application page.
+- Apply option links in the job detail sheet are now validated before rendering, preventing malformed or potentially unsafe URLs.
+- Improved job card loading skeletons to match the actual card layout (logo, title, badges) for a smoother loading experience.
+- Centered the "Configure Job Search" empty state on the page.
+- Extracted the `JobCard` component into its own file for better code organization.
+
+## Docs & Localization
+- Updated self-hosting and environment variable documentation to include LinkedIn OAuth configuration.
+- Synced translations across locales for the latest authentication and save-status messaging.
+</Update>
+
+<Update label="v5.0.14" description="24th March 2026">
+## Features
+- Implemented OAuth 2.1 support for MCP authentication, thanks to @5queezer. [#2829](https://github.com/amruthpillai/reactive-resume/pull/2829)
+- Migrated from using Biome to Oxlint/Oxfmt for linting and formatting, with a new autofix CI workflow. [#2822](https://github.com/amruthpillai/reactive-resume/pull/2822)
+
+## Fixes
+- Fixed an issue with the slider component for "Sidebar Width" in the resume builder. [#2830](https://github.com/amruthpillai/reactive-resume/issues/2830)
+</Update>
+
+<Update label="v5.0.13" description="19th March 2026">
+## Features & Improvements
+- Added **Job Listings with AI-Powered Resume Tailoring**, a major new feature that integrates job search (via JSearch API) directly into the dashboard with AI-driven resume tailoring to match job descriptions. [#2788](https://github.com/amruthpillai/reactive-resume/pull/2788)
+  - Search for jobs with filters for location (city, state, country), employment type, remote status, and more.
+  - View detailed job listings in a slide-out panel with apply links and tags.
+  - Tailor your resume to a specific job posting using AI — rewrites skills, experience, and references for optimal fit.
+  - Per-user API quota management with usage tracking in settings.
+  - Pagination with 30 results per page.
+- Added **DOCX resume export** — generate and download tailored resumes as Word documents. [#2788](https://github.com/amruthpillai/reactive-resume/pull/2788)
+- Migrated the entire project toolchain to **Vite+** (`vp` CLI), unifying Vite, Vitest, Oxlint, and Oxfmt under a single developer experience.
+- Migrated from **Biome to Oxlint/Oxfmt** for linting and formatting, with a new autofix CI workflow. [#2822](https://github.com/amruthpillai/reactive-resume/pull/2822)
+- Added **Slovenian** locale support.
+- Added a new `Progress` UI component.
+
+## Fixes
+- Fixed type issues in auth client and configuration.
+- Used RTL-friendly CSS classes across the app for improved bidirectional layout support.
+- Removed dead code and unused imports.
+- Updated route tree generation and added `routeTree.gen.ts` to `.gitignore`.
+- Improved animation performance with `willChange` styles on animation components.
+
+## Maintenance & Dependencies
+- Updated dependencies across the board, including `@typescript/native-preview`, `vite-plus`, and others.
+- Added database migrations for missing indexes.
+- Synced translations from Crowdin. [#2820](https://github.com/amruthpillai/reactive-resume/pull/2820), [#2824](https://github.com/amruthpillai/reactive-resume/pull/2824)
+- Updated French translation for 'Volunteer' to 'Bénévolat'. [#2823](https://github.com/amruthpillai/reactive-resume/pull/2823)
+- Multiple translation and language updates across all locales.
+
+## New Contributors
+- @lukadfagundes
+- @Hephaisto-dev
+</Update>
+
+<Update label="v5.0.12" description="17th March 2026">
+## Features & Improvements
+- Refactored the component system to `@base-ui/react` across the app for standardized UI behavior (dialogs, menus, accordions, comboboxes, switches, etc.).
+- Improved auth infrastructure with Better Auth dashboard/sentinel integration and expanded IP/header handling for proxied deployments.
+- Added a dedicated `src/server.ts` server entry using `FastResponse` for better runtime compatibility.
+- Sidebar button list now scrolls internally on overflow.
+
+## Fixes
+- Printer endpoint now resolves to IP when using chromedp, improving compatibility with proxied deployments.
+- Switched OpenAI integration to `chat/completions` for resume import and AI features.
+- AI PDF/DOCX resume parsing is now more robust via direct file send (multimodal input).
+- Resume import normalization hardened: section defaults merged, required fields enforced, missing IDs/flags autogenerated.
+- Fixed UI migration regressions (accordion behavior, button interaction, right sidebar scrollbar).
+- Fixed multi-page PDF crashes and Gemini API ingestion errors.
+- Fixed role title styling, role spacing, and issues with skills item rendering and template headings.
+
+## Maintenance & Dependencies
+- Updated dependencies and lockfile.
+- Synced translation strings across locales, including multiple contributions from Crowdin.
+- General dependency and code style improvements, plus removal of redundant indexes and plugins.
+
+## New Contributors
+- @yang-summer
+- @FrancocDev
+- @obitton
+- @jondycz
+</Update>
+
+<Update label="v5.0.10" description="24th February 2026">
+## Fixes
+- Show section titles for summary-type custom sections in the resume builder. [#2744](https://github.com/amruthpillai/reactive-resume/pull/2744)
+- Prevent browser password managers and Edge autofill/save prompts from appearing on AI settings API key fields. [#2719](https://github.com/amruthpillai/reactive-resume/pull/2719)
+- Replace deprecated Tailwind CSS classes: use `inset-s-*`/`inset-e-*` instead of `start-*`/`end-*`.
+- Fix PDF downloader to work correctly in offline mode. [#2743](https://github.com/amruthpillai/reactive-resume/pull/2743)
+- Make bold formatting visible for `<strong>` in the resume rich text editor (uses plain `font-weight: bold` fallback if the CSS variable is unset). Fixes [#2730](https://github.com/amruthpillai/reactive-resume/issues/2730)
+- Prevent credentials sign-in from dropping `session_token` Set-Cookie, improves login reliability. [#2718](https://github.com/amruthpillai/reactive-resume/pull/2718)
+- Remove redundant `resume-` prefix from download filename; add spacing between pages in shared view. [#2709](https://github.com/amruthpillai/reactive-resume/pull/2709)
+- Normalize autocomplete tokens for login and register forms. [#2714](https://github.com/amruthpillai/reactive-resume/pull/2714)
+- Fix improper chips reordering and update dependency/translations. [#2711](https://github.com/amruthpillai/reactive-resume/issues/2711)
+- Fix clipping of heading in Lapras resume template.
+- Remove error-causing plugins in oRPC integration.
+- Remove duplicate database indexes; add index for `created_at` on user and resume tables.
+
+## Features & Improvements
+- Added feature flag: `FLAG_DISABLE_IMAGE_PROCESSING` (allows disabling image processing site-wide).
+- Updated Discord invite link in the app and documentation.
+- Added comprehensive codebase and architecture documentation in `CLAUDE.md`.
+- Synced latest translations from Crowdin (multiple language updates and additions).
+
+## Maintenance & Other
+- Refactored auth utility from `originWith` to `withHostname` to preserve localhost/127.0.0.1 sibling trust.
+- Updated dependencies and improved code style.
+- Updated documentation and README files.
+</Update>
+
+<Update label="v5.0.9" description="9th February 2026">
+## Features & Improvements
+- Added Computer Modern web fonts to the font selector, allowing users to choose from LaTeX-style "Computer Modern" fonts for a classic scientific look.
+- Updated dependencies to the latest versions.
+</Update>
+
+<Update label="v5.0.8" description="9th February 2026">
+## Fixes
+- Removed Passkey support from the authentication system due to provider compatibility issues.
+- Updated dependencies to the latest versions.
+</Update>
+
+<Update label="v5.0.7" description="9th February 2026">
+## Features & Improvements
+- Introduced a new **MCP (Model Context Protocol) server** for managing and editing resumes from MCP-compatible AI tools (Claude Desktop, Cursor, Codex, and others). Supports listing, reading, creating, deleting, locking/unlocking, and patching resumes via natural language. [(guide)](/guides/using-the-mcp-server)
+- Added an **AI Chat** panel to the resume builder, allowing conversational resume modifications through tool-calling (JSON Patch operations applied to the resume in real time with visual feedback).
+- Added a system prompt and `patch_resume` tool for structured, minimal-diff resume edits via RFC 6902 JSON Patch.
+- Chat history is now persisted per resume in localStorage.
+
+## Fixes
+- Fixed rendering issues in the Lapras and Onyx resume templates.
+- Improved Combobox and ScrollArea UI components.
+- Fixed skills item rendering in shared resume components.
+- Updated authentication configuration and route handling.
+- Updated JSON Schema to match the latest resume data model.
+
+## Maintenance
+- Updated dependencies to latest versions.
+</Update>
+
+<Update label="v5.0.6" description="8th February 2026">
+## Features & Improvements
+- Implemented Atomic Resume Patching API for fine-grained, partial updates to resumes via a new PATCH endpoint. [#2692](https://github.com/amruthpillai/reactive-resume/pull/2692)
+- API endpoint `PUT /resume/{id}` now returns the updated resume object rather than void, with explicit DTOs for input/output. [#2688](https://github.com/amruthpillai/reactive-resume/pull/2688)
+- Added error logging for API server errors (server-side only) to improve debugging and reliability.
+- Refactored and cleaned up imports/exports for clarity and maintainability.
+- Added `.devcontainer` configuration for improved contributor development environment.
+- Added build status badge and documentation link to README.
+
+## Fixes
+- General bug fixes and minor improvements.
+- Synced latest translations from Crowdin (notably: French, other languages).
+- Updated dependencies to latest versions.
+</Update>
+
+<Update label="v5.0.5" description="31st January 2026">
+## Features & Improvements
+- Implemented Cover Letter functionality as a custom section in the resume builder. [(link)](/guides/adding-a-cover-letter)
+- Added full-screen mode to the rich text editor for distraction-free writing.
+- Introduced a new custom section type: `summary`, enabling users to add extra summary sections.
+- Added `useFormBlocker` hook to prevent dialogs from being closed with unsaved form changes.
+
+## Fixes
+- Fixed keyword spacing issue in the interests section. [#2631](https://github.com/amruthpillai/reactive-resume/pull/2631)
+- Fixed AI connection test and improved error reporting for AI provider issues.
+</Update>
+
+<Update label="v5.0.4" description="28th January 2026">
+## Features & Improvements
+- Brought back Undo/Redo functionality in the resume builder for an improved editing experience.
+- Sidebar builder now arranges dynamically based on the section type in each template. [#2564](https://github.com/amruthpillai/reactive-resume/pull/2603)
+- Added PWA (Progressive Web App) support and updated PDF example file links in documentation.
+
+## Fixes
+- Removed extra spacing when proficiency is empty. [#2607](https://github.com/amruthpillai/reactive-resume/pull/2626)
+- Fixed Pikachu template: header/page picture rendering, and respect for `fullWidth` property.
+- General template improvements for layout and rendering consistency.
+- Fixed GitHub OAuth login for users migrated from previous versions.
+- Improved printer service communication and reduced resource usage for more reliable PDF generation.
+- Fixed "empty" Git merge remnants in codebase.
+
+## Maintenance
+- Synced translations from Crowdin (Afrikaans, Persian, Portuguese/Brazilian, others).
+- Updated translation sources and configuration.
+- Updated package dependencies and fixed self-hosting guide links in README.
+- Removed dead code and updated screenshots.
+- Other bug fixes and minor improvements (#2542, #2573, #2598).
+</Update>
+
+<Update label="v5.0.3" description="25th January 2026">
+## Features & Improvements
+- Added support for printing Free-Form PDFs (no fixed page height), allowing for custom-fit page content. [(link)](/guides/selecting-page-format)
+- Allow overriding the default endpoint for all AI providers, not just Ollama; default endpoint now visible in AI settings.
+- Updated the chip input component: supports adding, editing, removing, and reordering keywords for skills and other sections.
+- Improved RTL support across the app, thanks to @obreo. [(link)](https://github.com/amruthpillai/reactive-resume/pull/2583)
+
+## Fixes
+- Updated translation configuration to remove line numbers, reducing unnecessary diffs.
+- Homepage video optimized for faster loading without quality loss.
+- Increased screenshot TTL for resumes to reduce unnecessary regenerations.
+- Updated dependencies and translations to latest versions.
+</Update>
+
+<Update label="v5.0.2" description="24th January 2026">
+## Features & Improvements
+- Added an agent skill `skills/resume-builder` for agentic AI assistants, enabling resume construction through conversational AI.
+- Added a guide for how to fit content on a page when exporting to PDF. [(link)](/guides/fitting-content-on-a-page)
+- Alert user when content is too tall for a page for easier export troubleshooting.
+
+## Fixes
+- Ditgar template now respects `fullWidth` setting.
+- Updated JSON Schema for proper format.
+- Updated Discord server invite link.
+- Updated dependencies to latest versions.
+</Update>
+
+<Update label="v5.0.1" description="23th January 2026">
+## Maintenance & Fixes
+- Updated translations from Crowdin.
+- Added Community Spotlight section to the documentation.
+- Removed `-r require-metadata` from the Dockerfile (was not needed).
+- Fixed inconsistencies in Docker compose documentation examples.
+- Fixed username validation to allow hyphens.
+- Fixed issues with the printer service's screenshot and PDF endpoints.
+</Update>
+
+<Update label="v5.0.0" description="22th January 2026">
+This release is a major overhaul of Reactive Resume. The app has been completely redesigned and rebuilt from scratch for a more intuitive, user-friendly experience.
+
+**Highlights:**
+- 2 new resume templates: _Ditgar_ and _Lapras_
+- Passkeys for authentication
+- Entirely new user interface and refreshed design
+- API access and reference docs
+- AI Integration with OpenAI, Google, Anthropic, and Ollama
+- Improved font selector with real-time preview
+- Expanded and improved documentation, with more how-to guides
+- Redesigned template gallery with detailed views
+- Resume import from PDF/DOCX (requires AI Integration)
+- Stronger infrastructure for better reliability and scalability
+- Drag-and-drop for moving items between sections and pages
+- Powerful new CSS Editor with autocompletion and highlighting
+- Custom sections now support typed extension for finer control
+- Icon style selector for indicators (stars, circles, custom, etc.)
+- Sidebar width adjustment and full-width page support
+
+And much more! Explore the new version and share your feedback via [contact](https://amruthpillai.com/#contact) or [GitHub issues](https://github.com/amruthpillai/reactive-resume/issues).
+</Update>

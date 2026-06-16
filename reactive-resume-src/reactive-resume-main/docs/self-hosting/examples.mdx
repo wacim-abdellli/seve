@@ -1,0 +1,448 @@
+---
+title: "Docker Compose Examples"
+description: "A collection of Docker Compose examples for different deployment scenarios. If you have a different setup that works for you, please share it by opening a pull request on GitHub."
+---
+
+<Info>
+  **From v5.1.0 onwards** — PDF generation now runs entirely client-side via `@react-pdf/renderer`. None of the examples below require a Browserless or Chromium service. Older configurations that still define a `printer` service or set `BROWSERLESS_TOKEN` / `PRINTER_*` will continue to start, but those services are inert and can be removed.
+</Info>
+
+## Overview
+
+Every self-hosted setup is unique. You might be running on a single VPS, a Kubernetes cluster, behind Cloudflare Tunnel, or using a specific reverse proxy like Traefik or nginx. This page provides real-world Docker Compose configurations for various deployment scenarios to help you get started faster.
+
+These examples go beyond the basic setup in the [Self-Hosting with Docker](/self-hosting/docker) guide, showing production-ready configurations with reverse proxies, SSL termination, and other common patterns.
+
+<Info>
+  **Help others by sharing your setup!** If you have a working configuration that isn't covered here, I'd love to
+  include it. Simply [open a pull request](https://github.com/amruthpillai/reactive-resume) with your example added to
+  this page. Your contribution helps the community and makes self-hosting easier for everyone.
+</Info>
+
+---
+
+## Docker with Traefik
+
+This example uses [Traefik](https://traefik.io/) as a reverse proxy with automatic SSL certificate management via Let's Encrypt. Only the Reactive Resume app is exposed through Traefik—Postgres remains on an internal network.
+
+<Tip>
+  Traefik automatically discovers services via Docker labels and handles SSL certificates, making it ideal for setups
+  where you want minimal configuration.
+</Tip>
+
+```yaml compose-traefik.yml lines expandable
+services:
+  traefik:
+    image: traefik:v3.2
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - reactive_resume_network
+    labels:
+      - "traefik.enable=true"
+      # Dashboard (optional, remove if not needed)
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - reactive_resume_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reactive_resume:
+    image: amruthpillai/reactive-resume:latest
+    restart: unless-stopped
+    environment:
+      - APP_URL=https://resume.${DOMAIN}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      - AUTH_SECRET=${AUTH_SECRET}
+      # Add other optional env vars as needed (SMTP, S3, OAuth, etc.)
+    volumes:
+      - reactive_resume_data:/app/data
+    networks:
+      - reactive_resume_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.reactive-resume.rule=Host(`resume.${DOMAIN}`)"
+      - "traefik.http.routers.reactive-resume.entrypoints=websecure"
+      - "traefik.http.routers.reactive-resume.tls.certresolver=letsencrypt"
+      - "traefik.http.services.reactive-resume.loadbalancer.server.port=3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  reactive_resume_network:
+    driver: bridge
+
+volumes:
+  traefik_letsencrypt:
+  postgres_data:
+  reactive_resume_data:
+```
+
+**Environment variables (`.env`):**
+
+```bash .env
+DOMAIN="example.com"
+ACME_EMAIL="admin@example.com"
+POSTGRES_PASSWORD="your-secure-postgres-password"
+AUTH_SECRET="your-auth-secret-from-openssl-rand-hex-32"
+# Optional: Traefik dashboard auth (generate with: htpasswd -nb admin password)
+TRAEFIK_DASHBOARD_AUTH="admin:$$apr1$$..."
+```
+
+---
+
+## Docker with nginx
+
+This example uses [nginx](https://nginx.org/) as a reverse proxy with SSL certificates (you'll need to provide your own certificates or use certbot separately).
+
+```yaml compose-nginx.yml lines expandable
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - reactive_resume_network
+
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - reactive_resume_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reactive_resume:
+    image: amruthpillai/reactive-resume:latest
+    restart: unless-stopped
+    environment:
+      - APP_URL=https://resume.${DOMAIN}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      - AUTH_SECRET=${AUTH_SECRET}
+      # Add other optional env vars as needed (SMTP, S3, OAuth, etc.)
+    volumes:
+      - reactive_resume_data:/app/data
+    networks:
+      - reactive_resume_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  reactive_resume_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  reactive_resume_data:
+```
+
+**nginx configuration (`nginx.conf`):**
+
+```nginx nginx.conf lines expandable
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream reactive_resume {
+        server reactive_resume:3000;
+    }
+
+    # Redirect HTTP to HTTPS
+    server {
+        listen 80;
+        server_name _;
+        return 301 https://$host$request_uri;
+    }
+
+    # HTTPS server
+    server {
+        listen 443 ssl http2;
+        server_name resume.example.com;
+
+        ssl_certificate /etc/nginx/certs/fullchain.pem;
+        ssl_certificate_key /etc/nginx/certs/privkey.pem;
+
+        # SSL configuration
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_prefer_server_ciphers on;
+        ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+
+        # Proxy settings
+        location / {
+            proxy_pass http://reactive_resume;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+
+            # Reasonable timeouts for app requests
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # Increase max body size for resume uploads
+        client_max_body_size 10M;
+    }
+}
+```
+
+<Tip>
+  For automatic SSL certificates with nginx, consider using [certbot](https://certbot.eff.org/) with the `--nginx`
+  plugin, or a companion container like [nginx-proxy-acme](https://github.com/nginx-proxy/acme-companion).
+</Tip>
+
+---
+
+## Docker Swarm
+
+This example demonstrates a production-grade Docker Swarm deployment with multiple replicas, health checks, rolling updates, and Traefik integration. It includes SeaweedFS for S3-compatible storage and a PostgreSQL database with custom configuration.
+
+<Tip>
+  Docker Swarm is great for multi-node deployments where you need high availability and easy scaling. The app service is
+  configured with 2 replicas and rolling update strategy.
+</Tip>
+
+```yaml compose-swarm.yml lines expandable
+services:
+  postgres:
+    image: postgres:latest
+    networks:
+      - reactive_resume_network
+    volumes:
+      - reactive_resume_postgres_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=$POSTGRES_DB
+      - POSTGRES_USER=$POSTGRES_USER
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    command: server -s3 -filer -dir=/data -ip=0.0.0.0
+    networks:
+      - reactive_resume_network
+    volumes:
+      - reactive_resume_seaweedfs_data:/data
+    environment:
+      - AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8888"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  seaweedfs_create_bucket:
+    image: quay.io/minio/mc:latest
+    entrypoint: >
+      /bin/sh -c "
+        until mc alias set seaweedfs http://seaweedfs:8333 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY; do
+          echo 'Waiting for SeaweedFS...';
+          sleep 2;
+        done;
+        mc mb seaweedfs/$S3_BUCKET --ignore-existing;
+      "
+    networks:
+      - reactive_resume_network
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  reactive_resume:
+    image: ghcr.io/amruthpillai/reactive-resume:latest
+    networks:
+      - traefik_network
+      - reactive_resume_network
+    volumes:
+      - reactive_resume_data:/app/data
+    environment:
+      - APP_URL=$APP_URL
+      - DATABASE_URL=$DATABASE_URL
+      - AUTH_SECRET=$AUTH_SECRET
+      - GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+      - GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
+      - GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
+      - LINKEDIN_CLIENT_ID=$LINKEDIN_CLIENT_ID
+      - LINKEDIN_CLIENT_SECRET=$LINKEDIN_CLIENT_SECRET
+      - SMTP_HOST=$SMTP_HOST
+      - SMTP_PORT=$SMTP_PORT
+      - SMTP_USER=$SMTP_USER
+      - SMTP_PASS=$SMTP_PASS
+      - SMTP_FROM=$SMTP_FROM
+      - SMTP_SECURE=$SMTP_SECURE
+      - S3_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID
+      - S3_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY
+      - S3_REGION=$S3_REGION
+      - S3_ENDPOINT=$S3_ENDPOINT
+      - S3_BUCKET=$S3_BUCKET
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.app.rule=Host(`rxresu.me`)"
+        - "traefik.http.routers.app.entrypoints=websecure"
+        - "traefik.http.routers.app.tls=true"
+        - "traefik.http.services.app.loadbalancer.server.port=3000"
+
+configs:
+  reactive_resume_postgres_config:
+    name: reactive_resume_postgres_config
+    external: true
+
+networks:
+  traefik_network:
+    external: true
+  reactive_resume_network:
+    name: reactive_resume_network
+    driver: overlay
+    attachable: true
+
+volumes:
+  reactive_resume_postgres_data:
+    name: reactive_resume_postgres_data
+  reactive_resume_seaweedfs_data:
+    name: reactive_resume_seaweedfs_data
+  reactive_resume_data:
+    name: reactive_resume_data
+```
+
+**Deploy the stack:**
+
+```bash
+docker stack deploy -c compose-swarm.yml reactive_resume
+```
+
+**Useful commands:**
+
+```bash
+# Check service status
+docker stack services reactive_resume
+
+# View logs for the app
+docker service logs -f reactive_resume_reactive_resume
+
+# Scale the app
+docker service scale reactive_resume_reactive_resume=3
+
+# Remove the stack
+docker stack rm reactive_resume
+```
+
+<Note>
+  This example assumes you have an external Traefik network already set up. Adjust the `traefik_network` reference and
+  labels based on your Traefik configuration.
+</Note>
+
+---
+
+## Contributing Your Setup
+
+Have a different deployment setup that works well? Consider contributing it here. Some examples include:
+
+- Kubernetes / Helm charts
+- Cloudflare Tunnel
+- Caddy reverse proxy
+- Docker with Portainer
+- Podman configurations
+- Cloud-specific deployments (AWS ECS, Google Cloud Run, Azure Container Apps)
+
+To contribute, [open a pull request](https://github.com/amruthpillai/reactive-resume) with your example added to this page. Include:
+
+1. A brief description of when/why someone would use this setup
+2. The complete Docker Compose (or equivalent) configuration
+3. Any additional configuration files (nginx.conf, etc.)
+4. Required environment variables

@@ -1,0 +1,64 @@
+---
+title: "Using the API"
+description: "Learn how to create API keys and authenticate requests to the Reactive Resume API"
+---
+
+<Steps>
+  <Step title="Sign in to the dashboard">
+    Head over to [https://rxresu.me](https://rxresu.me) and sign in with your account credentials.
+  </Step>
+
+<Step title="Navigate to API Keys settings">
+  Once you're in the dashboard, look for the sidebar navigation on the left. Under the <Badge>Settings</Badge> section,
+  click on the <Badge>API Keys</Badge> link.
+</Step>
+
+  <Step title="Open the API reference">
+    On the API Keys page, click <Badge>API Documentation</Badge> to view the API reference.
+
+    <Tip>
+      You can also open it directly here: [API Reference](https://docs.rxresu.me/api-reference).
+    </Tip>
+
+  </Step>
+
+  <Step title="Create a new API key">
+    Click <Badge>Create a new API key</Badge>. Fill in:
+
+    - **Name**: A label to help you identify what you use this key for
+    - **Expires in**: How long the key should remain valid
+
+  </Step>
+
+  <Step title="Copy the API key (important)">
+    After creating the key, you'll be shown the secret key once. Copy it and store it securely.
+
+    <Warning>
+      For security reasons, your API key is only displayed once. If you lose it, you must create a new one.
+    </Warning>
+
+  </Step>
+
+  <Step title="Authenticate requests with x-api-key">
+    To authenticate API requests, include your key in the <Badge>x-api-key</Badge> header.
+
+    <Info>
+      If you're self-hosting, replace <code>https://rxresu.me</code> with your instance URL. The API is served under <code>/api/openapi</code>.
+    </Info>
+
+    ```bash
+    curl "https://rxresu.me/api/openapi/resumes" \
+      -H "x-api-key: YOUR_API_KEY"
+    ```
+
+  </Step>
+
+  <Step title="Delete an API key (optional)">
+    In the API Keys list, click the trash icon next to a key and confirm deletion.
+
+    <Warning>
+      Deleted API keys stop working immediately, and the action cannot be undone.
+    </Warning>
+
+  </Step>
+</Steps>

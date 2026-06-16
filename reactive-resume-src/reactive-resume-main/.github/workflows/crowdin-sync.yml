@@ -1,0 +1,36 @@
+name: Sync Translations from Crowdin
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  crowdin-sync:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Sync Translations from Crowdin
+        uses: crowdin/github-action@v2
+        with:
+          download_translations: true
+          localization_branch_name: "l10n"
+          commit_message: "[skip ci] chore(i18n): sync translations from crowdin"
+          pull_request_title: "Sync Translations from Crowdin"
+          pull_request_body: "This is an automated pull request to sync translations from [Crowdin](https://crowdin.com/project/reactive-resume)."
+          pull_request_labels: "l10n"
+          pull_request_reviewers: "amruthpillai"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}

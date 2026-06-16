@@ -1,0 +1,60 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	"tags": ["-lintignore"],
+	"workspaces": {
+		".": {
+			"ignoreFiles": [".ncurc.cjs"]
+		},
+		"apps/web": {
+			"entry": ["lingui.config.ts", "vite.config.ts", "vitest.config.ts"],
+			"vite": {
+				"config": []
+			},
+			"vitest": {
+				"config": []
+			}
+		},
+		"apps/server": {
+			"ignoreDependencies": [
+				"@ai-sdk/anthropic",
+				"@ai-sdk/google",
+				"@ai-sdk/openai",
+				"@ai-sdk/openai-compatible",
+				"@aws-sdk/client-s3",
+				"@better-auth/api-key",
+				"@better-auth/drizzle-adapter",
+				"@better-auth/infra",
+				"@better-auth/passkey",
+				"@orpc/experimental-ratelimit",
+				"@sindresorhus/slugify",
+				"@t3-oss/env-core",
+				"@uiw/color-convert",
+				"ai",
+				"bcrypt",
+				"cjk-regex",
+				"deepmerge-ts",
+				"dompurify",
+				"dotenv",
+				"drizzle-zod",
+				"es-toolkit",
+				"fast-json-patch",
+				"jsonrepair",
+				"node-html-parser",
+				"nodemailer",
+				"ollama-ai-provider-v2",
+				"phosphor-icons-react-pdf",
+				"react-email",
+				"react-pdf-html",
+				"resumable-stream",
+				"sharp",
+				"ts-pattern",
+				"unique-names-generator",
+				"uuid"
+			]
+		},
+		"packages/api": {
+			"ignoreDependencies": ["ioredis"]
+		}
+	},
+	"ignoreDependencies": ["@reactive-resume/config", "npm-check-updates"]
+}

@@ -1,0 +1,20 @@
+OBJECTIVE:
+
+We are removing @react-pdf/renderer as the primary PDF generation system.
+
+First perform an audit and report:
+
+All files using @react-pdf/renderer.
+All files under src/pdf/.
+All PDF export buttons and handlers.
+How ResumePreview.tsx is rendered.
+Existing @media print styles.
+
+DO NOT modify code yet.
+
+Return:
+
+file paths
+dependencies
+export flow diagram
+migration plan

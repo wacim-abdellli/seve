@@ -1,0 +1,23 @@
+name: ✨ Feature Request
+
+description: Suggest an feature or idea that you would like to see in Reactive Resume
+
+title: "[Feature] <title>"
+labels: [enhancement, v5, needs triage]
+assignees: "AmruthPillai"
+
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this feature?
+      description: Please search to see if an issue already exists for the feature you requested.
+      options:
+        - label: Yes, I have searched the existing issues and it doesn't exist.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Feature Description
+      description: A detailed description of the feature you would like to see in Reactive Resume. Please provide as much detail as possible as it will help me implement the feature faster.
+    validations:
+      required: true

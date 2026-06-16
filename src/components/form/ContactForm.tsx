@@ -15,7 +15,6 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
     const updated = { ...contact, [field]: value }
     onChange(updated)
 
-    // Real-time validations
     if (field === 'email') {
       if (value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         setEmailError('Invalid email format (e.g. name@domain.com)')
@@ -25,8 +24,7 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
     }
 
     if (field === 'phone') {
-      // Allow letters/numbers/spaces/dashes/parentheses
-      if (value.trim() && !/^[\d\s\-\+\(\)]+$/.test(value)) {
+      if (value.trim() && !/^[\d\s\-+()]+$/.test(value)) {
         setPhoneError('Invalid phone number format')
       } else {
         setPhoneError('')
@@ -43,90 +41,92 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium text-white border-b border-slate-700 pb-2">Contact Information</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Full Name *
-          </label>
-          <input
-            type="text"
-            value={contact.fullName}
-            onChange={(e) => handleFieldChange('fullName', e.target.value)}
-            placeholder="Jane Doe"
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* Full Name */}
+      <div className="space-y-1">
+        <label className="text-[11px] text-zinc-500">
+          Full Name
+        </label>
+        <input
+          type="text"
+          value={contact.fullName}
+          onChange={(e) => handleFieldChange('fullName', e.target.value)}
+          className="drawer-input"
+          placeholder="Jane Doe"
+        />
+      </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Location *
-          </label>
-          <input
-            type="text"
-            value={contact.location}
-            onChange={(e) => handleFieldChange('location', e.target.value)}
-            placeholder="New York, NY"
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
+      {/* Location */}
+      <div className="space-y-1">
+        <label className="text-[11px] text-zinc-500">
+          Location
+        </label>
+        <input
+          type="text"
+          value={contact.location}
+          onChange={(e) => handleFieldChange('location', e.target.value)}
+          className="drawer-input"
+          placeholder="New York, NY"
+        />
+      </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Email Address *
-          </label>
-          <input
-            type="email"
-            value={contact.email}
-            onChange={(e) => handleFieldChange('email', e.target.value)}
-            placeholder="jane.doe@email.com"
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {emailError && <p className="text-xs text-red-400 mt-1">{emailError}</p>}
-        </div>
+      {/* Email */}
+      <div className="space-y-1">
+        <label className="text-[11px] text-zinc-500">
+          Email Address
+        </label>
+        <input
+          type="email"
+          value={contact.email}
+          onChange={(e) => handleFieldChange('email', e.target.value)}
+          className="drawer-input"
+          placeholder="jane.doe@email.com"
+        />
+        {emailError && <span className="text-[10px] font-bold text-rose-500 mt-0.5 block">{emailError}</span>}
+      </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Phone Number *
-          </label>
-          <input
-            type="text"
-            value={contact.phone}
-            onChange={(e) => handleFieldChange('phone', e.target.value)}
-            placeholder="+1 (555) 019-2834"
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {phoneError && <p className="text-xs text-red-400 mt-1">{phoneError}</p>}
-        </div>
+      {/* Phone */}
+      <div className="space-y-1">
+        <label className="text-[11px] text-zinc-500">
+          Phone Number
+        </label>
+        <input
+          type="text"
+          value={contact.phone}
+          onChange={(e) => handleFieldChange('phone', e.target.value)}
+          className="drawer-input"
+          placeholder="+1 (555) 019-2834"
+        />
+        {phoneError && <span className="text-[10px] font-bold text-rose-500 mt-0.5 block">{phoneError}</span>}
+      </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            LinkedIn Profile *
-          </label>
-          <input
-            type="text"
-            value={contact.linkedin}
-            onChange={(e) => handleFieldChange('linkedin', e.target.value)}
-            placeholder="linkedin.com/in/janedoe"
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {linkedinError && <p className="text-xs text-red-400 mt-1">{linkedinError}</p>}
-        </div>
+      {/* LinkedIn */}
+      <div className="space-y-1">
+        <label className="text-[11px] text-zinc-500">
+          LinkedIn URL
+        </label>
+        <input
+          type="text"
+          value={contact.linkedin}
+          onChange={(e) => handleFieldChange('linkedin', e.target.value)}
+          className="drawer-input"
+          placeholder="linkedin.com/in/janedoe"
+        />
+        {linkedinError && <span className="text-[10px] font-bold text-rose-500 mt-0.5 block">{linkedinError}</span>}
+      </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Personal Website / Portfolio (Optional)
-          </label>
-          <input
-            type="text"
-            value={contact.website || ''}
-            onChange={(e) => handleFieldChange('website', e.target.value)}
-            placeholder="janedoe.dev"
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
+      {/* Website */}
+      <div className="space-y-1">
+        <label className="text-[11px] text-zinc-500">
+          Personal Website (optional)
+        </label>
+        <input
+          type="text"
+          value={contact.website || ''}
+          onChange={(e) => handleFieldChange('website', e.target.value)}
+          className="drawer-input"
+          placeholder="janedoe.dev"
+        />
       </div>
     </div>
   )

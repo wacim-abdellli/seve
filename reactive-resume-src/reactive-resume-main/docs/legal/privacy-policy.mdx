@@ -1,0 +1,206 @@
+---
+title: "Privacy Policy"
+description: "How Reactive Resume handles personal data, cookies, uploads, and printing."
+---
+
+## Overview
+
+This Privacy Policy explains how **Reactive Resume** (the “Service”) collects, uses, stores, and shares information when you use it.
+
+Reactive Resume is open-source and can be operated in different ways (for example, by the official hosted service, or by an organization/self-hosted deployment). The specific data controller for your use depends on who operates the instance you are using.
+
+- **Service Operator**: Amruth Pillai
+- **Contact**: hello@amruthpillai.com
+- **Service URL**: https://rxresu.me
+- **Effective date**: 2023-01-01
+
+If you are self-hosting, **you** are the Service Operator and responsible for compliance (including configuring email delivery, storage, and logging appropriately).
+
+<Note>
+  **Note for self-hosted deployments:** If you are using the official hosted service at <code>rxresu.me</code>, the
+  project's published support contact is <code>hello@amruthpillai.com</code>. Replace the placeholders above with the
+  correct operator details for your deployment if you are self-hosting.
+</Note>
+
+---
+
+## What the Service Does
+
+Reactive Resume is a resume builder that lets you:
+
+- Create and edit resumes in a browser-based builder
+- Store resumes in an account, optionally mark them public, and share them via a link
+- Export/print resumes to PDF and generate preview screenshots
+- Upload files such as profile pictures (and other assets used in a resume)
+- Optionally configure AI features (e.g., using OpenAI/Gemini/Anthropic) from your own device
+
+---
+
+## Information We Collect
+
+### Account information
+
+When you create an account or sign in, the Service stores:
+
+- **Identity and profile**: name, email address, username/display username, optional profile image
+- **Authentication state**: whether email is verified; whether two-factor authentication is enabled
+
+If you use social sign-in (e.g., Google, GitHub, or a custom OAuth provider), the Service stores identifiers and tokens needed to link and maintain that login.
+
+### Authentication and security data
+
+To keep your account secure and keep you signed in, the Service stores:
+
+- **Session data**: session token, session expiry, and (if provided) IP address and user agent
+- **Verification data**: values used for email verification, password reset, or email change flows
+- **Two-factor authentication**: a 2FA secret and backup codes (if you enable 2FA)
+- **Passkeys** (if you use them): public key, credential ID, device metadata, counters, and related fields
+
+The Service Operator may also send **transactional emails** (for example, password reset or email verification). Depending on deployment, these emails may be delivered via an email provider or (in development/testing) the links may be logged to server output.
+
+### Resume content
+
+When you create or import a resume, the Service stores the resume data you provide, which may include personal data such as:
+
+- Contact details, location, summary
+- Employment, education, projects, links, and other resume sections
+- Any other content you add (including rich text)
+
+Resumes may also have metadata such as tags, a slug, visibility (public/private), and an optional resume password (if you lock a resume).
+
+### Public resume access and statistics
+
+If you publish a resume, other users may access it via its public link. The Service may also maintain simple statistics such as:
+
+- View count and download count
+- Last viewed/downloaded timestamps
+
+### Uploaded files (e.g., profile pictures)
+
+If you upload files, the Service stores them either:
+
+- On the **local filesystem** of the server (default: under a `data/` directory), or
+- In **S3-compatible object storage**, if configured by the Service Operator
+
+Depending on configuration, uploaded files may be publicly accessible (for example, some S3 configurations may default to public read access for uploaded objects). The Service Operator is responsible for selecting appropriate access controls for uploads.
+
+### API keys created in the Service
+
+If the Service Operator enables API key functionality, the Service can store:
+
+- API key metadata and rate limit counters
+- The API key value itself (as stored by the Service)
+
+### Local-only preferences and settings
+
+Some settings are stored on your device:
+
+- **Cookies**: UI preferences such as `theme` and `locale`
+- **Local storage**: some client-side state and, if you enable AI features, your **AI provider configuration and API key** may be stored in your browser's local storage
+
+These local-only values are stored in your browser and are not necessarily transmitted to the Service Operator unless you choose to use related features.
+
+---
+
+## How We Use Information
+
+We use the information above to:
+
+- Provide and operate the Service (account access, resume editing, storage, sharing)
+- Authenticate users and prevent abuse/fraud (sessions, security logs/metadata)
+- Generate PDFs and screenshots you request
+- Maintain basic functionality such as localization and theme preferences
+- Provide support and respond to user requests (if you contact the Service Operator)
+
+---
+
+## Cookies and Similar Technologies
+
+The Service uses cookies primarily for functionality:
+
+- **Authentication cookies**: to keep you signed in
+- **Preference cookies**: theme (`theme`) and language (`locale`)
+
+The Service does not include built-in behavioral advertising or third-party analytics by default. (For example, the authentication layer's built-in telemetry is disabled in this codebase.)
+
+---
+
+## Sharing and Third Parties
+
+We share information only as needed to provide the Service:
+
+### PDF generation (client-side)
+
+When you export to PDF, the Service renders the document directly in your browser using `@react-pdf/renderer`. Resume content is processed locally on your device for this purpose and is not sent to a separate rendering service. No third-party "printer" or headless-browser service is involved in the export.
+
+### Storage providers (optional)
+
+If configured, uploaded files may be stored in an S3-compatible provider. In that case, the storage provider processes and stores file data on behalf of the Service Operator.
+
+### OAuth providers (optional)
+
+If you sign in via OAuth (Google/GitHub/custom), those providers receive authentication requests and return profile information (such as email/name) to the Service, as permitted by your provider settings.
+
+### AI providers (optional, user-supplied)
+
+If you enable AI features and provide your own API key, prompts and generated content may be sent to your selected AI provider (OpenAI, Google, Anthropic), according to your use of those features and the provider's policies.
+
+---
+
+## Data Retention
+
+Retention depends on the Service Operator's configuration and your actions.
+
+As a baseline:
+
+- Account data and resumes are retained until you delete them (or your account is deleted).
+- Session and security data may be retained as needed for authentication and security.
+- Uploaded files are retained until deleted (for example, when you remove a picture or delete a resume/account).
+- Cached screenshot artifacts may be retained briefly (for example, minutes) for performance.
+
+The Service Operator may also retain backups and logs for limited periods.
+
+---
+
+## Security
+
+We take reasonable measures to protect data (authentication, access controls, and storage separation). No method of transmission or storage is 100% secure; you should use strong passwords and enable 2FA/passkeys where available.
+
+If you are self-hosting, you are responsible for:
+
+- Securing your infrastructure, database, and storage buckets
+- Using HTTPS and secure cookie settings
+- Configuring access controls for object storage (and avoiding unintended public access)
+
+---
+
+## International Transfers
+
+If the Service Operator (or its vendors) stores or processes data in other countries, your information may be transferred internationally. The Service Operator is responsible for providing appropriate safeguards where required by law.
+
+---
+
+## Your Choices and Rights
+
+Depending on your location, you may have rights to access, correct, delete, export, or restrict processing of your personal data. You can often exercise these rights directly in the Service (for example, by editing or deleting resumes), or by contacting the Service Operator.
+
+---
+
+## Children's Privacy
+
+The Service is not intended for children under the age of 13 (or the minimum age required in your jurisdiction). If you believe a child has provided personal data, contact the Service Operator.
+
+---
+
+## Changes to This Policy
+
+We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date.
+
+---
+
+## Contact
+
+For privacy requests or questions, contact:
+
+- **Service Operator**: Amruth Pillai
+- **Email**: hello@amruthpillai.com
