@@ -321,15 +321,15 @@ export default function ResumePreview({
           </div>
 
           {/* Color Chooser */}
-          <div className="flex items-center gap-1 ml-2 mr-1 flex-shrink-0">
-            <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mr-1 select-none hidden min-[1200px]:block">Color</span>
+          <div className="flex items-center gap-2 ml-2 mr-1 flex-shrink-0">
+            <span className="text-[9px] font-bold text-zinc-650 uppercase tracking-widest mr-1 select-none hidden min-[1200px]:block">Color</span>
             {themeColors.map((color) => {
               const isSelected = themeColor === color.value
               return (
                 <button
                   key={color.value}
                   onClick={() => onChangeColor?.(color.value)}
-                  style={{ backgroundColor: color.value, boxShadow: isSelected ? `0 0 0 2px #18181b, 0 0 0 3.5px ${color.value}` : undefined }}
+                  style={{ backgroundColor: color.value, boxShadow: isSelected ? `0 0 0 2px #09090b, 0 0 0 3.5px ${color.value}` : undefined }}
                   className={`w-3.5 h-3.5 rounded-full transition-all duration-200 relative cursor-pointer flex items-center justify-center hover:scale-125 active:scale-90 ${isSelected ? 'scale-110' : ''}`}
                   title={color.label}
                   type="button"
@@ -342,11 +342,11 @@ export default function ResumePreview({
             })}
             {/* Custom color picker */}
             <label
-              className="w-3.5 h-3.5 rounded-full bg-zinc-700 border border-zinc-600 cursor-pointer flex items-center justify-center hover:scale-125 transition-all duration-200 relative overflow-hidden"
+              className="w-3.5 h-3.5 rounded-full bg-zinc-800 border border-zinc-700 cursor-pointer flex items-center justify-center hover:scale-125 transition-all duration-200 relative overflow-hidden"
               title="Custom color"
-              style={!themeColors.find(c => c.value === themeColor) ? { boxShadow: `0 0 0 2px #18181b, 0 0 0 3.5px ${themeColor}`, backgroundColor: themeColor } : undefined}
+              style={!themeColors.find(c => c.value === themeColor) ? { boxShadow: `0 0 0 2px #09090b, 0 0 0 3.5px ${themeColor}`, backgroundColor: themeColor } : undefined}
             >
-              <span className="text-[8px] font-bold text-zinc-400 leading-none pointer-events-none select-none">+</span>
+              <span className="text-[9px] font-extrabold text-zinc-400 leading-none pointer-events-none select-none">+</span>
               <input
                 type="color"
                 value={themeColor}
