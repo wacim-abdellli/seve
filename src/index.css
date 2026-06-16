@@ -232,23 +232,18 @@ h1, h2, h3, h4, h5, h6 {
 
   .resume-print-wrapper {
     display: block !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+    position: relative !important;
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
-    z-index: 99999 !important;
     background: white !important;
     overflow: visible !important;
   }
 
   @page {
     size: A4 portrait;
-    margin: 0mm !important;
+    margin: 10.58mm !important;
   }
 
   html, body {
@@ -256,17 +251,16 @@ h1, h2, h3, h4, h5, h6 {
     overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: white !important;
   }
 
   .resume-page {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 210mm !important;
-    max-width: 210mm !important;
-    min-width: 210mm !important;
-    min-height: 297mm !important;
-    padding: 10.58mm !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: auto !important;
+    padding: 0 !important;
     margin: 0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
