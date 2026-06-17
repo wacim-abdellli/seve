@@ -1,0 +1,131 @@
+{
+  "contact": {
+    "fullName": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "phone": "+1-555-0199",
+    "linkedin": "linkedin.com/in/janedoe",
+    "location": "San Francisco, CA",
+    "website": "https://janedoe.dev"
+  },
+  "summary": "Result-driven Senior Software Engineer with over 8 years of professional experience designing, building, and deploying highly scalable cloud-native architectures and applications. Proven track record of optimizing database performance and leading cross-functional engineering teams. Expert in modern web technologies, React, TypeScript, Node.js, and Amazon Web Services cloud infrastructure.",
+  "experience": [
+    {
+      "id": "exp-1",
+      "jobTitle": "Senior Software Engineer",
+      "company": "TechCorp Solutions",
+      "location": "San Francisco, CA",
+      "startDate": "01/2021",
+      "endDate": "present",
+      "current": true,
+      "bullets": [
+        "Led a cross-functional team of 12 engineers and designers to build a new cloud-native microservices platform using Node.js and AWS, resulting in a 40% increase in development velocity.",
+        "Engineered a high-throughput streaming data pipeline using Apache Kafka that processed over 25 million events per day with a guaranteed 99.99% system uptime.",
+        "Optimized database query performance by 55% across millions of records using Redis caching layers and PostgreSQL indexing strategies.",
+        "Spearheaded the migration of legacy monolithic architectures to Kubernetes-orchestrated microservices, reducing infrastructure cloud costs by 30%."
+      ]
+    },
+    {
+      "id": "exp-2",
+      "jobTitle": "Software Engineer II",
+      "company": "InnoSystems LLC",
+      "location": "San Jose, CA",
+      "startDate": "06/2018",
+      "endDate": "12/2020",
+      "current": false,
+      "bullets": [
+        "Developed an interactive real-time web dashboard using React and TypeScript, which directly improved user engagement metrics by 35%.",
+        "Automated deployment processes by designing robust CI/CD pipelines with GitHub Actions, successfully reducing release cycle times by 50%.",
+        "Collaborated with product management and design teams to deliver 15 major customer-facing features ahead of schedule, enhancing client satisfaction ratings by 20%.",
+        "Maintained and supported a critical payment processing gateway, reducing transaction error rates by 18% through comprehensive unit and integration testing."
+      ]
+    },
+    {
+      "id": "exp-3",
+      "jobTitle": "Junior Developer",
+      "company": "WebCraft Technologies",
+      "location": "Oakland, CA",
+      "startDate": "06/2016",
+      "endDate": "05/2018",
+      "current": false,
+      "bullets": [
+        "Maintained client websites using HTML, CSS, and JavaScript, resolving 95% of reported bug tickets within SLA timelines.",
+        "Supported the engineering team in migrating database schemas, ensuring 100% data integrity for 10k customer accounts."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "degree": "Bachelor of Science in Computer Science",
+      "school": "University of California, Berkeley",
+      "location": "Berkeley, CA",
+      "graduationDate": "05/2018"
+    }
+  ],
+  "skills": [
+    "React",
+    "TypeScript",
+    "Node.js",
+    "AWS",
+    "Docker",
+    "PostgreSQL",
+    "Redis",
+    "CI/CD",
+    "Git",
+    "Python",
+    "GraphQL",
+    "Kubernetes"
+  ],
+  "languages": [
+    {
+      "id": "lang-1",
+      "name": "English",
+      "proficiency": "Native"
+    },
+    {
+      "id": "lang-2",
+      "name": "Spanish",
+      "proficiency": "Professional"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "CloudAnalytics Portal",
+      "description": "Designed and built an open-source visual telemetry dashboard providing real-time infrastructure metrics. Implemented high-performance WebSockets to stream live server statistics, supporting over 12k monthly active users with latency below 50ms.",
+      "technologies": [
+        "React",
+        "Node.js",
+        "WebSockets",
+        "Docker"
+      ]
+    }
+  ],
+  "awards": [
+    {
+      "id": "aw-1",
+      "title": "Outstanding Engineering Achievement Award",
+      "awarder": "TechCorp Solutions",
+      "date": "12/2023",
+      "description": "Awarded for lead contribution to microservices migration."
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-1",
+      "title": "AWS Certified Solutions Architect – Professional",
+      "issuer": "Amazon Web Services",
+      "date": "08/2023",
+      "description": "Professional level certification for designing distributed systems on AWS."
+    }
+  ],
+  "volunteer": [
+    {
+      "id": "vol-1",
+      "organization": "Code for America",
+      "location": "San Francisco, CA",
+      "period": "01/2022 - present",
+      "description": "Contributed as a volunteer software engineer to build civic open-source software tools for local communities, improving website accessibility for 5k+ citizens."
+    }
+  ]
+}

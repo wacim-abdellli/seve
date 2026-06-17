@@ -487,7 +487,7 @@ export default function ResumePreview({
             id="resume-print-area" 
             ref={resumeContentRef}
             style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-            className="relative resume-preview shadow-[0_32px_80px_rgba(0,0,0,0.8)] ring-1 ring-white/5 w-[794px] min-h-[1123px] bg-white text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
+            className="relative resume-preview w-[794px] bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
           >
             <style dangerouslySetInnerHTML={{ __html: `
               #resume-print-area, .resume-print-wrapper {
@@ -542,18 +542,7 @@ export default function ResumePreview({
               </div>
             )}
 
-            {/* Visual Page Break Lines (Screen Only) */}
-            {!isEmpty && pageCount > 1 && Array.from({ length: pageCount - 1 }).map((_, idx) => (
-              <div 
-                key={idx}
-                style={{ top: `${(idx + 1) * A4_HEIGHT_PX}px` }}
-                className="absolute left-0 right-0 h-0 pointer-events-none no-print z-40 border-b-2 border-dashed border-red-500/30 flex items-center justify-end"
-              >
-                <span className="bg-zinc-950 border border-zinc-800/80 text-red-400 text-[9px] font-extrabold px-2 py-0.5 rounded shadow-md mr-4 -translate-y-1/2 uppercase tracking-widest">
-                  Page {idx + 1} Cut-off
-                </span>
-              </div>
-            ))}
+
 
           {isEmpty ? (
             /* Premium Visual Empty State Mockup */

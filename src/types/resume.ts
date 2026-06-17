@@ -39,6 +39,9 @@ export interface Project {
   description: string
   technologies: string[]
   link?: string
+  startDate?: string
+  endDate?: string
+  date?: string
 }
 
 export interface Award {
@@ -85,6 +88,8 @@ export interface Volunteer {
   location: string
   period: string
   description: string
+  startDate?: string
+  endDate?: string
 }
 
 export interface ResumeData {
@@ -122,13 +127,6 @@ export interface AtsScore {
 
 export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative'
 
-export interface Message {
-  id: string
-  role: 'agent' | 'user'
-  content: string
-  timestamp: Date
-}
-
 export interface ResumeProfile {
   id: string
   title: string
@@ -137,13 +135,11 @@ export interface ResumeProfile {
   resumeData: ResumeData
   selectedTemplate: Template
   jobDescription: string
-  agentMessages: Message[]
 }
 
 export interface AppState {
   resumes: Record<string, ResumeProfile>
   selectedResumeId: string
-  apiKey: string
 }
 
 export interface SkillsMatrixItem {
@@ -154,4 +150,76 @@ export interface SkillsMatrixItem {
   missing: string[]
 }
 
+/* ─── Phase 1: ATS Report Types ─── */
 
+export type SectionTier = 'core' | 'expected' | 'optional' | 'hidden'
+
+export interface AtsIssue {
+  id: string
+  type: 'critical' | 'warning' | 'suggestion' | 'info'
+  category: 'completeness' | 'keywords' | 'formatting' | 'style' | 'structure' | 'semantic'
+  issue: string
+  fix: string
+  section?: string
+  bulletIndex?: number
+  details?: string[]
+  severityScore: number
+  autoFixable: boolean
+  learnMore?: string
+}
+
+export interface AtsCategoryScore {
+  key: string
+  label: string
+  score: number
+  max: number
+  weight: number
+  issues: AtsIssue[]
+}
+
+export interface AtsReport {
+  total: number
+  previousScore?: number
+  trend: 'up' | 'down' | 'stable'
+  grade: string
+  gradeLabel: string
+  categories: AtsCategoryScore[]
+  critical: AtsIssue[]
+  warnings: AtsIssue[]
+  suggestions: AtsIssue[]
+  passing: string[]
+  skillsMatrix: SkillsMatrixItem[]
+  language: 'en' | 'fr'
+  semanticScore: number
+  wordCount: number
+  sectionCount: number
+  estimatedReadTime: number
+  atsParseability: number
+  readingLevel: number
+  timeline: { date: number; score: number; label: string }[]
+  engineVersion: number
+  resumeDomain?: string
+  jdDomain?: string
+  breakdown: { key: string; label: string; score: number; max: number }[]
+}
+
+export type AtsRating = 'safe' | 'warning' | 'danger'
+
+export interface AtsRatingResult {
+  rating: AtsRating
+  feedback?: string
+  issues: AtsIssue[]
+}
+
+/* ─── Phase 2: Industry Profiles ─── */
+
+export interface IndustryProfile {
+  id: string
+  name: string
+  expectedSections: string[]
+  preferredOrder: string[]
+  synonymOverrides: Record<string, string[]>
+  lengthExpectation: 'short' | 'standard' | 'long'
+  verbPreference: 'technical' | 'leadership' | 'creative'
+  weightAdjustments: Partial<Record<string, number>>
+}

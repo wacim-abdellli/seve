@@ -3,6 +3,8 @@ import PreviewSectionWrapper from '../PreviewSectionWrapper'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
+import { evaluateSectionAts } from '../../utils/atsEvaluator'
+import { getPageBreakSections } from '../../utils/layoutHelper'
 import { User, Mail, Phone, MapPin, Globe, Briefcase, GraduationCap, FolderGit, Wrench, FileText, Award, BookOpen, Users, Heart } from 'lucide-react'
 
 const Linkedin = (props: React.SVGProps<SVGSVGElement>) => (
@@ -54,255 +56,118 @@ export default function CreativeTemplate({
   const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
 
 
-  // ATS Heuristics
-  const getContactAts = () => {
-    if (!contact.fullName?.trim() || !contact.email?.trim() || !contact.phone?.trim()) {
-      return { rating: 'danger' as const, feedback: 'Name, email, and phone are required contact details.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Contact profile formatted cleanly.' }
-  }
+  const contactAts = evaluateSectionAts('contact', data)
+  const summaryAts = evaluateSectionAts('summary', data)
+  const experienceAts = evaluateSectionAts('experience', data)
+  const projectsAts = evaluateSectionAts('projects', data)
+  const educationAts = evaluateSectionAts('education', data)
+  const skillsAts = evaluateSectionAts('skills', data)
+  const languagesAts = evaluateSectionAts('languages', data)
+  const awardsAts = evaluateSectionAts('awards', data)
+  const certificationsAts = evaluateSectionAts('certifications', data)
+  const interestsAts = evaluateSectionAts('interests', data)
+  const publicationsAts = evaluateSectionAts('publications', data)
+  const referencesAts = evaluateSectionAts('references', data)
+  const volunteerAts = evaluateSectionAts('volunteer', data)
 
-  const getSummaryAts = () => {
-    if (!summary?.trim()) {
-      return { rating: 'danger' as const, feedback: 'Professional summary is highly recommended.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Summary details clean and ATS-safe.' }
-  }
-
-  const getExperienceAts = () => {
-    if (!experience || experience.length === 0) {
-      return { rating: 'danger' as const, feedback: 'Work experience history is critical for applicant tracking.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Work entries ordered chronologically and ATS-safe.' }
-  }
-
-  const getProjectsAts = () => {
-    if (!projects || projects.length === 0) {
-      return { rating: 'warning' as const, feedback: 'Add 1-2 projects to showcase technical capabilities.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Projects list is ATS-compliant.' }
-  }
-
-  const getEducationAts = () => {
-    if (!education || education.length === 0) {
-      return { rating: 'danger' as const, feedback: 'Academic history is highly recommended.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Academic credentials listed clearly.' }
-  }
-
-  const getSkillsAts = () => {
-    if (!skills || skills.length === 0) {
-      return { rating: 'danger' as const, feedback: 'Skills list is mandatory for keyword indexing.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Keywords match candidate database indexes.' }
-  }
-
-  const getLanguagesAts = () => {
-    if (!languages || languages.length === 0) {
-      return { rating: 'warning' as const, feedback: 'Languages section shows global readiness.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Languages listed.' }
-  }
-
-  const getAwardsAts = () => {
-    if (!awards || awards.length === 0) return { rating: 'safe' as const, feedback: 'No awards listed.' }
-    return { rating: 'safe' as const, feedback: 'Awards showcase distinct performance.' }
-  }
-
-  const getCertificationsAts = () => {
-    if (!certifications || certifications.length === 0) return { rating: 'warning' as const, feedback: 'Certifications add professional credibility.' }
-    return { rating: 'safe' as const, feedback: 'Certifications validate expertise.' }
-  }
-
-  const getInterestsAts = () => {
-    if (!interests || interests.length === 0) return { rating: 'safe' as const, feedback: 'No interests listed.' }
-    return { rating: 'safe' as const, feedback: 'Interests add personality.' }
-  }
-
-  const getPublicationsAts = () => {
-    if (!publications || publications.length === 0) return { rating: 'safe' as const, feedback: 'No publications listed.' }
-    return { rating: 'safe' as const, feedback: 'Publications demonstrate thought leadership.' }
-  }
-
-  const getReferencesAts = () => {
-    if (!references || references.length === 0) return { rating: 'safe' as const, feedback: 'No references listed.' }
-    return { rating: 'safe' as const, feedback: 'References available.' }
-  }
-
-  const getVolunteerAts = () => {
-    if (!volunteer || volunteer.length === 0) return { rating: 'safe' as const, feedback: 'No volunteer experience listed.' }
-    return { rating: 'safe' as const, feedback: 'Volunteer work shows community engagement.' }
-  }
-
-  const contactAts = getContactAts()
-  const summaryAts = getSummaryAts()
-  const experienceAts = getExperienceAts()
-  const projectsAts = getProjectsAts()
-  const educationAts = getEducationAts()
-  const skillsAts = getSkillsAts()
-  const languagesAts = getLanguagesAts()
-  const awardsAts = getAwardsAts()
-  const certificationsAts = getCertificationsAts()
-  const interestsAts = getInterestsAts()
-  const publicationsAts = getPublicationsAts()
-  const referencesAts = getReferencesAts()
-  const volunteerAts = getVolunteerAts()
-
-  // Left Column Content (Contact details, Skills)
-  const leftColumnContent = (
-    <div className="space-y-6">
-      
-      {/* Contact info block */}
+  // Left Sidebar Sections Mapping
+  const leftSectionsMap: Record<string, React.ReactNode> = {
+    skills: skills && skills.length > 0 ? (
       <PreviewSectionWrapper
-        sectionId="contact"
+        sectionId="skills"
         activeSection={activeSection}
         atsMode={atsMode}
-        atsRating={contactAts.rating}
-        atsFeedback={contactAts.feedback}
+        atsRating={skillsAts.rating}
+        atsFeedback={skillsAts.feedback}
+        onEdit={onEditSection}
+        onDragStart={(e) => onDragStart?.(e, 'skills')}
+        onDragOver={onDragOver}
+        onDrop={() => onDrop?.('skills')}
+      >
+        <div className="space-y-3">
+          <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+            <Wrench className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.skills}</h3>
+          </div>
+          <p className="text-[9px] leading-relaxed text-slate-700">
+            {skills.join(' · ')}
+          </p>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+
+    languages: languages && languages.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="languages"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={languagesAts.rating}
+        atsFeedback={languagesAts.feedback}
         onEdit={onEditSection}
       >
         <div className="space-y-3">
           <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
-            <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
-            <h3 className="text-[9.5px] font-black uppercase tracking-wider text-slate-900">Info</h3>
+            <Globe className="w-3.5 h-3.5" style={{ color: themeColor }} />
+            <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.languages}</h3>
           </div>
-          <div className="space-y-2 text-[9px] text-slate-700 font-medium">
-            {contact.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
-                <span className="truncate">{contact.email}</span>
+          <div className="space-y-1 text-[9px] text-slate-700">
+            {languages.map((lang) => (
+              <div key={lang.id}>
+                <span className="font-semibold text-slate-900">{lang.name}</span>
+                <span className="text-slate-500"> — {lang.proficiency}</span>
               </div>
-            )}
-            {contact.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
-                <span>{contact.phone}</span>
-              </div>
-            )}
-            {contact.location && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
-                <span>{contact.location}</span>
-              </div>
-            )}
-            {contact.linkedin && (
-              <div className="flex items-center gap-2">
-                <Linkedin className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
-                <span className="truncate">{contact.linkedin.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//i, '')}</span>
-              </div>
-            )}
-            {contact.website && (
-              <div className="flex items-center gap-2">
-                <Globe className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
-                <span className="truncate">{contact.website.replace(/^(https?:\/\/)?(www\.)?/, '')}</span>
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </PreviewSectionWrapper>
+    ) : null,
 
-      {/* Skills list block */}
-      {skills && skills.length > 0 && (
-        <PreviewSectionWrapper
-          sectionId="skills"
-          activeSection={activeSection}
-          atsMode={atsMode}
-          atsRating={skillsAts.rating}
-          atsFeedback={skillsAts.feedback}
-          onEdit={onEditSection}
-          onDragStart={(e) => onDragStart?.(e, 'skills')}
-          onDragOver={onDragOver}
-          onDrop={() => onDrop?.('skills')}
-        >
-          <div className="space-y-3">
-            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
-              <Wrench className="w-3.5 h-3.5" style={{ color: themeColor }} />
-              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.skills}</h3>
-            </div>
-            <p className="text-[9px] leading-relaxed text-slate-700">
-              {skills.join(' · ')}
-            </p>
+    interests: interests && interests.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="interests"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={interestsAts.rating}
+        atsFeedback={interestsAts.feedback}
+        onEdit={onEditSection}
+      >
+        <div className="space-y-3">
+          <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+            <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.interests}</h3>
           </div>
-        </PreviewSectionWrapper>
-      )}
+          <p className="text-[9px] leading-relaxed text-slate-700">
+            {interests.map((i) => i.name + (i.keywords.length > 0 ? ` (${i.keywords.join(', ')})` : '')).join(' · ')}
+          </p>
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
 
-      {/* Languages list block */}
-      {languages && languages.length > 0 && (
-        <PreviewSectionWrapper
-          sectionId="languages"
-          activeSection={activeSection}
-          atsMode={atsMode}
-          atsRating={languagesAts.rating}
-          atsFeedback={languagesAts.feedback}
-          onEdit={onEditSection}
-        >
-          <div className="space-y-3">
-            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
-              <Globe className="w-3.5 h-3.5" style={{ color: themeColor }} />
-              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.languages}</h3>
-            </div>
-            <div className="space-y-1 text-[9px] text-slate-700">
-              {languages.map((lang) => (
-                <div key={lang.id}>
-                  <span className="font-semibold text-slate-900">{lang.name}</span>
-                  <span className="text-slate-500"> — {lang.proficiency}</span>
-                </div>
-              ))}
-            </div>
+    certifications: certifications && certifications.length > 0 ? (
+      <PreviewSectionWrapper
+        sectionId="certifications"
+        activeSection={activeSection}
+        atsMode={atsMode}
+        atsRating={certificationsAts.rating}
+        atsFeedback={certificationsAts.feedback}
+        onEdit={onEditSection}
+      >
+        <div className="space-y-3">
+          <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+            <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.certifications}</h3>
           </div>
-        </PreviewSectionWrapper>
-      )}
-
-      {/* Interests list block */}
-      {interests && interests.length > 0 && (
-        <PreviewSectionWrapper
-          sectionId="interests"
-          activeSection={activeSection}
-          atsMode={atsMode}
-          atsRating={interestsAts.rating}
-          atsFeedback={interestsAts.feedback}
-          onEdit={onEditSection}
-        >
-          <div className="space-y-3">
-            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
-              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.interests}</h3>
-            </div>
-            <p className="text-[9px] leading-relaxed text-slate-700">
-              {interests.map((i) => i.name + (i.keywords.length > 0 ? ` (${i.keywords.join(', ')})` : '')).join(' · ')}
-            </p>
+          <div className="space-y-1 text-[9px] text-slate-700">
+            {certifications.map((c) => (
+              <div key={c.id}>
+                <span className="font-semibold text-slate-900">{c.title}</span>
+                {c.issuer && <span className="text-slate-500"> — {c.issuer}</span>}
+                {c.date && <span className="text-slate-400"> ({c.date})</span>}
+              </div>
+            ))}
           </div>
-        </PreviewSectionWrapper>
-      )}
-
-      {/* Certifications list block */}
-      {certifications && certifications.length > 0 && (
-        <PreviewSectionWrapper
-          sectionId="certifications"
-          activeSection={activeSection}
-          atsMode={atsMode}
-          atsRating={certificationsAts.rating}
-          atsFeedback={certificationsAts.feedback}
-          onEdit={onEditSection}
-        >
-          <div className="space-y-3">
-            <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
-              <h3 className="text-[9.5px] font-black tracking-wider text-slate-900 section-heading">{SECTION_LABELS.certifications}</h3>
-            </div>
-            <div className="space-y-1 text-[9px] text-slate-700">
-              {certifications.map((c) => (
-                <div key={c.id}>
-                  <span className="font-semibold text-slate-900">{c.title}</span>
-                  {c.issuer && <span className="text-slate-500"> — {c.issuer}</span>}
-                  {c.date && <span className="text-slate-400"> ({c.date})</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </PreviewSectionWrapper>
-      )}
-
-    </div>
-  )
+        </div>
+      </PreviewSectionWrapper>
+    ) : null,
+  }
 
   // Right Column Content dynamic builder
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -605,30 +470,116 @@ export default function CreativeTemplate({
     ) : null
   }
 
+  const leftSectionKeys = ['skills', 'languages', 'interests', 'certifications']
+  const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder, leftSectionKeys)
+
+  const page1Left = page1Sections.filter(k => leftSectionKeys.includes(k))
+  const page1Right = page1Sections.filter(k => !leftSectionKeys.includes(k))
+
+  const page2Left = page2Sections.filter(k => leftSectionKeys.includes(k))
+  const page2Right = page2Sections.filter(k => !leftSectionKeys.includes(k))
+
   return (
-    <div className="font-sans text-[9.5pt] leading-normal text-slate-800 p-0 select-text max-w-full flex w-full min-h-[1123px] overflow-hidden">
-      
-      {/* Left column (Off-white sidebar) */}
-      <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0 left-column" style={{ backgroundColor: '#f2f2f2', borderRightWidth: 1, borderRightColor: '#e2e8f0' }}>
-        
-        {/* Name header */}
-        <div className="text-left pt-2 pb-2">
-          <h1 className="text-sm font-extrabold text-slate-900 leading-tight tracking-tight">
-            {getFullName(contact) || 'YOUR NAME'}
-          </h1>
+    <div className="resume-template">
+      {/* Page 1 */}
+      <div className="resume-page font-sans text-[9.5pt] leading-normal text-slate-800 p-0 select-text max-w-full flex w-full min-h-[1123px] overflow-hidden">
+        {/* Left column (Off-white sidebar) */}
+        <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0 left-column" style={{ backgroundColor: '#f2f2f2', borderRightWidth: 1, borderRightColor: '#e2e8f0' }}>
+          {/* Name header */}
+          <div className="text-left pt-2 pb-2">
+            <h1 className="text-sm font-extrabold text-slate-900 leading-tight tracking-tight">
+              {getFullName(contact) || 'YOUR NAME'}
+            </h1>
+          </div>
+
+          {/* Contact info block */}
+          <PreviewSectionWrapper
+            sectionId="contact"
+            activeSection={activeSection}
+            atsMode={atsMode}
+            atsRating={contactAts.rating}
+            atsFeedback={contactAts.feedback}
+            onEdit={onEditSection}
+          >
+            <div className="space-y-3">
+              <div className="pb-1.5 border-b flex items-center gap-1.5" style={{ borderBottomColor: `${themeColor}20` }}>
+                <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
+                <h3 className="text-[9.5px] font-black uppercase tracking-wider text-slate-900">Info</h3>
+              </div>
+              <div className="space-y-2 text-[9px] text-slate-700 font-medium">
+                {contact.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
+                    <span className="truncate">{contact.email}</span>
+                  </div>
+                )}
+                {contact.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
+                    <span>{contact.phone}</span>
+                  </div>
+                )}
+                {contact.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
+                    <span>{contact.location}</span>
+                  </div>
+                )}
+                {contact.linkedin && (
+                  <div className="flex items-center gap-2">
+                    <Linkedin className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
+                    <span className="truncate">{contact.linkedin.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//i, '')}</span>
+                  </div>
+                )}
+                {contact.website && (
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-3 h-3 shrink-0" style={{ color: themeColor }} />
+                    <span className="truncate">{contact.website.replace(/^(https?:\/\/)?(www\.)?/, '')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </PreviewSectionWrapper>
+
+          {/* Left Sidebar Sections */}
+          {page1Left.map((secId) => {
+            const component = leftSectionsMap[secId]
+            return component ? <div key={secId}>{component}</div> : null
+          })}
         </div>
 
-        {leftColumnContent}
+        {/* Right column (Main details area) */}
+        <div className="flex-1 p-10 space-y-5">
+          {page1Right.map((secId) => {
+            const component = sectionsMap[secId]
+            return component ? <div key={secId}>{component}</div> : null
+          })}
+        </div>
       </div>
 
-      {/* Right column (Main details area) */}
-      <div className="flex-1 p-10 space-y-5">
-        {sectionOrder.filter(secId => !['skills', 'languages', 'interests', 'certifications'].includes(secId)).map((secId) => {
-          const component = sectionsMap[secId]
-          return component ? <div key={secId}>{component}</div> : null
-        })}
-      </div>
+      {/* Page 2 */}
+      {page2Sections.length > 0 && (
+        <>
+          <div className="resume-page-break" />
+          <div className="resume-page resume-page-continuation font-sans text-[9.5pt] leading-normal text-slate-800 p-0 select-text max-w-full flex w-full min-h-[1123px] overflow-hidden">
+            {/* Left column (Off-white sidebar) */}
+            <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0 left-column" style={{ backgroundColor: '#f2f2f2', borderRightWidth: 1, borderRightColor: '#e2e8f0' }}>
+              {page2Left.map((secId) => {
+                const component = leftSectionsMap[secId]
+                return component ? <div key={secId}>{component}</div> : null
+              })}
+            </div>
 
+            {/* Right column (Main details area) */}
+            <div className="flex-1 p-10 space-y-5">
+              {page2Right.map((secId) => {
+                const component = sectionsMap[secId]
+                return component ? <div key={secId}>{component}</div> : null
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -1,0 +1,214 @@
+import { useOutletContext } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Eye, ChevronRight } from 'lucide-react'
+import { useResume } from '../hooks/useResume'
+import ResumePreview from '../components/ResumePreview'
+import AtsChecker from '../components/AtsChecker'
+import { getSectionStatus } from '../utils/completionHelper'
+import type { EditorContextType } from '../layouts/EditorLayout'
+import type { ResumeData, Template } from '../types/resume'
+import type { SectionType } from '../components/SectionSidebar'
+import {
+  User as UserIcon, FileText as FileTextIcon, Briefcase as BriefcaseIcon,
+  GraduationCap as GraduationCapIcon, Code2, Globe, FolderOpen,
+  Trophy, Award, Heart, BookOpen, Phone, HandHeart,
+} from 'lucide-react'
+
+const overviewSections = [
+  { id: 'contact' as const, title: 'Contact Info', icon: UserIcon, colorClass: 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/15 group-hover:text-blue-300' },
+  { id: 'summary' as const, title: 'Profile Summary', icon: FileTextIcon, colorClass: 'bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/15 group-hover:text-purple-300' },
+  { id: 'experience' as const, title: 'Work Experience', icon: BriefcaseIcon, colorClass: 'bg-rose-500/10 text-rose-400 group-hover:bg-rose-500/15 group-hover:text-rose-300' },
+  { id: 'education' as const, title: 'Education History', icon: GraduationCapIcon, colorClass: 'bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/15 group-hover:text-amber-300' },
+  { id: 'skills' as const, title: 'Skills & Stack', icon: Code2, colorClass: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/15 group-hover:text-emerald-300' },
+  { id: 'languages' as const, title: 'Languages', icon: Globe, colorClass: 'bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/15 group-hover:text-indigo-300' },
+  { id: 'projects' as const, title: 'Projects', icon: FolderOpen, colorClass: 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/15 group-hover:text-cyan-300' },
+  { id: 'awards' as const, title: 'Awards & Honors', icon: Trophy, colorClass: 'bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/15 group-hover:text-yellow-300' },
+  { id: 'certifications' as const, title: 'Certifications', icon: Award, colorClass: 'bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/15 group-hover:text-sky-300' },
+  { id: 'interests' as const, title: 'Interests', icon: Heart, colorClass: 'bg-pink-500/10 text-pink-400 group-hover:bg-pink-500/15 group-hover:text-pink-300' },
+  { id: 'publications' as const, title: 'Publications', icon: BookOpen, colorClass: 'bg-orange-500/10 text-orange-400 group-hover:bg-orange-500/15 group-hover:text-orange-300' },
+  { id: 'references' as const, title: 'References', icon: Phone, colorClass: 'bg-teal-500/10 text-teal-400 group-hover:bg-teal-500/15 group-hover:text-teal-300' },
+  { id: 'volunteer' as const, title: 'Volunteer', icon: HandHeart, colorClass: 'bg-violet-500/10 text-violet-400 group-hover:bg-violet-500/15 group-hover:text-violet-300' },
+]
+
+const truncateText = (str: string, max: number) => {
+  if (!str) return ''
+  return str.length > max ? str.slice(0, max) + '...' : str
+}
+
+const getSectionPreview = (section: string, data: ResumeData): string => {
+  switch (section) {
+    case 'contact': return data.contact.email || 'Add your details'
+    case 'summary': return truncateText(data.summary, 60) || 'Write a summary'
+    case 'experience':
+      return data.experience.length === 0 ? 'No positions added yet'
+        : `${data.experience[0].jobTitle || 'Untitled'} at ${data.experience[0].company || 'No Company'}` + (data.experience.length > 1 ? ` +${data.experience.length - 1} more` : '')
+    case 'education': return data.education.length === 0 ? 'No institutions added yet' : `${data.education.length} institution(s) added`
+    case 'skills': return data.skills.length === 0 ? 'No skills added yet' : data.skills.slice(0, 4).join(', ') + (data.skills.length > 4 ? '...' : '')
+    case 'languages': { const l = data.languages || []; return l.length === 0 ? 'No languages added' : l.map(x => x.name).join(', ') + (l.length > 3 ? '...' : '') }
+    case 'projects': { const l = data.projects || []; return l.length === 0 ? 'No projects added' : `${l.length} project(s)` }
+    case 'awards': { const l = data.awards || []; return l.length === 0 ? 'No awards added' : l.map(x => x.title).filter(Boolean).join(', ') }
+    case 'certifications': { const l = data.certifications || []; return l.length === 0 ? 'No certifications added' : l.map(x => x.title).filter(Boolean).join(', ') }
+    case 'interests': { const l = data.interests || []; return l.length === 0 ? 'No interests added' : l.map(x => x.name).filter(Boolean).join(', ') }
+    case 'publications': { const l = data.publications || []; return l.length === 0 ? 'No publications added' : l.map(x => x.title).filter(Boolean).join(', ') }
+    case 'references': { const l = data.references || []; return l.length === 0 ? 'No references added' : l.map(x => x.name).filter(Boolean).join(', ') }
+    case 'volunteer': { const l = data.volunteer || []; return l.length === 0 ? 'No volunteer experience added' : l.map(x => x.organization).filter(Boolean).join(', ') }
+    default: return ''
+  }
+}
+
+export default function EditorPage() {
+  const { resumeData, selectedTemplate, jobDescription, updateActiveResume } = useResume()
+  const ctx = useOutletContext<EditorContextType>()
+
+  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint } = ctx
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeMode}
+        initial={{ opacity: 0, y: 6, filter: 'blur(4px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        exit={{ opacity: 0, y: -6, filter: 'blur(4px)' }}
+        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
+        className="flex-1 flex flex-row overflow-hidden relative bg-transparent"
+      >
+        {activeMode === 'studio' && (
+          <div className="flex h-full w-full overflow-hidden relative bg-transparent">
+            <motion.div
+              layout
+              initial={{ opacity: 0, scale: 0.995 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.995 }}
+              transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
+              className="hidden lg:flex w-[380px] min-w-[320px] max-w-[420px] border-r border-zinc-800 bg-card/65 backdrop-blur-md flex-col flex-shrink-0 h-full overflow-hidden no-print"
+            >
+              <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0">
+                <h2 className="text-[16px] font-semibold text-white">Resume Builder</h2>
+                <p className="text-[12px] text-zinc-500 mt-0.5">Click any section to edit</p>
+              </div>
+              <div className="flex-1 overflow-y-auto form-panel">
+                {overviewSections.map((section) => {
+                  const isComplete = getSectionStatus(resumeData)[section.id]
+                  const previewText = getSectionPreview(section.id, resumeData)
+                  const Icon = section.icon
+                  return (
+                    <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className="w-full text-left group flex items-center gap-4 px-5 py-4 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/40 last:border-0 cursor-pointer">
+                      <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
+                        <Icon className="w-4 h-4 transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-medium text-white">{section.title}</p>
+                        <p className="text-[12px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {isComplete ? <span className="text-[11px] text-emerald-400">● Done</span> : <span className="text-[11px] text-zinc-650">○ Edit</span>}
+                        <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </motion.div>
+
+            <div className="w-full bg-card/65 backdrop-blur-md flex flex-col h-full overflow-hidden no-print lg:hidden">
+              <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0 flex items-center justify-between">
+                <div>
+                  <h2 className="text-[16px] font-semibold text-white">Resume Builder</h2>
+                  <p className="text-[12px] text-zinc-500 mt-0.5">Click any section to edit</p>
+                </div>
+                <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-8 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer">View Resume</button>
+              </div>
+              <div className="flex-1 overflow-y-auto form-panel">
+                {overviewSections.map((section) => {
+                  const isComplete = getSectionStatus(resumeData)[section.id]
+                  const previewText = getSectionPreview(section.id, resumeData)
+                  const Icon = section.icon
+                  return (
+                    <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className="w-full text-left group flex items-center gap-4 px-5 py-4 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/40 last:border-0 cursor-pointer">
+                      <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
+                        <Icon className="w-4 h-4 transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-medium text-white">{section.title}</p>
+                        <p className="text-[12px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {isComplete ? <span className="text-[11px] text-emerald-400">● Done</span> : <span className="text-[11px] text-zinc-650">○ Edit</span>}
+                        <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+              <div className="w-full max-w-[858px]">
+                <ResumePreview
+                  resumeData={resumeData} selectedTemplate={selectedTemplate}
+                  onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
+                  activeSection={activeStudioSection}
+                  onEditSection={(section) => { setActiveStudioSection(section); setMobileView('edit') }}
+                  onExportPdf={handlePrint} onPageCountChange={setPageCount}
+                  sectionOrder={sectionOrder} onSectionOrderChange={onSectionOrderChange}
+                  templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
+                  themeColor={themeColor} onChangeColor={setThemeColor}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMode === 'preview' && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-card/65 backdrop-blur-md p-5 no-print">
+            <div className="flex items-center justify-between border-b border-border pb-3 mb-4 flex-shrink-0">
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                  <Eye size={16} className="text-red-400" /> Document Preview & Export
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Choose your styling template and preview your resume</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Style Template:</label>
+                <select value={selectedTemplate} onChange={(e) => updateActiveResume(prev => ({ ...prev, selectedTemplate: e.target.value as Template }))} className="h-8 rounded-md border border-input bg-zinc-950 px-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-ring">
+                  <option value="classic">Classic (Serif)</option>
+                  <option value="modern">Modern (Tech/Sans)</option>
+                  <option value="executive">Executive (Leadership)</option>
+                  <option value="minimalist">Minimalist (Clean)</option>
+                  <option value="creative">Creative (Accented)</option>
+                </select>
+                <button onClick={handlePrint} className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 cursor-pointer">
+                  <Eye size={13} /> Export PDF
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto bg-zinc-950/20 p-6 flex justify-center items-start min-w-0">
+              <div className="w-full max-w-[858px]">
+                <ResumePreview
+                  resumeData={resumeData} selectedTemplate={selectedTemplate}
+                  onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
+                  activeSection={activeStudioSection}
+                  onEditSection={(section) => { setActiveStudioSection(section); setActiveMode('studio') }}
+                  onExportPdf={handlePrint} onPageCountChange={setPageCount}
+                  sectionOrder={sectionOrder} onSectionOrderChange={onSectionOrderChange}
+                  templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
+                  themeColor={themeColor} onChangeColor={setThemeColor}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMode === 'analyze' && (
+          <AtsChecker
+            resumeData={resumeData}
+            jobDescription={jobDescription}
+            onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
+            onFix={(fixed) => updateActiveResume((prev) => ({ ...prev, resumeData: fixed }))}
+            onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}
+          />
+        )}
+      </motion.div>
+    </AnimatePresence>
+  )
+}

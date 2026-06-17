@@ -243,7 +243,10 @@ h1, h2, h3, h4, h5, h6 {
 
   @page {
     size: A4 portrait;
-    margin: 10.58mm !important;
+    margin-top: 20mm;
+    margin-bottom: 20mm;
+    margin-left: 16mm;
+    margin-right: 16mm;
   }
 
   html, body {
@@ -260,7 +263,7 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 100% !important;
     min-width: 0 !important;
     min-height: auto !important;
-    padding: 0 !important;
+    padding: 0;
     margin: 0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -274,6 +277,17 @@ h1, h2, h3, h4, h5, h6 {
     print-color-adjust: exact !important;
     box-sizing: border-box !important;
     overflow: visible !important;
+  }
+
+  .resume-page-break {
+    display: block;
+    height: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .resume-page-continuation {
+    padding-top: 48px !important;
   }
 
   /* Strip all screen-only styles */
@@ -366,6 +380,11 @@ h1, h2, h3, h4, h5, h6 {
   .template-modern .section-heading {
     color: #1e3a5f !important;
     border-left-color: #1e3a5f !important;
+  }
+
+  /* Override inline left-column backgrounds so all areas print white */
+  .resume-page .left-column {
+    background: #ffffff !important;
   }
 }
 
@@ -741,6 +760,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none !important;
+}
+
+/* Screen-only page styling */
+@media screen {
+  .resume-page {
+    background-color: #ffffff !important;
+    width: 794px !important;
+    height: 1123px !important;
+    min-height: 1123px !important;
+    max-height: 1123px !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  
+  .resume-page + .resume-page {
+    margin-top: 32px !important;
+  }
 }
 
 

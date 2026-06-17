@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ResumeProfile } from '../types/resume'
-import { Copy, Edit2, Trash2, Check, Plus, FolderOpen, Calendar, X, AlertTriangle, UploadCloud } from 'lucide-react'
+import { Copy, Edit2, Trash2, Check, Plus, FolderOpen, Calendar, X, AlertTriangle } from 'lucide-react'
 import { calculateCompletion } from '../utils/completionHelper'
 
 interface ResumeManagerProps {
@@ -14,7 +14,6 @@ interface ResumeManagerProps {
   onRename: (id: string, newTitle: string) => void
   onDelete: (id: string) => void
   onClose: () => void
-  onTriggerImport: () => void
 }
 
 export default function ResumeManager({
@@ -26,7 +25,6 @@ export default function ResumeManager({
   onRename,
   onDelete,
   onClose,
-  onTriggerImport
 }: ResumeManagerProps) {
   const [newTitle, setNewTitle] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -101,17 +99,6 @@ export default function ResumeManager({
             New Version
           </button>
           
-          <button
-            type="button"
-            onClick={() => {
-              onTriggerImport()
-              onClose()
-            }}
-            className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1 transition-all cursor-pointer flex-shrink-0"
-          >
-            <UploadCloud className="w-3.5 h-3.5 text-rose-450" />
-            Import PDF/Word
-          </button>
         </form>
 
         {/* Resumes List */}

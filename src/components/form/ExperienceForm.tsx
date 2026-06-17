@@ -1,37 +1,28 @@
 import { useState } from 'react'
 import type { Experience } from '../../types/resume'
-import { useToast } from '../../hooks/useToast'
-import { generateContent } from '../../utils/aiService'
 import { 
   GripVertical, 
   Trash2, 
-  Sparkles, 
   Plus, 
-  Wrench, 
-  RefreshCw,
   X,
   ChevronDown
 } from 'lucide-react'
-import BulletWorkshopModal from '../BulletWorkshopModal'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ExperienceFormProps {
   experience: Experience[]
-  apiKey: string
   onChange: (updated: Experience[]) => void
 }
 
-export default function ExperienceForm({ experience, apiKey, onChange }: ExperienceFormProps) {
-  const { showToast } = useToast()
-  const [loadingId, setLoadingId] = useState<string | null>(null)
-  const [loadingBulletIdx, setLoadingBulletIdx] = useState<{ expId: string; bulletIdx: number } | null>(null)
+export default function ExperienceForm({ experience, onChange }: ExperienceFormProps) {
   const [expandedId, setExpandedId] = useState<string | null>(experience[0]?.id || null)
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
-  const [isWorkshopOpen, setIsWorkshopOpen] = useState(false)
-  const [workshopExpId, setWorkshopExpId] = useState<string | null>(null)
-  const [workshopBulletIdx, setWorkshopBulletIdx] = useState<number | null>(null)
   const [starOpenId, setStarOpenId] = useState<string | null>(null)
   const [starFields, setStarFields] = useState<Record<string, { s: string; t: string; a: string; r: string }>>({}) 
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id)
+  }
 
   const handleAdd = () => {
     const newEntry: Experience = {
@@ -124,98 +115,6 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
     setDraggedIdx(null)
   }
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id)
-  }
-
-  const handleAiBullets = async (expId: string, title: string) => {
-    if (!apiKey || !apiKey.trim()) {
-      showToast('Google Gemini API Key is required. Please set it in Settings (gear icon).', 'warning')
-      return
-    }
-    if (!title.trim()) {
-      showToast('Please provide a job title first.', 'warning')
-      return
-    }
-    setLoadingId(expId)
-    try {
-      const prompt = `Generate 3 professional resume bullet achievements for the role: ${title}. Use strong action verbs, omit pronouns, and include placeholder metrics (e.g. [X]%).`
-      const res = await generateContent(prompt, apiKey, 'bullet')
-      
-      const parsedBullets = res
-        .split('\n')
-        .map(line => line.replace(/^[-*•\d.]+\s*/, '').trim())
-        .filter(line => line.length > 0)
-        .slice(0, 3)
-
-      if (parsedBullets.length > 0) {
-        onChange(
-          experience.map(exp => {
-            if (exp.id === expId) {
-              return { 
-                ...exp, 
-                bullets: parsedBullets 
-              }
-            }
-            return exp
-          })
-        )
-        showToast('AI summary bullets generated!', 'success')
-      }
-    } catch (err: any) {
-      console.error(err)
-      if (err.message === 'API_KEY_REQUIRED') {
-        showToast('Google Gemini API Key is required. Please set it in Settings.', 'warning')
-      } else {
-        showToast('AI Bullet generation failed.', 'error')
-      }
-    } finally {
-      setLoadingId(null)
-    }
-  }
-
-  const handleAiImproveBullet = async (expId: string, idx: number, currentText: string) => {
-    if (!apiKey || !apiKey.trim()) {
-      showToast('Google Gemini API Key is required. Please set it in Settings (gear icon).', 'warning')
-      return
-    }
-    if (!currentText.trim()) return
-    setLoadingBulletIdx({ expId, bulletIdx: idx })
-    try {
-      const prompt = `Optimize this resume bullet point for ATS. Start with a strong action verb, remove pronouns, and make it concise: "${currentText}"`
-      const res = await generateContent(prompt, apiKey, 'improve')
-      if (res.trim()) {
-        handleBulletChange(expId, idx, res.trim())
-        showToast('Bullet point optimized!', 'success')
-      }
-    } catch (err: any) {
-      console.error(err)
-      if (err.message === 'API_KEY_REQUIRED') {
-        showToast('Google Gemini API Key is required. Please set it in Settings.', 'warning')
-      } else {
-        showToast('AI optimization failed.', 'error')
-      }
-    } finally {
-      setLoadingBulletIdx(null)
-    }
-  }
-
-  const handleOpenWorkshop = (expId: string, bIdx: number) => {
-    setWorkshopExpId(expId)
-    setWorkshopBulletIdx(bIdx)
-    setIsWorkshopOpen(true)
-  }
-
-  const handleApplyWorkshop = (improvedText: string) => {
-    if (workshopExpId !== null && workshopBulletIdx !== null) {
-      handleBulletChange(workshopExpId, workshopBulletIdx, improvedText)
-      setIsWorkshopOpen(false)
-      setWorkshopExpId(null)
-      setWorkshopBulletIdx(null)
-      showToast('Workshop improvement applied!', 'success')
-    }
-  }
-
   const getStarFields = (expId: string) => {
     return starFields[expId] || { s: '', t: '', a: '', r: '' }
   }
@@ -229,10 +128,7 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
 
   const handleInjectStar = (expId: string) => {
     const f = getStarFields(expId)
-    if (!f.a.trim()) {
-      showToast('Fill in at least the Action (A) field to inject a bullet.', 'warning')
-      return
-    }
+    if (!f.a.trim()) return
     const parts: string[] = []
     const actionVerb = f.a.trim().charAt(0).toUpperCase() + f.a.trim().slice(1)
     parts.push(actionVerb)
@@ -254,7 +150,6 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
     )
     setStarFields(prev => ({ ...prev, [expId]: { s: '', t: '', a: '', r: '' } }))
     setStarOpenId(null)
-    showToast('STAR achievement bullet injected!', 'success')
   }
 
   return (
@@ -421,31 +316,15 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
                         </label>
 
                         {/* Bullets header */}
-                        <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60">
+                        <div className="pt-2 border-t border-zinc-800/60">
                           <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">
                             Achievements
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => handleAiBullets(exp.id, exp.jobTitle)}
-                            disabled={loadingId === exp.id}
-                            className="flex items-center gap-1.5 text-[11px] text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-lg hover:bg-rose-500/15 transition-colors cursor-pointer"
-                          >
-                            {loadingId === exp.id ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Sparkles className="w-3 h-3" />
-                            )}
-                            <span>AI Write</span>
-                          </button>
                         </div>
 
                         {/* Bullets list */}
                         <div className="space-y-2">
                           {exp.bullets.map((b, bIdx) => {
-                            const isBulletImproving = 
-                              loadingBulletIdx?.expId === exp.id && loadingBulletIdx?.bulletIdx === bIdx
-
                             return (
                               <div
                                 key={bIdx}
@@ -470,27 +349,6 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
 
                                 {/* Hover Actions */}
                                 <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAiImproveBullet(exp.id, bIdx, b)}
-                                    disabled={isBulletImproving || !b.trim()}
-                                    className="p-1 text-zinc-550 hover:text-blue-400 rounded transition-colors cursor-pointer"
-                                    title="AI Improve Bullet"
-                                  >
-                                    {isBulletImproving ? (
-                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                    ) : (
-                                      <Sparkles className="w-3.5 h-3.5" />
-                                    )}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenWorkshop(exp.id, bIdx)}
-                                    className="p-1 text-zinc-550 hover:text-amber-400 rounded transition-colors cursor-pointer"
-                                    title="AI Bullet Workshop"
-                                  >
-                                    <Wrench className="w-3.5 h-3.5" />
-                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveBullet(exp.id, bIdx)}
@@ -591,24 +449,6 @@ export default function ExperienceForm({ experience, apiKey, onChange }: Experie
         </div>
       )}
 
-      {/* Inline Bullet Workshop Card inside Experience Drawer */}
-      <AnimatePresence>
-        {isWorkshopOpen && workshopExpId && (
-          <BulletWorkshopModal
-            isOpen={isWorkshopOpen}
-            isInline={true}
-            onClose={() => {
-              setIsWorkshopOpen(false)
-              setWorkshopExpId(null)
-              setWorkshopBulletIdx(null)
-            }}
-            bulletText={experience.find(exp => exp.id === workshopExpId)?.bullets[workshopBulletIdx || 0] || ''}
-            jobTitle={experience.find(exp => exp.id === workshopExpId)?.jobTitle || ''}
-            onApply={handleApplyWorkshop}
-            apiKey={apiKey}
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }

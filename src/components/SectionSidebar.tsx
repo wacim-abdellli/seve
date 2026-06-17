@@ -4,32 +4,29 @@ import {
   PenLine, 
   Eye, 
   ShieldCheck, 
-  Bot,
   ChevronDown,
   CheckCircle,
   Circle,
   Sparkles
 } from 'lucide-react'
-import type { ResumeData } from '../types/resume'
-import { getSectionStatus } from '../utils/completionHelper'
+import { useResume } from '../hooks/useResume'
+import { calculateCompletion, getSectionStatus } from '../utils/completionHelper'
 
 export type SectionType = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
 interface SectionSidebarProps {
-  activeMode: 'studio' | 'preview' | 'analyze' | 'ai'
-  onModeChange: (mode: 'studio' | 'preview' | 'analyze' | 'ai') => void
-  resumeCompletion: number
-  resumeData: ResumeData
+  activeMode: 'studio' | 'preview' | 'analyze'
+  onModeChange: (mode: 'studio' | 'preview' | 'analyze') => void
   onOpenSection: (section: SectionType) => void
 }
 
 export default function SectionSidebar({
   activeMode,
   onModeChange,
-  resumeCompletion,
-  resumeData,
   onOpenSection,
 }: SectionSidebarProps) {
+  const { resumeData } = useResume()
+  const resumeCompletion = calculateCompletion(resumeData)
   const [showChecklist, setShowChecklist] = useState(false)
   const status = getSectionStatus(resumeData)
 
@@ -56,7 +53,6 @@ export default function SectionSidebar({
     { id: 'studio' as const, label: 'Edit Resume', icon: PenLine },
     { id: 'preview' as const, label: 'Preview', icon: Eye },
     { id: 'analyze' as const, label: 'ATS Check', icon: ShieldCheck },
-    { id: 'ai' as const, label: 'AI Coach', icon: Bot },
   ]
 
   return (
@@ -269,17 +265,6 @@ export default function SectionSidebar({
                   <h4 className="text-xs font-bold uppercase tracking-wider text-white">ATS Check</h4>
                   <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
                     Your resume is scored live. Aim for 80+ to pass most ATS filters.
-                  </p>
-                </div>
-              </div>
-            )}
-            {activeMode === 'ai' && (
-              <div className="bg-zinc-900 rounded-xl p-4 w-full flex flex-col gap-3">
-                <Bot size={32} className="text-indigo-400" />
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-white">AI Coach</h4>
-                  <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-                    Ask me to rewrite any section or tailor your resume to a job posting.
                   </p>
                 </div>
               </div>

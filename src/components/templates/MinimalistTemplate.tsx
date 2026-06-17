@@ -3,6 +3,8 @@ import PreviewSectionWrapper from '../PreviewSectionWrapper'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
+import { evaluateSectionAts } from '../../utils/atsEvaluator'
+import { getPageBreakSections } from '../../utils/layoutHelper'
 
 interface MinimalistTemplateProps {
   data: ResumeData
@@ -45,122 +47,19 @@ export default function MinimalistTemplate({
   const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
 
 
-  // ATS Heuristics
-  const getContactAts = () => {
-    if (!contact.fullName?.trim() || !contact.email?.trim() || !contact.phone?.trim()) {
-      return { rating: 'danger' as const, feedback: 'Name, email, and phone are required contact details.' }
-    }
-    if (!contact.linkedin?.trim() || !contact.location?.trim()) {
-      return { rating: 'warning' as const, feedback: 'Add LinkedIn and location info to improve match index.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Contact profile formatted cleanly.' }
-  }
-
-  const getSummaryAts = () => {
-    if (!summary?.trim()) {
-      return { rating: 'danger' as const, feedback: 'Professional summary is highly recommended.' }
-    }
-    if (/\b(I|my|me|we|our)\b/i.test(summary)) {
-      return { rating: 'warning' as const, feedback: 'Avoid personal pronouns (e.g. I, my) for ATS compliance.' }
-    }
-    if (summary.length < 100) {
-      return { rating: 'warning' as const, feedback: 'Summary is short. Write 2-3 detailed sentences.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Excellent action-verb focus, ATS-safe.' }
-  }
-
-  const getExperienceAts = () => {
-    if (!experience || experience.length === 0) {
-      return { rating: 'danger' as const, feedback: 'Work experience history is critical for applicant tracking.' }
-    }
-    const hasPronouns = experience.some(exp => exp.bullets.some(b => /\b(I|my|me|we|our)\b/i.test(b)))
-    if (hasPronouns) {
-      return { rating: 'warning' as const, feedback: 'Remove first-person pronouns from job details.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Work entries ordered chronologically and ATS-safe.' }
-  }
-
-  const getProjectsAts = () => {
-    if (!projects || projects.length === 0) {
-      return { rating: 'warning' as const, feedback: 'Add 1-2 projects to showcase technical capabilities.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Side projects outline tech stacks nicely.' }
-  }
-
-  const getEducationAts = () => {
-    if (!education || education.length === 0) {
-      return { rating: 'danger' as const, feedback: 'Academic history is highly recommended.' }
-    }
-    const hasGpaWarning = education.some(edu => {
-      const val = parseFloat(edu.gpa || '')
-      return !isNaN(val) && val < 3.5
-    })
-    if (hasGpaWarning) {
-      return { rating: 'warning' as const, feedback: 'GPA below 3.5 should be removed to avoid filter filters.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Academic credentials listed clearly.' }
-  }
-
-  const getSkillsAts = () => {
-    if (!skills || skills.length === 0) {
-      return { rating: 'danger' as const, feedback: 'Skills list is mandatory for keyword indexing.' }
-    }
-    if (skills.length < 6) {
-      return { rating: 'warning' as const, feedback: 'List at least 6-8 core technical skill terms.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Keywords match candidate database indexes.' }
-  }
-
-  const getLanguagesAts = () => {
-    if (!languages || languages.length === 0) {
-      return { rating: 'warning' as const, feedback: 'Languages section shows global readiness.' }
-    }
-    return { rating: 'safe' as const, feedback: 'Languages listed.' }
-  }
-
-  const getAwardsAts = () => {
-    if (!awards || awards.length === 0) return { rating: 'safe' as const, feedback: 'No awards listed.' }
-    return { rating: 'safe' as const, feedback: 'Awards showcase distinct performance.' }
-  }
-
-  const getCertificationsAts = () => {
-    if (!certifications || certifications.length === 0) return { rating: 'warning' as const, feedback: 'Certifications add professional credibility.' }
-    return { rating: 'safe' as const, feedback: 'Certifications validate expertise.' }
-  }
-
-  const getInterestsAts = () => {
-    if (!interests || interests.length === 0) return { rating: 'safe' as const, feedback: 'No interests listed.' }
-    return { rating: 'safe' as const, feedback: 'Interests add personality.' }
-  }
-
-  const getPublicationsAts = () => {
-    if (!publications || publications.length === 0) return { rating: 'safe' as const, feedback: 'No publications listed.' }
-    return { rating: 'safe' as const, feedback: 'Publications demonstrate thought leadership.' }
-  }
-
-  const getReferencesAts = () => {
-    if (!references || references.length === 0) return { rating: 'safe' as const, feedback: 'No references listed.' }
-    return { rating: 'safe' as const, feedback: 'References available.' }
-  }
-
-  const getVolunteerAts = () => {
-    if (!volunteer || volunteer.length === 0) return { rating: 'safe' as const, feedback: 'No volunteer experience listed.' }
-    return { rating: 'safe' as const, feedback: 'Volunteer work shows community engagement.' }
-  }
-
-  const contactAts = getContactAts()
-  const summaryAts = getSummaryAts()
-  const experienceAts = getExperienceAts()
-  const projectsAts = getProjectsAts()
-  const educationAts = getEducationAts()
-  const skillsAts = getSkillsAts()
-  const languagesAts = getLanguagesAts()
-  const awardsAts = getAwardsAts()
-  const certificationsAts = getCertificationsAts()
-  const interestsAts = getInterestsAts()
-  const publicationsAts = getPublicationsAts()
-  const referencesAts = getReferencesAts()
-  const volunteerAts = getVolunteerAts()
+  const contactAts = evaluateSectionAts('contact', data)
+  const summaryAts = evaluateSectionAts('summary', data)
+  const experienceAts = evaluateSectionAts('experience', data)
+  const projectsAts = evaluateSectionAts('projects', data)
+  const educationAts = evaluateSectionAts('education', data)
+  const skillsAts = evaluateSectionAts('skills', data)
+  const languagesAts = evaluateSectionAts('languages', data)
+  const awardsAts = evaluateSectionAts('awards', data)
+  const certificationsAts = evaluateSectionAts('certifications', data)
+  const interestsAts = evaluateSectionAts('interests', data)
+  const publicationsAts = evaluateSectionAts('publications', data)
+  const referencesAts = evaluateSectionAts('references', data)
+  const volunteerAts = evaluateSectionAts('volunteer', data)
 
   // Dynamic sections lookup mapping
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -581,38 +480,54 @@ export default function MinimalistTemplate({
     ) : null
   }
 
-  return (
-    <div className="font-serif text-[10pt] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5">
-      
-      {/* Contact Header (Always Top) */}
-      <PreviewSectionWrapper
-        sectionId="contact"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={contactAts.rating}
-        atsFeedback={contactAts.feedback}
-        onEdit={onEditSection}
-      >
-        <div className="text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: themeColor || '#111111' }}>
-          <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-slate-950 mb-1">
-            {getFullName(contact) || 'YOUR NAME'}
-          </h1>
-          <div className="text-[9.5px] text-slate-500 uppercase tracking-widest flex flex-wrap gap-x-3 gap-y-1">
-            {contact.location && <span>{contact.location}</span>}
-            {contact.email && <span>• {contact.email}</span>}
-            {contact.phone && <span>• {contact.phone}</span>}
-            {contact.linkedin && <span>• {contact.linkedin}</span>}
-            {contact.website && <span>• {contact.website}</span>}
-          </div>
-        </div>
-      </PreviewSectionWrapper>
+  const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
 
-      {/* Reordered Body Sections */}
-      {sectionOrder.map((secId) => {
-        const component = sectionsMap[secId]
-        return component ? <div key={secId}>{component}</div> : null
-      })}
-      
+  return (
+    <div className="resume-template">
+      {/* Page 1 */}
+      <div className="resume-page font-serif text-[10pt] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
+        {/* Contact Header (Always Top) */}
+        <PreviewSectionWrapper
+          sectionId="contact"
+          activeSection={activeSection}
+          atsMode={atsMode}
+          atsRating={contactAts.rating}
+          atsFeedback={contactAts.feedback}
+          onEdit={onEditSection}
+        >
+          <div className="text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: themeColor || '#111111' }}>
+            <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-slate-950 mb-1">
+              {getFullName(contact) || 'YOUR NAME'}
+            </h1>
+            <div className="text-[9.5px] text-slate-500 uppercase tracking-widest flex flex-wrap gap-x-3 gap-y-1">
+              {contact.location && <span>{contact.location}</span>}
+              {contact.email && <span>• {contact.email}</span>}
+              {contact.phone && <span>• {contact.phone}</span>}
+              {contact.linkedin && <span>• {contact.linkedin}</span>}
+              {contact.website && <span>• {contact.website}</span>}
+            </div>
+          </div>
+        </PreviewSectionWrapper>
+
+        {/* Reordered Body Sections */}
+        {page1Sections.map((secId) => {
+          const component = sectionsMap[secId]
+          return component ? <div key={secId}>{component}</div> : null
+        })}
+      </div>
+
+      {/* Page 2 */}
+      {page2Sections.length > 0 && (
+        <>
+          <div className="resume-page-break" />
+          <div className="resume-page resume-page-continuation font-serif text-[10pt] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
+            {page2Sections.map((secId) => {
+              const component = sectionsMap[secId]
+              return component ? <div key={secId}>{component}</div> : null
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }

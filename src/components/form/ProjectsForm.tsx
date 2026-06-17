@@ -103,13 +103,21 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
 
-            {/* Link */}
-            <input
-              value={project.link || ''}
-              onChange={(e) => handleChange(project.id, 'link', e.target.value)}
-              placeholder="e.g. github.com/username/project"
-              className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-650 focus:outline-none focus:border-rose-500/40 transition-all"
-            />
+            {/* Link + Date — side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                value={project.link || ''}
+                onChange={(e) => handleChange(project.id, 'link', e.target.value)}
+                placeholder="e.g. github.com/username/project"
+                className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
+              />
+              <input
+                value={project.date || ''}
+                onChange={(e) => handleChange(project.id, 'date', e.target.value)}
+                placeholder="e.g. 2023 - Present"
+                className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
+              />
+            </div>
 
             {/* Technologies — tag input */}
             <div className="space-y-2">

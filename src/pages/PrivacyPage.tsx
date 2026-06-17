@@ -1,10 +1,8 @@
-import { ArrowLeft, ShieldCheck, Database, Key, Globe, Eye } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ShieldCheck, Database, Globe, Eye } from 'lucide-react'
 
-interface PrivacyPageProps {
-  onBack: () => void
-}
-
-export default function PrivacyPage({ onBack }: PrivacyPageProps) {
+export default function PrivacyPage() {
+  const navigate = useNavigate()
   return (
     <div className="select-text" style={{ minHeight: '100vh', background: 'var(--bg-void)', display: 'flex', flexDirection: 'column', position: 'relative', overflowX: 'hidden' }}>
       {/* Decorative ambient blobs */}
@@ -26,7 +24,7 @@ export default function PrivacyPage({ onBack }: PrivacyPageProps) {
         <div className="container is-flex is-align-items-center is-justify-content-between">
           <div className="is-flex is-align-items-center" style={{ gap: '1rem' }}>
             <button
-              onClick={onBack}
+              onClick={() => navigate('/')}
               className="button is-small is-text p-0 h-auto"
               style={{ 
                 color: 'var(--bulma-text-weak)', 
@@ -110,24 +108,6 @@ export default function PrivacyPage({ onBack }: PrivacyPageProps) {
               </div>
             </div>
 
-            {/* Pillar 2 */}
-            <div className="column is-6">
-              <div className="box tm-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', margin: 0 }}>
-                <div className="is-flex is-align-items-center" style={{ gap: '0.75rem' }}>
-                  <div 
-                    className="is-flex is-align-items-center is-justify-content-center"
-                    style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
-                  >
-                    <Key size={20} />
-                  </div>
-                  <h3 className="title is-6" style={{ margin: 0, color: '#ffffff', fontWeight: 700 }}>Secure API Routing</h3>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--bulma-text-weak)', lineHeight: '1.5', fontWeight: 300, margin: 0 }}>
-                  If you specify a Google Gemini API Key in the application settings, AI suggestions are dispatched directly from your browser to the Google Gemini endpoint. Your API key never passes through any third-party intermediary server.
-                </p>
-              </div>
-            </div>
-
             {/* Pillar 3 */}
             <div className="column is-6">
               <div className="box tm-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', margin: 0 }}>
@@ -180,24 +160,10 @@ export default function PrivacyPage({ onBack }: PrivacyPageProps) {
                   The following specific localStorage keys are used to retain your data between sessions:
                 </p>
                 <ul style={{ listStyleType: 'disc', paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_state:</strong> Stores your resume data fields, target job description, chat history, and Gemini API key.</li>
+                   <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_state:</strong> Stores your resume data fields, target job description, and chat history.</li>
                   <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_workspace_layout:</strong> Stores your active pane layout preference (split, studio, focus).</li>
                   <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_score_history:</strong> Stores the history of your resume ATS scores for progress tracking.</li>
                   <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_section_order:</strong> Stores the order of your resume sections if custom-sorted.</li>
-                </ul>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingTop: '0.5rem' }}>
-                <h4 style={{ fontWeight: 'bold', color: 'var(--bulma-text-strong)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>
-                  Gemini API Key Usage
-                </h4>
-                <p style={{ margin: 0 }}>
-                  When calling AI helpers (AI Write Bullets, STAR Achievement Amplifier, Cover Letter Writer, Agent Chat, or Job Tailoring):
-                </p>
-                <ul style={{ listStyleType: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <li>• Requests are sent directly to <code style={{ background: 'var(--bg-void)', padding: '2px 4px', borderRadius: '4px', color: '#fb7185' }}>generativelanguage.googleapis.com</code> using the API key you set.</li>
-                  <li>• The payload includes only your resume draft and the job description to run contextual prompt instructions.</li>
-                  <li>• Google's API usage is subject to the terms of Google AI Studio.</li>
                 </ul>
               </div>
 
@@ -215,7 +181,7 @@ export default function PrivacyPage({ onBack }: PrivacyPageProps) {
           {/* Back CTA */}
           <div className="has-text-centered mt-6">
             <button
-              onClick={onBack}
+              onClick={() => navigate('/')}
               className="button is-primary is-medium"
               style={{ fontWeight: 700 }}
             >

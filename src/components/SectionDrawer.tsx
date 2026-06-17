@@ -17,7 +17,7 @@ import {
   HeartHandshake,
   Lightbulb
 } from 'lucide-react'
-import type { ResumeData } from '../types/resume'
+import { useResume } from '../hooks/useResume'
 import type { SectionType } from './SectionSidebar'
 import ContactForm from './form/ContactForm'
 import SummaryForm from './form/SummaryForm'
@@ -35,9 +35,6 @@ import VolunteerForm from './form/VolunteerForm'
 
 interface SectionDrawerProps {
   section: SectionType
-  resumeData: ResumeData
-  apiKey: string
-  onChange: (updated: ResumeData) => void
   onClose: () => void
 }
 
@@ -82,7 +79,7 @@ const sectionMeta = {
     title: 'Projects',
     icon: FolderOpen,
     guide: 'Highlight 1-2 major side projects or open-source contributions. Mention the specific tech stack used and describe the problem you solved, focusing on metrics, performance, and scalability.',
-    example: 'Seve (Resume Builder): Open-source client-side React app with local ATS compatibility parsing. Integrated client-side Gemini AI for resume optimizations, gaining 1.2k+ GitHub stars.'
+    example: 'Seve (Resume Builder): Open-source client-side React app with local ATS compatibility parsing, gaining 1.2k+ GitHub stars.'
   },
   awards: { 
     title: 'Awards & Honors',
@@ -124,11 +121,9 @@ const sectionMeta = {
 
 export default function SectionDrawer({
   section,
-  resumeData,
-  apiKey,
-  onChange,
   onClose,
 }: SectionDrawerProps) {
+  const { resumeData, updateResumeData: onChange } = useResume()
   // Escape key support (non-negotiable UX)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -200,14 +195,12 @@ export default function SectionDrawer({
         {section === 'summary' && (
           <SummaryForm
             summary={resumeData.summary}
-            apiKey={apiKey}
             onChange={(updated) => onChange({ ...resumeData, summary: updated })}
           />
         )}
         {section === 'experience' && (
           <ExperienceForm
             experience={resumeData.experience}
-            apiKey={apiKey}
             onChange={(updated) => onChange({ ...resumeData, experience: updated })}
           />
         )}

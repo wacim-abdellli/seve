@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { 
-  Sparkles, 
   CheckCircle2, 
   ArrowRight, 
   Code,
@@ -15,12 +15,8 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 
-interface LandingPageProps {
-  onStartBuild: () => void
-  onViewPrivacy: () => void
-}
-
-export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPageProps) {
+export default function LandingPage() {
+  const navigate = useNavigate()
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
   const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState<'classic' | 'modern' | 'executive' | 'minimalist' | 'creative'>('classic')
 
@@ -39,7 +35,7 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
   const faqItems = [
     {
       q: 'Is Seve really free?',
-      a: 'Yes. The core editor, professional templates, local keyword matching, and ATS compatibility checker are 100% free, requiring no credit card, subscription, or sign-up. Optional AI-powered features (like rephrasing or cover letters) require you to input your own free Gemini API key.'
+      a: 'Yes. The core editor, professional templates, local keyword matching, and ATS compatibility checker are 100% free, requiring no credit card, subscription, or sign-up.'
     },
     {
       q: 'How does the ATS compatibility checker work?',
@@ -47,7 +43,7 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
     },
     {
       q: 'Is my personal data secure?',
-      a: 'Completely. Your resume data is stored locally inside your browser\'s localStorage and never uploaded to our servers. If you choose to enable the optional AI writing assistants, only the relevant text fields are sent directly to Google\'s secure Gemini API endpoints.'
+      a: 'Completely. Your resume data is stored locally inside your browser\'s localStorage and never uploaded to our servers.'
     }
   ]
 
@@ -85,7 +81,7 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Client-Side & Open Source
             </span>
-            <Button onClick={onStartBuild} size="sm" className="font-bold">
+            <Button onClick={() => navigate('/editor')} size="sm" className="font-bold">
               Build Your Resume
             </Button>
           </div>
@@ -113,7 +109,7 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
               </p>
               
               <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <Button onClick={onStartBuild} className="font-bold gap-2 text-red-400 bg-red-950/20 border border-red-800/60 hover:bg-red-900/35 hover:text-red-300 shadow-[0_0_24px_rgba(224,49,79,0.15)] h-11 px-6 transition-all">
+                <Button onClick={() => navigate('/editor')} className="font-bold gap-2 text-red-400 bg-red-950/20 border border-red-800/60 hover:bg-red-900/35 hover:text-red-300 shadow-[0_0_24px_rgba(224,49,79,0.15)] h-11 px-6 transition-all">
                   Build Your Resume
                   <ArrowRight size={16} />
                 </Button>
@@ -221,11 +217,6 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
                 title: 'Professional Layouts',
                 desc: 'Choose from 5 clean, single and multi-column templates engineered for high readability and print-to-PDF output.'
               },
-              {
-                icon: Sparkles,
-                title: 'Optional AI Tools',
-                desc: 'Access optional AI coaching, cover letter building, and rephrasing by supplying your own free Gemini API key.'
-              }
             ].map((feat, i) => (
               <Card key={i} className="flex flex-col gap-4 p-5 bg-card/40 border-border/80 hover:border-zinc-700/80 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-red-500/5 border border-border flex items-center justify-center text-red-400">
@@ -282,7 +273,7 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
                   )
                 ))}
                 <Button
-                  onClick={onStartBuild}
+                  onClick={() => navigate('/editor')}
                   className="font-bold gap-2 text-red-400 bg-red-950/20 border border-red-800/60 hover:bg-red-900/35 hover:text-red-300 shadow-[0_0_15px_rgba(224,49,79,0.1)] w-fit mt-4 transition-all"
                 >
                   Use this style
@@ -386,7 +377,7 @@ export default function LandingPage({ onStartBuild, onViewPrivacy }: LandingPage
           <div>© {new Date().getFullYear()} Seve. Free and open source.</div>
           <div className="flex items-center gap-6">
             <button 
-              onClick={onViewPrivacy} 
+              onClick={() => navigate('/privacy')} 
               className="hover:text-white transition-colors flex items-center gap-1.5"
             >
               <ShieldCheck size={16} className="text-emerald-500" />

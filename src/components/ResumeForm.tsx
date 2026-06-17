@@ -18,14 +18,13 @@ import { Card } from '@/components/ui/Card'
 
 interface ResumeFormProps {
   resumeData: ResumeData
-  apiKey: string
   onChange: (updated: ResumeData) => void
   activeSection?: Tab
 }
 
 type Tab = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
-export default function ResumeForm({ resumeData, apiKey, onChange, activeSection }: ResumeFormProps) {
+export default function ResumeForm({ resumeData, onChange, activeSection }: ResumeFormProps) {
   const [localActiveSubTab, setLocalActiveSubTab] = useState<Tab>('contact')
   const activeSubTab = activeSection || localActiveSubTab
   const isControlled = activeSection !== undefined
@@ -135,7 +134,6 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
         {activeSubTab === 'summary' && (
           <SummaryForm
             summary={resumeData.summary}
-            apiKey={apiKey}
             onChange={(updated) => updateSection('summary', updated)}
           />
         )}
@@ -143,7 +141,6 @@ export default function ResumeForm({ resumeData, apiKey, onChange, activeSection
         {activeSubTab === 'experience' && (
           <ExperienceForm
             experience={resumeData.experience}
-            apiKey={apiKey}
             onChange={(updated) => updateSection('experience', updated)}
           />
         )}
