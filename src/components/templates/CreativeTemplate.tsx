@@ -606,37 +606,27 @@ export default function CreativeTemplate({
   }
 
   return (
-    <div className="font-sans text-[9.5pt] leading-normal text-slate-800 p-0 select-text max-w-full flex h-full min-h-[1059px] overflow-hidden">
+    <div className="font-sans text-[9.5pt] leading-normal text-slate-800 p-0 select-text max-w-full flex w-full min-h-[1123px] overflow-hidden">
       
-      {/* 2-Column Grid Container */}
-      <div className="flex w-full">
+      {/* Left column (Off-white sidebar) */}
+      <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0 left-column" style={{ backgroundColor: '#f2f2f2', borderRightWidth: 1, borderRightColor: '#e2e8f0' }}>
         
-        {/* Left column (Off-white sidebar) */}
-        <div className="w-[220px] p-6 space-y-6 flex flex-col justify-start shrink-0 left-column" style={{ backgroundColor: `${themeColor}05`, borderRightWidth: 1, borderRightColor: `${themeColor}15` }}>
-          
-          {/* Circular name abbreviation visual header */}
-          <div className="space-y-3.5 text-left pt-2 pb-4">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-base font-black tracking-wide shadow-md print:shadow-none avatar-circle no-print" style={{ background: `linear-gradient(to top right, ${themeColor}, ${themeColor}bb)`, boxShadow: `0 4px 12px ${themeColor}20` }}>
-              {getFullName(contact) ? getFullName(contact).split(' ').map(n => n.charAt(0)).slice(0,2).join('').toUpperCase() : 'ME'}
-            </div>
-            <div>
-              <h1 className="text-sm font-extrabold text-slate-900 leading-tight tracking-tight">
-                {getFullName(contact) || 'YOUR NAME'}
-              </h1>
-            </div>
-          </div>
-
-          {leftColumnContent}
+        {/* Name header */}
+        <div className="text-left pt-2 pb-2">
+          <h1 className="text-sm font-extrabold text-slate-900 leading-tight tracking-tight">
+            {getFullName(contact) || 'YOUR NAME'}
+          </h1>
         </div>
 
-        {/* Right column (Main details area) */}
-        <div className="flex-1 p-10 space-y-5">
-          {sectionOrder.filter(secId => !['skills', 'languages', 'interests', 'certifications'].includes(secId)).map((secId) => {
-            const component = sectionsMap[secId]
-            return component ? <div key={secId}>{component}</div> : null
-          })}
-        </div>
+        {leftColumnContent}
+      </div>
 
+      {/* Right column (Main details area) */}
+      <div className="flex-1 p-10 space-y-5">
+        {sectionOrder.filter(secId => !['skills', 'languages', 'interests', 'certifications'].includes(secId)).map((secId) => {
+          const component = sectionsMap[secId]
+          return component ? <div key={secId}>{component}</div> : null
+        })}
       </div>
 
     </div>

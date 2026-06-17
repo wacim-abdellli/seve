@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, ChevronRight, ChevronLeft, Check, Bot, RotateCcw, X } from 'lucide-react'
 import { generateContent } from '../utils/aiService'
@@ -512,9 +513,8 @@ export default function BulletWorkshopModal({
     )
   }
 
-  // MODAL OVERLAY RENDER FOR OTHER PLACES (IF ANY)
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -843,4 +843,6 @@ export default function BulletWorkshopModal({
       </motion.div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

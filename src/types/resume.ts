@@ -146,3 +146,12 @@ export interface AppState {
   apiKey: string
 }
 
+export interface SkillsMatrixItem {
+  subject: string
+  candidate: number
+  required: number
+  matched: string[]
+  missing: string[]
+}
+
+

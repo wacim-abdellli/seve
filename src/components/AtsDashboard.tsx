@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { AtsScore, ResumeData } from '../types/resume'
-import { autoFix, calculateLocalSemanticScore } from '../utils/atsEvaluator'
+import { autoFix, calculateLocalSemanticScore, calculateSkillsMatrix } from '../utils/atsEvaluator'
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -65,6 +65,20 @@ export default function AtsDashboard({
   const [analysisStep, setAnalysisStep] = useState(globalAnalysisStep)
   const [scanProgress, setScanProgress] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<string[]>([])
+
+  // Phase 3 Skills Matrix & Gap Bridger States
+  const [activeAxisIndex, setActiveAxisIndex] = useState<number | null>(null)
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null)
+  const [generatedBullet, setGeneratedBullet] = useState('')
+  const [bridgerStatus, setBridgerStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle')
+  const [selectedExpId, setSelectedExpId] = useState('')
+
+  useEffect(() => {
+    if (resumeData.experience && resumeData.experience.length > 0 && !selectedExpId) {
+      setSelectedExpId(resumeData.experience[0].id)
+    }
+  }, [resumeData.experience, selectedExpId])
+
 
   // Animated score counter for traditional ATS Score
   useEffect(() => {
@@ -390,6 +404,95 @@ Do not return any markdown code block formatting or backticks around the JSON st
         runMainThreadFallbackScan(resumeText, jobDescription)
       }
     }
+  }
+
+  // AI Gap Bridger Handlers
+  const handleGenerateAiBullet = async () => {
+    if (!selectedKeyword) return
+    setBridgerStatus('generating')
+    
+    const prompt = `You are an expert resume writer. Create a high-impact, professional resume achievement bullet point that highlights the skill "${selectedKeyword}".
+The bullet point must:
+1. Start with a strong action verb (e.g., Spearheaded, Engineered, Orchestrated, Optimized).
+2. Describe a highly valuable technical contribution or business impact.
+3. Include a metric placeholder [e.g., "improving performance by 25%"] so the user can customize it.
+4. Write it in English (or French if the resume language is ${language === 'fr' ? 'French' : 'English'}).
+5. Do NOT use personal pronouns. Keep it to exactly one sentence. Just return the bullet point text itself.`
+
+    try {
+      let result = ''
+      if (apiKey && apiKey.trim() !== '') {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { maxOutputTokens: 250, temperature: 0.7 }
+            })
+          }
+        )
+        
+        if (!response.ok) throw new Error('Failed to generate bullet point')
+        const data = await response.json()
+        result = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      } else {
+        // Fallback local writer in case they have no API key
+        const isTech = /developer|engineer|software|architect|programmer|qa|data|cloud|devops|system|tech/i.test(selectedKeyword)
+        if (language === 'fr') {
+          result = isTech 
+            ? `Intégration et développement de solutions basées sur ${selectedKeyword} afin d'optimiser les flux de données, avec un gain de performance estimé à [20%].`
+            : `Pilotage de l'implémentation de la méthodologie ${selectedKeyword} au sein de l'équipe, améliorant l'efficacité opérationnelle de [15%].`
+        } else {
+          result = isTech
+            ? `Engineered and integrated solutions utilizing ${selectedKeyword} to optimize data pipelines, resulting in a [20%] performance increase.`
+            : `Spearheaded the adoption of ${selectedKeyword} across cross-functional teams, boosting operational efficiency by [15%].`
+        }
+      }
+      
+      const cleanBullet = result.trim().replace(/^•|-|\*|\d+\.\s*/, '').trim()
+      setGeneratedBullet(cleanBullet)
+      setBridgerStatus('success')
+    } catch (e) {
+      console.error('Gap bridger generation failed:', e)
+      setBridgerStatus('error')
+    }
+  }
+
+  const handleAppendBullet = () => {
+    if (!generatedBullet.trim() || !selectedExpId) return
+    
+    const updatedExperience = resumeData.experience.map(exp => {
+      if (exp.id === selectedExpId) {
+        return {
+          ...exp,
+          bullets: [...exp.bullets, generatedBullet.trim()]
+        }
+      }
+      return exp
+    })
+
+    const updatedResume = {
+      ...resumeData,
+      experience: updatedExperience
+    }
+
+    onFix(updatedResume)
+    
+    const targetExp = resumeData.experience.find(exp => exp.id === selectedExpId)
+    const roleName = targetExp ? `${targetExp.jobTitle} at ${targetExp.company}` : ''
+    showToast(
+      language === 'fr'
+        ? `Puce ajoutée avec succès à ${roleName} !`
+        : `Bullet point successfully added to ${roleName}!`,
+      'success'
+    )
+    
+    // Clean states
+    setSelectedKeyword(null)
+    setGeneratedBullet('')
+    setBridgerStatus('idle')
   }
 
   const startAtsScan = () => {
@@ -751,6 +854,31 @@ Do not return any markdown code block formatting or backticks around the JSON st
     )
   }
 
+  // Skills Matrix Pre-calculations
+  const skillsMatrix = calculateSkillsMatrix(resumeData, jobDescription)
+  const cx = 150
+  const cy = 135
+  const r = 90
+  const numAxes = 5
+
+  const getCoordinatesForPercent = (index: number, percent: number) => {
+    const angle = (index * 2 * Math.PI) / numAxes - Math.PI / 2
+    const valueRadius = (percent / 100) * r
+    const x = cx + valueRadius * Math.cos(angle)
+    const y = cy + valueRadius * Math.sin(angle)
+    return { x, y }
+  }
+
+  const candidatePoints = skillsMatrix.map((item, index) => {
+    const coords = getCoordinatesForPercent(index, item.candidate)
+    return `${coords.x},${coords.y}`
+  }).join(' ')
+
+  const requiredPoints = skillsMatrix.map((item, index) => {
+    const coords = getCoordinatesForPercent(index, item.required)
+    return `${coords.x},${coords.y}`
+  }).join(' ')
+
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6 animate-fade-in">
 
@@ -806,6 +934,415 @@ Do not return any markdown code block formatting or backticks around the JSON st
           {content.autoFixBtn}
         </button>
       </div>
+
+      {/* Phase 3: Skills Matrix & Gap Heatmap Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Radar Chart (Skills Matrix) - 5 Cols */}
+        <div className="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg flex flex-col items-center relative overflow-hidden group">
+          <div className="absolute -top-12 -left-12 w-28 h-28 rounded-full bg-violet-500/5 blur-2xl pointer-events-none" />
+          <div className="w-full flex items-center justify-between mb-4 border-b border-zinc-800/40 pb-3 flex-shrink-0">
+            <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
+              <Target className="w-4 h-4 text-violet-400" />
+              {language === 'fr' ? 'Matrice des Compétences' : 'Skills Matrix'}
+            </h3>
+            <span className="text-[10px] font-semibold text-zinc-550 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700 uppercase">
+              {language === 'fr' ? 'Radar Interactif' : 'Interactive Radar'}
+            </span>
+          </div>
+
+          {/* SVG Radar Chart */}
+          <div className="relative w-full flex items-center justify-center min-h-[250px]">
+            <svg viewBox="0 0 300 270" className="w-full max-w-[280px]">
+              {/* Concentric grid lines (Pentagons) */}
+              {[25, 50, 75, 100].map(level => {
+                const points = Array.from({ length: 5 }, (_, i) => {
+                  const coords = getCoordinatesForPercent(i, level)
+                  return `${coords.x},${coords.y}`
+                }).join(' ')
+                
+                return (
+                  <g key={level}>
+                    <polygon 
+                      points={points} 
+                      fill="none" 
+                      stroke="rgba(63, 63, 70, 0.4)" 
+                      strokeWidth="1" 
+                    />
+                    {/* Level label */}
+                    <text 
+                      x={cx} 
+                      y={cy - (level / 100) * r + 3} 
+                      fill="rgba(113, 113, 122, 0.5)" 
+                      fontSize="7.5" 
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      className="select-none font-mono"
+                    >
+                      {level}%
+                    </text>
+                  </g>
+                )
+              })}
+
+              {/* Axis lines */}
+              {skillsMatrix.map((_, index) => {
+                const endCoords = getCoordinatesForPercent(index, 100)
+                const isHovered = activeAxisIndex === index
+                return (
+                  <line 
+                    key={index}
+                    x1={cx} 
+                    y1={cy} 
+                    x2={endCoords.x} 
+                    y2={endCoords.y} 
+                    stroke={isHovered ? 'rgba(139, 92, 246, 0.6)' : 'rgba(63, 63, 70, 0.3)'} 
+                    strokeWidth={isHovered ? '1.5' : '1'} 
+                  />
+                )
+              })}
+
+              {/* Required Shape Pentagon (Dashed line) */}
+              <polygon 
+                points={requiredPoints} 
+                fill="none" 
+                stroke="rgba(244, 63, 94, 0.4)" 
+                strokeWidth="1.5" 
+                strokeDasharray="3,3" 
+              />
+
+              {/* Candidate Shape Pentagon (Filled area) */}
+              <polygon 
+                points={candidatePoints} 
+                fill="rgba(139, 92, 246, 0.25)" 
+                stroke="rgb(139, 92, 246)" 
+                strokeWidth="2" 
+              />
+
+              {/* Candidate vertex dots */}
+              {skillsMatrix.map((item, index) => {
+                const coords = getCoordinatesForPercent(index, item.candidate)
+                const isHovered = activeAxisIndex === index
+                return (
+                  <circle 
+                    key={index}
+                    cx={coords.x} 
+                    cy={coords.y} 
+                    r={isHovered ? "5" : "3.5"} 
+                    fill={isHovered ? "rgb(167, 139, 250)" : "rgb(139, 92, 246)"} 
+                    stroke={isHovered ? "rgb(255, 255, 255)" : "rgb(167, 139, 250)"} 
+                    strokeWidth="1.5"
+                    className="transition-all duration-150 cursor-pointer"
+                    onMouseEnter={() => setActiveAxisIndex(index)}
+                    onMouseLeave={() => setActiveAxisIndex(null)}
+                  />
+                )
+              })}
+
+              {/* Axis labels */}
+              {skillsMatrix.map((item, index) => {
+                const angle = (index * 2 * Math.PI) / numAxes - Math.PI / 2
+                const labelDist = r + 24
+                const lx = cx + labelDist * Math.cos(angle)
+                const ly = cy + labelDist * Math.sin(angle) + 2
+
+                let textAnchor: "inherit" | "end" | "start" | "middle" = 'middle'
+                if (Math.cos(angle) < -0.15) textAnchor = 'end'
+                else if (Math.cos(angle) > 0.15) textAnchor = 'start'
+
+                const isHovered = activeAxisIndex === index
+
+                return (
+                  <text
+                    key={index}
+                    x={lx}
+                    y={ly}
+                    fill={isHovered ? 'rgb(167, 139, 250)' : 'rgb(161, 161, 170)'}
+                    fontSize="9"
+                    fontWeight={isHovered ? 'bold' : 'medium'}
+                    textAnchor={textAnchor}
+                    className="cursor-pointer transition-colors duration-150 font-sans select-none"
+                    onMouseEnter={() => setActiveAxisIndex(index)}
+                    onMouseLeave={() => setActiveAxisIndex(null)}
+                  >
+                    {item.subject}
+                  </text>
+                )
+              })}
+            </svg>
+          </div>
+
+          {/* Interactive Axis Inspection */}
+          <div className="w-full mt-4 p-3 bg-zinc-955/40 rounded-xl border border-zinc-800/60 min-h-[110px] flex flex-col justify-center font-sans">
+            {activeAxisIndex !== null ? (
+              <div className="space-y-2 animate-fade-in text-left">
+                <div className="flex justify-between items-center">
+                  <span className="text-[12px] font-bold text-white">
+                    {skillsMatrix[activeAxisIndex].subject}
+                  </span>
+                  <span className="text-[11px] font-mono text-zinc-400">
+                    Fit: <strong className="text-violet-400">{skillsMatrix[activeAxisIndex].candidate}%</strong> / Required: <strong className="text-zinc-300">{skillsMatrix[activeAxisIndex].required}%</strong>
+                  </span>
+                </div>
+                
+                <div className="space-y-1.5 pt-1">
+                  {/* Matched list */}
+                  {skillsMatrix[activeAxisIndex].matched.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      <span className="text-[9px] font-extrabold uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/10">Matched</span>
+                      <p className="text-[11px] text-zinc-350">
+                        {skillsMatrix[activeAxisIndex].matched.join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Missing list */}
+                  {skillsMatrix[activeAxisIndex].missing.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      <span className="text-[9px] font-extrabold uppercase text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/10">Missing</span>
+                      <p className="text-[11px] text-zinc-350">
+                        {skillsMatrix[activeAxisIndex].missing.map(m => (
+                          <span 
+                            key={m} 
+                            onClick={() => {
+                              setSelectedKeyword(m)
+                              showToast(language === 'fr' ? `Génération d'ébauche initiée pour "${m}" !` : `Initiating gap generation for "${m}"!`, 'info')
+                            }}
+                            className="text-rose-400 hover:text-rose-350 underline cursor-pointer font-medium hover:scale-105 inline-block mr-1.5 transition-all"
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-extrabold uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/10">No Gaps</span>
+                      <p className="text-[11px] text-zinc-400">
+                        {language === 'fr' ? 'Excellent ! Aucun mot-clé manquant dans cette catégorie.' : 'Excellent! You match all expected skills in this area.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-zinc-500 text-[11.5px] leading-relaxed py-2">
+                <Target className="w-5 h-5 mx-auto text-zinc-650 mb-1.5 animate-pulse" />
+                {language === 'fr'
+                  ? 'Survolez un axe du graphique radar pour inspecter le détail des compétences détectées.'
+                  : 'Hover over any axis on the radar chart to inspect detailed matching skills.'}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Heatmap & AI Gap Bridger - 7 Cols */}
+        <div className="lg:col-span-7 flex flex-col justify-between gap-6">
+          
+          {/* Keyword Heatmap */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group flex-1">
+            <div className="absolute -top-12 -left-12 w-28 h-28 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
+            <div className="flex items-center justify-between mb-4 border-b border-zinc-800/40 pb-3 flex-shrink-0">
+              <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                {language === 'fr' ? 'Analyse des Écarts de Mots-Clés' : 'Keyword Gap Analytics'}
+              </h3>
+              <span className="text-[10px] text-zinc-450 font-sans">
+                {language === 'fr' ? 'Cliquez sur un mot-clé manquant' : 'Click a missing keyword to bridge gap'}
+              </span>
+            </div>
+
+            {jobDescription ? (
+              <div className="space-y-4 text-left">
+                <p className="text-[11.5px] text-zinc-400 leading-normal font-sans font-light">
+                  {language === 'fr' 
+                    ? "Voici les mots-clés extraits de l'offre. Les mots en vert sont présents dans votre CV. Les mots en rouge/orange sont manquants. Cliquez sur un mot manquant pour générer un puce IA."
+                    : "These keywords are extracted from the job description. Green words are in your resume. Amber words are missing. Click any missing word to write a bullet point."}
+                </p>
+
+                <div className="flex flex-wrap gap-2.5 items-center justify-center p-4 bg-zinc-950/40 rounded-xl border border-zinc-800/50 min-h-[120px]">
+                  {extractedKeywords.length > 0 ? (
+                    extractedKeywords.map((kw, i) => {
+                      // Alternate font sizes to look like a premium tag cloud
+                      const sizeClass = i % 3 === 0 ? 'text-[13px] font-bold' : i % 3 === 1 ? 'text-[12px] font-semibold' : 'text-[11px] font-medium'
+                      
+                      return (
+                        <button
+                          key={kw.word}
+                          onClick={() => {
+                            if (!kw.matched) {
+                              setSelectedKeyword(kw.word)
+                              setGeneratedBullet('')
+                              setBridgerStatus('idle')
+                            } else {
+                              showToast(language === 'fr' ? `"${kw.word}" est déjà présent dans votre CV !` : `"${kw.word}" is already present in your resume!`, 'info')
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none ${
+                            kw.matched
+                              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15 hover:shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+                              : 'bg-rose-500/10 border-rose-500/20 text-rose-455 hover:bg-rose-500/15 hover:border-rose-500/40 hover:shadow-[0_0_12px_rgba(244,63,94,0.1)] hover:scale-105 active:scale-95 text-rose-400'
+                          } ${sizeClass}`}
+                          type="button"
+                        >
+                          {kw.matched ? (
+                            <span className="text-emerald-400">✓</span>
+                          ) : (
+                            <span className="text-rose-400 animate-pulse">+</span>
+                          )}
+                          {kw.word}
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <p className="text-xs text-zinc-550 italic font-sans">
+                      {language === 'fr' ? 'Aucun mot-clé trouvé.' : 'No keywords found.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-zinc-550 italic font-sans text-xs">
+                {language === 'fr' 
+                  ? 'Collez une description de poste en bas pour voir la carte thermique.' 
+                  : 'Paste a job description below to unlock keyword heatmap analytics.'}
+              </div>
+            )}
+          </div>
+
+          {/* AI Skill Gap Bridger */}
+          {selectedKeyword && (
+            <div className="bg-zinc-900 border border-violet-500/30 rounded-2xl p-5 shadow-xl shadow-violet-500/5 relative overflow-hidden group animate-fade-in">
+              <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-violet-500/10 blur-2xl pointer-events-none" />
+              
+              <div className="flex items-center gap-2 mb-4 border-b border-zinc-800/40 pb-3">
+                <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                  <Brain className="w-3.5 h-3.5 text-violet-400" />
+                </div>
+                <div>
+                  <h3 className="text-[13px] font-semibold text-white">
+                    {language === 'fr' ? 'IA Correcteur d\'Écart' : 'AI Skill Gap Bridger'}
+                  </h3>
+                  <p className="text-[10px] text-zinc-400">
+                    {language === 'fr' ? `Optimisation pour "${selectedKeyword}"` : `Targeting missing keyword: "${selectedKeyword}"`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedKeyword(null)
+                    setGeneratedBullet('')
+                    setBridgerStatus('idle')
+                  }}
+                  className="ml-auto text-zinc-500 hover:text-white transition-colors cursor-pointer text-xs"
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="space-y-4 text-left">
+                <p className="text-[11.5px] text-zinc-400 leading-normal font-sans font-light">
+                  {language === 'fr' 
+                    ? `Générez une puce professionnelle qui intègre le mot-clé "${selectedKeyword}". Vous pourrez ensuite l'ajouter à l'une de vos expériences.`
+                    : `Generate a high-impact experience bullet point containing the keyword "${selectedKeyword}". You can then append it to your resume.`}
+                </p>
+
+                {/* Generated Bullet Display Area */}
+                {bridgerStatus === 'generating' && (
+                  <div className="p-4 bg-zinc-950/60 rounded-xl border border-zinc-800/50 flex flex-col items-center justify-center py-6 gap-2">
+                    <RefreshCw className="w-5 h-5 animate-spin text-violet-400" />
+                    <span className="text-[11px] text-zinc-400 font-medium animate-pulse">
+                      {language === 'fr' ? 'Génération de la puce par l\'IA...' : 'Writing bullet point with Gemini AI...'}
+                    </span>
+                  </div>
+                )}
+
+                {bridgerStatus === 'success' && generatedBullet && (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/80">
+                      <textarea
+                        value={generatedBullet}
+                        onChange={(e) => setGeneratedBullet(e.target.value)}
+                        className="w-full bg-transparent text-[12.5px] text-white leading-relaxed focus:outline-none resize-none min-h-[70px] font-sans font-normal"
+                      />
+                      <div className="flex justify-end pt-1">
+                        <span className="text-[9px] text-violet-400 font-bold uppercase tracking-wider bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/10">
+                          Editable AI Output
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Dropdown Selection for Work Experience */}
+                    {resumeData.experience && resumeData.experience.length > 0 ? (
+                      <div className="space-y-2">
+                        <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                          {language === 'fr' ? 'Sélectionnez le poste cible :' : 'Select role to append to:'}
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <select
+                            value={selectedExpId}
+                            onChange={(e) => setSelectedExpId(e.target.value)}
+                            className="flex-1 bg-zinc-955 border border-zinc-850 rounded-xl px-3 py-2 text-[12px] text-zinc-300 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 font-sans"
+                          >
+                            {resumeData.experience.map((exp) => (
+                              <option key={exp.id} value={exp.id}>
+                                {exp.jobTitle} at {exp.company}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={handleAppendBullet}
+                            className="bg-violet-650 hover:bg-violet-550 text-white font-bold text-[12px] px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-violet-600/10 active:scale-95"
+                            type="button"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            {language === 'fr' ? 'Ajouter au CV' : 'Append to Role'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-rose-400 bg-rose-500/5 border border-rose-500/10 p-2.5 rounded-xl">
+                        {language === 'fr' 
+                          ? 'Veuillez d\'abord ajouter une expérience professionnelle à votre CV pour pouvoir y rattacher la puce.' 
+                          : 'Please add a work experience role in the editor first to append this bullet point.'}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {bridgerStatus === 'error' && (
+                  <div className="p-3.5 bg-rose-500/5 border border-rose-500/10 rounded-xl text-center space-y-2">
+                    <p className="text-[11px] text-rose-400 font-medium">
+                      {language === 'fr' ? 'Échec de la génération.' : 'Failed to generate bullet point.'}
+                    </p>
+                    <button
+                      onClick={handleGenerateAiBullet}
+                      className="bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                      type="button"
+                    >
+                      Retry Generation
+                    </button>
+                  </div>
+                )}
+
+                {bridgerStatus === 'idle' && (
+                  <div className="flex justify-end pt-1">
+                    <button
+                      onClick={handleGenerateAiBullet}
+                      className="bg-violet-650 hover:bg-violet-550 text-white font-semibold text-[12px] px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-violet-600/10 active:scale-95 w-full sm:w-auto justify-center"
+                      type="button"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {language === 'fr' ? 'Générer la Puce IA' : 'Generate AI Bullet'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
 
       {/* Local AI Deep Scan Section */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 relative overflow-hidden group shadow-xl">

@@ -22,6 +22,7 @@ import MinimalistTemplate from './components/templates/MinimalistTemplate'
 import CreativeTemplate from './components/templates/CreativeTemplate'
 import { calculateCompletion, getSectionStatus } from './utils/completionHelper'
 import ResumeManager from './components/ResumeManager'
+import ResumeImportModal from './components/ResumeImportModal'
 
 import { 
   Download, 
@@ -159,7 +160,7 @@ interface PrintSettingsModalProps {
 }
 
 function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl animate-scale-in">
         <div className="flex items-center gap-3 text-blue-500 mb-4">
@@ -213,12 +214,14 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
+
 function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarningModalProps) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl animate-scale-in">
         <div className="flex items-center gap-3 text-amber-500 mb-4">
@@ -257,9 +260,11 @@ function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarning
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
+
 
 function App() {
   const [view, setView] = useState<'landing' | 'workspace' | 'privacy'>('landing')
@@ -349,6 +354,7 @@ function App() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
+  const [isResumeImportOpen, setIsResumeImportOpen] = useState(false)
 
   const activeResumeId = state.selectedResumeId
   const activeResume = state.resumes[activeResumeId] || Object.values(state.resumes)[0]
@@ -469,6 +475,37 @@ function App() {
       }
     })
   }
+
+  const handleImportParsedResume = (title: string, data: ResumeData) => {
+    const newId = crypto.randomUUID()
+    const newProfile: ResumeProfile = {
+      id: newId,
+      title: title || 'Imported Resume',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      resumeData: data,
+      selectedTemplate: 'classic',
+      jobDescription: '',
+      agentMessages: [
+        {
+          id: 'welcome_imported',
+          role: 'agent',
+          content: `Hello! I have successfully parsed and imported your resume "${title}". You can now optimize it, tailor it to job descriptions, or edit details directly!`,
+          timestamp: new Date()
+        }
+      ]
+    }
+    setState(prev => ({
+      ...prev,
+      resumes: {
+        ...prev.resumes,
+        [newId]: newProfile
+      },
+      selectedResumeId: newId
+    }))
+    setActiveMode('studio')
+  }
+
   const [activeMode, setActiveMode] = useState<'studio' | 'preview' | 'analyze' | 'ai'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
   const [pageCount, setPageCount] = useState(1)
@@ -1059,7 +1096,7 @@ function App() {
 
                   {/* Live Resume Preview Canvas (Shared for all layouts) */}
                   <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
-                    <div className="w-full max-w-3xl">
+                    <div className="w-full max-w-[858px]">
                       <ResumePreview 
                         resumeData={resumeData}
                         selectedTemplate={selectedTemplate}
@@ -1077,6 +1114,7 @@ function App() {
                         onChangeFontSize={setTemplateFontSize}
                         themeColor={themeColor}
                         onChangeColor={setThemeColor}
+                        onTriggerImport={() => setIsResumeImportOpen(true)}
                       />
                     </div>
                   </div>
@@ -1122,7 +1160,7 @@ function App() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto bg-zinc-950/20 p-6 flex justify-center items-start min-w-0">
-                    <div className="w-full max-w-3xl">
+                    <div className="w-full max-w-[858px]">
                       <ResumePreview 
                         resumeData={resumeData}
                         selectedTemplate={selectedTemplate}
@@ -1140,6 +1178,7 @@ function App() {
                         onChangeFontSize={setTemplateFontSize}
                         themeColor={themeColor}
                         onChangeColor={setThemeColor}
+                        onTriggerImport={() => setIsResumeImportOpen(true)}
                       />
                     </div>
                   </div>
@@ -1254,6 +1293,20 @@ function App() {
             onRename={handleRenameResume}
             onDelete={handleDeleteResume}
             onClose={() => setIsResumeManagerOpen(false)}
+            onTriggerImport={() => setIsResumeImportOpen(true)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Resume Import Modal Component */}
+      <AnimatePresence>
+        {isResumeImportOpen && (
+          <ResumeImportModal
+            isOpen={isResumeImportOpen}
+            onClose={() => setIsResumeImportOpen(false)}
+            onImport={handleImportParsedResume}
+            apiKey={state.apiKey}
+            onUpdateApiKey={(key) => setState(prev => ({ ...prev, apiKey: key }))}
           />
         )}
       </AnimatePresence>

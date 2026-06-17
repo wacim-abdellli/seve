@@ -17,10 +17,12 @@ import {
   ZoomIn, 
   ZoomOut, 
   Grid3x3,
-  Layout,
-  ScanLine,
   Download,
-  Minimize2
+  Minimize2,
+  ChevronDown,
+  UploadCloud,
+  Type,
+  Sliders
 } from 'lucide-react'
 
 interface ResumePreviewProps {
@@ -37,6 +39,7 @@ interface ResumePreviewProps {
   onChangeFontSize: (size: number) => void
   themeColor: string
   onChangeColor?: (color: string) => void
+  onTriggerImport?: () => void
 }
 
 const templatesList: { id: Template; label: string; colorDot: string }[] = [
@@ -71,14 +74,15 @@ export default function ResumePreview({
   templateFontSize,
   onChangeFontSize,
   themeColor,
-  onChangeColor
+  onChangeColor,
+  onTriggerImport
 }: ResumePreviewProps) {
   const { showToast } = useToast()
   const [atsMode, setAtsMode] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [showGuides, setShowGuides] = useState(false)
   const [pageCount, setPageCount] = useState(1)
-  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false)
+  const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -121,8 +125,9 @@ export default function ResumePreview({
   useEffect(() => {
     const checkHeight = () => {
       if (!resumeContentRef.current) return
-      const height = resumeContentRef.current.scrollHeight
-      const pages = Math.ceil(height / A4_HEIGHT_PX)
+      const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
+      const height = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
+      const pages = Math.ceil((height - 10) / A4_HEIGHT_PX)
       setPageCount(pages)
       if (onPageCountChangeRef.current) {
         onPageCountChangeRef.current(pages)
@@ -140,7 +145,8 @@ export default function ResumePreview({
 
   const fitToOnePage = () => {
     if (!resumeContentRef.current) return
-    const contentHeight = resumeContentRef.current.scrollHeight
+    const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
+    const contentHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
     
     if (contentHeight <= USABLE_HEIGHT_PX) {
       onChangeFontSize(10) // reset
@@ -241,23 +247,63 @@ export default function ResumePreview({
       
       {/* Top Inspector Bar */}
       {!isEmpty && (
-        <div className="flex items-center justify-between px-4 h-12 bg-zinc-950 border border-zinc-800 rounded-t-xl no-print select-none relative z-40 w-full">
-          {/* LEFT GROUP (document controls - Rule 6) */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-[13px] text-zinc-300 font-mono w-10 text-center">
-              {Math.round(zoom * 100)}%
-            </span>
+        <div className="flex items-center justify-between px-4 h-12 bg-zinc-950 border border-zinc-800 rounded-t-xl no-print select-none relative z-40 w-full animate-fade-in">
+          
+          {/* LEFT GROUP: Document View Settings */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-0.5 h-8 flex-shrink-0 shadow-sm">
+              <button 
+                onClick={() => setAtsMode(false)}
+                className={`px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer h-full flex items-center ${
+                  !atsMode ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                type="button"
+                title="Live Layout View"
+              >
+                Live
+              </button>
+              <button 
+                onClick={() => setAtsMode(true)}
+                className={`px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer h-full flex items-center ${
+                  atsMode ? 'bg-zinc-800 text-rose-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                type="button"
+                title="ATS Heatmap Analyzer"
+              >
+                Heatmap
+              </button>
+              
+              <div className="w-px h-3.5 bg-zinc-800/80 mx-1 flex-shrink-0" />
+              
+              <button 
+                onClick={() => setShowGuides(!showGuides)}
+                className={`px-2 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center ${
+                  showGuides ? 'bg-rose-500/10 text-rose-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/60'
+                }`}
+                type="button"
+                title="Toggle Margins & Guides"
+              >
+                <Grid3x3 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* CENTER GROUP: Unified Zoom controls */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-0.5 h-8 flex-shrink-0 shadow-sm z-30">
             <button 
               onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
-              className="p-1.5 text-zinc-500 hover:text-white rounded-md hover:bg-zinc-900 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
               type="button"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
+            <span className="text-[11px] text-zinc-300 font-mono px-2 min-w-[38px] text-center select-none font-extrabold">
+              {Math.round(zoom * 100)}%
+            </span>
             <button 
               onClick={() => setZoom(prev => Math.min(1.5, prev + 0.1))}
-              className="p-1.5 text-zinc-500 hover:text-white rounded-md hover:bg-zinc-900 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
               type="button"
               title="Zoom In"
             >
@@ -265,163 +311,160 @@ export default function ResumePreview({
             </button>
           </div>
 
-          {/* Divider between Left and Center */}
-          <div className="w-px h-4 bg-zinc-800 mx-2 flex-shrink-0" />
-
-          {/* CENTER: template pill (Classic ▾) — most important (Rule 6) */}
-          <div className="relative z-35 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
-              className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-1.5 text-[12px] text-white hover:bg-zinc-800 transition-colors cursor-pointer shadow-sm"
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${templatesList.find(t => t.id === selectedTemplate)?.colorDot || 'bg-zinc-400'}`} />
-              <span className="font-semibold">{templatesList.find(t => t.id === selectedTemplate)?.label || 'Classic'}</span>
-              <span className="text-zinc-400 text-[9px]">▼</span>
-            </button>
-            
-            <AnimatePresence>
-              {isTemplateDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-2xl w-36 z-50"
-                >
-                  {templatesList.map((option) => {
-                    const isSelected = option.id === selectedTemplate
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => {
-                          onChangeTemplate?.(option.id)
-                          setIsTemplateDropdownOpen(false)
-                        }}
-                        className={`flex items-center justify-between w-full px-3 py-2 text-xs transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'bg-zinc-800/60 text-white font-medium'
-                            : 'text-zinc-400 hover:bg-zinc-800/80 hover:text-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${option.colorDot}`} />
-                          <span>{option.label}</span>
-                        </div>
-                        {isSelected && (
-                          <span className="text-rose-400 text-[10px] font-bold">✓</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Color Chooser */}
-          <div className="flex items-center gap-2 ml-2 mr-1 flex-shrink-0">
-            <span className="text-[9px] font-bold text-zinc-650 uppercase tracking-widest mr-1 select-none hidden min-[1200px]:block">Color</span>
-            {themeColors.map((color) => {
-              const isSelected = themeColor === color.value
-              return (
-                <button
-                  key={color.value}
-                  onClick={() => onChangeColor?.(color.value)}
-                  style={{ backgroundColor: color.value, boxShadow: isSelected ? `0 0 0 2px #09090b, 0 0 0 3.5px ${color.value}` : undefined }}
-                  className={`w-3.5 h-3.5 rounded-full transition-all duration-200 relative cursor-pointer flex items-center justify-center hover:scale-125 active:scale-90 ${isSelected ? 'scale-110' : ''}`}
-                  title={color.label}
-                  type="button"
-                >
-                  {isSelected && (
-                    <span className="w-1 h-1 rounded-full bg-white opacity-95 shadow-sm" />
-                  )}
-                </button>
-              )
-            })}
-            {/* Custom color picker */}
-            <label
-              className="w-3.5 h-3.5 rounded-full bg-zinc-800 border border-zinc-700 cursor-pointer flex items-center justify-center hover:scale-125 transition-all duration-200 relative overflow-hidden"
-              title="Custom color"
-              style={!themeColors.find(c => c.value === themeColor) ? { boxShadow: `0 0 0 2px #09090b, 0 0 0 3.5px ${themeColor}`, backgroundColor: themeColor } : undefined}
-            >
-              <span className="text-[9px] font-extrabold text-zinc-400 leading-none pointer-events-none select-none">+</span>
-              <input
-                type="color"
-                value={themeColor}
-                onChange={(e) => onChangeColor?.(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                title="Pick a custom color"
-              />
-            </label>
-          </div>
-
-          {/* Divider between Center and Right */}
-          <div className="w-px h-4 bg-zinc-800 mx-2 flex-shrink-0" />
-
-          {/* RIGHT GROUP (view options - Rule 6) */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* RIGHT GROUP: Style Controls & Actions */}
+          <div className="flex items-center gap-2.5 flex-shrink-0 relative z-35">
+            {/* Fit to Page Action Button */}
             {(pageCount > 1 || templateFontSize < 10) && (
               <button 
                 onClick={fitToOnePage}
-                className="flex items-center gap-1.5 text-[12px] px-2.5 py-1.5 rounded-lg text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-colors cursor-pointer font-medium"
+                className="h-8 w-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer flex items-center justify-center shadow-sm flex-shrink-0"
                 type="button"
-                title="Fit to 1 Page"
+                title={`Fit to 1 Page (Current font size: ${templateFontSize}pt)`}
               >
-                <Minimize2 className="w-3.5 h-3.5" />
-                <span className="hidden min-[1440px]:inline font-mono">Fit to 1 Page ({templateFontSize}pt)</span>
-                <span className="inline min-[1440px]:hidden font-mono">Fit ({templateFontSize}pt)</span>
+                <Minimize2 className="w-3.5 h-3.5 text-amber-450" />
               </button>
             )}
 
-            <button 
-              onClick={() => setShowGuides(!showGuides)}
-              className={`flex items-center gap-1.5 text-[12px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                showGuides ? 'bg-rose-500/10 text-rose-400 font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-905'
-              }`}
-              type="button"
-              title="Guides"
-            >
-              <Grid3x3 className="w-3.5 h-3.5" />
-              <span className="hidden min-[1440px]:inline">Guides</span>
-            </button>
+            {/* Combined Style Menu Popover */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsStyleMenuOpen(!isStyleMenuOpen)}
+                className={`flex items-center gap-1.5 px-3 h-8 text-[11px] font-extrabold uppercase tracking-wider rounded-xl transition-all cursor-pointer border ${
+                  isStyleMenuOpen 
+                    ? 'bg-rose-500/10 border-rose-500/35 text-rose-400 shadow-sm' 
+                    : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:text-white hover:bg-zinc-800/80'
+                }`}
+                title="Design Styles & Formatting"
+              >
+                <Sliders className="w-3.5 h-3.5 text-rose-450" />
+                <span>Style</span>
+                <ChevronDown className="w-3 h-3 text-zinc-500 shrink-0" />
+              </button>
 
-            <button 
-              onClick={() => setAtsMode(false)}
-              className={`flex items-center gap-1.5 text-[12px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                !atsMode ? 'bg-rose-500/10 text-rose-400 font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-905'
-              }`}
-              type="button"
-              title="Live Layout"
-            >
-              <Layout className="w-3.5 h-3.5" />
-              <span className="hidden min-[1440px]:inline">Live Layout</span>
-            </button>
+              <AnimatePresence>
+                {isStyleMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-850 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.95)] w-56 z-50 flex flex-col gap-4"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-1.5 border-b border-zinc-900">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 select-none">Design & Style</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setIsStyleMenuOpen(false)} 
+                        className="text-[9px] font-bold text-zinc-500 hover:text-white transition-colors"
+                      >
+                        Done
+                      </button>
+                    </div>
 
-            <button 
-              onClick={() => setAtsMode(true)}
-              className={`flex items-center gap-1.5 text-[12px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                atsMode ? 'bg-rose-500/10 text-rose-400 font-medium' : 'text-zinc-400 hover:text-white hover:bg-zinc-905'
-              }`}
-              type="button"
-              title="ATS Heatmap"
-            >
-              <ScanLine className="w-3.5 h-3.5" />
-              <span className="hidden min-[1440px]:inline">ATS Heatmap</span>
-            </button>
+                    {/* Section 1: Template Selection */}
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Layout Template</label>
+                      <div className="relative">
+                        <select
+                          value={selectedTemplate}
+                          onChange={(e) => onChangeTemplate?.(e.target.value as Template)}
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-[11px] text-zinc-200 focus:outline-none focus:border-rose-500/50 font-bold appearance-none cursor-pointer"
+                        >
+                          {templatesList.map(t => (
+                            <option key={t.id} value={t.id} className="bg-zinc-950 text-zinc-200 font-bold">{t.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
 
+                    {/* Section 2: Accent Color */}
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Theme Accent</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {themeColors.map((color) => {
+                          const isSelected = themeColor === color.value
+                          return (
+                            <button
+                              key={color.value}
+                              type="button"
+                              onClick={() => onChangeColor?.(color.value)}
+                              style={{ backgroundColor: color.value }}
+                              className={`w-5 h-5 rounded-full transition-all duration-150 relative cursor-pointer flex items-center justify-center hover:scale-110 active:scale-95 ${
+                                isSelected ? 'ring-2 ring-rose-500 ring-offset-2 ring-offset-zinc-950' : 'border border-white/5'
+                              }`}
+                              title={color.label}
+                            />
+                          )
+                        })}
+                        {/* Custom color picker */}
+                        <label
+                          className="w-5 h-5 rounded-full bg-zinc-900 border border-zinc-800 cursor-pointer flex items-center justify-center hover:scale-110 hover:border-zinc-700 transition-all duration-150 relative overflow-hidden"
+                          title="Custom color"
+                          style={!themeColors.find(c => c.value === themeColor) ? { 
+                            backgroundColor: themeColor,
+                            border: 'none',
+                            boxShadow: '0 0 0 2px #f43f5e'
+                          } : undefined}
+                        >
+                          <span className="text-[10px] font-extrabold text-zinc-300 leading-none pointer-events-none select-none">+</span>
+                          <input
+                            type="color"
+                            value={themeColor}
+                            onChange={(e) => onChangeColor?.(e.target.value)}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Section 3: Font Size */}
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Base Font Size</label>
+                      <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl p-0.5 h-8 w-full justify-between">
+                        <button 
+                          onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
+                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
+                          type="button"
+                          title="Decrease Font Size"
+                        >
+                          <span className="text-[10px] font-extrabold select-none">A-</span>
+                        </button>
+                        
+                        <div className="flex items-center gap-1 px-1 text-zinc-300 font-mono select-none">
+                          <Type className="w-3.5 h-3.5 text-zinc-500" />
+                          <span className="text-[10px] font-extrabold">{templateFontSize}pt</span>
+                        </div>
+                        
+                        <button 
+                          onClick={() => onChangeFontSize(Math.min(16, Number((templateFontSize + 0.5).toFixed(1))))}
+                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
+                          type="button"
+                          title="Increase Font Size"
+                        >
+                          <span className="text-[10px] font-extrabold select-none">A+</span>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Export PDF Button */}
             {onExportPdf && (
               <>
-                <div className="w-px h-4 bg-zinc-800 mx-1 flex-shrink-0" />
+                <div className="w-px h-4 bg-zinc-800/80 flex-shrink-0" />
                 <button 
                   onClick={onExportPdf}
-                  className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg bg-red-650 hover:bg-red-500 text-white font-semibold shadow-lg transition-colors cursor-pointer"
+                  className="h-8 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-rose-600/10 flex items-center gap-1.5"
                   type="button"
+                  title="Export PDF Document"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span className="hidden min-[1440px]:inline">Export</span>
-                  <span className="inline min-[1440px]:hidden">PDF</span>
+                  <span>Export</span>
                 </button>
               </>
             )}
@@ -599,12 +642,26 @@ export default function ResumePreview({
                       Start filling in the form sections or chat with the AI coach on the left panel to watch your resume build here live!
                     </p>
                   </div>
+
+                  {onTriggerImport && (
+                    <div className="pt-3 border-t border-zinc-800/60 flex flex-col gap-2 w-full">
+                      <span className="text-[9px] text-zinc-550 font-bold uppercase tracking-wider block">— OR —</span>
+                      <button
+                        type="button"
+                        onClick={onTriggerImport}
+                        className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-rose-600/10 cursor-pointer"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Import PDF/Word Resume
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ) : (
             /* Normal Template Rendering with Drag-and-drop handlers */
-            <>
+            <div className="resume-template-wrapper">
               {selectedTemplate === 'classic' && (
                 <ClassicTemplate 
                   data={resumeData} 
@@ -674,7 +731,7 @@ export default function ResumePreview({
                   themeColor={themeColor}
                 />
               )}
-            </>
+            </div>
           )}
           </div>
         </div>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ResumeProfile } from '../types/resume'
-import { Copy, Edit2, Trash2, Check, Plus, FolderOpen, Calendar, X, AlertTriangle } from 'lucide-react'
+import { Copy, Edit2, Trash2, Check, Plus, FolderOpen, Calendar, X, AlertTriangle, UploadCloud } from 'lucide-react'
 import { calculateCompletion } from '../utils/completionHelper'
 
 interface ResumeManagerProps {
@@ -13,6 +14,7 @@ interface ResumeManagerProps {
   onRename: (id: string, newTitle: string) => void
   onDelete: (id: string) => void
   onClose: () => void
+  onTriggerImport: () => void
 }
 
 export default function ResumeManager({
@@ -23,7 +25,8 @@ export default function ResumeManager({
   onDuplicate,
   onRename,
   onDelete,
-  onClose
+  onClose,
+  onTriggerImport
 }: ResumeManagerProps) {
   const [newTitle, setNewTitle] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -48,8 +51,8 @@ export default function ResumeManager({
     setEditingId(null)
   }
 
-  return (
-    <div className="fixed inset-0 z-55 flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       {/* Backdrop close area */}
       <div className="absolute inset-0" onClick={onClose} />
 
@@ -92,10 +95,22 @@ export default function ResumeManager({
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-lg shadow-rose-500/10 cursor-pointer"
+            className="px-3 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl flex items-center gap-1 transition-colors shadow-lg shadow-rose-500/10 cursor-pointer flex-shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             New Version
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => {
+              onTriggerImport()
+              onClose()
+            }}
+            className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1 transition-all cursor-pointer flex-shrink-0"
+          >
+            <UploadCloud className="w-3.5 h-3.5 text-rose-450" />
+            Import PDF/Word
           </button>
         </form>
 
@@ -267,4 +282,6 @@ export default function ResumeManager({
       </motion.div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
