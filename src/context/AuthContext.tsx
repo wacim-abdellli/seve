@@ -22,27 +22,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
+
+      // After Supabase processes the OAuth hash tokens (#access_token=...),
+      // clean the URL by removing the leftover hash fragment.
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname)
+      }
     })
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
+      // Also clean hash on initial load (e.g. user lands back on /editor#)
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname)
+      }
     })
 
     return () => listener?.subscription.unsubscribe()
   }, [])
+
 
   const signInWithGoogle = async () => {
     try {
       setError(null)
       await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/editor' },
+        options: {
+          redirectTo: window.location.origin + '/editor',
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+          skipBrowserRedirect: false,
+        },
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google')
     }
   }
+
 
   const signOut = async () => {
     try {
