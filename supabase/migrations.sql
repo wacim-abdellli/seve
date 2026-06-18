@@ -1,38 +1,108 @@
--- Required table: resumes
--- The application upserts rows with { id, user_id, title, resume_data, updated_at }
--- Run this in the Supabase SQL editor to set up RLS.
+-- ============================================================
+-- Seve Resume Builder — Supabase Schema
+-- Run this in your Supabase Dashboard → SQL Editor
+-- Safe to run multiple times (idempotent)
+-- ============================================================
 
-create table if not exists public.resumes (
-  id            text primary key,
-  user_id       uuid not null references auth.users(id) on delete cascade,
-  title         text not null default 'Untitled Resume',
-  resume_data   jsonb not null,
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================
+-- Resumes table
+-- id is TEXT so it accepts both UUIDs and any string IDs.
+-- This prevents "invalid input syntax for type uuid" errors.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.resumes (
+  id            TEXT PRIMARY KEY,
+  user_id       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title         TEXT NOT NULL DEFAULT 'My Resume',
+  resume_data   JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Enable RLS
-alter table public.resumes enable row level security;
-
--- Users can only read their own resumes
-create policy "Users can read own resumes"
-  on public.resumes for select
-  using (auth.uid() = user_id);
-
--- Users can only insert their own resumes
-create policy "Users can insert own resumes"
-  on public.resumes for insert
-  with check (auth.uid() = user_id);
-
--- Users can only update their own resumes
-create policy "Users can update own resumes"
-  on public.resumes for update
-  using (auth.uid() = user_id);
-
--- Users can only delete their own resumes
-create policy "Users can delete own resumes"
-  on public.resumes for delete
-  using (auth.uid() = user_id);
-
 -- Index for faster user-scoped queries
-create index if not exists idx_resumes_user_id on public.resumes(user_id);
+CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON public.resumes(user_id);
+
+-- Auto-update updated_at on row change
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_resumes_updated_at ON public.resumes;
+
+CREATE TRIGGER set_resumes_updated_at
+  BEFORE UPDATE ON public.resumes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- Row Level Security
+-- ============================================================
+ALTER TABLE public.resumes ENABLE ROW LEVEL SECURITY;
+
+-- Drop all existing policies first (idempotent)
+DROP POLICY IF EXISTS "Users can view their own resumes"  ON public.resumes;
+DROP POLICY IF EXISTS "Users can insert their own resumes" ON public.resumes;
+DROP POLICY IF EXISTS "Users can update their own resumes" ON public.resumes;
+DROP POLICY IF EXISTS "Users can delete their own resumes" ON public.resumes;
+DROP POLICY IF EXISTS "Users can read own resumes"   ON public.resumes;
+DROP POLICY IF EXISTS "Users can insert own resumes" ON public.resumes;
+DROP POLICY IF EXISTS "Users can update own resumes" ON public.resumes;
+DROP POLICY IF EXISTS "Users can delete own resumes" ON public.resumes;
+
+-- SELECT: only own resumes
+CREATE POLICY "Users can view their own resumes"
+  ON public.resumes FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- INSERT: only insert rows where user_id = self
+CREATE POLICY "Users can insert their own resumes"
+  ON public.resumes FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- UPDATE: only update own rows AND ensure user_id can't change
+CREATE POLICY "Users can update their own resumes"
+  ON public.resumes FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- DELETE: only delete own rows
+CREATE POLICY "Users can delete their own resumes"
+  ON public.resumes FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================================
+-- Page views table (anonymous analytics)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.page_views (
+  id          BIGSERIAL PRIMARY KEY,
+  visitor_id  TEXT NOT NULL,
+  path        TEXT NOT NULL,
+  date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_page_views_visitor_path_date
+  ON public.page_views (visitor_id, path, date);
+
+ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can insert page views" ON public.page_views;
+DROP POLICY IF EXISTS "Anyone can select page views" ON public.page_views;
+
+CREATE POLICY "Anyone can insert page views"
+  ON public.page_views FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Anyone can select page views"
+  ON public.page_views FOR SELECT USING (true);
+
+CREATE OR REPLACE FUNCTION count_distinct_visitors(since TIMESTAMPTZ DEFAULT NULL)
+RETURNS BIGINT LANGUAGE SQL STABLE AS $$
+  SELECT COUNT(DISTINCT visitor_id) FROM public.page_views
+  WHERE ($1 IS NULL OR created_at >= $1);
+$$;

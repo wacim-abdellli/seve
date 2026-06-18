@@ -347,7 +347,6 @@ export default function EditorLayout() {
               : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
               : 'bg-zinc-900 border-zinc-800 text-zinc-500'
             }`}
-            title={cloudStatus === 'error' && cloudError ? `Error: ${cloudError}` : undefined}
           >
             {cloudStatus === 'error' ? (
               <AlertCircle size={11} className="text-red-400 shrink-0" />
@@ -358,14 +357,15 @@ export default function EditorLayout() {
             ) : (
               <HardDrive size={11} className="text-zinc-500 shrink-0" />
             )}
-            <span className="leading-none">
-              {cloudStatus === 'error' ? 'Sync failed'
+            <span className="leading-none max-w-[240px] truncate" title={cloudError ?? undefined}>
+              {cloudStatus === 'error'
+                ? (cloudError ? `Error: ${cloudError}` : 'Sync failed')
                 : isSaving || cloudStatus === 'syncing' ? 'Saving…'
                 : cloudStatus === 'synced' ? 'Cloud saved'
                 : 'Saved locally'}
             </span>
             {cloudStatus === 'error' && (
-              <button onClick={retrySync} className="ml-0.5 text-red-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer">
+              <button onClick={retrySync} className="ml-0.5 shrink-0 text-red-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer">
                 Retry
               </button>
             )}
