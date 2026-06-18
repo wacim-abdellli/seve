@@ -119,7 +119,8 @@ export default function ResumePreview({
     }
   }, [])
 
-  const PAGE_HEIGHT_PX = 1130
+  const A4_PX = 1122
+  const A4_SCREEN_THRESHOLD = 1160
   // Tracks vertical padding (top + bottom) added by templates' .resume-page div.
   // This padding does NOT scale with font-size, so fit math must exclude it.
   const TEMPLATE_VERTICAL_PADDING = 96
@@ -132,13 +133,25 @@ export default function ResumePreview({
 
   const measurePageCount = useCallback(() => {
     if (!resumeContentRef.current) return
-    const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
-    const height = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
-    const pages = Math.ceil(height / PAGE_HEIGHT_PX)
-    setPageCount(pages)
-    if (onPageCountChangeRef.current) {
-      onPageCountChangeRef.current(pages)
+
+    const pageEls = resumeContentRef.current.querySelectorAll('.resume-page')
+
+    if (pageEls.length > 1) {
+      const count = pageEls.length
+      setPageCount(count)
+      if (onPageCountChangeRef.current) onPageCountChangeRef.current(count)
+      return
     }
+
+    const measureTarget =
+      pageEls[0] ??
+      resumeContentRef.current.querySelector('.resume-template-wrapper') ??
+      resumeContentRef.current
+
+    const height = measureTarget.scrollHeight
+    const pages = Math.max(1, Math.ceil(height / A4_SCREEN_THRESHOLD))
+    setPageCount(pages)
+    if (onPageCountChangeRef.current) onPageCountChangeRef.current(pages)
   }, [])
 
   useEffect(() => {
@@ -157,7 +170,7 @@ export default function ResumePreview({
     const scrollHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
 
     // Reset to default if it naturally fits (or user called it accidentally)
-    if (scrollHeight <= PAGE_HEIGHT_PX) {
+    if (scrollHeight <= A4_PX) {
       onChangeFontSize(10)
       showToast('Resume naturally fits on 1 page', 'success')
       return
@@ -165,7 +178,7 @@ export default function ResumePreview({
 
     // Padding doesn't scale with font-size, so compute content-only height
     const contentHeight = scrollHeight - TEMPLATE_VERTICAL_PADDING
-    const targetContentArea = PAGE_HEIGHT_PX - TEMPLATE_VERTICAL_PADDING // 1027px
+    const targetContentArea = A4_PX - TEMPLATE_VERTICAL_PADDING // 1026px
     const scale = targetContentArea / contentHeight
     const targetFontSize = Math.floor(10 * scale * 10) / 10
     const MIN_FONT_SIZE = 8.5
