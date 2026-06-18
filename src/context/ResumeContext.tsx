@@ -209,7 +209,29 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
                   updated_at: new Date().toISOString(),
                 })
 
-              if (insertError) throw insertError
+              if (insertError) {
+                if (insertError.code === '23505') {
+                  // Duplicate key: a row with this ID exists in DB but
+                  // belongs to a different user (RLS hid it from SELECT).
+                  // Self-heal: assign a fresh ID so this user's data can sync.
+                  const newId = crypto.randomUUID()
+                  setState(prev => {
+                    const resume = prev.resumes[p.id]
+                    if (!resume) return prev
+                    const next = { ...prev.resumes }
+                    delete next[p.id]
+                    next[newId] = { ...resume, id: newId }
+                    return {
+                      ...prev,
+                      resumes: next,
+                      selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
+                    }
+                  })
+                  // Let the next auto-save cycle handle the INSERT with the new ID
+                  continue
+                }
+                throw insertError
+              }
             }
           }
 
@@ -359,7 +381,26 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         } else {
           const { error: insertError } = await supabase.from('resumes')
             .insert({ id: p.id, user_id: user.id, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
-          if (insertError) throw insertError
+          if (insertError) {
+            if (insertError.code === '23505') {
+              // Orphaned row: same ID, different user. Reassign a fresh ID.
+              const newId = crypto.randomUUID()
+              setState(prev => {
+                const resume = prev.resumes[p.id]
+                if (!resume) return prev
+                const next = { ...prev.resumes }
+                delete next[p.id]
+                next[newId] = { ...resume, id: newId }
+                return {
+                  ...prev,
+                  resumes: next,
+                  selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
+                }
+              })
+              continue
+            }
+            throw insertError
+          }
         }
       }
       setCloudStatus('synced')
