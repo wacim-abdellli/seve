@@ -1,10 +1,13 @@
 import type { ResumeData } from '../../types/resume'
 import { memo } from 'react'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
-import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface ClassicTemplateProps {
   data: ResumeData
@@ -48,9 +51,11 @@ const ClassicTemplate = memo(function ClassicTemplate({
   )
 
   const h2 = (label: string) => (
-    <h2 className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2.5 font-serif" style={{ borderBottomColor: borderColor }}>
-      {label}
-    </h2>
+    <ResumeSectionHeading
+      label={label}
+      className="text-[10px] font-black tracking-widest border-b pb-0.5 mb-2.5 font-serif"
+      style={{ borderBottomColor: borderColor }}
+    />
   )
 
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -66,21 +71,21 @@ const ClassicTemplate = memo(function ClassicTemplate({
         {h2(SECTION_LABELS.experience)}
         <div className="space-y-3">
           {experience.map((exp) => (
-            <div key={exp.id} className="space-y-1 exp-entry">
+            <div key={exp.id} className="exp-entry">
               <div className="flex justify-between items-baseline font-serif">
-                <div className="text-[10.5px] font-extrabold text-slate-950">
+                <span className="text-[10.5px] font-extrabold text-slate-950">
                   {exp.jobTitle} <span className="font-medium text-slate-700">&mdash; {exp.company}</span>
-                </div>
-                <div className="text-[9.5px] font-bold text-slate-500 font-mono">
-                  {formatDate(exp.startDate)} &ndash; {exp.current ? 'Present' : formatDate(exp.endDate)}
-                </div>
+                </span>
+                <span className="text-[9.5px] font-bold text-slate-500 font-mono">
+                  <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} />
+                </span>
               </div>
               {exp.location && <div className="text-[8.5px] text-slate-500 italic -mt-0.5">{exp.location}</div>}
-              <ul className="space-y-0.5 pl-4">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[10px] leading-relaxed text-justify list-disc text-slate-800 pl-0.5">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList
+                bullets={exp.bullets}
+                className="space-y-0.5 pl-4"
+                itemClassName="text-[10px] leading-relaxed text-justify list-disc text-slate-800 pl-0.5"
+              />
             </div>
           ))}
         </div>
@@ -95,7 +100,7 @@ const ClassicTemplate = memo(function ClassicTemplate({
             <div key={edu.id} className="edu-entry">
               <div className="flex justify-between items-baseline font-serif">
                 <span className="text-[10.5px] font-extrabold text-slate-950">{edu.school || 'Institution Name'}</span>
-                <span className="text-[9.5px] font-bold text-slate-500 font-mono">{formatDate(edu.graduationDate)}</span>
+                <span className="text-[9.5px] font-bold text-slate-500 font-mono">{edu.graduationDate}</span>
               </div>
               <div className="text-[10px] text-slate-600 mt-0.5 font-serif">
                 <span>{edu.degree}</span>
@@ -111,9 +116,7 @@ const ClassicTemplate = memo(function ClassicTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-5">
         {h2(SECTION_LABELS.skills)}
-        <p className="text-[10px] leading-relaxed text-slate-700">
-          {skills.join(' · ')}
-        </p>
+        <ResumeSkillsList skills={skills} className="text-[10px] leading-relaxed text-slate-700" />
       </div>
     ), 'skills') : null,
 
@@ -122,7 +125,7 @@ const ClassicTemplate = memo(function ClassicTemplate({
         {h2(SECTION_LABELS.projects)}
         <div className="space-y-2">
           {projects.map((proj) => (
-            <div key={proj.id} className="space-y-0.5 proj-entry">
+            <div key={proj.id} className="proj-entry">
               <div className="flex justify-between items-baseline">
                 <span className="text-[10.5px] font-bold text-slate-950">{proj.name}</span>
                 <span className="text-[9px] font-bold text-slate-500">{proj.technologies.join(', ')}</span>

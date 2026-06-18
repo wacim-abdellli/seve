@@ -5,6 +5,9 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 import { Mail, Phone, MapPin, Globe } from 'lucide-react'
 
 interface CreativeTemplateProps {
@@ -57,14 +60,12 @@ const CreativeTemplate = memo(function CreativeTemplate({
   )
 
   const leftH2 = (label: string) => (
-    <h2 className="text-[9.5px] font-black tracking-wider text-slate-900 pb-1.5 border-b font-sans" style={{ borderBottomColor: `${themeColor}20` }}>
-      {label}
-    </h2>
+    <ResumeSectionHeading label={label} className="text-[9.5px] font-black tracking-wider text-slate-900 pb-1.5 border-b font-sans" style={{ borderBottomColor: `${themeColor}20` }} />
   )
 
   const rightH2 = (label: string) => (
     <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 mb-2.5">
-      <h2 className="text-[10px] font-black tracking-wider text-slate-900 font-sans">{label}</h2>
+      <ResumeSectionHeading label={label} className="text-[10px] font-black tracking-wider text-slate-900 font-sans" />
     </div>
   )
 
@@ -138,15 +139,11 @@ const CreativeTemplate = memo(function CreativeTemplate({
                   {exp.jobTitle} &mdash; <span className="font-bold" style={{ color: themeColor }}>{exp.company}</span>
                 </div>
                 <div className="text-[9px] font-bold text-slate-500 font-mono">
-                  {formatDate(exp.startDate)} &ndash; {exp.current ? 'Present' : formatDate(exp.endDate)}
+                  <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[9px] font-bold text-slate-500 font-mono" />
                 </div>
               </div>
               {exp.location && <div className="text-[8.5px] text-slate-500 italic -mt-0.5">{exp.location}</div>}
-              <ul className="space-y-0.5 pl-4">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="space-y-0.5 pl-4" itemClassName="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5" />
             </div>
           ))}
         </div>

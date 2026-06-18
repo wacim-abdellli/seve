@@ -5,6 +5,10 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface CompactTemplateProps {
   data: ResumeData
@@ -45,7 +49,7 @@ const CompactTemplate = memo(function CompactTemplate({
   )
 
   const h2 = (label: string) => (
-    <h2 className="text-[9px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">{label}</h2>
+    <ResumeSectionHeading label={label} className="text-[9px] font-bold uppercase tracking-wider text-slate-600 mb-1.5" />
   )
 
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -64,13 +68,9 @@ const CompactTemplate = memo(function CompactTemplate({
             <div key={exp.id} className="exp-entry">
               <div className="flex justify-between items-baseline">
                 <div className="text-[9px] font-bold text-slate-900">{exp.jobTitle} — {exp.company}</div>
-                <div className="text-[8px] font-medium text-slate-500">{formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}</div>
+                <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[8px] font-medium text-slate-500" />
               </div>
-              <ul className="mt-0.5">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[8px] leading-relaxed text-slate-600 pl-3 -indent-2 ml-2">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="mt-0.5" itemClassName="text-[8px] leading-relaxed text-slate-600 pl-3 -indent-2 ml-2" />
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ const CompactTemplate = memo(function CompactTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-2">
         {h2(SECTION_LABELS.skills)}
-        <p className="text-[8.5px] text-slate-700">{skills.join(' | ')}</p>
+        <ResumeSkillsList skills={skills} separator=" | " className="text-[8.5px] text-slate-700" />
       </div>
     ), 'skills') : null,
 

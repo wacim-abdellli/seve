@@ -5,6 +5,9 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface TechnicalTemplateProps {
   data: ResumeData
@@ -46,9 +49,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
   )
 
   const h2 = (label: string) => (
-    <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2.5" style={{ borderBottomColor: `${themeColor}40` }}>
-      {label}
-    </h2>
+    <ResumeSectionHeading label={label} className="text-[10px] font-bold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2.5" style={{ borderBottomColor: `${themeColor}40` }} />
   )
 
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -78,14 +79,10 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
             <div key={exp.id} className="exp-entry">
               <div className="flex justify-between items-baseline">
                 <div className="text-[10px] font-bold text-slate-900">{exp.jobTitle} <span className="font-normal text-slate-500">@ {exp.company}</span></div>
-                <div className="text-[8.5px] font-mono text-slate-500">{formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}</div>
+                <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[8.5px] font-mono text-slate-500" />
               </div>
               {exp.location && <div className="text-[8.5px] text-slate-400">{exp.location}</div>}
-              <ul className="mt-1 space-y-0.5">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[9.5px] leading-relaxed text-slate-700 pl-3 -indent-2 ml-2">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="mt-1 space-y-0.5" itemClassName="text-[9.5px] leading-relaxed text-slate-700 pl-3 -indent-2 ml-2" />
             </div>
           ))}
         </div>

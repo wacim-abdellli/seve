@@ -5,6 +5,10 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface AcademicTemplateProps {
   data: ResumeData
@@ -46,9 +50,7 @@ const AcademicTemplate = memo(function AcademicTemplate({
   )
 
   const h2 = (label: string) => (
-    <h2 className="text-[11px] font-serif font-bold tracking-wide text-slate-800 border-b pb-1 mb-3" style={{ borderBottomColor: `${themeColor}40` }}>
-      {label}
-    </h2>
+    <ResumeSectionHeading label={label} className="text-[11px] font-serif font-bold tracking-wide text-slate-800 border-b pb-1 mb-3" style={{ borderBottomColor: `${themeColor}40` }} />
   )
 
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -99,13 +101,9 @@ const AcademicTemplate = memo(function AcademicTemplate({
             <div key={exp.id} className="exp-entry">
               <div className="flex justify-between items-baseline">
                 <div className="text-[10.5px] font-bold font-serif text-slate-900">{exp.jobTitle} — {exp.company}</div>
-                <div className="text-[9px] text-slate-500 font-serif">{formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}</div>
+                <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[9px] text-slate-500 font-serif" />
               </div>
-              <ul className="mt-1 pl-4 space-y-0.5">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[9.5px] leading-relaxed text-slate-700 font-serif">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="mt-1 pl-4 space-y-0.5" itemClassName="text-[9.5px] leading-relaxed text-slate-700 font-serif" />
             </div>
           ))}
         </div>
@@ -129,7 +127,7 @@ const AcademicTemplate = memo(function AcademicTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-4">
         {h2(SECTION_LABELS.skills)}
-        <p className="text-[10px] text-slate-700 font-serif">{skills.join(' · ')}</p>
+        <ResumeSkillsList skills={skills} className="text-[10px] text-slate-700 font-serif" />
       </div>
     ), 'skills') : null,
 

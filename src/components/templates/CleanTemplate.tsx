@@ -5,6 +5,10 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface CleanTemplateProps {
   data: ResumeData
@@ -45,7 +49,7 @@ const CleanTemplate = memo(function CleanTemplate({
   )
 
   const h2 = (label: string) => (
-    <h2 className="text-[11px] font-extralight uppercase tracking-[0.3em] text-slate-400 mb-3">{label}</h2>
+    <ResumeSectionHeading label={label} className="text-[11px] font-extralight uppercase tracking-[0.3em] text-slate-400 mb-3" />
   )
 
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -64,14 +68,10 @@ const CleanTemplate = memo(function CleanTemplate({
             <div key={exp.id} className="exp-entry">
               <div className="flex justify-between items-baseline mb-0.5">
                 <div className="text-[11px] font-semibold text-slate-800">{exp.jobTitle} <span className="font-light text-slate-500">— {exp.company}</span></div>
-                <div className="text-[9px] text-slate-400 font-light">{formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}</div>
+                <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[9px] text-slate-400 font-light" />
               </div>
               {exp.location && <div className="text-[9px] text-slate-400 font-light -mt-0.5 mb-1">{exp.location}</div>}
-              <ul className="space-y-0.5">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[9.5px] leading-relaxed text-slate-600 font-light pl-3 -indent-2 ml-2">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="space-y-0.5" itemClassName="text-[9.5px] leading-relaxed text-slate-600 font-light pl-3 -indent-2 ml-2" />
             </div>
           ))}
         </div>
@@ -98,7 +98,7 @@ const CleanTemplate = memo(function CleanTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-4">
         {h2(SECTION_LABELS.skills)}
-        <p className="text-[10px] text-slate-600 font-light leading-relaxed">{skills.join('  ·  ')}</p>
+        <ResumeSkillsList skills={skills} separator="  ·  " className="text-[10px] text-slate-600 font-light leading-relaxed" />
       </div>
     ), 'skills') : null,
 

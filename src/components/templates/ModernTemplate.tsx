@@ -5,6 +5,10 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface ModernTemplateProps {
   data: ResumeData
@@ -22,7 +26,7 @@ function SectionHeading({ label, color }: { label: string; color: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: color }} />
-      <h2 className="text-[11px] font-black tracking-wider text-slate-950 section-heading">{label}</h2>
+      <ResumeSectionHeading label={label} className="text-[11px] font-black tracking-wider text-slate-950 section-heading" />
     </div>
   )
 }
@@ -73,15 +77,11 @@ const ModernTemplate = memo(function ModernTemplate({
                   {exp.jobTitle} <span className="font-semibold" style={{ color: themeColor }}>— {exp.company}</span>
                 </div>
                 <div className="text-[9.5px] font-bold text-slate-500">
-                  {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
+                  <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[9.5px] font-bold text-slate-500" />
                 </div>
               </div>
               {exp.location && <div className="text-[9px] text-slate-500 font-medium">{exp.location}</div>}
-              <ul className="space-y-1 pl-4">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[10px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="space-y-1 pl-4" itemClassName="text-[10px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5" />
             </div>
           ))}
         </div>
@@ -112,7 +112,7 @@ const ModernTemplate = memo(function ModernTemplate({
     skills: skills.length > 0 ? renderPreviewWrapper('skills', (
       <div className="mb-2">
         <SectionHeading label={SECTION_LABELS.skills} color={themeColor} />
-        <p className="text-[10px] leading-relaxed text-slate-700">{skills.join(' · ')}</p>
+        <ResumeSkillsList skills={skills} className="text-[10px] leading-relaxed text-slate-700" />
       </div>
     ), 'skills') : null,
 

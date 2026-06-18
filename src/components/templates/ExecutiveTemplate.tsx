@@ -5,6 +5,10 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface ExecutiveTemplateProps {
   data: ResumeData
@@ -49,12 +53,12 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
 
   const leftH2 = (label: string) => (
     <div className="border-t border-slate-300 pt-2 mt-3">
-      <h2 className="text-[10px] font-black tracking-wider text-slate-500">{label}</h2>
+      <ResumeSectionHeading label={label} className="text-[10px] font-black tracking-wider text-slate-500" />
     </div>
   )
 
   const rightH2 = (label: string) => (
-    <h2 className="text-[11px] font-black tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 mb-2.5 font-serif">{label}</h2>
+    <ResumeSectionHeading label={label} className="text-[11px] font-black tracking-widest text-slate-900 border-b-2 border-slate-100 pb-1 mb-2.5 font-serif" />
   )
 
   const leftSectionsMap: Record<string, React.ReactNode> = {
@@ -76,7 +80,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-4">
         {leftH2(SECTION_LABELS.skills)}
-        <p className="text-[9px] text-slate-700 mt-1 leading-relaxed">{skills.join(' · ')}</p>
+        <ResumeSkillsList skills={skills} className="text-[9px] text-slate-700 mt-1 leading-relaxed" />
       </div>
     )) : null,
 
@@ -122,15 +126,11 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
                   {exp.jobTitle} <span className="font-normal text-slate-500">— {exp.company}</span>
                 </div>
                 <div className="text-[9.5px] font-bold text-slate-600 shrink-0 ml-4 font-mono">
-                  {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
+                  <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[9.5px] font-bold text-slate-600 shrink-0 ml-4 font-mono" />
                 </div>
               </div>
               {exp.location && <div className="text-[9px] text-slate-400 italic -mt-0.5">{exp.location}</div>}
-              <ul className="space-y-1 pl-4">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5 font-sans">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="space-y-1 pl-4" itemClassName="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5 font-sans" />
             </div>
           ))}
         </div>

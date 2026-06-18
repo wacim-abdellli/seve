@@ -4,6 +4,10 @@ import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
 import { useTemplateData } from './useTemplateData'
 import PreviewSectionWrapper from '../PreviewSectionWrapper'
+import ResumeSectionHeading from '../ui/resume/ResumeSectionHeading'
+import ResumeSkillsList from '../ui/resume/ResumeSkillsList'
+import ResumeDateRange from '../ui/resume/ResumeDateRange'
+import ResumeBulletList from '../ui/resume/ResumeBulletList'
 
 interface MinimalistTemplateProps {
   data: ResumeData
@@ -47,14 +51,10 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
   )
 
   const h2 = (label: string) => (
-    <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-2 font-serif" style={{ borderBottomColor: borderColor }}>
-      {label}
-    </h2>
+    <ResumeSectionHeading label={label} className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-2 font-serif" style={{ borderBottomColor: borderColor }} />
   )
   const h2Late = (label: string) => (
-    <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-      {label}
-    </h2>
+    <ResumeSectionHeading label={label} className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans" />
   )
 
   const sectionsMap: Record<string, React.ReactNode> = {
@@ -76,15 +76,11 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
                   {exp.jobTitle} <span className="font-normal text-slate-500">— {exp.company}</span>
                 </div>
                 <div className="text-[9.5px] font-bold text-slate-500 font-mono">
-                  {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
+                  <ResumeDateRange startDate={exp.startDate} endDate={exp.endDate} current={exp.current} className="text-[9.5px] font-bold text-slate-500 font-mono" />
                 </div>
               </div>
               {exp.location && <div className="text-[8.5px] text-slate-400 italic -mt-0.5">{exp.location}</div>}
-              <ul className="space-y-0.5 pl-4">
-                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
-                  <li key={bullet} className="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5">{bullet}</li>
-                ))}
-              </ul>
+              <ResumeBulletList bullets={exp.bullets} className="space-y-0.5 pl-4" itemClassName="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5" />
             </div>
           ))}
         </div>
@@ -143,9 +139,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-2">
         {h2('Skills')}
-        <p className="text-[9.5px] leading-relaxed text-slate-700" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' } as React.CSSProperties}>
-          {skills.join(' , ')}
-        </p>
+        <ResumeSkillsList skills={skills} separator=" , " className="text-[9.5px] leading-relaxed text-slate-700" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' } as React.CSSProperties} />
       </div>
     ), 'skills') : null,
 
