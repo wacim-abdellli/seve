@@ -280,7 +280,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         await syncToCloud(Object.values(state.resumes), user.id)
         setCloudStatus('synced')
         setCloudError(null)
-        showToast('Cloud saved', 'success')
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message
           : (err as { message?: string })?.message ?? 'Unknown sync error'

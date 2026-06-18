@@ -165,7 +165,7 @@ export default function ResumeManager({
                         {profile.title}
                       </h4>
                       {cloudStatus === 'synced' && (
-                        <Cloud size={11} className="text-emerald-400 shrink-0" title="Synced to cloud" />
+                        <span title="Synced to cloud"><Cloud size={11} className="text-emerald-400 shrink-0" /></span>
                       )}
                       {!cloudStatus || cloudStatus === 'local' ? (
                         <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-zinc-800/60 text-zinc-500 ml-1">

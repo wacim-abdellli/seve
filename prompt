@@ -1,140 +1,124 @@
-# Page Count Bug — Full Fix Plan
+Agent Prompt: ATS Audit UX Overhaul
+3 files to edit, zero token waste.
+File 1: src/components/AtsChecker.tsx
+1A — Fix scan trigger (module-level persistence)
+Replace const prevResultKey = useRef('') (line 157) + the useEffect (lines 164–214) with:
+let atsLastResultKey: string | null = null
 
-## What's Actually Happening (Root Cause)
+// Inside component (remove useRef import too)
+useEffect(() => {
+  if (atsLastResultKey === resultKey) return
 
-### Problem 1 — Wrong element being measured
+  const prevKey = atsLastResultKey
+  atsLastResultKey = resultKey
 
-`measurePageCount` in `ResumePreview.tsx` does this:
+  setIsScanning(true)
+  setScanStage(0)
+  setResumeScanVersion(v => v + 1)
+  setScanLogs([])
+  setMicroTick(0)
 
-```ts
-const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
-const height = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
-```
+  const timeouts: ReturnType<typeof setTimeout>[] = []
+  let d = 0
+  const delays = [800, 700, 650, 550, 400].map(d => d + Math.random() * 200 - 100)
+  delays.forEach((ms, i) => {
+    d += ms
+    const t = setTimeout(() => {
+      if (i < delays.length - 1) {
+        setScanStage(i + 1)
+      } else {
+        setIsScanning(false)
+        setLastAudited(new Date())
+      }
+    }, d)
+    timeouts.push(t)
+  })
 
-`.resume-template-wrapper` **EXISTS** — it's a `<div>` rendered at line 683 that wraps the actual template.
+  const microInterval = setInterval(() => {
+    setMicroTick(t => t + 1)
+  }, 85)
 
-So `contentEl.scrollHeight` is the full height of the wrapper including everything: the template, the DnD providers, etc.
+  const logLines = dynamicLogLines()
+  let logIdx = 0
+  const logInterval = setInterval(() => {
+    setScanLogs(prev => {
+      const next = [...prev, logLines[logIdx % logLines.length]]
+      logIdx++
+      return next.slice(-6)
+    })
+  }, 95)
 
-**But the problem is what's inside `.resume-template-wrapper`.** Each template's root div is `className="resume-template"`. Inside that is the `.resume-page` div. The `.resume-template-wrapper` height equals the `.resume-page` height (since the template root has no extra padding/margin).
-
-So this part is actually fine. The issue is the threshold.
-
----
-
-### Problem 2 — Screen height ≠ Print height
-
-The browser print engine renders fonts at the **printer's DPI** (PDF = 72dpi, printer = 300dpi), with different font hinting and subpixel rounding. This produces **slightly different line heights** than the screen rendering at 96dpi.
-
-Specifically:
-- Screen at 96dpi: same content may render as **1140–1155px** tall
-- Print at PDF/72dpi: same content may render as **1100–1115px** tall — fits on 1 page
-
-This is why the badge says "2 Pages" but the print dialog says "1 page." The content genuinely measures over `PAGE_HEIGHT_PX = 1130` on screen, but the browser squeezes it slightly in print.
-
-### Problem 3 — Different templates have no min-height
-
-- **Creative / Executive**: have `min-h-[1123px]` → always measure ≥ 1123px → page count works correctly with 1130 threshold
-- **Classic / Modern / Minimalist**: have NO `min-h` → render at natural content height → might measure 1135px on screen even though it's 1 print page
-
-**Each template's natural screen height for a "just fits 1 page" resume is different.** Classic measures differently from Minimalist because of different `space-y-*` gaps and heading sizes.
-
----
-
-## The Fix
-
-### File: `src/components/ResumePreview.tsx`
-
-**Replace the entire `measurePageCount` function** (lines 133–142) with this improved version:
-
-```tsx
-const measurePageCount = useCallback(() => {
-  if (!resumeContentRef.current) return
-
-  // Prefer querying the actual .resume-page elements for most accurate measurement.
-  // Each template puts content inside .resume-page divs.
-  const pageEls = resumeContentRef.current.querySelectorAll('.resume-page')
-
-  if (pageEls.length > 1) {
-    // Template explicitly created multiple page divs (e.g. after section splitting)
-    const count = pageEls.length
-    setPageCount(count)
-    if (onPageCountChangeRef.current) onPageCountChangeRef.current(count)
-    return
-  }
-
-  // Single .resume-page: measure its height to estimate pages
-  // Fall back to .resume-template-wrapper, then to the full ref
-  const measureTarget =
-    pageEls[0] ??
-    resumeContentRef.current.querySelector('.resume-template-wrapper') ??
-    resumeContentRef.current
-
-  const height = measureTarget.scrollHeight
-
-  // A4 at 96dpi = 297mm × (96/25.4) = 1122.52px ≈ 1123px
-  // Browser print engine renders slightly more compact than screen (different DPI/hinting)
-  // Use 1160px as threshold: 1123px + 37px tolerance for rendering differences.
-  // This means content must be >1160px on screen to be counted as 2 pages.
-  const A4_SCREEN_THRESHOLD = 1160
-
-  const pages = Math.max(1, Math.ceil(height / A4_SCREEN_THRESHOLD))
-  setPageCount(pages)
-  if (onPageCountChangeRef.current) onPageCountChangeRef.current(pages)
-}, [])
-```
-
-**Also update the `PAGE_HEIGHT_PX` constant on line 122** — it's only used by `fitToOnePage()`, not by `measurePageCount` anymore. Change it to match the new threshold:
-
-```ts
-// Line 122: remove PAGE_HEIGHT_PX = 1130 (now unused by measurePageCount)
-// Keep it only for fitToOnePage calculations:
-const A4_PX = 1122      // exact A4 at 96dpi
-const TEMPLATE_VERTICAL_PADDING = 96
-```
-
-**Also update `fitToOnePage` function** (line 154–185) to use `A4_PX` instead of `PAGE_HEIGHT_PX`:
-
-Find every reference to `PAGE_HEIGHT_PX` in `fitToOnePage` and replace with `A4_PX`:
-
-```tsx
-// Line 160: was PAGE_HEIGHT_PX, change to A4_PX
-if (scrollHeight <= A4_PX) {
-
-// Line 168: was PAGE_HEIGHT_PX, change to A4_PX  
-const targetContentArea = A4_PX - TEMPLATE_VERTICAL_PADDING // 1026px
-```
-
----
-
-## Why 1160px and not something else?
-
-| Threshold | Risk |
-|---|---|
-| 1123px (exact A4) | Too strict — any font hinting variation causes false 2-page |
-| 1130px (current) | Still too strict — Minimalist at 9.5pt triggers falsely |
-| 1155px | Better but still can fail for Creative/Executive with min-h-[1123px] |
-| **1160px** | Safe: 37px of tolerance covers all templates and font sizes from 8.5–10.5px |
-| 1200px | Too loose — would miss genuinely 2-page resumes |
-
-The 37px tolerance accounts for:
-- 8px: subpixel rounding accumulated across 20+ sections with `space-y-*`
-- 12px: font hinting difference between screen 96dpi and print 72dpi
-- 10px: `space-y-5` / `space-y-6` gaps rendering at slightly different sizes per template
-- 7px: safety margin
-
-For a resume to be counted as 2 pages, its content must be genuinely over 1160px on screen — which only happens when it truly overflows one physical A4 page.
-
----
-
-## Summary of Changes
-
-Only **one file** to change: `src/components/ResumePreview.tsx`
-
-| Location | Change |
-|---|---|
-| Line 122 | Remove `PAGE_HEIGHT_PX = 1130`, replace with `const A4_PX = 1122` |
-| Lines 133–142 | Replace `measurePageCount` function with the new version above |
-| Line 160 | Change `PAGE_HEIGHT_PX` → `A4_PX` in `fitToOnePage` |
-| Line 168 | Change `PAGE_HEIGHT_PX` → `A4_PX` in `fitToOnePage` |
-
-That's it. No template files need touching. No CSS changes. Just the threshold and the measurement target.
+  return () => { timeouts.forEach(clearTimeout); clearInterval(microInterval); clearInterval(logInterval) }
+}, [resultKey])
+Behavior:
+Scenario	Shows scan?
+First visit to ATS in session	✅ "analyzing your resume..."
+Same data, re-visit ATS	❌ results immediately
+Edit CV → re-visit ATS	✅ new analysis
+Edit JD while on ATS	✅ re-analysis
+Auto-fix triggered	✅ re-analysis
+Page refresh → ATS	✅ first visit (module reset)
+1B — Dynamic log lines (real user data instead of fake numbers)
+Add this helper above the useEffect:
+function dynamicLogLines() {
+  const expCount = resumeData.experience?.length ?? 0
+  const skillCount = resumeData.skills?.length ?? 0
+  const projCount = resumeData.projects?.length ?? 0
+  const eduCount = resumeData.education?.length ?? 0
+  const totalWords = resumeData.summary?.split(/\s+/).filter(Boolean).length ?? 0
+  const tokens = expCount * 12 + skillCount * 8 + totalWords
+  return [
+    'initializing scan engine...', 'loading ATS ruleset', 'parsing document tree',
+    `indexing ${tokens} tokens`, `extracting ${expCount + eduCount + projCount + 3} sections`, 'linking section metadata',
+    'computing keyword vector', `cross-referencing ${skillCount} skills against target role`, 'applying synonym map (62 entries)',
+    'scanning formatting rules', `validating ${expCount + eduCount} date fields`, 'checking encoding safety',
+    'measuring section coverage', `rating ${expCount + projCount} bullet points`, 'benchmarking against industry standards',
+    'compiling weighted scores', 'generating recommendations', 'finalizing audit report',
+  ]
+}
+Replace the hardcoded logLines array variable inside the effect with a call to dynamicLogLines().
+1C — Stage emoji prefix for visual rhythm
+In SCAN_STAGES (line 144), add emoji to each label:
+const SCAN_STAGES = [
+  { label: '🔍 Parsing resume structure...', ... },
+  { label: '🎯 Analyzing keyword density...', ... },
+  { label: '⚙️ Checking formatting safety...', ... },
+  { label: '📊 Evaluating section completeness...', ... },
+  { label: '📝 Generating multi-dimensional report...', ... },
+]
+1D — Score hologram lock-in effect
+Add a new state: const [scanComplete, setScanComplete] = useState(false)
+In the last stage timeout callback, add setScanComplete(true) right after setIsScanning(false):
+} else {
+  setIsScanning(false)
+  setScanComplete(true)
+  setLastAudited(new Date())
+}
+Then reset setScanComplete(false) at the start of the effect (next scan).
+In the dashboard score gauge area (around line 623), add motion to make the score "pop" when scan completes:
+<motion.div
+  animate={scanComplete ? { scale: [1, 1.06, 1] } : {}}
+  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+  onAnimationComplete={() => setScanComplete(false)}
+>
+  <ScoreGauge ... />
+</motion.div>
+File 2: src/context/ResumeContext.tsx
+2 — Delete the spammy success toast
+Find:
+showToast('Cloud saved', 'success')
+Delete this one line. Keep showToast('Cloud sync failed', 'error').
+Reason: The badge already shows "Cloud saved" — a toast on every 800ms keystroke debounce is excessive.
+Cleanup
+Remove useRef from the React import in AtsChecker.tsx if it's no longer used anywhere else in the file.
+Verify
+npm run build
+Zero TS errors, zero warnings (except the pre-existing chunk size warning).
+Manual test checklist
+- Navigate to ATS → scan animation plays (~3s) → results appear smoothly
+- Switch to studio, edit resume, back to ATS → scan animation plays again
+- Switch to ATS again without editing → results appear instantly, no scan
+- Add/update job description while on ATS → scan animation plays
+- After scan, score gauge "pops" subtly on reveal
+- Log lines reference real data counts (not generic numbers)
+- Success toast for cloud save does NOT fire on keystroke; error toast still works

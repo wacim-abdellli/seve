@@ -9,8 +9,8 @@ import {
   CheckCircle2, XCircle, FileCode, Activity,
   Target, Zap, Sparkles, ArrowRight, Lightbulb, BarChart3,
   AlertTriangle, ShieldAlert, TrendingUp,
-  ChevronDown, ChevronUp, RefreshCw, BookOpen,
-  Plus, Check, FileText, Briefcase, Circle
+  ChevronDown, ChevronUp, BookOpen,
+  Plus, Check, FileText, Briefcase
 } from 'lucide-react'
 
 interface AtsCheckerProps {
@@ -154,25 +154,24 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [microTick, setMicroTick] = useState(0)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
+  const prevResultKey = useRef('')
+
   const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
   const resultKey = useMemo(() =>
     atsScore.total + '|' + (atsScore.reportV2?.breakdown?.map(b => b.score).join(',') || ''),
   [atsScore])
 
-  const prevResultKey = useRef('')
   useEffect(() => {
-    if (!prevResultKey.current) {
-      prevResultKey.current = resultKey
-      return
-    }
-    if (prevResultKey.current === resultKey) return
-    prevResultKey.current = resultKey
+    const isNewKey = prevResultKey.current !== resultKey
 
-    setIsScanning(true)
-    setScanStage(0)
-    setResumeScanVersion(v => v + 1)
-    setScanLogs([])
-    setMicroTick(0)
+    if (isNewKey) {
+      prevResultKey.current = resultKey
+      setIsScanning(true)
+      setScanStage(0)
+      setResumeScanVersion(v => v + 1)
+      setScanLogs([])
+      setMicroTick(0)
+    }
 
     const timeouts: ReturnType<typeof setTimeout>[] = []
     let d = 0
@@ -348,7 +347,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
         >
           <CheckCircle2 size={13} />
           Audit Checklist
-          {totalIssuesCount > 0 && (
+          {!isScanning && totalIssuesCount > 0 && (
             <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded-full ${criticalIssues.length > 0 ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
               {totalIssuesCount}
             </span>
@@ -425,175 +424,124 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col items-center justify-center py-10"
               >
-                {/* Frosted Glass Scanner Card */}
-                <div className="glass-card rounded-3xl p-8 max-w-md w-full border border-white/[0.06] relative overflow-hidden bg-zinc-950/40 backdrop-blur-md flex flex-col items-center space-y-6 shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
-                  {/* Scanning Beam Line */}
-                  <motion.div
-                    className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-400/80 to-transparent pointer-events-none z-10"
-                    animate={{ top: ['0%', '100%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    style={{ filter: 'blur(1px)' }}
-                  />
-                  <motion.div
-                    className="absolute inset-x-8 h-12 bg-gradient-to-b from-rose-500/5 to-transparent pointer-events-none z-0"
-                    animate={{ top: ['-10%', '110%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                  />
+                <div className="relative w-full max-w-sm">
+                  {/* Glow */}
+                  <div className="absolute -inset-16 bg-[radial-gradient(ellipse_at_center,_rgba(244,63,94,0.1)_0%,_transparent_70%)] pointer-events-none" />
 
-                  {/* Background Glows */}
-                  <div className="absolute -right-20 -top-20 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -left-20 -bottom-20 w-48 h-48 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
-                  <motion.div
-                    className="absolute inset-0 rounded-3xl pointer-events-none"
-                    animate={{ boxShadow: ['inset 0 0 30px rgba(244,63,94,0.03)', 'inset 0 0 60px rgba(244,63,94,0.07)', 'inset 0 0 30px rgba(244,63,94,0.03)'] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  <div className="relative rounded-2xl border border-zinc-800/50 bg-zinc-950/70 backdrop-blur-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
 
-                  {/* Header Title */}
-                  <div className="text-center space-y-1.5 w-full">
-                    <motion.span
-                      className="inline-block text-[10px] font-black uppercase tracking-widest text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full"
-                      animate={{ scale: [1, 1.04, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      ATS Scanning Active
-                    </motion.span>
-                    <h3 className="text-base font-extrabold text-white mt-3">Analyzing Resume Compliance</h3>
-                  </div>
+                    <div className="relative z-10 px-6 py-7 flex flex-col items-center gap-5">
 
-                  {/* Circular SVG Progress Loader */}
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    {/* Outer pulsing ring */}
-                    <motion.div
-                      className="absolute w-36 h-36 rounded-full border border-rose-500/20"
-                      animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.1, 0.3] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                      className="absolute w-40 h-40 rounded-full border border-rose-500/10"
-                      animate={{ scale: [1, 1.12, 1], opacity: [0.15, 0.05, 0.15] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                    />
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="64" cy="64" r="54" className="stroke-zinc-800" strokeWidth="6" fill="transparent" />
-                      <motion.circle
-                        cx="64" cy="64" r="54"
-                        className="stroke-rose-500"
-                        strokeWidth="6" fill="transparent"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 54}
-                        animate={{ strokeDashoffset: 2 * Math.PI * 54 * (1 - SCAN_STAGES[scanStage].pct / 100) }}
-                        transition={{ duration: 0.4, ease: 'easeOut' }}
-                      />
-                    </svg>
-                    <div className="absolute inset-2 rounded-full border border-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.2)] pointer-events-none" />
-                    <div className="absolute text-center">
-                      <motion.span
-                        key={SCAN_STAGES[scanStage].pct}
-                        className="text-2xl font-black text-white leading-none font-mono tabular-nums"
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        {Math.round(SCAN_STAGES[scanStage].pct)}
-                      </motion.span>
-                      <span className="text-[9px] text-zinc-500 block uppercase font-bold tracking-wider mt-0.5">Progress</span>
-                    </div>
-                  </div>
-
-                  {/* Vertical Audit Checklist */}
-                  <div className="w-full space-y-3 pt-4 border-t border-zinc-900">
-                    {SCAN_STAGES.map((stage, idx) => {
-                      const isCompleted = idx < scanStage
-                      const isActive = idx === scanStage
-                      const microIdx = microTick % stage.sublabels.length
-
-                      return (
+                      {/* Neural nodes animation */}
+                      <div className="relative w-32 h-32">
+                        {/* Pulsing center */}
                         <motion.div
-                          key={stage.label}
-                          layout
-                          className={`flex items-start gap-3 rounded-xl px-3 py-2 -mx-3 transition-all duration-500 ${
-                            isCompleted ? 'opacity-50' : isActive ? 'bg-rose-500/[0.04] shadow-[inset_0_0_20px_rgba(244,63,94,0.04)]' : 'opacity-25'
-                          }`}
-                        >
-                          <div className="mt-0.5 shrink-0">
-                            {isCompleted ? (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                              >
-                                <CheckCircle2 size={16} className="text-emerald-400" />
-                              </motion.div>
-                            ) : isActive ? (
-                              <div className="relative">
-                                <RefreshCw size={15} className="text-rose-400 animate-spin" />
-                                <motion.div
-                                  className="absolute inset-0 rounded-full border border-rose-400/30"
-                                  animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
-                                  transition={{ duration: 1, repeat: Infinity }}
-                                />
-                              </div>
-                            ) : (
-                              <Circle size={15} className="text-zinc-700" />
-                            )}
-                          </div>
-                          <div className="space-y-0.5 min-w-0">
-                            <p className={`text-[11px] font-bold leading-tight truncate ${isActive ? 'text-rose-300' : 'text-zinc-200'}`}>
-                              {stage.label}
-                            </p>
-                            {isActive && (
-                              <motion.p
-                                key={microIdx}
-                                className="text-[9.5px] text-zinc-400 leading-normal"
-                                initial={{ opacity: 0, x: -4 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 4 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                {stage.sublabels[microIdx]}
-                              </motion.p>
-                            )}
-                          </div>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Live Scan Log */}
-                  <div className="w-full pt-3 border-t border-zinc-900/60">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                      <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">Operation Log</span>
-                    </div>
-                    <div className="space-y-1 max-h-20 overflow-hidden">
-                      {scanLogs.map((log, i) => (
+                          className="absolute inset-0 rounded-full bg-rose-500/10"
+                          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        />
+                        {/* Orbiting nodes */}
+                        {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                          <motion.div
+                            key={angle}
+                            className="absolute w-2 h-2 rounded-full"
+                            style={{
+                              background: i % 2 === 0 ? '#f43f5e' : '#fb923c',
+                              boxShadow: `0 0 8px ${i % 2 === 0 ? '#f43f5e' : '#fb923c'}80`,
+                              top: '50%',
+                              left: '50%',
+                            }}
+                            animate={{
+                              x: [Math.cos((angle * Math.PI) / 180) * 48, Math.cos(((angle + 360) * Math.PI) / 180) * 48],
+                              y: [Math.sin((angle * Math.PI) / 180) * 48, Math.sin(((angle + 360) * Math.PI) / 180) * 48],
+                              opacity: [0.4, 1, 0.4],
+                            }}
+                            transition={{
+                              duration: 3 + i * 0.2,
+                              repeat: Infinity,
+                              ease: 'linear',
+                            }}
+                          />
+                        ))}
+                        {/* Center glow */}
                         <motion.div
-                          key={`${resumeScanVersion}-${i}`}
-                          initial={{ opacity: 0, x: -6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="text-[9px] text-zinc-600 font-mono truncate"
-                        >
-                          <span className="text-zinc-700">$</span> {log}
-                        </motion.div>
-                      ))}
-                      <motion.div
-                        className="text-[9px] text-zinc-700 font-mono"
-                        animate={{ opacity: [0.3, 0.7, 0.3] }}
-                        transition={{ duration: 1.2, repeat: Infinity }}
-                      >
-                        <span className="text-zinc-700">$</span> _
-                      </motion.div>
-                    </div>
-                  </div>
+                          className="absolute inset-8 rounded-full bg-gradient-to-br from-rose-400 to-amber-500 blur-xl opacity-20"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        />
+                        {/* Percentage */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <motion.span
+                            key={SCAN_STAGES[scanStage].pct}
+                            className="text-2xl font-black text-white tabular-nums leading-none"
+                            initial={{ y: 6, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {Math.round(SCAN_STAGES[scanStage].pct)}<span className="text-xs text-zinc-500">%</span>
+                          </motion.span>
+                        </div>
+                      </div>
 
-                  {/* Footer */}
-                  <div className="w-full pt-2 flex justify-between items-center text-[8px] text-zinc-700 font-mono">
-                    <span>ENGINE v2.3</span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-1 h-1 rounded-full bg-rose-400/50 animate-pulse" />
-                      analyzing v{resumeScanVersion}
-                    </span>
+                      {/* Current stage text */}
+                      <div className="text-center">
+                        <motion.p
+                          key={SCAN_STAGES[scanStage].label}
+                          className="text-sm font-semibold text-white/90"
+                          initial={{ y: 4, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {SCAN_STAGES[scanStage].label}
+                        </motion.p>
+                        <motion.p
+                          key={`sub-${microTick}`}
+                          className="text-[11px] text-zinc-500 mt-1"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {SCAN_STAGES[scanStage].sublabels[microTick % SCAN_STAGES[scanStage].sublabels.length]}
+                        </motion.p>
+                      </div>
+
+                      {/* Thin progress bar */}
+                      <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-rose-500 to-amber-500"
+                          animate={{ width: `${SCAN_STAGES[scanStage].pct}%` }}
+                          transition={{ duration: 0.4, ease: 'easeOut' }}
+                        />
+                      </div>
+
+                      {/* Compact log */}
+                      <div className="w-full bg-zinc-950/80 rounded-lg border border-zinc-800/30 p-2.5">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                          <span className="text-[6px] font-bold text-zinc-600 uppercase tracking-widest">Live</span>
+                        </div>
+                        <div className="h-10 overflow-hidden">
+                          {scanLogs.slice(-2).map((log, i) => (
+                            <motion.div
+                              key={`${resumeScanVersion}-${i}`}
+                              initial={{ opacity: 0, x: -4 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="text-[8px] text-zinc-600 font-mono truncate leading-relaxed"
+                            >
+                              <span className="text-rose-500/50">▸</span> {log}
+                            </motion.div>
+                          ))}
+                          <motion.div
+                            className="text-[8px] text-zinc-700 font-mono"
+                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            <span className="text-rose-500/50">▸</span> _
+                          </motion.div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
