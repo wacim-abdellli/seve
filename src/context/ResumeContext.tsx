@@ -5,7 +5,10 @@ import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 
 const LOCAL_STORAGE_KEY = 'seve_state'
-const defaultResumeId = 'default-resume'
+// Fixed UUID for the default resume — must be a valid UUID because
+// the Supabase `resumes` table has `id UUID`. Using a fixed deterministic
+// UUID so existing users' localStorage data migrates cleanly.
+const defaultResumeId = '00000000-0000-0000-0000-000000000001'
 
 const INITIAL_RESUME_DATA: ResumeData = {
   contact: {
@@ -48,9 +51,20 @@ function loadInitialState(): AppState {
     try {
       const parsed = JSON.parse(saved)
       if (parsed.resumes && parsed.selectedResumeId) {
+        // Migrate any old string-based IDs ('default-resume') to the proper UUID.
+        // This ensures Supabase upsert doesn't fail with invalid UUID type errors.
+        const migratedResumes: typeof parsed.resumes = {}
+        let migratedSelectedId = parsed.selectedResumeId
+
+        for (const [id, resume] of Object.entries(parsed.resumes)) {
+          const newId = id === 'default-resume' ? defaultResumeId : id
+          migratedResumes[newId] = { ...(resume as ResumeProfile), id: newId }
+          if (parsed.selectedResumeId === id) migratedSelectedId = newId
+        }
+
         return {
-          resumes: parsed.resumes,
-          selectedResumeId: parsed.selectedResumeId,
+          resumes: migratedResumes,
+          selectedResumeId: migratedSelectedId,
         }
       } else if (parsed.resumeData) {
         let sectionOrder = parsed.sectionOrder
