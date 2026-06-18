@@ -219,6 +219,11 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
               <option value="executive">Executive (Leadership)</option>
               <option value="minimalist">Minimalist (Clean)</option>
               <option value="creative">Creative (Accented)</option>
+              <option value="compact">Compact (Space-saving)</option>
+              <option value="professional">Professional (Bold)</option>
+              <option value="technical">Technical (Structured)</option>
+              <option value="academic">Academic (Publications)</option>
+              <option value="clean">Clean (Minimal)</option>
             </select>
           </div>
           <div className="space-y-2">

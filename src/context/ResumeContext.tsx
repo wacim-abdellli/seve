@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react'
 import type { ResumeData, ResumeProfile, AppState } from '../types/resume'
+import { useToast } from '../hooks/useToast'
 import { ResumeContext } from './resumeContextDef'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
@@ -104,11 +105,17 @@ export type CloudStatus = 'local' | 'syncing' | 'synced' | 'error'
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const [state, setState] = useState<AppState>(loadInitialState)
   const [isSaving, setIsSaving] = useState(false)
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>('local')
   const [cloudError, setCloudError] = useState<string | null>(null)
   const hasFetchedCloudRef = useRef(false)
+
+  // Reset cloud fetch flag when user ID changes (handles A?B login switch)
+  useEffect(() => {
+    hasFetchedCloudRef.current = false
+  }, [user?.id])
 
   // Login Merge: when user is authenticated, merge cloud resumes into local state.
   // Runs on initial mount (if user already auth'd from session cookie) AND on login.
@@ -116,52 +123,68 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     if (!user || hasFetchedCloudRef.current) return
     hasFetchedCloudRef.current = true
 
+    const ac = new AbortController()
+    let retryAttempt = 0
+    const MAX_RETRIES = 3
+
     setCloudStatus('syncing')
 
-    supabase
-      .from('resumes')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Cloud sync fetch failed:', error.message)
-          setCloudStatus('error')
-          setCloudError(error.message)
-          return
-        }
-
-        if (!data || data.length === 0) {
-          setCloudStatus('synced')
-          return
-        }
-
-        const cloudResumes: Record<string, ResumeProfile> = {}
-        for (const row of data) {
-          cloudResumes[row.id] = row.resume_data as ResumeProfile
-        }
-
-        setState(prev => {
-          const merged = { ...prev.resumes }
-
-          for (const [id, cloudProfile] of Object.entries(cloudResumes)) {
-            if (merged[id]) {
-              if (new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
-                merged[id] = cloudProfile
-              }
-            } else {
-              merged[id] = cloudProfile
+    function fetchCloud() {
+      supabase
+        .from('resumes')
+        .select('*', { signal: ac.signal } as any)
+        .then(({ data, error }) => {
+          if (error) {
+            if (ac.signal.aborted) return
+            console.error('Cloud sync fetch failed:', error.message)
+            if (retryAttempt < MAX_RETRIES) {
+              retryAttempt++
+              const delay = Math.pow(2, retryAttempt) * 1000
+              setTimeout(fetchCloud, delay)
+              return
             }
+            setCloudStatus('error')
+            setCloudError(error.message)
+            return
           }
 
-          const mergedState = { ...prev, resumes: merged }
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedState))
-          return mergedState
-        })
+          if (!data || data.length === 0) {
+            setCloudStatus('synced')
+            return
+          }
 
-        setCloudStatus('synced')
-      })
+          const cloudResumes: Record<string, ResumeProfile> = {}
+          for (const row of data) {
+            cloudResumes[row.id] = row.resume_data as ResumeProfile
+          }
+
+          setState(prev => {
+            const merged = { ...prev.resumes }
+
+            for (const [id, cloudProfile] of Object.entries(cloudResumes)) {
+              if (merged[id]) {
+                if (new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
+                  merged[id] = cloudProfile
+                }
+              } else {
+                merged[id] = cloudProfile
+              }
+            }
+
+            const mergedState = { ...prev, resumes: merged }
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedState))
+            return mergedState
+          })
+
+          setCloudStatus('synced')
+        })
+    }
+
+    fetchCloud()
+    return () => ac.abort()
   }, [user])
 
-  // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------  // ---------------------------------------------------------------------------
   // Shared cloud-sync helper (used by both auto-save effect and retrySync)
   // ---------------------------------------------------------------------------
   const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
@@ -257,12 +280,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         await syncToCloud(Object.values(state.resumes), user.id)
         setCloudStatus('synced')
         setCloudError(null)
+        showToast('Cloud saved', 'success')
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message
           : (err as { message?: string })?.message ?? 'Unknown sync error'
         console.error('[Seve] Cloud sync failed:', err)
         setCloudStatus('error')
         setCloudError(msg)
+        showToast('Cloud sync failed', 'error')
       }
     }, 800)
 
@@ -355,6 +380,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const deleteResume = useCallback((id: string) => {
+    if (user) {
+      ;(async () => { await supabase.from('resumes').delete().eq('id', id).eq('user_id', user.id) })().catch(() => {})
+    }
     setState(prev => {
       const next = { ...prev.resumes }
       delete next[id]
@@ -363,7 +391,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         : prev.selectedResumeId
       return { ...prev, resumes: next, selectedResumeId: nextSelectedId }
     })
-  }, [])
+  }, [user])
 
   const updateResumeData = useCallback((data: ResumeData) => {
     updateActiveResume(prev => ({ ...prev, resumeData: data }))
