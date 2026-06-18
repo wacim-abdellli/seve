@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ResumeProfile } from '../types/resume'
-import { Copy, Edit2, Trash2, Check, Plus, FolderOpen, Calendar, X, AlertTriangle } from 'lucide-react'
+import { Copy, Edit2, Trash2, Check, Plus, FolderOpen, Calendar, X, AlertTriangle, Cloud } from 'lucide-react'
 import { calculateCompletion } from '../utils/completionHelper'
 
 interface ResumeManagerProps {
@@ -165,7 +165,7 @@ export default function ResumeManager({
                         {profile.title}
                       </h4>
                       {cloudStatus === 'synced' && (
-                        <span title="Synced to cloud" className="text-[11px]">☁️</span>
+                        <Cloud size={11} className="text-emerald-400 shrink-0" title="Synced to cloud" />
                       )}
                       {!cloudStatus || cloudStatus === 'local' ? (
                         <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-zinc-800/60 text-zinc-500 ml-1">
