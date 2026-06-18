@@ -1,527 +1,290 @@
 import type { ResumeData } from '../../types/resume'
-import PreviewSectionWrapper from '../PreviewSectionWrapper'
-import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { memo } from 'react'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
-import { evaluateSectionAts } from '../../utils/atsEvaluator'
-import { getPageBreakSections } from '../../utils/layoutHelper'
+import { useTemplateData } from './useTemplateData'
+import PreviewSectionWrapper from '../PreviewSectionWrapper'
 
 interface MinimalistTemplateProps {
   data: ResumeData
   activeSection?: string | null
   atsMode?: boolean
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
+  onEditSection?: (section: string) => void
   sectionOrder?: string[]
-  onDragStart?: (e: React.DragEvent, sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
+  onDragStart?: (e: React.DragEvent, sectionId: string) => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (sectionId: 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
+  onDrop?: (sectionId: string) => void
   themeColor?: string
 }
 
-export default function MinimalistTemplate({ 
-  data, 
-  activeSection, 
-  atsMode, 
-  onEditSection,
+const MinimalistTemplate = memo(function MinimalistTemplate({
+  data, activeSection, atsMode, onEditSection,
   sectionOrder = ['summary', 'experience', 'projects', 'education', 'skills'],
-  onDragStart,
-  onDragOver,
-  onDrop,
-  themeColor
+  onDragStart, onDragOver, onDrop, themeColor
 }: MinimalistTemplateProps) {
-  const { contact, summary } = data
-  const experience = (data.experience || []).filter(
-    (exp) => exp.jobTitle?.trim() && exp.company?.trim()
+  const {
+    contact, summary, experience, education, skills, projects, languages,
+    awards, certifications, interests, publications, references, volunteer,
+    ats, sectionData,
+  } = useTemplateData(data, activeSection, atsMode, onEditSection, onDragStart, onDragOver, onDrop, sectionOrder)
+
+  const borderColor = themeColor || '#cbd5e1'
+
+  const wrap = (sectionId: string, children: React.ReactNode, dragSection?: string) => (
+    <PreviewSectionWrapper
+      sectionId={sectionId}
+      activeSection={activeSection}
+      atsMode={atsMode}
+      atsRating={ats[sectionId]?.rating || ''}
+      atsFeedback={ats[sectionId]?.feedback}
+      onEdit={onEditSection}
+      onDragStart={dragSection ? ((e: React.DragEvent) => onDragStart?.(e, dragSection)) : undefined}
+      onDragOver={onDragOver}
+      onDrop={dragSection ? (() => onDrop?.(dragSection)) : undefined}
+    >
+      {children}
+    </PreviewSectionWrapper>
   )
-  const education = (data.education || []).filter(
-    (edu) => edu.school?.trim() && edu.degree?.trim()
+
+  const h2 = (label: string) => (
+    <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-2 font-serif" style={{ borderBottomColor: borderColor }}>
+      {label}
+    </h2>
   )
-  const skills = (data.skills || []).filter((s) => s?.trim())
-  const projects = (data.projects || []).filter((p) => p.name?.trim())
-  const languages = (data.languages || []).filter((l) => l.name?.trim())
-  const awards = (data.awards || []).filter((a) => a.title?.trim())
-  const certifications = (data.certifications || []).filter((c) => c.title?.trim())
-  const interests = (data.interests || []).filter((i) => i.name?.trim())
-  const publications = (data.publications || []).filter((p) => p.title?.trim())
-  const references = (data.references || []).filter((r) => r.name?.trim())
-  const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
+  const h2Late = (label: string) => (
+    <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
+      {label}
+    </h2>
+  )
 
-
-  const contactAts = evaluateSectionAts('contact', data)
-  const summaryAts = evaluateSectionAts('summary', data)
-  const experienceAts = evaluateSectionAts('experience', data)
-  const projectsAts = evaluateSectionAts('projects', data)
-  const educationAts = evaluateSectionAts('education', data)
-  const skillsAts = evaluateSectionAts('skills', data)
-  const languagesAts = evaluateSectionAts('languages', data)
-  const awardsAts = evaluateSectionAts('awards', data)
-  const certificationsAts = evaluateSectionAts('certifications', data)
-  const interestsAts = evaluateSectionAts('interests', data)
-  const publicationsAts = evaluateSectionAts('publications', data)
-  const referencesAts = evaluateSectionAts('references', data)
-  const volunteerAts = evaluateSectionAts('volunteer', data)
-
-  // Dynamic sections lookup mapping
   const sectionsMap: Record<string, React.ReactNode> = {
-    summary: summary ? (
-      <PreviewSectionWrapper
-        sectionId="summary"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={summaryAts.rating}
-        atsFeedback={summaryAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'summary')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('summary')}
-      >
-        <div>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-1.5 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
-            Professional Summary
-          </h2>
-          <p className="text-[10px] leading-relaxed text-justify text-slate-700">{summary}</p>
-        </div>
-      </PreviewSectionWrapper>
-    ) : null,
+    summary: summary ? wrap('summary', (
+      <div className="mb-5">
+        {h2('Professional Summary')}
+        <p className="text-[9.5px] leading-relaxed text-slate-700 text-justify font-serif">{summary}</p>
+      </div>
+    ), 'summary') : null,
 
-    experience: experience && experience.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="experience"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={experienceAts.rating}
-        atsFeedback={experienceAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'experience')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('experience')}
-      >
-        <div>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-2 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
-            Experience
-          </h2>
-          <div className="space-y-4">
-            {experience.map((exp) => (
-              <div key={exp.id} className="space-y-1 exp-entry">
-                <div className="flex justify-between items-baseline font-serif">
-                  <div className="text-[10.5px] font-bold text-slate-950">
-                    {exp.jobTitle} <span className="font-normal text-slate-500">— {exp.company}</span>
-                  </div>
-                  <div className="text-[9.5px] font-bold text-slate-500 font-mono">
-                    {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
-                  </div>
+    experience: experience.length > 0 ? wrap('experience', (
+      <div className="mb-5">
+        {h2('Experience')}
+        <div className="space-y-3">
+          {experience.map((exp) => (
+            <div key={exp.id} className="space-y-1 exp-entry">
+              <div className="flex justify-between items-baseline font-serif">
+                <div className="text-[10.5px] font-bold text-slate-950">
+                  {exp.jobTitle} <span className="font-normal text-slate-500">— {exp.company}</span>
                 </div>
-                {exp.location && (
-                  <div className="text-[8.5px] text-slate-400 italic -mt-0.5">{exp.location}</div>
-                )}
-                <ul className="space-y-0.5 pl-4">
-                  {exp.bullets.filter(b => b.trim() !== '').map((bullet, idx) => (
-                    <li key={idx} className="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5">
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </PreviewSectionWrapper>
-    ) : null,
-
-    projects: projects && projects.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="projects"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={projectsAts.rating}
-        atsFeedback={projectsAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'projects')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('projects')}
-      >
-        <div>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-2 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
-            Projects
-          </h2>
-          <div className="space-y-3.5">
-            {projects.map((proj) => (
-              <div key={proj.id} className="space-y-0.5 font-serif proj-entry">
-                <div className="flex justify-between items-baseline">
-                  <div className="text-[10.5px] font-bold text-slate-950">
-                    {proj.name} {proj.link && <span className="font-normal text-[8.5px] text-slate-500 lowercase">({proj.link})</span>}
-                  </div>
-                  <div className="text-[9.5px] font-bold text-slate-500">
-                    {proj.technologies.join(', ')}
-                  </div>
+                <div className="text-[9.5px] font-bold text-slate-500 font-mono">
+                  {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
                 </div>
-                <p className="text-[10px] leading-relaxed text-justify text-slate-700">{proj.description}</p>
               </div>
-            ))}
-          </div>
+              {exp.location && <div className="text-[8.5px] text-slate-400 italic -mt-0.5">{exp.location}</div>}
+              <ul className="space-y-0.5 pl-4">
+                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
+                  <li key={bullet} className="text-[9.5px] leading-relaxed text-justify list-disc text-slate-700 pl-0.5">{bullet}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-      </PreviewSectionWrapper>
-    ) : null,
+      </div>
+    ), 'experience') : null,
 
-    education: education && education.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="education"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={educationAts.rating}
-        atsFeedback={educationAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'education')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('education')}
-      >
-        <div>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-2 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
-            Education
-          </h2>
-          <div className="space-y-4">
-            {education
-              .filter(edu => edu.school?.trim() || edu.degree?.trim())
-              .map((edu) => (
-                <div key={edu.id} className="edu-entry">
-                  {/* School & graduation date */}
-                  <div className="flex justify-between items-baseline font-serif">
-                    <span className="text-[10.5px] font-bold text-slate-950">
-                      {edu.school || 'Institution Name'}
-                    </span>
-                    <span className="text-[9.5px] font-bold text-slate-500 font-mono">
-                      {formatDate(edu.graduationDate)}
-                    </span>
-                  </div>
-                  
-                  {/* Degree — secondary */}
-                  <div className="text-[9.5px] text-slate-500 mt-0.5 font-serif">
-                    <span>{edu.degree}</span>
-                    {edu.location && ` · ${edu.location}`}
-                    {edu.gpa && parseFloat(edu.gpa) >= 3.5 && ` · GPA: ${edu.gpa}`}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      </PreviewSectionWrapper>
-    ) : null,
-
-    languages: languages && languages.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="languages"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={languagesAts.rating}
-        atsFeedback={languagesAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'languages')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('languages')}
-      >
-        <div>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-1.5 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
-            {SECTION_LABELS.languages}
-          </h2>
-          <div className="text-[10px] leading-relaxed text-slate-700 font-serif" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
-            {languages.map((lang, idx) => (
-              <span key={lang.id}>
-                {idx > 0 && ' · '}
-                <span>{lang.name} ({lang.proficiency})</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </PreviewSectionWrapper>
-    ) : null,
-
-    awards: awards && awards.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="awards"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={awardsAts.rating}
-        atsFeedback={awardsAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'awards')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('awards')}
-      >
-        <div>
-          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-            {SECTION_LABELS.awards}
-          </h2>
-          <div className="space-y-2.5">
-            {awards.map((award) => (
-              <div key={award.id} className="space-y-0.5">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[10px] font-bold text-slate-950 font-sans">{award.title}</span>
-                  {award.date && <span className="text-[9px] text-slate-400 font-sans">{formatDate(award.date)}</span>}
-                </div>
-                {award.awarder && (
-                  <div className="text-[9.5px] text-slate-500 font-sans">{award.awarder}</div>
-                )}
-                {award.description && (
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{award.description}</p>
-                )}
+    education: education.length > 0 ? wrap('education', (
+      <div className="mb-5">
+        {h2('Education')}
+        <div className="space-y-3">
+          {education.map((edu) => (
+            <div key={edu.id} className="edu-entry">
+              <div className="flex justify-between items-baseline font-serif">
+                <span className="text-[10.5px] font-bold text-slate-950">{edu.school || 'Institution Name'}</span>
+                <span className="text-[9.5px] font-bold text-slate-500 font-mono">{formatDate(edu.graduationDate)}</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </PreviewSectionWrapper>
-    ) : null,
-
-    certifications: certifications && certifications.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="certifications"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={certificationsAts.rating}
-        atsFeedback={certificationsAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'certifications')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('certifications')}
-      >
-        <div>
-          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-            {SECTION_LABELS.certifications}
-          </h2>
-          <div className="space-y-2.5">
-            {certifications.map((cert) => (
-              <div key={cert.id} className="space-y-0.5">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[10px] font-bold text-slate-950 font-sans">{cert.title}</span>
-                  {cert.date && <span className="text-[9px] text-slate-400 font-sans">{formatDate(cert.date)}</span>}
-                </div>
-                {cert.issuer && (
-                  <div className="text-[9.5px] text-slate-500 font-sans">{cert.issuer}</div>
-                )}
-                {cert.description && (
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{cert.description}</p>
-                )}
+              <div className="text-[9.5px] text-slate-500 mt-0.5 font-serif">
+                <span>{edu.degree}</span>
+                {edu.location && ` · ${edu.location}`}
+                {edu.gpa && parseFloat(edu.gpa) >= 3.5 && ` · GPA: ${edu.gpa}`}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </PreviewSectionWrapper>
-    ) : null,
+      </div>
+    ), 'education') : null,
 
-    interests: interests && interests.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="interests"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={interestsAts.rating}
-        atsFeedback={interestsAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'interests')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('interests')}
-      >
-        <div>
-          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-            {SECTION_LABELS.interests}
-          </h2>
-          <div className="text-[10px] leading-relaxed text-slate-700 font-sans">
-            {interests.map((i, idx) => (
-              <span key={i.id}>
-                {idx > 0 && ', '}
-                <span>{i.name}{i.keywords && i.keywords.length > 0 ? ` (${i.keywords.join(', ')})` : ''}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </PreviewSectionWrapper>
-    ) : null,
-
-    publications: publications && publications.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="publications"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={publicationsAts.rating}
-        atsFeedback={publicationsAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'publications')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('publications')}
-      >
-        <div>
-          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-            {SECTION_LABELS.publications}
-          </h2>
-          <div className="space-y-2.5">
-            {publications.map((pub) => (
-              <div key={pub.id} className="space-y-0.5">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[10px] font-bold text-slate-950 font-sans">{pub.title}</span>
-                  {pub.date && <span className="text-[9px] text-slate-400 font-sans">{formatDate(pub.date)}</span>}
-                </div>
-                {pub.publisher && (
-                  <div className="text-[9.5px] italic text-slate-500 font-sans">{pub.publisher}</div>
-                )}
-                {pub.description && (
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{pub.description}</p>
-                )}
+    projects: projects.length > 0 ? wrap('projects', (
+      <div className="mb-5">
+        {h2('Projects')}
+        <div className="space-y-2">
+          {projects.map((proj) => (
+            <div key={proj.id} className="space-y-0.5 proj-entry">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold text-slate-950">{proj.name}</span>
+                <span className="text-[8.5px] font-bold text-slate-500">{proj.technologies.join(', ')}</span>
               </div>
-            ))}
-          </div>
+              <p className="text-[9px] leading-relaxed text-slate-600 text-justify">{proj.description}</p>
+            </div>
+          ))}
         </div>
-      </PreviewSectionWrapper>
-    ) : null,
+      </div>
+    ), 'projects') : null,
 
-    references: references && references.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="references"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={referencesAts.rating}
-        atsFeedback={referencesAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'references')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('references')}
-      >
-        <div>
-          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-            {SECTION_LABELS.references}
-          </h2>
-          <div className="space-y-2.5">
-            {references.map((ref) => (
-              <div key={ref.id} className="space-y-0.5">
-                <div className="text-[10px] font-bold text-slate-950 font-sans">{ref.name}</div>
-                {ref.position && <div className="text-[9.5px] text-slate-500 font-sans">{ref.position}</div>}
-                {ref.phone && <div className="text-[9.5px] text-slate-500 font-sans">{ref.phone}</div>}
-                {ref.description && (
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{ref.description}</p>
-                )}
+    languages: languages.length > 0 ? wrap('languages', (
+      <div className="mb-5">
+        {h2Late('Languages')}
+        <p className="text-[9.5px] leading-relaxed text-slate-700" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' } as React.CSSProperties}>
+          {languages.map((lang, idx) => (
+            <span key={lang.id}>{idx > 0 && ' · '}<span>{lang.name} ({lang.proficiency})</span></span>
+          ))}
+        </p>
+      </div>
+    ), 'languages') : null,
+
+    skills: skills.length > 0 ? wrap('skills', (
+      <div className="mb-2">
+        {h2('Skills')}
+        <p className="text-[9.5px] leading-relaxed text-slate-700" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' } as React.CSSProperties}>
+          {skills.join(' , ')}
+        </p>
+      </div>
+    ), 'skills') : null,
+
+    awards: awards.length > 0 ? wrap('awards', (
+      <div className="mb-5">
+        {h2Late('Awards')}
+        <div className="space-y-2">
+          {awards.map((a) => (
+            <div key={a.id} className="space-y-0.5">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold text-slate-950">{a.title}</span>
+                {a.date && <span className="text-[8.5px] font-bold text-slate-500">{formatDate(a.date)}</span>}
               </div>
-            ))}
-          </div>
+              {a.awarder && <div className="text-[9px] text-slate-500">{a.awarder}</div>}
+              {a.description && <p className="text-[9px] leading-relaxed text-slate-600">{a.description}</p>}
+            </div>
+          ))}
         </div>
-      </PreviewSectionWrapper>
-    ) : null,
+      </div>
+    ), 'awards') : null,
 
-    volunteer: volunteer && volunteer.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="volunteer"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={volunteerAts.rating}
-        atsFeedback={volunteerAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'volunteer')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('volunteer')}
-      >
-        <div>
-          <h2 className="text-[10px] font-semibold tracking-widest text-slate-900 border-b border-slate-200 pb-1 mb-2 font-sans">
-            {SECTION_LABELS.volunteer}
-          </h2>
-          <div className="space-y-2.5">
-            {volunteer.map((vol) => (
-              <div key={vol.id} className="space-y-0.5">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[10px] font-bold text-slate-950 font-sans">{vol.organization}</span>
-                  {vol.period && <span className="text-[9px] text-slate-400 font-sans">{vol.period}</span>}
-                </div>
-                {vol.location && (
-                  <div className="text-[9.5px] text-slate-500 font-sans">{vol.location}</div>
-                )}
-                {vol.description && (
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-sans">{vol.description}</p>
-                )}
+    certifications: certifications.length > 0 ? wrap('certifications', (
+      <div className="mb-5">
+        {h2Late('Certifications')}
+        <div className="space-y-2">
+          {certifications.map((c) => (
+            <div key={c.id} className="space-y-0.5">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold text-slate-950">{c.title}</span>
+                {c.date && <span className="text-[8.5px] font-bold text-slate-500">{formatDate(c.date)}</span>}
               </div>
-            ))}
-          </div>
+              {c.issuer && <div className="text-[9px] text-slate-500">{c.issuer}</div>}
+              {c.description && <p className="text-[9px] leading-relaxed text-slate-600">{c.description}</p>}
+            </div>
+          ))}
         </div>
-      </PreviewSectionWrapper>
-    ) : null,
+      </div>
+    ), 'certifications') : null,
 
-    skills: skills && skills.length > 0 ? (
-      <PreviewSectionWrapper
-        sectionId="skills"
-        activeSection={activeSection}
-        atsMode={atsMode}
-        atsRating={skillsAts.rating}
-        atsFeedback={skillsAts.feedback}
-        onEdit={onEditSection}
-        onDragStart={(e) => onDragStart?.(e, 'skills')}
-        onDragOver={onDragOver}
-        onDrop={() => onDrop?.('skills')}
-      >
-        <div>
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b pb-0.5 mb-1.5 font-serif" style={{ borderBottomColor: themeColor || '#cbd5e1' }}>
-            Skills
-          </h2>
-          <div className="text-[10px] leading-relaxed text-justify text-slate-700 font-serif" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
-            {skills.map((skill, idx) => {
-              const parts = skill.split(':')
-              if (parts.length > 1 && parts[0].trim().length < 30) {
-                return (
-                  <span key={skill}>
-                    {idx > 0 && ' , '}
-                    <strong className="font-extrabold text-slate-950">{parts[0].trim()}:</strong>
-                    <span> {parts.slice(1).join(':')}</span>
-                  </span>
-                )
-              }
-              return (
-                <span key={skill}>
-                  {idx > 0 && ' , '}
-                  <span>{skill}</span>
-                </span>
-              )
-            })}
-          </div>
+    interests: interests.length > 0 ? wrap('interests', (
+      <div className="mb-5">
+        {h2Late('Interests')}
+        <p className="text-[9.5px] leading-relaxed text-slate-700">
+          {interests.map((i, idx) => (
+            <span key={i.id}>{idx > 0 && ' · '}<span>{i.name}{i.keywords?.length ? ` (${i.keywords.join(', ')})` : ''}</span></span>
+          ))}
+        </p>
+      </div>
+    ), 'interests') : null,
+
+    publications: publications.length > 0 ? wrap('publications', (
+      <div className="mb-5">
+        {h2Late('Publications')}
+        <div className="space-y-2">
+          {publications.map((p) => (
+            <div key={p.id} className="space-y-0.5">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold text-slate-950">{p.title}</span>
+                {p.date && <span className="text-[8.5px] font-bold text-slate-500">{p.date}</span>}
+              </div>
+              {p.publisher && <div className="text-[9px] text-slate-500">{p.publisher}</div>}
+              {p.description && <p className="text-[9px] leading-relaxed text-slate-600">{p.description}</p>}
+            </div>
+          ))}
         </div>
-      </PreviewSectionWrapper>
-    ) : null
+      </div>
+    ), 'publications') : null,
+
+    references: references.length > 0 ? wrap('references', (
+      <div className="mb-5">
+        {h2Late('References')}
+        <div className="space-y-2">
+          {references.map((r) => (
+            <div key={r.id} className="space-y-0.5">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold text-slate-950">{r.name}</span>
+                {r.position && <span className="text-[8.5px] font-bold text-slate-500">{r.position}</span>}
+              </div>
+              {r.phone && <div className="text-[9px] text-slate-500">{r.phone}</div>}
+              {r.description && <p className="text-[9px] leading-relaxed text-slate-600">{r.description}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'references') : null,
+
+    volunteer: volunteer.length > 0 ? wrap('volunteer', (
+      <div className="mb-5">
+        {h2Late('Volunteer')}
+        <div className="space-y-2">
+          {volunteer.map((v) => (
+            <div key={v.id} className="space-y-0.5">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold text-slate-950">{v.organization}</span>
+                {v.period && <span className="text-[8.5px] font-bold text-slate-500">{v.period}</span>}
+              </div>
+              {v.location && <div className="text-[9px] text-slate-500">{v.location}</div>}
+              {v.description && <p className="text-[9px] leading-relaxed text-slate-600">{v.description}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'volunteer') : null,
   }
-
-  const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
 
   return (
     <div className="resume-template">
-      {/* Page 1 */}
-      <div className="resume-page font-serif text-[10pt] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
-        {/* Contact Header (Always Top) */}
+      <div className="resume-page font-sans text-[10px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
         <PreviewSectionWrapper
           sectionId="contact"
           activeSection={activeSection}
           atsMode={atsMode}
-          atsRating={contactAts.rating}
-          atsFeedback={contactAts.feedback}
+          atsRating={ats.contact.rating}
+          atsFeedback={ats.contact.feedback}
           onEdit={onEditSection}
         >
-          <div className="text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: themeColor || '#111111' }}>
-            <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-slate-950 mb-1">
-              {getFullName(contact) || 'YOUR NAME'}
-            </h1>
-            <div className="text-[9.5px] text-slate-500 uppercase tracking-widest flex flex-wrap gap-x-3 gap-y-1">
+          <div className="mb-5 text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: themeColor || '#111111' }}>
+            <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-slate-950">{getFullName(contact) || 'YOUR NAME'}</h1>
+            <div className="text-[9.5px] text-slate-500 uppercase tracking-widest mt-1">
               {contact.location && <span>{contact.location}</span>}
-              {contact.email && <span>• {contact.email}</span>}
-              {contact.phone && <span>• {contact.phone}</span>}
-              {contact.linkedin && <span>• {contact.linkedin}</span>}
-              {contact.website && <span>• {contact.website}</span>}
+              {contact.location && (contact.email || contact.phone) && <span> · </span>}
+              {contact.email && <span>{contact.email}</span>}
+              {contact.email && contact.phone && <span> · </span>}
+              {contact.phone && <span>{contact.phone}</span>}
             </div>
           </div>
         </PreviewSectionWrapper>
 
-        {/* Reordered Body Sections */}
-        {page1Sections.map((secId) => {
+        {sectionData.page1Sections.map((secId) => {
           const component = sectionsMap[secId]
           return component ? <div key={secId}>{component}</div> : null
         })}
       </div>
 
-      {/* Page 2 */}
-      {page2Sections.length > 0 && (
+      {sectionData.page2Sections.length > 0 && (
         <>
           <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation font-serif text-[10pt] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
-            {page2Sections.map((secId) => {
+          <div className="resume-page resume-page-continuation font-sans text-[10px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
+            {sectionData.page2Sections.map((secId) => {
               const component = sectionsMap[secId]
               return component ? <div key={secId}>{component}</div> : null
             })}
@@ -530,4 +293,6 @@ export default function MinimalistTemplate({
       )}
     </div>
   )
-}
+})
+
+export default MinimalistTemplate

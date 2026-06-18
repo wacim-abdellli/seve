@@ -60,7 +60,7 @@ export default function EditorPage() {
   const { resumeData, selectedTemplate, jobDescription, updateActiveResume } = useResume()
   const ctx = useOutletContext<EditorContextType>()
 
-  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint } = ctx
+  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint } = ctx
 
   return (
     <AnimatePresence mode="wait">
@@ -148,10 +148,11 @@ export default function EditorPage() {
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
                   onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
                   activeSection={activeStudioSection}
-                  onEditSection={(section) => { setActiveStudioSection(section); setMobileView('edit') }}
+                  onEditSection={(section) => { setActiveStudioSection(section as SectionType); setMobileView('edit') }}
                   onExportPdf={handlePrint} onPageCountChange={setPageCount}
                   sectionOrder={sectionOrder} onSectionOrderChange={onSectionOrderChange}
                   templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
+                  templateFontWeight={templateFontWeight} onChangeFontWeight={onChangeFontWeight}
                   themeColor={themeColor} onChangeColor={setThemeColor}
                 />
               </div>
@@ -188,10 +189,11 @@ export default function EditorPage() {
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
                   onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
                   activeSection={activeStudioSection}
-                  onEditSection={(section) => { setActiveStudioSection(section); setActiveMode('studio') }}
+                  onEditSection={(section) => { setActiveStudioSection(section as SectionType); setActiveMode('studio') }}
                   onExportPdf={handlePrint} onPageCountChange={setPageCount}
                   sectionOrder={sectionOrder} onSectionOrderChange={onSectionOrderChange}
                   templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
+                  templateFontWeight={templateFontWeight} onChangeFontWeight={onChangeFontWeight}
                   themeColor={themeColor} onChangeColor={setThemeColor}
                 />
               </div>
@@ -203,6 +205,7 @@ export default function EditorPage() {
           <AtsChecker
             resumeData={resumeData}
             jobDescription={jobDescription}
+            templateFontSize={templateFontSize}
             onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
             onFix={(fixed) => updateActiveResume((prev) => ({ ...prev, resumeData: fixed }))}
             onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}

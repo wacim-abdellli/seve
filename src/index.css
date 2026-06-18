@@ -62,10 +62,6 @@
   --font-mono: 'JetBrains Mono', monospace;
   --font-serif: 'EB Garamond', serif;
 
-  --bulma-font-sans: var(--font-sans);
-  --bulma-body-family: var(--font-sans);
-  --bulma-title-family: var(--font-display);
-
   /* Color Palette — Deep Carbon */
   --bg-void: #090a0f;
   --bg-surface: #12131a;
@@ -79,30 +75,6 @@
   --brand-light: rgba(224, 49, 79, 0.08);
   --brand-gradient: linear-gradient(135deg, #e0314f 0%, #901427 100%);
   
-  /* Bulma v1 Theme Overrides (CSS Custom Properties) */
-  --bulma-primary: var(--brand-primary);
-  --bulma-primary-hover: var(--brand-hover);
-  --bulma-primary-invert: #ffffff;
-  
-  --bulma-scheme-main: var(--bg-void);
-  --bulma-scheme-main-bis: var(--bg-surface);
-  --bulma-scheme-main-ter: var(--bg-elevated);
-  --bulma-scheme-invert: #ffffff;
-  
-  --bulma-background: var(--bg-void);
-  
-  --bulma-text: #f3f4f6;
-  --bulma-text-strong: #ffffff;
-  --bulma-text-weak: #9ca3af;
-  --bulma-text-title: #ffffff;
-  
-  --bulma-border: var(--bg-border);
-  --bulma-border-hover: rgba(224, 49, 79, 0.35);
-
-  --bulma-card-background-color: var(--bg-surface);
-  --bulma-card-color: var(--bulma-text);
-  --bulma-card-header-color: var(--bulma-text-strong);
-  
   /* Semantic Colors */
   --score-great: #10b981;
   --score-warn: #991b1b;
@@ -112,6 +84,65 @@
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
+
+  /* Template font scaling — set dynamically via inline style on containers */
+  --template-font-size: 10px;
+  --template-font-weight: 400;
+}
+
+/* Template font-size + weight via CSS custom properties (avoids dangerouslySetInnerHTML) */
+#resume-print-area .resume-page,
+.resume-template-print-wrapper .resume-page {
+  font-size: var(--template-font-size) !important;
+  font-weight: var(--template-font-weight) !important;
+}
+#resume-print-area .text-\[10px\],
+.resume-template-print-wrapper .text-\[10px\] {
+  font-size: var(--template-font-size) !important;
+}
+#resume-print-area .text-\[10\.5px\],
+.resume-template-print-wrapper .text-\[10\.5px\] {
+  font-size: calc(1.05 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-\[9\.5px\],
+.resume-template-print-wrapper .text-\[9\.5px\] {
+  font-size: calc(0.95 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-\[9px\],
+.resume-template-print-wrapper .text-\[9px\] {
+  font-size: calc(0.9 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-\[8\.5px\],
+.resume-template-print-wrapper .text-\[8\.5px\] {
+  font-size: calc(0.85 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-\[8px\],
+.resume-template-print-wrapper .text-\[8px\] {
+  font-size: calc(0.8 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-2xl,
+.resume-template-print-wrapper .text-2xl {
+  font-size: calc(2.4 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-xl,
+.resume-template-print-wrapper .text-xl {
+  font-size: calc(2.0 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-lg,
+.resume-template-print-wrapper .text-lg {
+  font-size: calc(1.8 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-base,
+.resume-template-print-wrapper .text-base {
+  font-size: calc(1.6 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-sm,
+.resume-template-print-wrapper .text-sm {
+  font-size: calc(1.4 * var(--template-font-size)) !important;
+}
+#resume-print-area .text-xs,
+.resume-template-print-wrapper .text-xs {
+  font-size: calc(1.2 * var(--template-font-size)) !important;
 }
 
 body {
@@ -224,73 +255,96 @@ h1, h2, h3, h4, h5, h6 {
 }
 /* Print CSS Stylesheet */
 @media print {
-  /* Hide everything except resume */
+
+  /* ── 1. Hide everything except the resume print wrapper ─────── */
   body > *:not(.resume-print-wrapper) {
     display: none !important;
-    visibility: hidden !important;
+  }
+  #root {
+    display: none !important;
   }
 
-  .resume-print-wrapper {
-    display: block !important;
-    position: relative !important;
-    width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    overflow: visible !important;
-  }
-
+  /* ── 2. Page setup: zero margin (template padding does spacing) ─ */
   @page {
     size: A4 portrait;
-    margin-top: 20mm;
-    margin-bottom: 20mm;
-    margin-left: 16mm;
-    margin-right: 16mm;
+    margin: 12mm 0mm !important;
   }
 
   html, body {
-    height: auto !important;
-    overflow: visible !important;
+    width: 210mm !important;
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
+    overflow: visible !important;
   }
 
-  .resume-page {
-    position: relative !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    min-height: auto !important;
-    padding: 0;
+  /* ── 3. Print wrapper shell ──────────────────────────────────── */
+  .resume-print-wrapper {
+    display: block !important;
+    position: static !important;
+    width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  .resume-template-print-wrapper {
+    display: block !important;
+    width: 210mm !important;
     margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── 4. Each resume page ─────────────────────────────────────── */
+  /*
+   * CRITICAL: Do NOT set padding here. The template's own p-10 and
+   * style={{ paddingTop: 48 }} provide the margins.
+   *
+   * Do NOT set width: 100% on children. The template's internal grid
+   * and flex layouts must be preserved.
+   */
+  .resume-page {
+    width: 210mm !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
+    box-sizing: border-box !important;
     background: #ffffff !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
     transform: none !important;
-    font-size: 10pt !important;
-    line-height: 1.4 !important;
-    color: #000000 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    -webkit-box-decoration-break: clone !important;
+    box-decoration-break: clone !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
+    color-adjust: exact !important;
   }
 
+  /* ── 5. Page break between page 1 and page 2 ─────────────────── */
   .resume-page-break {
-    display: block;
-    height: 0;
-    page-break-after: always;
-    break-after: page;
+    display: block !important;
+    width: 0 !important;
+    height: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
   }
 
-  .resume-page-continuation {
-    padding-top: 48px !important;
+  /* ── 6. Preserve ALL colors and backgrounds ───────────────────── */
+  .resume-page,
+  .resume-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
-  /* Strip all screen-only styles */
+  /* ── 7. Strip screen-only decorations, keep everything else ───── */
   .resume-page * {
     box-shadow: none !important;
     text-shadow: none !important;
@@ -300,13 +354,12 @@ h1, h2, h3, h4, h5, h6 {
     transition: none !important;
   }
 
-  /* Name — never transform case */
+  /* ── 8. Typography ────────────────────────────────────────────── */
   .resume-name,
   .resume-page h1 {
     text-transform: none !important;
   }
 
-  /* Force bullets */
   .resume-page ul {
     list-style: disc !important;
     padding-left: 14pt !important;
@@ -315,22 +368,16 @@ h1, h2, h3, h4, h5, h6 {
   .resume-page li {
     display: list-item !important;
     list-style: disc !important;
-    font-size: 9.5pt !important;
     line-height: 1.45 !important;
     margin-bottom: 2pt !important;
-    color: #111111 !important;
   }
 
-  /* Hide UI elements */
-  .no-print,
-  .avatar-circle,
-  .skill-tag,
-  [class*="badge"],
-  [class*="pill"] {
+  /* ── 9. Hide all UI chrome ────────────────────────────────────── */
+  .no-print {
     display: none !important;
   }
 
-  /* Page break rules */
+  /* ── 10. Page-break hints for sections ────────────────────────── */
   h2, h3 {
     page-break-after: avoid !important;
     break-after: avoid !important;
@@ -342,50 +389,16 @@ h1, h2, h3, h4, h5, h6 {
     break-inside: avoid !important;
   }
 
-  /* Sidebar backgrounds → light grey */
-  .template-executive [class*="left"],
+  /* ── 11. Sidebar colour-adjust for 2-col templates ────────────── */
+  .template-executive .left-column,
   .template-executive [class*="sidebar"],
-  .template-twocolumn [class*="left"],
-  .template-twocolumn [class*="sidebar"],
-  .template-creative [class*="left"],
+  .template-creative .left-column,
   .template-creative [class*="sidebar"] {
-    background: #f2f2f2 !important;
-    background-color: #f2f2f2 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
-  /* Remove template's own padding — .resume-page handles it */
-  .template-classic > div:first-child,
-  .template-modern > div:first-child,
-  .template-executive > div:first-child,
-  .template-minimalist > div:first-child,
-  .template-creative > div:first-child {
-    padding: 0 !important;
-  }
-
-  /* Force all direct children of .resume-page to fill width */
-  .resume-page > * {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  /* All text dark in print */
-  .resume-page,
-  .resume-page * {
-    color: #111111 !important;
-  }
-
-  /* Exception: keep accent colors for modern template */
-  .template-modern .section-heading {
-    color: #1e3a5f !important;
-    border-left-color: #1e3a5f !important;
-  }
-
-  /* Override inline left-column backgrounds so all areas print white */
-  .resume-page .left-column {
-    background: #ffffff !important;
-  }
 }
 
 /* Particle Burst for Score Milestones */
@@ -533,7 +546,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: space-between;
   padding: 0.5rem 1.25rem;
   background: #090a0f;
-  border-top: 1px solid var(--bulma-border);
+  border-top: 1px solid var(--bg-border);
   z-index: 25;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
 }
@@ -554,7 +567,7 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: column;
     padding: 1.5rem 0;
     border-top: none;
-    border-right: 1px solid var(--bulma-border);
+    border-right: 1px solid var(--bg-border);
     background: var(--bg-surface);
     box-shadow: none;
   }
@@ -767,20 +780,39 @@ h1, h2, h3, h4, h5, h6 {
   .resume-page {
     background-color: #ffffff !important;
     width: 794px !important;
-    height: 1123px !important;
     min-height: 1123px !important;
-    max-height: 1123px !important;
+    height: auto !important; /* Allow continuous flow */
+    max-height: none !important; /* Remove cutoff limit */
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
     border: 1px solid rgba(0, 0, 0, 0.04) !important;
     border-radius: 4px !important;
     box-sizing: border-box !important;
     position: relative !important;
-    overflow: hidden !important;
+    overflow: visible !important; /* Critical: prevent cutting off overflow */
   }
   
   .resume-page + .resume-page {
     margin-top: 32px !important;
   }
+}
+
+/* -----------------------------------------------------
+   Native Print Pagination Engine Rules
+   ----------------------------------------------------- */
+.exp-entry,
+.edu-entry,
+.proj-entry,
+.preview-section-wrapper,
+.preview-section {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  display: block !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.section-heading {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
 }
 
 

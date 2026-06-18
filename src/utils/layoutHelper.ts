@@ -1,44 +1,34 @@
 import type { ResumeData } from '../types/resume'
 
-export const estimateTextHeight = (text: string | undefined, charsPerLine: number = 80): number => {
+export const estimateTextHeight = (text: string | undefined, charsPerLine: number = 80, fontSize: number = 10): number => {
   if (!text || !text.trim()) return 0
   const lines = Math.ceil(text.length / charsPerLine)
-  return lines * 18 + 12 // 18px line height + 12px padding/margin
+  const scale = fontSize / 10
+  return lines * (18 * scale) + (12 * scale)
 }
 
-export const getSectionHeights = (resumeData: ResumeData): Record<string, number> => {
+export const getSectionHeights = (resumeData: ResumeData, fontSize: number = 10): Record<string, number> => {
+  const s = fontSize / 10
   return {
-    contact: 80,
-    summary: estimateTextHeight(resumeData.summary, 80),
-    experience: (resumeData.experience || []).reduce((h, e) => h + 60 + (e.bullets || []).filter(b => b.trim() !== '').length * 28, 0),
-    education: (resumeData.education || []).length * 64,
-    skills: 48,
-    projects: (resumeData.projects?.length ?? 0) * 80,
-    awards: (resumeData.awards?.length ?? 0) * 56,
-    certifications: (resumeData.certifications?.length ?? 0) * 56,
-    volunteer: (resumeData.volunteer?.length ?? 0) * 72,
-    languages: 36,
-    publications: (resumeData.publications?.length ?? 0) * 56,
-    references: (resumeData.references?.length ?? 0) * 72,
-    interests: 36,
+    contact: 80 * s,
+    summary: estimateTextHeight(resumeData.summary, 90, fontSize) + (30 * s),
+    experience: (resumeData.experience || []).reduce((h, e) => h + (45 * s) + (e.bullets || []).filter(b => b.trim() !== '').reduce((bh, b) => bh + estimateTextHeight(b, 90, fontSize), 0), (40 * s)),
+    education: (resumeData.education || []).reduce((h, e) => h + (50 * s) + (e.gpa ? (18 * s) : 0), (40 * s)),
+    skills: estimateTextHeight(resumeData.skills?.join(' · '), 90, fontSize) + (40 * s),
+    projects: (resumeData.projects || []).reduce((h, p) => h + (45 * s) + estimateTextHeight(p.description, 90, fontSize) + estimateTextHeight(p.technologies?.join(' · '), 90, fontSize), (40 * s)),
+    awards: (resumeData.awards || []).reduce((h, a) => h + (40 * s) + estimateTextHeight(a.description, 90, fontSize), (40 * s)),
+    certifications: (resumeData.certifications || []).reduce((h, c) => h + (40 * s) + estimateTextHeight(c.description, 90, fontSize), (40 * s)),
+    volunteer: (resumeData.volunteer || []).reduce((h, v) => h + (45 * s) + estimateTextHeight(v.description, 90, fontSize), (40 * s)),
+    languages: estimateTextHeight(resumeData.languages?.map(l => l.name).join(' · '), 90, fontSize) + (40 * s),
+    publications: (resumeData.publications || []).reduce((h, p) => h + (40 * s) + estimateTextHeight(p.description, 90, fontSize), (40 * s)),
+    references: (resumeData.references || []).length * (60 * s) + (40 * s),
+    interests: estimateTextHeight(resumeData.interests?.map(i => i.name).join(' · '), 90, fontSize) + (40 * s),
   }
 }
 
-export function getPageBreakSections(
-  resumeData: ResumeData,
-  sectionOrder: string[],
-  leftSectionKeys?: string[]
-): {
-  page1Sections: string[];
-  page2Sections: string[];
-} {
-  const sectionHeights = getSectionHeights(resumeData)
-  const USABLE_PER_PAGE = 1026  // A4 minus margins
+const USABLE_PER_PAGE = 1026
 
-  const page1Sections: string[] = []
-  const page2Sections: string[] = []
-
-  // Helper to check if a section actually has content
+export function estimatePageCount(resumeData: ResumeData, sectionOrder: string[], fontSize: number = 10): number {
   const hasContent = (key: string): boolean => {
     if (key === 'summary') return !!(resumeData.summary && resumeData.summary.trim() !== '')
     if (key === 'skills') return !!(resumeData.skills && resumeData.skills.length > 0)
@@ -46,49 +36,29 @@ export function getPageBreakSections(
     return Array.isArray(val) && val.length > 0
   }
 
-  // Filter sectionOrder to only include sections with content
   const activeSections = sectionOrder.filter(hasContent)
+  const heights = getSectionHeights(resumeData, fontSize)
+  const totalHeight = activeSections.reduce((sum, sec) => sum + (heights[sec] || 60), 0)
+  return Math.ceil(totalHeight / USABLE_PER_PAGE)
+}
 
-  if (leftSectionKeys && leftSectionKeys.length > 0) {
-    // Two-column layout
-    // Left column: starts with contact info (80px)
-    let leftRunning = 80
-    const leftOrdered = activeSections.filter(k => leftSectionKeys.includes(k))
-    for (const secId of leftOrdered) {
-      const h = sectionHeights[secId] ?? 0
-      if (leftRunning + h <= USABLE_PER_PAGE) {
-        page1Sections.push(secId)
-        leftRunning += h
-      } else {
-        page2Sections.push(secId)
-      }
-    }
-
-    // Right column: no contact header, starts with 0
-    let rightRunning = 0
-    const rightOrdered = activeSections.filter(k => !leftSectionKeys.includes(k))
-    for (const secId of rightOrdered) {
-      const h = sectionHeights[secId] ?? 0
-      if (rightRunning + h <= USABLE_PER_PAGE) {
-        page1Sections.push(secId)
-        rightRunning += h
-      } else {
-        page2Sections.push(secId)
-      }
-    }
-  } else {
-    // Single-column layout: starts with contact (80px)
-    let runningHeight = 80
-    for (const secId of activeSections) {
-      const h = sectionHeights[secId] ?? 0
-      if (runningHeight + h <= USABLE_PER_PAGE) {
-        page1Sections.push(secId)
-        runningHeight += h
-      } else {
-        page2Sections.push(secId)
-      }
-    }
+export function getPageBreakSections(
+  resumeData: ResumeData,
+  sectionOrder: string[]
+): {
+  page1Sections: string[];
+  page2Sections: string[];
+} {
+  const hasContent = (key: string): boolean => {
+    if (key === 'summary') return !!(resumeData.summary && resumeData.summary.trim() !== '')
+    if (key === 'skills') return !!(resumeData.skills && resumeData.skills.length > 0)
+    const val = (resumeData as unknown as Record<string, unknown>)[key]
+    return Array.isArray(val) && val.length > 0
   }
 
-  return { page1Sections, page2Sections }
+  const activeSections = sectionOrder.filter(hasContent)
+
+  // CSS @media print handles page breaking via page-break-inside: avoid on section entries.
+  // We do NOT split sections in JS — estimates are unreliable. Let the browser decide.
+  return { page1Sections: activeSections, page2Sections: [] }
 }

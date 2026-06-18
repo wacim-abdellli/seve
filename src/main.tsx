@@ -4,14 +4,17 @@ import './index.css'
 import App from './App.tsx'
 import { ResumeProvider } from './context/ResumeContext'
 import { ToastProvider } from './components/Toast'
+import { AuthProvider } from './context/AuthContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ResumeProvider>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
-    </ResumeProvider>
+    <AuthProvider>
+      <ResumeProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </ResumeProvider>
+    </AuthProvider>
   </StrictMode>,
 )
 

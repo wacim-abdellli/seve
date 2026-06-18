@@ -14,6 +14,7 @@ interface ResumeManagerProps {
   onRename: (id: string, newTitle: string) => void
   onDelete: (id: string) => void
   onClose: () => void
+  cloudStatus?: string
 }
 
 export default function ResumeManager({
@@ -25,6 +26,7 @@ export default function ResumeManager({
   onRename,
   onDelete,
   onClose,
+  cloudStatus,
 }: ResumeManagerProps) {
   const [newTitle, setNewTitle] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -162,6 +164,14 @@ export default function ResumeManager({
                       >
                         {profile.title}
                       </h4>
+                      {cloudStatus === 'synced' && (
+                        <span title="Synced to cloud" className="text-[11px]">☁️</span>
+                      )}
+                      {!cloudStatus || cloudStatus === 'local' ? (
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-zinc-800/60 text-zinc-500 ml-1">
+                          Local
+                        </span>
+                      ) : null}
                       {isSelected && (
                         <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-rose-500/10 border border-rose-500/20 text-rose-400">
                           Active

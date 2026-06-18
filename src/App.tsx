@@ -1,10 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Component, type ErrorInfo, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import PrivacyPage from './pages/PrivacyPage'
 import EditorPage from './pages/EditorPage'
 import EditorLayout from './layouts/EditorLayout'
+
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('App crashed:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-zinc-950 text-white p-8">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+            <p className="text-zinc-400 mb-6">An unexpected error occurred. Please try refreshing the page.</p>
+            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-rose-600 hover:bg-rose-500 rounded-lg text-sm font-medium transition-colors">
+              Reload App
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function SplashScreen({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<'brand' | 'analyzing' | 'done'>('brand')
@@ -69,8 +98,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <AppErrorBoundary>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </AppErrorBoundary>
   )
 }

@@ -238,8 +238,8 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
                       {sec.id === 'experience' && (
                         resumeData.experience.length > 0 ? (
                           <ul className="flex flex-col gap-0.5">
-                            {resumeData.experience.slice(0, 2).map((exp, idx) => (
-                              <li key={idx} className="truncate">
+                            {resumeData.experience.slice(0, 2).map((exp) => (
+                              <li key={exp.id} className="truncate">
                                 <span className="font-semibold text-white">{exp.jobTitle}</span> at {exp.company}
                               </li>
                             ))}
@@ -252,8 +252,8 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
                       {sec.id === 'education' && (
                         resumeData.education.length > 0 ? (
                           <ul className="flex flex-col gap-0.5">
-                            {resumeData.education.slice(0, 2).map((edu, idx) => (
-                              <li key={idx} className="truncate">
+                            {resumeData.education.slice(0, 2).map((edu) => (
+                              <li key={edu.id} className="truncate">
                                 <span className="font-semibold text-white">{edu.degree}</span> @ {edu.school}
                               </li>
                             ))}
@@ -285,8 +285,8 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
                       {sec.id === 'projects' && (
                         resumeData.projects && resumeData.projects.length > 0 ? (
                           <ul className="flex flex-col gap-0.5">
-                            {resumeData.projects.slice(0, 2).map((proj, idx) => (
-                              <li key={idx} className="truncate font-semibold text-white">
+                            {resumeData.projects.slice(0, 2).map((proj) => (
+                              <li key={proj.id} className="truncate font-semibold text-white">
                                 • {proj.name}
                               </li>
                             ))}

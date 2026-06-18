@@ -1,48 +1,56 @@
- SEVE: Phase 6 - UX & ATS Engine Synchronization
+ SEVE: Strategic Audit & Forward Roadmap
 
-  ROLE: You are an elite Senior React/TypeScript Architect. Your current objective is to resolve a critical mismatch
-  between the ATS scoring heuristics and the User Interface, and to recalibrate overly aggressive formatting warnings.
+  ROLE: You are the Lead Architect for the "Seve" project.
 
-  CONTEXT:
-  The ATS Engine (atsEvaluator.ts) is penalizing users for not having dates on their Projects. However, the UI
-  (ProjectsForm.tsx) does not provide input fields for project dates. Furthermore, the ATS Engine is aggressively
-  warning that bullets "wrap to 2+ lines" based on a strict 160 character limit, which is factually incorrect depending
-   1. Locate the rendering block inside the projects.map loop.
-   2. Below the "Project Name" and "Link" inputs, add a new layout row. You should probably put the "Link" input and the
-      new "Date" input side-by-side (e.g., using grid grid-cols-2 gap-3).
-   3. Add a new <input> field for the Date.
-      - Value: project.date || ''
-      - OnChange: handleChange(project.id, 'date', e.target.value)
-      - Placeholder: e.g. 2023 - Present
-      - Styling: Match the existing inputs (w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5
-        text-[13px] text-white...).
-   4. Ensure the UI remains clean and doesn't break the existing Tailwind layouts.
+  CURRENT STATE (The Audit):
+  We have successfully stabilized the v1.0 architecture. The monolith is broken down, ResumeContext handles state, the
+  CSS/PDF Print engine is highly robust, and TypeScript/ESLint errors are at zero. The app is fast, local-first, and
+  production-ready.
 
-  🟡  STEP 2: Recalibrate ATS Heuristics (atsEvaluator.ts)
-  Target File: src/utils/atsEvaluator.ts
-  We need to tone down stylistic checks so they act as coaching rather than "formatting errors".
+  Our overall architecture score is an 8.3/10.
 
-   1. Fix the "Bullet Wraps" check:
-      - Locate the scoreBulletQuality function.
-      - Change TOO_LONG_CHARS from 160 to 180.
-      - In the issues.push block for long bullets:
-        - Change the type from 'warning' to 'suggestion'.
-        - Change the category from 'formatting' to 'style'.
-        - Change the issue text from ` Bullet wraps to 2+ lines (${charCount} chars)... ` to ` Bullet is quite long
-          (${charCount} chars) and may be hard to scan quickly. `
-        - Change severityScore from 6 to 2.
+  THE MISSION:
+  We are now moving from "Stabilization" to "Scale & Polish". To achieve a 10/10 SaaS product, we must execute the
+  following strategic roadmap.
 
-   2. Fix the "Weak Verb Start" check:
-      - Locate the BULLET_CHECKS array.
-      - Find the check named 'Weak verb start'.
-      - Change category: 'style' (leave it as is).
-      - Change type: 'warning' to type: 'suggestion'.
+  Review these upcoming Epics. Await my specific instruction on which Epic to begin implementing.
 
-   3. Verify Date logic:
-      - Ensure that scoreDateConsistency handles the newly exposed single date string from the project object without
-        throwing errors, treating it the same way it treats certification or award dates. (It should already do this via
-        the allDates extraction logic, but verify it doesn't crash).
+  ---
 
-  VERIFICATION:
-  After completing these steps, run npm run lint and npm run build to ensure no types or styles were broken. Do not
-  modify the core scoring algorithm totals, just the severity types and UI bindings.
+  🚀 EPIC 1: Cloud Persistence (Phase 12)
+   * The Problem: localStorage is fragile. If users clear their cache, their resumes are destroyed. We cannot build
+     advanced features (sharing, analytics) without user accounts.
+   * The Goal: Implement "Progressive Authentication" using Supabase.
+   * The Architecture: The app must remain "Local-First". Users can build resumes instantly without logging in. If they
+     opt-in to log in, ResumeContext must seamlessly run a background UPSERT to sync localStorage to a Supabase Postgres
+     database.
+
+  🎨 EPIC 2: Frictionless UX (Phase 13+)
+   * The Problem: The current form-based editing (opening a drawer, typing in inputs, closing it) is functional but
+     tedious. The layout is currently rigid.
+   * The Goal: Evolve the Editor Canvas.
+   * The Architecture:
+       1. Drag-and-Drop: Implement native HTML5 DnD on the PreviewSectionWrapper to allow users to visually reorder
+          sections (e.g., move Education above Experience). Update the sectionOrder array in global state.
+       2. Inline Editing (Future): Explore migrating from sidebar forms to direct contentEditable inline editing on the
+          preview canvas itself.
+
+  🧠 EPIC 3: Semantic ATS Intelligence
+   * The Problem: The current ATS engine (atsEvaluator.ts) is a brilliant but "dumb" rule-based system (regex, length
+     checks, hardcoded keyword matching). It cannot understand the actual quality of an achievement.
+   * The Goal: Upgrade the ATS Brain to understand semantic meaning.
+   * The Architecture: Integrate a lightweight Language Model. We can either explore running a small model entirely in the
+     browser (via WebLLM/Transformers.js to maintain the privacy promise), or set up a secure proxy to an OpenAI/Claude
+     API to evaluate how well a bullet point actually matches the provided Job Description.
+
+  🧹  EPIC 4: Template De-Duplication
+   * The Problem: Files like CreativeTemplate.tsx and ModernTemplate.tsx are approaching ~600 lines. They duplicate a
+     massive amount of JSX and Tailwind classes for rendering basic things like bullet points or dates.
+   * The Goal: DRY (Don't Repeat Yourself) the template rendering system.
+   * The Architecture: Create a suite of micro-components in src/components/ui/resume/ (e.g., <ResumeHeader />,
+     <ResumeExperienceEntry />). The main Template files should simply be layout wrappers (CSS Grid/Flex orchestrators)
+     that import and position these shared micro-components.
+
+  ---
+
+  AGENT DIRECTIVE: Acknowledge receipt of this roadmap. Do not begin coding. Await my command to initiate a specific Epic.

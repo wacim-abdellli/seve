@@ -19,6 +19,7 @@ interface AtsCheckerProps {
   onUpdateJobDescription: (jd: string) => void
   onFix: (fixed: ResumeData) => void
   onNavigateToSection: (section: string) => void
+  templateFontSize?: number
 }
 
 /* ─── Animated Score Counter ─── */
@@ -131,7 +132,7 @@ const BAR_SHADOWS: Record<string, string> = {
   length: '#f97316',
 }
 
-export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDescription, onFix, onNavigateToSection }: AtsCheckerProps) {
+export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDescription, onFix, onNavigateToSection, templateFontSize }: AtsCheckerProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'audit' | 'keywords'>('overview')
   const [showJdInput, setShowJdInput] = useState(false)
   const [jdDraft, setJdDraft] = useState(jobDescription)
@@ -153,7 +154,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [microTick, setMicroTick] = useState(0)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
-  const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription), [resumeData, jobDescription])
+  const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
   const resultKey = useMemo(() =>
     atsScore.total + '|' + (atsScore.reportV2?.breakdown?.map(b => b.score).join(',') || ''),
   [atsScore])
@@ -509,7 +510,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                       return (
                         <motion.div
-                          key={idx}
+                          key={stage.label}
                           layout
                           className={`flex items-start gap-3 rounded-xl px-3 py-2 -mx-3 transition-all duration-500 ${
                             isCompleted ? 'opacity-50' : isActive ? 'bg-rose-500/[0.04] shadow-[inset_0_0_20px_rgba(244,63,94,0.04)]' : 'opacity-25'
@@ -1003,12 +1004,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         <div className="space-y-4">
                           <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Indexed Skills & Keywords Matrix</h4>
                           <div className="space-y-4">
-                            {skillsMatrix.map((item, idx) => {
+                            {skillsMatrix.map((item) => {
                               const matchPercent = item.required > 0 ? Math.round((item.matched.length / (item.matched.length + item.missing.length || 1)) * 100) : 100
 
                               return (
                                 <div
-                                  key={idx}
+                                  key={item.subject}
                                   className="bg-zinc-900/20 border border-zinc-900 rounded-3xl p-5 space-y-4 hover:border-zinc-800 transition-colors shadow-lg"
                                 >
                                   {/* Item Header */}

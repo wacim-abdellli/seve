@@ -9,14 +9,12 @@ import SectionSidebar, { type SectionType } from '../components/SectionSidebar'
 import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
-import ClassicTemplate from '../components/templates/ClassicTemplate'
-import ModernTemplate from '../components/templates/ModernTemplate'
-import ExecutiveTemplate from '../components/templates/ExecutiveTemplate'
-import MinimalistTemplate from '../components/templates/MinimalistTemplate'
-import CreativeTemplate from '../components/templates/CreativeTemplate'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode } from 'lucide-react'
+import TemplateRenderer from '../components/TemplateRenderer'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-type SectionKey = 'summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
+
+type SectionKey = string
 
 export interface EditorContextType {
   activeMode: 'studio' | 'preview' | 'analyze'
@@ -28,6 +26,8 @@ export interface EditorContextType {
   setPageCount: (count: number) => void
   templateFontSize: number
   onChangeFontSize: (size: number) => void
+  templateFontWeight: number
+  onChangeFontWeight: (weight: number) => void
   sectionOrder: SectionKey[]
   onSectionOrderChange: (order: SectionKey[]) => void
   mobileView: 'edit' | 'preview'
@@ -59,8 +59,8 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-extrabold tracking-tight text-white uppercase">Print Settings</h3>
-            <p className="text-[11px] text-zinc-400">Adjust your browser print settings for best results</p>
+            <h3 className="text-sm font-extrabold tracking-tight text-white uppercase">Export to PDF</h3>
+            <p className="text-[11px] text-zinc-400">Follow these steps for a pixel-perfect PDF</p>
           </div>
         </div>
         <div className="space-y-3 mb-6">
@@ -68,27 +68,27 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
             <span className="text-emerald-400 shrink-0 font-bold">1.</span>
             <div>
               <p className="text-white font-semibold text-[13px]">Set Margins to <span className="text-amber-400">None</span></p>
-              <p className="text-zinc-400 mt-0.5">In the print dialog, go to <strong>More settings → Margins → None</strong></p>
+              <p className="text-zinc-400 mt-0.5">In the print dialog → <strong>More settings → Margins → None</strong></p>
             </div>
           </div>
           <div className="flex gap-3 p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/40 text-[12px] leading-relaxed">
             <span className="text-emerald-400 shrink-0 font-bold">2.</span>
             <div>
               <p className="text-white font-semibold text-[13px]">Enable Background Graphics</p>
-              <p className="text-zinc-400 mt-0.5">Check <strong>More settings → Background graphics</strong></p>
+              <p className="text-zinc-400 mt-0.5">Check <strong>More settings → Background graphics</strong> to preserve template colors</p>
             </div>
           </div>
           <div className="flex gap-3 p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/40 text-[12px] leading-relaxed">
             <span className="text-emerald-400 shrink-0 font-bold">3.</span>
             <div>
-              <p className="text-white font-semibold text-[13px]">Select A4 Paper Size</p>
-              <p className="text-zinc-400 mt-0.5">Choose <strong>A4</strong> under <strong>Paper size</strong> (or your local standard)</p>
+              <p className="text-white font-semibold text-[13px]">Save as PDF — A4 Paper</p>
+              <p className="text-zinc-400 mt-0.5">In <strong>Destination</strong>, choose <strong>Save as PDF</strong> and set <strong>Paper size → A4</strong></p>
             </div>
           </div>
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 h-10 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer">Cancel</button>
-          <button onClick={onContinue} className="flex-1 h-10 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-xs shadow-lg shadow-blue-500/10 transition-colors cursor-pointer">Continue to Print</button>
+          <button onClick={onContinue} className="flex-1 h-10 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-xs shadow-lg shadow-blue-500/10 transition-colors cursor-pointer">Open Print Dialog</button>
         </div>
       </div>
     </div>,
@@ -260,23 +260,20 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
 export default function EditorLayout() {
   const navigate = useNavigate()
   const {
-    resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving,
+    resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, retrySync,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
-    updateActiveResume, importResumeData,
+    updateActiveResume, importResumeData, sectionOrder, updateSectionOrder,
   } = useResume()
+  const { user, signInWithGoogle, signOut } = useAuth()
 
   const [activeMode, setActiveMode] = useState<'studio' | 'preview' | 'analyze'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
   const [pageCount, setPageCount] = useState(1)
   const [templateFontSize, setTemplateFontSize] = useState(10)
+  const [templateFontWeight, setTemplateFontWeight] = useState(400)
   const { activeWarnings, showPrintModal, handlePrint: handlePrintModal, dismissWarnings, exportAnyway, dismissPrintModal, confirmPrint } = usePrintResume()
-  const [sectionOrder, setSectionOrder] = useState<SectionKey[]>(() => {
-    let saved = localStorage.getItem('seve_section_order')
-    if (!saved) saved = localStorage.getItem('resumeai_section_order')
-    if (saved) { try { const p = JSON.parse(saved); if (Array.isArray(p) && p.length > 0) return p as SectionKey[] } catch { /* invalid stored order */ } }
-    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
-  })
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [themeColor, setThemeColor] = useState<string>(() => localStorage.getItem('seve_theme_color') || '#e11d48')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
@@ -299,7 +296,8 @@ export default function EditorLayout() {
     activeStudioSection, setActiveStudioSection,
     pageCount, setPageCount,
     templateFontSize, onChangeFontSize: setTemplateFontSize,
-    sectionOrder, onSectionOrderChange: setSectionOrder,
+    templateFontWeight, onChangeFontWeight: setTemplateFontWeight,
+    sectionOrder, onSectionOrderChange: updateSectionOrder,
     mobileView, setMobileView, themeColor, setThemeColor,
     handlePrint,
   }
@@ -342,13 +340,54 @@ export default function EditorLayout() {
               <span>Multi-page ({pageCount} Pages)</span>
             </div>
           )}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-            <span className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-            <span>{isSaving ? 'Saving Changes' : 'Saved Locally'}</span>
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest ${
+            cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/35 text-red-400'
+            : cloudStatus === 'syncing' ? 'bg-amber-500/10 border-amber-500/35 text-amber-400'
+            : cloudStatus === 'synced' ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-400'
+            : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              cloudStatus === 'error' ? 'bg-red-500'
+              : isSaving ? 'bg-amber-500 animate-pulse'
+              : cloudStatus === 'synced' ? 'bg-emerald-500'
+              : 'bg-zinc-500'
+            }`} />
+            <span>
+              {cloudStatus === 'error' ? '⚠️ Sync Error'
+                : isSaving ? '🔄 Syncing...'
+                : !user ? '💾 Local Storage'
+                : cloudStatus === 'syncing' ? '🔄 Syncing...'
+                : cloudStatus === 'synced' ? '☁️ Cloud Sync'
+                : '💾 Local Storage'}
+            </span>
+            {cloudStatus === 'error' && (
+              <button onClick={retrySync} className="ml-1 underline hover:text-white transition-colors cursor-pointer">Retry</button>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          {user ? (
+            <div className="relative">
+              <button onClick={() => setShowUserMenu(!showUserMenu)} onBlur={() => setTimeout(() => setShowUserMenu(false), 150)} className="flex items-center gap-2 border border-zinc-800 text-xs font-semibold px-2 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
+                <img src={user.user_metadata?.avatar_url} alt="" className="w-5 h-5 rounded-full" referrerPolicy="no-referrer" />
+                <span className="max-w-[80px] truncate">{user.user_metadata?.full_name || user.email}</span>
+                <ChevronDown size={12} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl z-50 min-w-[180px] animate-fade-in">
+                  <div className="px-3 py-2 text-[11px] text-zinc-400 border-b border-zinc-800 truncate">{user.email}</div>
+                  <button onClick={() => { signOut(); setShowUserMenu(false) }} className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer">
+                    <LogOut size={13} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button onClick={signInWithGoogle} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
+              <LogIn size={13} /> Sign In
+            </button>
+          )}
           <button onClick={() => setActiveMode('analyze')} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
             <CheckCircle2 size={13} /> ATS Audit
           </button>
@@ -395,7 +434,7 @@ export default function EditorLayout() {
       <AnimatePresence>
         {isResumeManagerOpen && (
           <ResumeManager
-            resumes={resumes} selectedResumeId={selectedResumeId}
+            resumes={resumes} selectedResumeId={selectedResumeId} cloudStatus={cloudStatus}
             onSelect={selectResume} onCreate={createResume} onDuplicate={duplicateResume}
             onRename={renameResume} onDelete={deleteResume}
             onClose={() => setIsResumeManagerOpen(false)}
@@ -405,27 +444,9 @@ export default function EditorLayout() {
 
       {createPortal(
         <div className="resume-print-wrapper hidden print:block">
-          <div className={`resume-template-print-wrapper template-${selectedTemplate}`}>
-          <style dangerouslySetInnerHTML={{ __html: `
-            .resume-template-print-wrapper, .resume-page { font-size: ${templateFontSize}pt !important; }
-            .resume-template-print-wrapper .text-\\[10px\\], .resume-page .text-\\[10px\\] { font-size: ${(templateFontSize / 10) * 10}px !important; }
-            .resume-template-print-wrapper .text-\\[10\\.5px\\], .resume-page .text-\\[10\\.5px\\] { font-size: ${(templateFontSize / 10) * 10.5}px !important; }
-            .resume-template-print-wrapper .text-\\[9\\.5px\\], .resume-page .text-\\[9\\.5px\\] { font-size: ${(templateFontSize / 10) * 9.5}px !important; }
-            .resume-template-print-wrapper .text-\\[9px\\], .resume-page .text-\\[9px\\] { font-size: ${(templateFontSize / 10) * 9}px !important; }
-            .resume-template-print-wrapper .text-\\[8\\.5px\\], .resume-page .text-\\[8\\.5px\\] { font-size: ${(templateFontSize / 10) * 8.5}px !important; }
-            .resume-template-print-wrapper .text-\\[8px\\], .resume-page .text-\\[8px\\] { font-size: ${(templateFontSize / 10) * 8}px !important; }
-            .resume-template-print-wrapper .text-2xl, .resume-page .text-2xl { font-size: ${(templateFontSize / 10) * 24}px !important; }
-            .resume-template-print-wrapper .text-xl, .resume-page .text-xl { font-size: ${(templateFontSize / 10) * 20}px !important; }
-            .resume-template-print-wrapper .text-lg, .resume-page .text-lg { font-size: ${(templateFontSize / 10) * 18}px !important; }
-            .resume-template-print-wrapper .text-base, .resume-page .text-base { font-size: ${(templateFontSize / 10) * 16}px !important; }
-            .resume-template-print-wrapper .text-sm, .resume-page .text-sm { font-size: ${(templateFontSize / 10) * 14}px !important; }
-            .resume-template-print-wrapper .text-xs, .resume-page .text-xs { font-size: ${(templateFontSize / 10) * 12}px !important; }
-          ` }} />
-          {selectedTemplate === 'classic' && <ClassicTemplate data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />}
-          {selectedTemplate === 'modern' && <ModernTemplate data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />}
-          {selectedTemplate === 'executive' && <ExecutiveTemplate data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />}
-          {selectedTemplate === 'minimalist' && <MinimalistTemplate data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />}
-          {selectedTemplate === 'creative' && <CreativeTemplate data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />}
+          <div className={`resume-template-print-wrapper template-${selectedTemplate}`}
+               style={{ '--template-font-size': `${templateFontSize}px`, '--template-font-weight': templateFontWeight } as React.CSSProperties}>
+          <TemplateRenderer type={selectedTemplate} data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />
           </div>
         </div>,
         document.body

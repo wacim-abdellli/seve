@@ -11,38 +11,36 @@ export default function PrivacyPage() {
 
       {/* Header */}
       <header 
-        className="px-6 py-4 no-print" 
+        className="px-6 py-4 no-print sticky top-0 z-20" 
         style={{ 
-          zIndex: 20, 
-          position: 'sticky', 
-          top: 0, 
-          borderBottom: '1px solid var(--bulma-border)', 
+          borderBottom: '1px solid var(--bg-border)', 
           background: 'rgba(7, 7, 8, 0.8)', 
           backdropFilter: 'blur(20px)' 
         }}
       >
-        <div className="container is-flex is-align-items-center is-justify-content-between">
-          <div className="is-flex is-align-items-center" style={{ gap: '1rem' }}>
+        <div className="mx-auto w-full max-w-5xl px-6 flex items-center justify-between">
+          <div className="flex items-center" style={{ gap: '1rem' }}>
             <button
               onClick={() => navigate('/')}
-              className="button is-small is-text p-0 h-auto"
+              className="flex items-center gap-1.5 p-0 h-auto"
               style={{ 
-                color: 'var(--bulma-text-weak)', 
+                color: '#a1a1aa', 
                 fontWeight: 600, 
                 textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.375rem'
+                fontSize: 'inherit',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
               }}
             >
               <ArrowLeft size={14} />
               Back to Landing
             </button>
             
-            <div style={{ width: 1, height: 20, background: 'var(--bulma-border)' }} />
+            <div style={{ width: 1, height: 20, background: 'var(--bg-border)' }} />
 
-            <div className="is-flex is-align-items-center" style={{ gap: '0.5rem', userSelect: 'none' }}>
-              <div className="is-flex is-align-items-center">
+            <div className="flex items-center gap-2 select-none">
+              <div className="flex items-center">
                 <span style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', lineHeight: 1, position: 'relative' }}>
                   S
                   <span style={{ position: 'absolute', top: 0, right: '-6px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#e11d48' }} />
@@ -51,7 +49,7 @@ export default function PrivacyPage() {
                   eve
                 </span>
               </div>
-              <span className="tag is-small is-success is-light" style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
                 Privacy
               </span>
             </div>
@@ -60,13 +58,13 @@ export default function PrivacyPage() {
       </header>
 
       {/* Main Content */}
-      <main className="section flex-1" style={{ zIndex: 10, position: 'relative' }}>
-        <div className="container" style={{ maxWidth: '768px' }}>
+      <main className="flex-1 relative z-10" style={{ padding: '3rem 0' }}>
+        <div className="mx-auto w-full max-w-3xl px-6">
           
           {/* Intro */}
-          <div className="has-text-centered mb-6" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+          <div className="text-center flex flex-col items-center gap-3 mb-6">
             <div 
-              className="is-flex is-align-items-center is-justify-content-center"
+              className="flex items-center justify-center"
               style={{
                 padding: '0.75rem',
                 borderRadius: '16px',
@@ -80,98 +78,92 @@ export default function PrivacyPage() {
             >
               <ShieldCheck size={32} />
             </div>
-            <h2 className="title is-3" style={{ color: '#ffffff', fontWeight: 900 }}>
+            <h2 className="text-3xl font-black text-white">
               Privacy Notice
             </h2>
-            <p className="subtitle is-6 mt-2" style={{ color: 'var(--bulma-text-weak)', fontWeight: 300, maxWidth: '500px', margin: '0 auto' }}>
-              Seve was built under a strict pledge: <strong>no tracking, no subscriptions, and absolute data ownership</strong>. Here is exactly how your data is handled.
+            <p className="text-zinc-400 font-light max-w-lg mx-auto" style={{ fontWeight: 300 }}>
+              Seve was built under a strict pledge: <strong className="text-white">no tracking, no subscriptions, and absolute data ownership</strong>. Here is exactly how your data is handled.
             </p>
           </div>
 
           {/* Pillars Grid */}
-          <div className="columns is-multiline pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Pillar 1 */}
-            <div className="column is-6">
-              <div className="box tm-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', margin: 0 }}>
-                <div className="is-flex is-align-items-center" style={{ gap: '0.75rem' }}>
-                  <div 
-                    className="is-flex is-align-items-center is-justify-content-center"
-                    style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
-                  >
-                    <Database size={20} />
-                  </div>
-                  <h3 className="title is-6" style={{ margin: 0, color: '#ffffff', fontWeight: 700 }}>100% Local-First</h3>
+            <div className="flex flex-col gap-3 h-full" style={{ padding: '1.5rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--bg-border)' }}>
+              <div className="flex items-center gap-3">
+                <div 
+                  className="flex items-center justify-center"
+                  style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
+                >
+                  <Database size={20} />
                 </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--bulma-text-weak)', lineHeight: '1.5', fontWeight: 300, margin: 0 }}>
-                  Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code style={{ color: '#fb7185', background: 'rgba(244, 63, 94, 0.05)', padding: '2px 4px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>localStorage</code>. We never run databases or storage servers to collect your records.
-                </p>
+                <h3 className="text-base font-bold text-white m-0">100% Local-First</h3>
               </div>
+              <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
+                Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code className="text-rose-400 bg-rose-500/5 px-1 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>localStorage</code>. We never run databases or storage servers to collect your records.
+              </p>
             </div>
 
             {/* Pillar 3 */}
-            <div className="column is-6">
-              <div className="box tm-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', margin: 0 }}>
-                <div className="is-flex is-align-items-center" style={{ gap: '0.75rem' }}>
-                  <div 
-                    className="is-flex is-align-items-center is-justify-content-center"
-                    style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', color: '#3b82f6' }}
-                  >
-                    <Globe size={20} />
-                  </div>
-                  <h3 className="title is-6" style={{ margin: 0, color: '#ffffff', fontWeight: 700 }}>Zero Analytics & Ads</h3>
+            <div className="flex flex-col gap-3 h-full" style={{ padding: '1.5rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--bg-border)' }}>
+              <div className="flex items-center gap-3">
+                <div 
+                  className="flex items-center justify-center"
+                  style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', color: '#3b82f6' }}
+                >
+                  <Globe size={20} />
                 </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--bulma-text-weak)', lineHeight: '1.5', fontWeight: 300, margin: 0 }}>
-                  Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. We have no way of knowing how many resumes you construct or who you are.
-                </p>
+                <h3 className="text-base font-bold text-white m-0">Zero Analytics & Ads</h3>
               </div>
+              <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
+                Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. We have no way of knowing how many resumes you construct or who you are.
+              </p>
             </div>
 
             {/* Pillar 4 */}
-            <div className="column is-6">
-              <div className="box tm-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', margin: 0 }}>
-                <div className="is-flex is-align-items-center" style={{ gap: '0.75rem' }}>
-                  <div 
-                    className="is-flex is-align-items-center is-justify-content-center"
-                    style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981' }}
-                  >
-                    <Eye size={20} />
-                  </div>
-                  <h3 className="title is-6" style={{ margin: 0, color: '#ffffff', fontWeight: 700 }}>Total Transparency</h3>
+            <div className="flex flex-col gap-3 h-full" style={{ padding: '1.5rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--bg-border)' }}>
+              <div className="flex items-center gap-3">
+                <div 
+                  className="flex items-center justify-center"
+                  style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981' }}
+                >
+                  <Eye size={20} />
                 </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--bulma-text-weak)', lineHeight: '1.5', fontWeight: 300, margin: 0 }}>
-                  The entire source code is fully open-source. Anyone can audit the network requests and verify that the application operates entirely within your browser sandboxes.
-                </p>
+                <h3 className="text-base font-bold text-white m-0">Total Transparency</h3>
               </div>
+              <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
+                The entire source code is fully open-source. Anyone can audit the network requests and verify that the application operates entirely within your browser sandboxes.
+              </p>
             </div>
           </div>
 
           {/* Detailed Section */}
-          <div className="box mt-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--bulma-border)', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <h3 className="title is-5 mb-0 pb-3" style={{ color: '#ffffff', fontWeight: 700, borderBottom: '1px solid var(--bulma-border)' }}>
+          <div className="mt-6 flex flex-col gap-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 'var(--radius-lg)', padding: '2rem' }}>
+            <h3 className="text-lg font-bold text-white m-0 pb-3" style={{ borderBottom: '1px solid var(--bg-border)' }}>
               Technical Details & Data Handling
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.75rem', color: 'var(--bulma-text-weak)', lineHeight: '1.5' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <h4 style={{ fontWeight: 'bold', color: 'var(--bulma-text-strong)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>
+            <div className="flex flex-col gap-4 text-xs text-zinc-400 leading-relaxed">
+              <div className="flex flex-col gap-2">
+                <h4 className="font-bold text-white uppercase tracking-wider text-[10px]">
                   Local Browser Storage Keys
                 </h4>
-                <p style={{ margin: 0 }}>
+                <p className="m-0">
                   The following specific localStorage keys are used to retain your data between sessions:
                 </p>
-                <ul style={{ listStyleType: 'disc', paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                   <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_state:</strong> Stores your resume data fields, target job description, and chat history.</li>
-                  <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_workspace_layout:</strong> Stores your active pane layout preference (split, studio, focus).</li>
-                  <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_score_history:</strong> Stores the history of your resume ATS scores for progress tracking.</li>
-                  <li><strong style={{ color: 'var(--bulma-text-strong)' }}>seve_section_order:</strong> Stores the order of your resume sections if custom-sorted.</li>
+                <ul className="list-disc pl-5 flex flex-col gap-1">
+                  <li><strong className="text-white">seve_state:</strong> Stores your resume data fields, target job description, and chat history.</li>
+                  <li><strong className="text-white">seve_workspace_layout:</strong> Stores your active pane layout preference (split, studio, focus).</li>
+                  <li><strong className="text-white">seve_score_history:</strong> Stores the history of your resume ATS scores for progress tracking.</li>
+                  <li><strong className="text-white">seve_section_order:</strong> Stores the order of your resume sections if custom-sorted.</li>
                 </ul>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingTop: '0.5rem' }}>
-                <h4 style={{ fontWeight: 'bold', color: 'var(--bulma-text-strong)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '10px' }}>
+              <div className="flex flex-col gap-2 pt-2">
+                <h4 className="font-bold text-white uppercase tracking-wider text-[10px]">
                   Importing & Exporting
                 </h4>
-                <p style={{ margin: 0 }}>
+                <p className="m-0">
                   Because everything lives in browser storage, you can download a full backup file using the "Export Data (JSON)" button in settings, or upload a previously exported file to migrate your work to a different machine or browser.
                 </p>
               </div>
@@ -179,11 +171,11 @@ export default function PrivacyPage() {
           </div>
 
           {/* Back CTA */}
-          <div className="has-text-centered mt-6">
+          <div className="text-center mt-6">
             <button
               onClick={() => navigate('/')}
-              className="button is-primary is-medium"
-              style={{ fontWeight: 700 }}
+              className="font-bold px-6 py-3 rounded-xl text-white cursor-pointer transition-all"
+              style={{ background: 'var(--brand-primary)', fontWeight: 700, border: 'none', fontSize: 'inherit' }}
             >
               I Understand, Let's Build
             </button>
@@ -194,16 +186,13 @@ export default function PrivacyPage() {
 
       {/* Footer */}
       <footer 
-        className="footer py-6 no-print"
+        className="py-6 no-print relative z-10 text-center"
         style={{ 
-          zIndex: 10, 
-          position: 'relative', 
-          borderTop: '1px solid var(--bulma-border)', 
-          background: 'var(--bg-void)',
-          textAlign: 'center'
+          borderTop: '1px solid var(--bg-border)', 
+          background: 'var(--bg-void)'
         }}
       >
-        <div style={{ fontSize: '0.75rem', color: 'var(--bulma-text-weak)' }}>
+        <div className="text-xs text-zinc-400">
           © {new Date().getFullYear()} Seve. Free and open source.
         </div>
       </footer>

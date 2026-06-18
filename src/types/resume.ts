@@ -125,7 +125,7 @@ export interface AtsScore {
   failing: { issue: string; fix: string; section?: string }[]
 }
 
-export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative'
+export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative' | 'compact' | 'professional' | 'technical' | 'academic' | 'clean'
 
 export interface ResumeProfile {
   id: string
@@ -135,6 +135,7 @@ export interface ResumeProfile {
   resumeData: ResumeData
   selectedTemplate: Template
   jobDescription: string
+  sectionOrder: string[]
 }
 
 export interface AppState {

@@ -18,18 +18,23 @@ import { Card } from '@/components/ui/Card'
 export default function LandingPage() {
   const navigate = useNavigate()
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
-  const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState<'classic' | 'modern' | 'executive' | 'minimalist' | 'creative'>('classic')
+  const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState('classic')
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
   }
 
   const templatesInfo = [
-    { id: 'classic' as const, name: 'Classic', font: 'Georgia / Serif', desc: 'Standard single-column layout, highly recommended for traditional finance and legal roles.' },
-    { id: 'modern' as const, name: 'Modern', font: 'Arial / Sans-Serif', desc: 'Sleek, colored headers with a modern structure for tech and startup applications.' },
-    { id: 'executive' as const, name: 'Executive', font: 'EB Garamond / Garamond', desc: 'Elegant, distinguished header bars tailored for senior and management roles.' },
-    { id: 'minimalist' as const, name: 'Minimalist', font: 'Inter / Sans-Serif', desc: 'Airy margins and clean whitespace optimized for maximal readability.' },
-    { id: 'creative' as const, name: 'Creative', font: 'Outfit / Sans-Serif', desc: 'Distinct layout tags with left-border accents for design and marketing.' }
+    { id: 'classic', name: 'Classic', font: 'Georgia / Serif', desc: 'Standard single-column layout, highly recommended for traditional finance and legal roles.' },
+    { id: 'modern', name: 'Modern', font: 'Arial / Sans-Serif', desc: 'Sleek, colored headers with a modern structure for tech and startup applications.' },
+    { id: 'executive', name: 'Executive', font: 'EB Garamond / Garamond', desc: 'Elegant, distinguished header bars tailored for senior and management roles.' },
+    { id: 'minimalist', name: 'Minimalist', font: 'Inter / Sans-Serif', desc: 'Airy margins and clean whitespace optimized for maximal readability.' },
+    { id: 'creative', name: 'Creative', font: 'Outfit / Sans-Serif', desc: 'Distinct layout tags with left-border accents for design and marketing.' },
+    { id: 'compact', name: 'Compact', font: 'System UI / Sans', desc: 'Dense single-page design for maximum content in minimal space.' },
+    { id: 'professional', name: 'Professional', font: 'Inter / Sans-Serif', desc: 'Clean business-oriented layout with subtle color accents.' },
+    { id: 'technical', name: 'Technical', font: 'SF Mono / Monospace', desc: 'Monospace tech-optimized template with skill badges.' },
+    { id: 'academic', name: 'Academic', font: 'Georgia / Serif', desc: 'Research-focused layout prioritizing education and publications.' },
+    { id: 'clean', name: 'Clean', font: 'Inter / Sans-Serif', desc: 'Ultra-minimalist design with maximum whitespace and readability.' },
   ]
 
   const faqItems = [
@@ -324,6 +329,45 @@ export default function LandingPage() {
                           <div className="w-full h-2 bg-zinc-900/60 rounded-sm" />
                           <div className="w-[90%] h-2 bg-zinc-900/60 rounded-sm" />
                         </div>
+                      </div>
+                    )}
+                    {selectedPreviewTemplate === 'compact' && (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="w-full h-1.5 bg-zinc-800 rounded-sm" />
+                        <div className="w-[75%] h-1.5 bg-zinc-900/60 rounded-sm" />
+                        <div className="w-[90%] h-1.5 bg-zinc-900/60 rounded-sm" />
+                        <div className="w-[60%] h-1.5 bg-zinc-900/60 rounded-sm" />
+                      </div>
+                    )}
+                    {selectedPreviewTemplate === 'professional' && (
+                      <div className="flex flex-col gap-2">
+                        <div className="w-32 h-2 bg-zinc-800 rounded-sm" />
+                        <div className="w-full h-2 bg-zinc-900/60 rounded-sm" />
+                        <div className="w-[80%] h-2 bg-zinc-900/60 rounded-sm" />
+                      </div>
+                    )}
+                    {selectedPreviewTemplate === 'technical' && (
+                      <div className="flex flex-col gap-2 font-mono">
+                        <div className="flex gap-1.5 flex-wrap">
+                          <div className="w-10 h-3 bg-zinc-800/40 rounded-sm" />
+                          <div className="w-14 h-3 bg-zinc-800/40 rounded-sm" />
+                          <div className="w-8 h-3 bg-zinc-800/40 rounded-sm" />
+                        </div>
+                        <div className="w-full h-2 bg-zinc-900/60 rounded-sm" />
+                      </div>
+                    )}
+                    {selectedPreviewTemplate === 'academic' && (
+                      <div className="flex flex-col gap-2 font-serif">
+                        <div className="w-full h-2 bg-zinc-800/40 rounded-sm" />
+                        <div className="w-[70%] h-2 bg-zinc-900/60 rounded-sm" />
+                        <div className="w-[90%] h-2 bg-zinc-900/60 rounded-sm" />
+                      </div>
+                    )}
+                    {selectedPreviewTemplate === 'clean' && (
+                      <div className="flex flex-col gap-3 py-1">
+                        <div className="w-full h-2 bg-zinc-800/30 rounded-sm" />
+                        <div className="w-[80%] h-2 bg-zinc-900/60 rounded-sm" />
+                        <div className="w-[60%] h-2 bg-zinc-900/60 rounded-sm" />
                       </div>
                     )}
                   </div>

@@ -1,56 +1,16 @@
-import type { ResumeData, AtsScore, SkillsMatrixItem, AtsIssue, AtsCategoryScore, AtsReport, AtsRatingResult, SectionTier, IndustryProfile } from '../types/resume'
+import type { ResumeData, AtsScore, SkillsMatrixItem, AtsIssue, AtsCategoryScore, AtsReport, AtsRatingResult, SectionTier } from '../types/resume'
 import { classifyDomain, computeDomainPenalty } from './roleClassifier'
 import { computeSemanticRelevance } from './semanticScorer'
-import { getPageBreakSections } from './layoutHelper'
-
-// Helper list of strong active verbs (English)
-const STRONG_VERBS = new Set([
-  'led', 'built', 'created', 'designed', 'developed', 'managed',
-  'increased', 'decreased', 'improved', 'launched', 'delivered',
-  'achieved', 'executed', 'optimized', 'automated', 'coordinated',
-  'generated', 'reduced', 'implemented', 'streamlined', 'negotiated',
-  'established', 'transformed', 'spearheaded', 'drove', 'deployed',
-  'engineered', 'analyzed', 'produced', 'trained', 'mentored',
-  'directed', 'facilitated', 'collaborated', 'resolved', 'maintained',
-  'monitored', 'supported', 'authored'
-])
-
-// Helper list of strong active verbs (French - participles and infinitives)
-const FR_STRONG_VERBS = new Set([
-  'dirigé', 'conçu', 'créé', 'développé', 'géré', 'optimisé', 'automatisé', 'implémenté',
-  'amélioré', 'lancé', 'livré', 'réalisé', 'exécuté', 'coordonné', 'généré', 'réduit',
-  'mis', 'structuré', 'négocié', 'établi', 'transformé', 'piloté', 'propulsé', 'déployé',
-  'conduit', 'analysé', 'produit', 'formé', 'encadré', 'supervisé', 'facilité', 'collaboré',
-  'résolu', 'maintenu', 'suivi', 'soutenu', 'rédigé', 'administré', 'déterminé', 'accru',
-  // Infinitives
-  'diriger', 'concevoir', 'créer', 'développer', 'gérer', 'optimiser', 'automatiser', 'implémenter',
-  'améliorer', 'lancer', 'livrer', 'réaliser', 'exécuter', 'coordonner', 'générer', 'réduire',
-  'mettre', 'structurer', 'négocier', 'établir', 'transformer', 'piloter', 'propulser', 'déployer',
-  'conduire', 'analyser', 'produire', 'former', 'encadrer', 'superviser', 'faciliter', 'collaborer',
-  'résoudre', 'maintenir', 'suivre', 'soutenir', 'rédiger', 'administrer', 'déterminer', 'accroître'
-])
-
-// Helper list of common English stopwords
-const STOPWORDS = new Set([
-  'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-  'should', 'may', 'might', 'shall', 'can', 'need', 'dare', 'ought',
-  'used', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from',
-  'as', 'into', 'through', 'during', 'before', 'after', 'above',
-  'below', 'between', 'out', 'off', 'over', 'under', 'again',
-  'further', 'then', 'once', 'and', 'or', 'but', 'if', 'about'
-])
-
-// Helper list of common French stopwords
-const FR_STOPWORDS = new Set([
-  'le', 'la', 'les', 'un', 'une', 'des', 'est', 'sont', 'a', 'ont', 'de', 'en',
-  'pour', 'sur', 'avec', 'dans', 'par', 'du', 'au', 'aux', 'et', 'ou', 'mais',
-  'si', 'se', 'sa', 'ses', 'ce', 'cet', 'cette', 'ces', 'qui', 'que', 'quoi',
-  'dont', 'ou', 'dans', 'chez', 'sous', 'vers', 'pourquoi', 'comment', 'plus'
-])
-
-const EN_PRONOUNS_REGEX = /\b(i|me|my|we|our|us)\b/i
-const FR_PRONOUNS_REGEX = /\b(je|moi|mon|ma|mes|nous|notre|nos|on)\b/i
+import { estimatePageCount, getSectionHeights } from './layoutHelper'
+import { INDUSTRY_PROFILES, detectIndustry, applyProfileAdjustments } from './atsIndustry'
+import { tokenize, matchKeywords } from './atsKeywords'
+import {
+  USABLE_PER_PAGE, STRONG_VERBS, FR_STRONG_VERBS, STOPWORDS, FR_STOPWORDS,
+  EN_PRONOUNS_REGEX, FR_PRONOUNS_REGEX, WEAK_TO_STRONG_EN, WEAK_TO_STRONG_FR,
+  WEAK_VERB_STARTERS, STRONG_VERB_SUGGESTIONS,
+  DIMENSION_WEIGHTS, JD_STOPWORDS,
+  HISTORY_KEY, MAX_HISTORY,
+} from './atsConstants'
 
 // Localized UI feedback messages
 // Helper function to extract words from text
@@ -104,8 +64,8 @@ function detectDateFormat(dateStr: string, lang: 'en' | 'fr'): 'MM/YYYY' | 'Mont
   return 'Invalid'
 }
 
-export function evaluateResume(resume: ResumeData, jobDescription: string): AtsScore & { language: 'en' | 'fr'; reportV2: AtsReport } {
-  const report = generateAtsReportV2(resume, jobDescription)
+export function evaluateResume(resume: ResumeData, jobDescription: string, fontSize: number = 10): AtsScore & { language: 'en' | 'fr'; reportV2: AtsReport } {
+  const report = generateAtsReportV2(resume, jobDescription, null, fontSize)
   
   // Map categories back to the V1 "sections" format
   const sections = {
@@ -144,33 +104,7 @@ export function evaluateResume(resume: ResumeData, jobDescription: string): AtsS
 }
 
 
-const WEAK_TO_STRONG_EN: Record<string, string> = {
-  helped: 'Collaborated',
-  assisted: 'Facilitated',
-  made: 'Created',
-  did: 'Executed',
-  worked: 'Engineered',
-  managed: 'Led',
-  went: 'Navigated',
-  had: 'Acquired',
-  saw: 'Monitored',
-  took: 'Spearheaded',
-  gave: 'Delivered',
-  talked: 'Presented',
-  got: 'Secured',
-}
 
-const WEAK_TO_STRONG_FR: Record<string, string> = {
-  aidé: 'Collaboré',
-  assisté: 'Facilité',
-  fait: 'Créé',
-  faisais: 'Conçu',
-  travaillé: 'Développé',
-  eu: 'Obtenu',
-  donné: 'Présenté',
-  parlé: 'Communiqué',
-  pris: 'Dirigé',
-}
 
 export function autoFix(resume: ResumeData): ResumeData {
   const fixed = JSON.parse(JSON.stringify(resume)) as ResumeData
@@ -534,158 +468,12 @@ export function calculateSkillsMatrix(resume: ResumeData, jobDescription: string
    Phase 1: Section Classification
    ═══════════════════════════════════════════ */
 
-export const SECTION_TIERS: Record<string, SectionTier> = {
-  contact: 'core',
-  summary: 'expected',
-  experience: 'core',
-  education: 'core',
-  skills: 'core',
-  languages: 'optional',
-  projects: 'expected',
-  awards: 'optional',
-  certifications: 'expected',
-  interests: 'optional',
-  publications: 'optional',
-  references: 'optional',
-  volunteer: 'optional',
-}
 
-export const CORE_SECTION_KEYS = ['contact', 'experience', 'education', 'skills']
-export const EXPECTED_SECTION_KEYS = ['summary', 'projects', 'certifications']
 
 
 /* ═══════════════════════════════════════════
    Phase 1: Word-Boundary Tokenizer
    ═══════════════════════════════════════════ */
-
-export function tokenize(text: string): string[] {
-  return (text.toLowerCase().match(/\b\w+\b/g) || [])
-    .filter(w => w.length > 1)
-}
-
-/* ═══════════════════════════════════════════
-   Phase 1: Synonym Map
-   ═══════════════════════════════════════════ */
-
-export const SYNONYM_MAP: Record<string, string[]> = {
-  javascript: ['js', 'ecmascript', 'es6'],
-  js: ['javascript', 'ecmascript'],
-  typescript: ['ts'],
-  ts: ['typescript'],
-  postgresql: ['postgres', 'psql'],
-  postgres: ['postgresql', 'psql'],
-  nextjs: ['next.js', 'next'],
-  'next.js': ['nextjs', 'next'],
-  react: ['reactjs', 'react.js'],
-  reactjs: ['react', 'react.js'],
-  node: ['nodejs', 'node.js'],
-  nodejs: ['node', 'node.js'],
-  aws: ['amazon web services', 'amazon webservices', 'amazon'],
-  gcp: ['google cloud', 'google cloud platform'],
-  python: ['py', 'python3'],
-  docker: ['dockerized', 'container', 'containers', 'containerization'],
-  kubernetes: ['k8s', 'kube'],
-  k8s: ['kubernetes', 'kube'],
-  'machine learning': ['ml', 'deep learning', 'ai'],
-  ml: ['machine learning', 'deep learning'],
-  ai: ['artificial intelligence', 'machine learning'],
-  leadership: ['leader', 'leading', 'led'],
-  management: ['manager', 'managing', 'managed'],
-  communication: ['communicating', 'communicated', 'verbal', 'written'],
-  agile: ['scrum', 'kanban', 'sprint'],
-  ci: ['continuous integration', 'ci/cd'],
-  cd: ['continuous delivery', 'continuous deployment', 'ci/cd'],
-  'ci/cd': ['continuous integration', 'continuous delivery', 'continuous deployment', 'ci', 'cd'],
-  mongodb: ['mongo', 'nosql'],
-  sql: ['database', 'relational database', 'rdbms', 'mysql', 'postgresql'],
-  mysql: ['sql', 'database', 'mariadb'],
-  analysis: ['analytics', 'analyzing', 'analyzed', 'data analysis'],
-  testing: ['test', 'tests', 'qa', 'quality assurance', 'automated testing'],
-  'problem solving': ['problem-solving', 'critical thinking', 'analytical'],
-  'project management': ['pm', 'project planning', 'project manager'],
-  html: ['html5'],
-  css: ['css3', 'stylesheets'],
-  ux: ['user experience', 'usability'],
-  ui: ['user interface', 'frontend'],
-  saas: ['software as a service', 'cloud'],
-  api: ['apis', 'rest', 'restful', 'rest api', 'restful api', 'graphql', 'endpoint'],
-  graphql: ['api', 'apis', 'graph ql', 'gql'],
-  rest: ['restful', 'rest api', 'api'],
-  microservices: ['micro-service', 'micro service', 'service-oriented', 'soa'],
-  cloud: ['aws', 'azure', 'gcp', 'cloud computing', 'saas'],
-  azure: ['microsoft azure', 'cloud'],
-  devops: ['dev ops', 'dev-ops', 'site reliability', 'sre', 'ci/cd'],
-  linux: ['unix', 'bash', 'shell', 'posix'],
-  data: ['analytics', 'data analysis', 'data science', 'data engineering', 'big data'],
-  blockchain: ['web3', 'web 3', 'solidity', 'ethereum', 'crypto', 'cryptocurrency'],
-  mobile: ['ios', 'android', 'react native', 'flutter', 'swift', 'kotlin', 'mobile app'],
-  security: ['cybersecurity', 'cyber security', 'infosec', 'information security', 'appsec'],
-}
-
-/* ═══════════════════════════════════════════
-   Phase 1: matchKeywords()
-   ═══════════════════════════════════════════ */
-
-export interface MatchResult {
-  matched: string[]
-  missing: string[]
-  partial: { jdTerm: string; resumeTerm: string }[]
-}
-
-export function matchKeywords(jdTokens: string[], resumeTokens: string[]): MatchResult {
-  const resumeSet = new Set(resumeTokens)
-  const matched: string[] = []
-  const missing: string[] = []
-  const partial: { jdTerm: string; resumeTerm: string }[] = []
-  const seen = new Set<string>()
-
-  for (const token of jdTokens) {
-    if (seen.has(token)) continue
-    seen.add(token)
-
-    if (resumeSet.has(token)) {
-      matched.push(token)
-      continue
-    }
-
-    const variants = SYNONYM_MAP[token]
-    if (variants) {
-      const found = variants.find(v => resumeSet.has(v))
-      if (found) {
-        matched.push(token)
-        partial.push({ jdTerm: token, resumeTerm: found })
-        continue
-      }
-    }
-
-    for (const [key, vals] of Object.entries(SYNONYM_MAP)) {
-      if (vals.includes(token) && resumeSet.has(key)) {
-        matched.push(token)
-        partial.push({ jdTerm: token, resumeTerm: key })
-        continue
-      }
-    }
-
-    missing.push(token)
-  }
-
-  return { matched, missing, partial }
-}
-
-/* ═══════════════════════════════════════════
-   Phase 1: Multi-Word Skill Phrase Matching
-   ═══════════════════════════════════════════ */
-
-function escapeRegex(s: string): string {
-  return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
-}
-
-export function extractMultiWordSkills(text: string, skillPhrases: string[]): string[] {
-  const lower = text.toLowerCase()
-  return skillPhrases.filter(phrase =>
-    new RegExp(`\\b${escapeRegex(phrase)}\\b`, 'i').test(lower)
-  )
-}
 
 /* ═══════════════════════════════════════════
    Phase 1: Bullet Audit
@@ -704,9 +492,7 @@ interface BulletCheck {
   type: 'warning' | 'suggestion'
 }
 
-const WEAK_VERB_STARTERS = /^(was|were|been|being|had|has|have|am|is|are|used to|responsible for|worked on|helped with|in charge of|tasked with|participated in|involved in|assisted with|supported|handled|performed|did|made|got|took|gave|went|saw)/i
 
-const STRONG_VERB_SUGGESTIONS = 'Led • Built • Developed • Engineered • Optimized • Delivered • Created • Designed • Implemented • Launched • Drove • Established • Generated • Produced • Transformed • Spearheaded'
 
 function getAlternativeStarters(word: string): string[] {
   const map: Record<string, string[]> = {
@@ -1003,20 +789,6 @@ export function evaluateSectionAts(
    Phase 1: 10 Dimension Scoring Functions
    ═══════════════════════════════════════════ */
 
-const DIMENSION_WEIGHTS: Record<string, number> = {
-  completeness: 0.15,
-  keywords: 0.20,
-  semantic: 0.20,
-  formatting: 0.15,
-  actionVerbs: 0.08,
-  quantifiedResults: 0.08,
-  contactInfo: 0.04,
-  dateConsistency: 0.05,
-  length: 0.05,
-  bulletQuality: 0.00,
-  readability: 0.05,
-}
-
 function scoreCompleteness(resume: ResumeData, lang: string): AtsCategoryScore {
   const issues: AtsIssue[] = []
   let score = 0
@@ -1095,17 +867,6 @@ function scoreCompleteness(resume: ResumeData, lang: string): AtsCategoryScore {
 
   return { key: 'completeness', label: 'Section Completeness', score: Math.min(score, max), max, weight: DIMENSION_WEIGHTS.completeness, issues }
 }
-
-const JD_STOPWORDS = new Set([
-  // Generic management verbs — every resume has these
-  'lead', 'leads', 'led', 'manage', 'manages', 'managed', 'develop', 'develops',
-  'developed', 'support', 'collaborate', 'build', 'create', 'implement', 'drive',
-  'deliver', 'ensure', 'work', 'help', 'strong', 'excellent', 'proven', 'ability',
-  'experience', 'team', 'project', 'company', 'client', 'role', 'opportunity',
-  // Filler JD words
-  'passionate', 'dynamic', 'innovative', 'results', 'fast-paced', 'environment',
-  'growth', 'join', 'hiring', 'apply', 'candidate', 'profile', 'responsibilities',
-])
 
 function extractMeaningfulKeywords(jdText: string): string[] {
   const tokens = jdText.toLowerCase().match(/\b[a-z][a-z.+#/-]{2,}\b/g) ?? []
@@ -1577,7 +1338,7 @@ function scoreDateConsistency(resume: ResumeData, lang: string): AtsCategoryScor
   return { key: 'dateConsistency', label: 'Date Consistency', score, max, weight: DIMENSION_WEIGHTS.dateConsistency, issues }
 }
 
-function scoreLength(resume: ResumeData, lang: string): AtsCategoryScore {
+function scoreLength(resume: ResumeData, lang: string, fontSize: number = 10): AtsCategoryScore {
   const issues: AtsIssue[] = []
   const max = 5
   const text = extractResumeText(resume)
@@ -1616,16 +1377,28 @@ function scoreLength(resume: ResumeData, lang: string): AtsCategoryScore {
 
   // Check sparse Page 2 layout
   const defaultSectionOrder = ['summary', 'experience', 'projects', 'education', 'skills', 'languages', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
-  const { page2Sections } = getPageBreakSections(resume, defaultSectionOrder)
-  const page2SectionCount = page2Sections.length
+  const pageCount = estimatePageCount(resume, defaultSectionOrder, fontSize)
 
-  if (page2SectionCount > 0 && page2SectionCount < 3) {
+  // Compute overflow heuristic: how much content spills onto page 2
+  const hasContent = (key: string): boolean => {
+    if (key === 'summary') return !!(resume.summary && resume.summary.trim() !== '')
+    if (key === 'skills') return !!(resume.skills && resume.skills.length > 0)
+    const val = (resume as unknown as Record<string, unknown>)[key]
+    return Array.isArray(val) && val.length > 0
+  }
+  const activeSections = defaultSectionOrder.filter(hasContent)
+  const heights = getSectionHeights(resume, fontSize)
+  const totalHeight = activeSections.reduce((sum, sec) => sum + (heights[sec] || 60), 0)
+  const overflow = totalHeight - USABLE_PER_PAGE
+
+  if (pageCount >= 2 && overflow > 0 && overflow < USABLE_PER_PAGE * 0.4) {
     score = Math.max(1, score - 1) // Deduct 1 point for sparse page layout
+    const spillPercent = Math.round((overflow / USABLE_PER_PAGE) * 100)
     issues.push({
       id: 'page2-sparse',
       type: 'warning',
       category: 'structure',
-      issue: `Page 2 contains only ${page2SectionCount} section(s) — wastes most of the page.`,
+      issue: `Page 2 is sparse (~${spillPercent}% of a page spills over) — wastes most of the page.`,
       fix: 'Move Certifications and Volunteer to bottom of page 1, or add more content to justify a second page. A near-empty page 2 signals poor layout to human reviewers.',
       severityScore: 8,
       autoFixable: false,
@@ -1764,7 +1537,7 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   const quantifiedResults = scoreQuantifiedResults(resume, lang)
   const contactInfo = scoreContactInfo(resume, lang)
   const dateConsistency = scoreDateConsistency(resume, lang)
-  const length = scoreLength(resume, lang)
+  const length = scoreLength(resume, lang, 10)
   const bulletQuality = scoreBulletQuality(resume)
   const readability = scoreReadability(resume, lang)
 
@@ -1853,120 +1626,7 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   }
 }
 
-/* ═══════════════════════════════════════════
-   Phase 2: Industry Profiles
-   ═══════════════════════════════════════════ */
 
-export const INDUSTRY_PROFILES: Record<string, IndustryProfile> = {
-  tech: {
-    id: 'tech',
-    name: 'Tech / Engineering',
-    expectedSections: ['contact', 'summary', 'skills', 'experience', 'education', 'projects'],
-    preferredOrder: ['contact', 'summary', 'skills', 'experience', 'projects', 'education', 'certifications'],
-    synonymOverrides: {
-      javascript: ['js', 'ecmascript', 'es6', 'es2015'],
-      python: ['python', 'py', 'python3'],
-      typescript: ['ts', 'typescript'],
-      react: ['reactjs', 'react.js', 'react js'],
-    },
-    lengthExpectation: 'standard',
-    verbPreference: 'technical',
-    weightAdjustments: { keywords: 0.30, quantifiedResults: 0.08 },
-  },
-  finance: {
-    id: 'finance',
-    name: 'Finance / Banking',
-    expectedSections: ['contact', 'summary', 'experience', 'education', 'certifications'],
-    preferredOrder: ['contact', 'summary', 'experience', 'education', 'certifications', 'skills'],
-    synonymOverrides: {
-      analysis: ['analytics', 'financial analysis', 'modeling'],
-      excel: ['spreadsheet', 'vba', 'pivot'],
-    },
-    lengthExpectation: 'short',
-    verbPreference: 'leadership',
-    weightAdjustments: { quantifiedResults: 0.20, actionVerbs: 0.15, keywords: 0.15 },
-  },
-  marketing: {
-    id: 'marketing',
-    name: 'Marketing / Creative',
-    expectedSections: ['contact', 'summary', 'experience', 'skills', 'projects'],
-    preferredOrder: ['contact', 'summary', 'experience', 'skills', 'projects', 'education'],
-    synonymOverrides: {
-      content: ['copywriting', 'blog', 'editorial'],
-      seo: ['search engine optimization', 'sem'],
-    },
-    lengthExpectation: 'standard',
-    verbPreference: 'creative',
-    weightAdjustments: { keywords: 0.20, readability: 0.10 },
-  },
-  healthcare: {
-    id: 'healthcare',
-    name: 'Healthcare / Clinical',
-    expectedSections: ['contact', 'summary', 'experience', 'education', 'certifications', 'licenses'],
-    preferredOrder: ['contact', 'summary', 'certifications', 'experience', 'education', 'skills'],
-    synonymOverrides: {},
-    lengthExpectation: 'long',
-    verbPreference: 'leadership',
-    weightAdjustments: { completeness: 0.20, contactInfo: 0.10 },
-  },
-  executive: {
-    id: 'executive',
-    name: 'Executive / Leadership',
-    expectedSections: ['contact', 'summary', 'experience', 'education', 'skills', 'certifications'],
-    preferredOrder: ['contact', 'summary', 'experience', 'education', 'certifications', 'skills'],
-    synonymOverrides: {
-      leadership: ['executive', 'c-level', 'director', 'vp', 'chief'],
-      strategy: ['strategic planning', 'vision', 'transformation'],
-    },
-    lengthExpectation: 'standard',
-    verbPreference: 'leadership',
-    weightAdjustments: { actionVerbs: 0.15, bulletQuality: 0.10, keywords: 0.15 },
-  },
-  entryLevel: {
-    id: 'entryLevel',
-    name: 'Entry Level / Graduate',
-    expectedSections: ['contact', 'education', 'skills', 'experience', 'projects'],
-    preferredOrder: ['contact', 'summary', 'education', 'skills', 'experience', 'projects'],
-    synonymOverrides: {},
-    lengthExpectation: 'short',
-    verbPreference: 'technical',
-    weightAdjustments: { completeness: 0.20, keywords: 0.15, quantifiedResults: 0.05 },
-  },
-}
-
-export function detectIndustry(jd: string, resumeData?: ResumeData): string {
-  const lower = jd.toLowerCase()
-  const scores: { id: string; count: number }[] = Object.entries(INDUSTRY_PROFILES).map(([id, profile]) => {
-    const keywords = Object.keys(profile.synonymOverrides).flat()
-    const matched = keywords.filter(k => lower.includes(k)).length
-    return { id, count: matched }
-  })
-
-  scores.sort((a, b) => b.count - a.count)
-  const top = scores[0]
-  if (top && top.count > 0) return top.id
-
-  // Fallback: detect from resume if it has project sections (likely tech)
-  if (resumeData) {
-    if (resumeData.projects && resumeData.projects.length > 0) return 'tech'
-    if (resumeData.certifications && resumeData.certifications.length > 0) return 'healthcare'
-  }
-
-  return 'general'
-}
-
-export function applyProfileAdjustments(
-  categories: AtsCategoryScore[],
-  profile: IndustryProfile
-): AtsCategoryScore[] {
-  return categories.map(cat => {
-    const adj = profile.weightAdjustments[cat.key]
-    return {
-      ...cat,
-      weight: adj !== undefined ? adj : cat.weight,
-    }
-  })
-}
 
 /* ═══════════════════════════════════════════
    Phase 2: ATS Parseability Score
@@ -2140,9 +1800,6 @@ export function incrementalScore(
    Phase 2: Timeline History (localStorage)
    ═══════════════════════════════════════════ */
 
-const HISTORY_KEY = 'ats-score-history'
-const MAX_HISTORY = 30
-
 export function loadTimeline(): { date: number; score: number; label: string }[] {
   try {
     return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
@@ -2169,7 +1826,8 @@ export function saveTimelineEntry(score: number, label: string): void {
 export function generateAtsReportV2(
   resume: ResumeData,
   jd: string,
-  previousReport?: AtsReport | null
+  previousReport?: AtsReport | null,
+  fontSize: number = 10
 ): AtsReport {
   const text = extractResumeText(resume)
   const lang = detectLanguage(text)
@@ -2185,7 +1843,7 @@ export function generateAtsReportV2(
   const quantifiedResults = scoreQuantifiedResults(resume, lang)
   const contactInfo = scoreContactInfo(resume, lang)
   const dateConsistency = scoreDateConsistency(resume, lang)
-  const length = scoreLength(resume, lang)
+  const length = scoreLength(resume, lang, fontSize)
   const bulletQuality = scoreBulletQuality(resume)
   const readability = scoreReadability(resume, lang)
 

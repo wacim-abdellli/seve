@@ -1,13 +1,27 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, createContext, useContext } from 'react'
 import { FileEdit, Info, GripVertical } from 'lucide-react'
 
+export type SectionKey = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
+
+interface SectionReorderContextType {
+  moveSection: (sectionId: SectionKey, direction: 'up' | 'down') => void
+}
+
+const SectionReorderContext = createContext<SectionReorderContextType | null>(null)
+
+export function useSectionReorder() {
+  return useContext(SectionReorderContext)
+}
+
+export const SectionReorderProvider = SectionReorderContext.Provider
+
 interface PreviewSectionWrapperProps {
-  sectionId: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
+  sectionId: string
   activeSection?: string | null
   atsMode?: boolean
-  atsRating?: 'safe' | 'warning' | 'danger'
+  atsRating?: string
   atsFeedback?: string
-  onEdit?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
+  onEdit?: (section: string) => void
   onDragStart?: (e: React.DragEvent) => void
   onDragOver?: (e: React.DragEvent) => void
   onDrop?: (e: React.DragEvent) => void
@@ -65,6 +79,21 @@ export default function PreviewSectionWrapper({
 
   const isDraggable = !atsMode && sectionId !== 'contact'
 
+  const reorder = useSectionReorder()
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.altKey && e.key === 'ArrowUp') {
+      e.preventDefault()
+      reorder?.moveSection(sectionId as SectionKey, 'up')
+    }
+    if (e.altKey && e.key === 'ArrowDown') {
+      e.preventDefault()
+      reorder?.moveSection(sectionId as SectionKey, 'down')
+    }
+  }
+
+  const sectionIdLabel = sectionId.charAt(0).toUpperCase() + sectionId.slice(1).replace(/([A-Z])/g, ' $1')
+
   return (
     <div 
       draggable={isDraggable}
@@ -72,6 +101,11 @@ export default function PreviewSectionWrapper({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="option"
+      aria-label={`${sectionIdLabel} section. ${isDraggable ? 'Alt+Arrow keys to reorder.' : ''}`}
+      aria-roledescription="resume section"
       className={`preview-section ${ripple ? 'animate-ripple' : ''}`}
       style={{
         borderLeft: isActive ? '2px solid rgba(251,146,60,0.6)' : '2px solid transparent',
@@ -102,14 +136,14 @@ export default function PreviewSectionWrapper({
         {/* Drag Handle */}
         {isDraggable && (
           <div 
-            className="is-flex is-align-items-center is-justify-content-center"
+            className="flex items-center justify-center"
             style={{ 
               width: 24, 
               height: 24, 
               borderRadius: 6, 
               background: '#12131a', 
-              border: '1px solid var(--bulma-border)', 
-              color: 'var(--bulma-text-weak)', 
+              border: '1px solid var(--bg-border)', 
+              color: '#a1a1aa', 
               cursor: 'grab' 
             }}
           >
@@ -121,8 +155,8 @@ export default function PreviewSectionWrapper({
         {!atsMode && (
           <button
             onClick={handleEditClick}
-            className="button is-small is-primary"
-            style={{ width: 24, height: 24, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="flex items-center justify-center"
+            style={{ width: 24, height: 24, padding: 0 }}
             title={`Edit ${sectionId}`}
           >
             <FileEdit size={12} />
@@ -135,7 +169,7 @@ export default function PreviewSectionWrapper({
       {/* ATS View Heatmap Overlay */}
       {atsMode && (
         <div 
-          className="is-flex is-flex-direction-column is-justify-content-start is-align-items-end"
+          className="flex flex-col justify-start items-end"
           style={{
             position: 'absolute',
             inset: 0,
@@ -147,10 +181,9 @@ export default function PreviewSectionWrapper({
             padding: '0.375rem'
           }}
         >
-          <div className="is-flex is-align-items-center" style={{ gap: '0.25rem', opacity: 0.9, pointerEvents: 'auto', position: 'relative', zIndex: 20 }}>
+          <div className="flex items-center" style={{ gap: '0.25rem', opacity: 0.9, pointerEvents: 'auto', position: 'relative', zIndex: 20 }}>
             <span 
-              className={`tag is-small ${atsRating === 'safe' ? 'is-success' : atsRating === 'warning' ? 'is-warning' : 'is-danger'}`}
-              style={{ fontWeight: 'bold', display: 'inline-flex', gap: '0.25rem', cursor: 'help' }}
+              className={`font-bold inline-flex gap-1 cursor-help` + (atsRating === 'safe' ? ' text-emerald-400' : atsRating === 'warning' ? ' text-amber-400' : ' text-red-400')}
               title={atsFeedback}
             >
               <Info size={10} />

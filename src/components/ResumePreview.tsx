@@ -1,11 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { ResumeData, Template } from '../types/resume'
 import { motion, AnimatePresence } from 'framer-motion'
-import ClassicTemplate from './templates/ClassicTemplate'
-import ModernTemplate from './templates/ModernTemplate'
-import ExecutiveTemplate from './templates/ExecutiveTemplate'
-import MinimalistTemplate from './templates/MinimalistTemplate'
-import CreativeTemplate from './templates/CreativeTemplate'
+import TemplateRenderer from './TemplateRenderer'
+import { SectionReorderProvider } from './PreviewSectionWrapper'
 import { useToast } from '../hooks/useToast'
 import { 
   Sparkles, 
@@ -30,13 +27,15 @@ interface ResumePreviewProps {
   selectedTemplate: Template
   onChangeTemplate?: (template: Template) => void
   activeSection?: string | null
-  onEditSection?: (section: 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer') => void
+  onEditSection?: (section: string) => void
   onExportPdf?: () => void
   onPageCountChange?: (count: number) => void
-  sectionOrder?: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer')[]
-  onSectionOrderChange?: (order: ('summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer')[]) => void
+  sectionOrder?: string[]
+  onSectionOrderChange?: (order: string[]) => void
   templateFontSize: number
   onChangeFontSize: (size: number) => void
+  templateFontWeight: number
+  onChangeFontWeight: (weight: number) => void
   themeColor: string
   onChangeColor?: (color: string) => void
   onTriggerImport?: () => void
@@ -48,9 +47,14 @@ const templatesList: { id: Template; label: string; colorDot: string }[] = [
   { id: 'executive', label: 'Executive', colorDot: 'bg-amber-500' },
   { id: 'minimalist', label: 'Minimalist', colorDot: 'bg-teal-500' },
   { id: 'creative', label: 'Creative', colorDot: 'bg-rose-500' },
+  { id: 'compact', label: 'Compact', colorDot: 'bg-sky-500' },
+  { id: 'professional', label: 'Professional', colorDot: 'bg-slate-600' },
+  { id: 'technical', label: 'Technical', colorDot: 'bg-emerald-500' },
+  { id: 'academic', label: 'Academic', colorDot: 'bg-violet-500' },
+  { id: 'clean', label: 'Clean', colorDot: 'bg-teal-400' },
 ]
 
-type SectionKey = 'summary' | 'experience' | 'projects' | 'education' | 'skills' | 'languages' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
+type SectionKey = string
 
 const themeColors = [
   { value: '#e11d48', label: 'Crimson', bgClass: 'bg-rose-500' },
@@ -73,6 +77,8 @@ export default function ResumePreview({
   onSectionOrderChange,
   templateFontSize,
   onChangeFontSize,
+  templateFontWeight,
+  onChangeFontWeight,
   themeColor,
   onChangeColor,
   onTriggerImport
@@ -113,8 +119,10 @@ export default function ResumePreview({
     }
   }, [])
 
-  const A4_HEIGHT_PX = 1123
-  const USABLE_HEIGHT_PX = A4_HEIGHT_PX - 96 // 1027px
+  const PAGE_HEIGHT_PX = 1123
+  // Tracks vertical padding (top + bottom) added by templates' .resume-page div.
+  // This padding does NOT scale with font-size, so fit math must exclude it.
+  const TEMPLATE_VERTICAL_PADDING = 96
   const resumeContentRef = useRef<HTMLDivElement>(null)
 
   const onPageCountChangeRef = useRef(onPageCountChange)
@@ -122,64 +130,64 @@ export default function ResumePreview({
     onPageCountChangeRef.current = onPageCountChange
   }, [onPageCountChange])
 
-  useEffect(() => {
-    const checkHeight = () => {
-      if (!resumeContentRef.current) return
-      const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
-      const height = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
-      const pages = Math.ceil((height - 10) / A4_HEIGHT_PX)
-      setPageCount(pages)
-      if (onPageCountChangeRef.current) {
-        onPageCountChangeRef.current(pages)
-      }
+  const measurePageCount = useCallback(() => {
+    if (!resumeContentRef.current) return
+    const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
+    const height = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
+    const pages = Math.ceil(height / PAGE_HEIGHT_PX)
+    setPageCount(pages)
+    if (onPageCountChangeRef.current) {
+      onPageCountChangeRef.current(pages)
     }
-    
-    checkHeight()
-    
-    const observer = new ResizeObserver(checkHeight)
+  }, [])
+
+  useEffect(() => {
+    measurePageCount()
+
+    const observer = new ResizeObserver(measurePageCount)
     if (resumeContentRef.current) {
       observer.observe(resumeContentRef.current)
     }
     return () => observer.disconnect()
-  }, [resumeData, selectedTemplate, templateFontSize])
+  }, [resumeData, selectedTemplate, templateFontSize, measurePageCount])
 
   const fitToOnePage = () => {
     if (!resumeContentRef.current) return
     const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
-    const contentHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
-    
-    if (contentHeight <= USABLE_HEIGHT_PX) {
-      onChangeFontSize(10) // reset
-      showToast('Resume already fits on 1 page', 'success')
+    const scrollHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
+
+    // Reset to default if it naturally fits (or user called it accidentally)
+    if (scrollHeight <= PAGE_HEIGHT_PX) {
+      onChangeFontSize(10)
+      showToast('Resume naturally fits on 1 page', 'success')
       return
     }
-    
-    const scale = USABLE_HEIGHT_PX / contentHeight
-    const newFontSize = Math.max(8.5, Math.floor(10 * scale * 10) / 10)
+
+    // Padding doesn't scale with font-size, so compute content-only height
+    const contentHeight = scrollHeight - TEMPLATE_VERTICAL_PADDING
+    const targetContentArea = PAGE_HEIGHT_PX - TEMPLATE_VERTICAL_PADDING // 1027px
+    const scale = targetContentArea / contentHeight
+    const targetFontSize = Math.floor(10 * scale * 10) / 10
+    const MIN_FONT_SIZE = 8.5
+
+    const newFontSize = Math.max(MIN_FONT_SIZE, targetFontSize)
     onChangeFontSize(newFontSize)
-    showToast(`Font adjusted to ${newFontSize}pt to fit 1 page`, 'info')
+
+    // Double rAF to wait for font-size CSS to paint before re-measuring
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        measurePageCount()
+      })
+    })
+
+    if (targetFontSize < MIN_FONT_SIZE) {
+      showToast(`Font minimized to ${MIN_FONT_SIZE}pt, but content is still too long for 1 page.`, 'warning')
+    } else {
+      showToast(`Font adjusted to ${newFontSize}pt to fit 1 page`, 'success')
+    }
   }
   
-  // Section Reordering State
-  const [localSectionOrder, setLocalSectionOrder] = useState<SectionKey[]>(() => {
-    let saved = localStorage.getItem('seve_section_order')
-    if (!saved) {
-      saved = localStorage.getItem('resumeai_section_order')
-    }
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed as SectionKey[]
-        }
-      } catch {
-        /* Ignore parsing errors */
-      }
-    }
-    return ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
-  })
-
-  const baseOrder = propsSectionOrder || localSectionOrder
+  // Section Order — comes from context via props
   const activeSectionKeys: SectionKey[] = [
     'summary', 'experience', 'projects', 'education', 'skills',
     'languages', 'awards', 'certifications', 'publications', 'volunteer',
@@ -188,24 +196,16 @@ export default function ResumePreview({
   const sectionsWithData = activeSectionKeys.filter(key => {
     if (key === 'summary') return resumeData.summary && resumeData.summary.trim() !== ''
     if (key === 'skills') return resumeData.skills && resumeData.skills.length > 0
-    const val = resumeData[key]
+    const val = resumeData[key as keyof ResumeData]
     return Array.isArray(val) && val.length > 0
   })
 
-  const sectionOrder = [...baseOrder]
+  const sectionOrder = [...(propsSectionOrder || [])]
   sectionsWithData.forEach(sec => {
     if (!sectionOrder.includes(sec)) {
       sectionOrder.push(sec)
     }
   })
-
-  const setSectionOrder = (newOrder: SectionKey[]) => {
-    if (onSectionOrderChange) {
-      onSectionOrderChange(newOrder)
-    } else {
-      setLocalSectionOrder(newOrder)
-    }
-  }
 
   const [draggedSectionId, setDraggedSectionId] = useState<SectionKey | null>(null)
 
@@ -236,10 +236,23 @@ export default function ResumePreview({
     if (draggedIdx !== -1 && targetIdx !== -1) {
       const [removed] = updated.splice(draggedIdx, 1)
       updated.splice(targetIdx, 0, removed)
-      setSectionOrder(updated)
-      localStorage.setItem('seve_section_order', JSON.stringify(updated))
+      if (onSectionOrderChange) {
+        onSectionOrderChange(updated)
+      }
     }
     setDraggedSectionId(null)
+  }
+
+  const handleMoveSection = (sectionId: SectionKey, direction: 'up' | 'down') => {
+    const idx = sectionOrder.indexOf(sectionId)
+    if (idx === -1) return
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= sectionOrder.length) return
+    const updated = [...sectionOrder]
+    ;[updated[idx], updated[swapIdx]] = [updated[swapIdx], updated[idx]]
+    if (onSectionOrderChange) {
+      onSectionOrderChange(updated)
+    }
   }
 
   return (
@@ -258,7 +271,8 @@ export default function ResumePreview({
                   !atsMode ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
                 type="button"
-                title="Live Layout View"
+                title="Live view"
+                aria-pressed={!atsMode}
               >
                 Live
               </button>
@@ -268,7 +282,8 @@ export default function ResumePreview({
                   atsMode ? 'bg-zinc-800 text-rose-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
                 type="button"
-                title="ATS Heatmap Analyzer"
+                title="ATS heatmap analyzer"
+                aria-pressed={atsMode}
               >
                 Heatmap
               </button>
@@ -281,7 +296,8 @@ export default function ResumePreview({
                   showGuides ? 'bg-rose-500/10 text-rose-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/60'
                 }`}
                 type="button"
-                title="Toggle Margins & Guides"
+                title="Toggle margins and guides"
+                aria-pressed={showGuides}
               >
                 <Grid3x3 className="w-3.5 h-3.5" />
               </button>
@@ -294,7 +310,8 @@ export default function ResumePreview({
               onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
               className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
               type="button"
-              title="Zoom Out"
+              title="Zoom out"
+              aria-label={`Zoom out. Current: ${Math.round(zoom * 100)}%`}
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
@@ -305,7 +322,8 @@ export default function ResumePreview({
               onClick={() => setZoom(prev => Math.min(1.5, prev + 0.1))}
               className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
               type="button"
-              title="Zoom In"
+              title="Zoom in"
+              aria-label={`Zoom in. Current: ${Math.round(zoom * 100)}%`}
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
@@ -314,12 +332,13 @@ export default function ResumePreview({
           {/* RIGHT GROUP: Style Controls & Actions */}
           <div className="flex items-center gap-2.5 flex-shrink-0 relative z-35">
             {/* Fit to Page Action Button */}
-            {(pageCount > 1 || templateFontSize < 10) && (
+            {pageCount > 1 && (
               <button 
                 onClick={fitToOnePage}
                 className="h-8 w-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer flex items-center justify-center shadow-sm flex-shrink-0"
                 type="button"
-                title={`Fit to 1 Page (Current font size: ${templateFontSize}pt)`}
+                title={`Fit to 1 page (font: ${templateFontSize}pt)`}
+                aria-label={`Fit to 1 page. Current font size: ${templateFontSize}pt`}
               >
                 <Minimize2 className="w-3.5 h-3.5 text-amber-450" />
               </button>
@@ -410,12 +429,13 @@ export default function ResumePreview({
                           } : undefined}
                         >
                           <span className="text-[10px] font-extrabold text-zinc-300 leading-none pointer-events-none select-none">+</span>
-                          <input
-                            type="color"
-                            value={themeColor}
-                            onChange={(e) => onChangeColor?.(e.target.value)}
-                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                          />
+                            <input
+                              type="color"
+                              value={themeColor}
+                              onChange={(e) => onChangeColor?.(e.target.value)}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                              aria-label="Theme accent color"
+                            />
                         </label>
                       </div>
                     </div>
@@ -428,13 +448,14 @@ export default function ResumePreview({
                           onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
                           className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
                           type="button"
-                          title="Decrease Font Size"
+                          title="Decrease font size"
+                          aria-label={`Decrease font size. Current: ${templateFontSize}pt`}
                         >
-                          <span className="text-[10px] font-extrabold select-none">A-</span>
+                          <span className="text-[10px] font-extrabold select-none" aria-hidden="true">A-</span>
                         </button>
                         
-                        <div className="flex items-center gap-1 px-1 text-zinc-300 font-mono select-none">
-                          <Type className="w-3.5 h-3.5 text-zinc-500" />
+                        <div className="flex items-center gap-1 px-1 text-zinc-300 font-mono select-none" aria-live="polite" aria-atomic="true">
+                          <Type className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
                           <span className="text-[10px] font-extrabold">{templateFontSize}pt</span>
                         </div>
                         
@@ -442,10 +463,60 @@ export default function ResumePreview({
                           onClick={() => onChangeFontSize(Math.min(16, Number((templateFontSize + 0.5).toFixed(1))))}
                           className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
                           type="button"
-                          title="Increase Font Size"
+                          title="Increase font size"
+                          aria-label={`Increase font size. Current: ${templateFontSize}pt`}
                         >
                           <span className="text-[10px] font-extrabold select-none">A+</span>
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Font Weight */}
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Font Weight</label>
+                      <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl p-0.5 h-8 w-full justify-between">
+                        <button 
+                          onClick={() => onChangeFontWeight(Math.max(300, templateFontWeight - 100))}
+                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
+                          type="button"
+                          title="Lighter font weight"
+                          aria-label={`Decrease font weight. Current: ${templateFontWeight}`}
+                        >
+                          <span className="text-[9px] font-extrabold select-none opacity-60" aria-hidden="true">B-</span>
+                        </button>
+                        
+                        <div className="flex items-center gap-1 px-1 text-zinc-300 font-mono select-none" aria-live="polite" aria-atomic="true">
+                          <span className="text-[10px] font-extrabold">{templateFontWeight}</span>
+                        </div>
+                        
+                        <button 
+                          onClick={() => onChangeFontWeight(Math.min(900, templateFontWeight + 100))}
+                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
+                          type="button"
+                          title="Bolder font weight"
+                          aria-label={`Increase font weight. Current: ${templateFontWeight}`}
+                        >
+                          <span className="text-[9px] font-extrabold select-none opacity-100" aria-hidden="true">B+</span>
+                        </button>
+                      </div>
+                      <div className="flex gap-1" role="radiogroup" aria-label="Font weight presets">
+                        {[300, 400, 500, 600, 700].map((w) => (
+                          <button
+                            key={w}
+                            onClick={() => onChangeFontWeight(w)}
+                            className={`flex-1 h-6 text-[9px] font-extrabold rounded-lg transition-colors cursor-pointer border ${
+                              templateFontWeight === w
+                                ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
+                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                            }`}
+                            type="button"
+                            role="radio"
+                            aria-checked={templateFontWeight === w}
+                            aria-label={`Font weight ${w}`}
+                          >
+                            {w}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </motion.div>
@@ -486,50 +557,9 @@ export default function ResumePreview({
           <div 
             id="resume-print-area" 
             ref={resumeContentRef}
-            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', '--template-font-size': `${templateFontSize}px`, '--template-font-weight': templateFontWeight } as React.CSSProperties}
             className="relative resume-preview w-[794px] bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
           >
-            <style dangerouslySetInnerHTML={{ __html: `
-              #resume-print-area, .resume-print-wrapper {
-                font-size: ${templateFontSize}pt !important;
-              }
-              #resume-print-area .text-\\[10px\\], .resume-print-wrapper .text-\\[10px\\] {
-                font-size: ${(templateFontSize / 10) * 10}px !important;
-              }
-              #resume-print-area .text-\\[10\\.5px\\], .resume-print-wrapper .text-\\[10\\.5px\\] {
-                font-size: ${(templateFontSize / 10) * 10.5}px !important;
-              }
-              #resume-print-area .text-\\[9\\.5px\\], .resume-print-wrapper .text-\\[9\\.5px\\] {
-                font-size: ${(templateFontSize / 10) * 9.5}px !important;
-              }
-              #resume-print-area .text-\\[9px\\], .resume-print-wrapper .text-\\[9px\\] {
-                font-size: ${(templateFontSize / 10) * 9}px !important;
-              }
-              #resume-print-area .text-\\[8\\.5px\\], .resume-print-wrapper .text-\\[8\\.5px\\] {
-                font-size: ${(templateFontSize / 10) * 8.5}px !important;
-              }
-              #resume-print-area .text-\\[8px\\], .resume-print-wrapper .text-\\[8px\\] {
-                font-size: ${(templateFontSize / 10) * 8}px !important;
-              }
-              #resume-print-area .text-2xl, .resume-print-wrapper .text-2xl {
-                font-size: ${(templateFontSize / 10) * 24}px !important;
-              }
-              #resume-print-area .text-xl, .resume-print-wrapper .text-xl {
-                font-size: ${(templateFontSize / 10) * 20}px !important;
-              }
-              #resume-print-area .text-lg, .resume-print-wrapper .text-lg {
-                font-size: ${(templateFontSize / 10) * 18}px !important;
-              }
-              #resume-print-area .text-base, .resume-print-wrapper .text-base {
-                font-size: ${(templateFontSize / 10) * 16}px !important;
-              }
-              #resume-print-area .text-sm, .resume-print-wrapper .text-sm {
-                font-size: ${(templateFontSize / 10) * 14}px !important;
-              }
-              #resume-print-area .text-xs, .resume-print-wrapper .text-xs {
-                font-size: ${(templateFontSize / 10) * 12}px !important;
-              }
-            ` }} />
 
             {/* Layout Guides Overlay */}
             {showGuides && !isEmpty && (
@@ -651,9 +681,10 @@ export default function ResumePreview({
           ) : (
             /* Normal Template Rendering with Drag-and-drop handlers */
             <div className="resume-template-wrapper">
-              {selectedTemplate === 'classic' && (
-                <ClassicTemplate 
-                  data={resumeData} 
+              <SectionReorderProvider value={{ moveSection: handleMoveSection }}>
+                <TemplateRenderer
+                  type={selectedTemplate}
+                  data={resumeData}
                   activeSection={activeSection}
                   atsMode={atsMode}
                   onEditSection={onEditSection}
@@ -663,63 +694,7 @@ export default function ResumePreview({
                   onDrop={handleDrop}
                   themeColor={themeColor}
                 />
-              )}
-              
-              {selectedTemplate === 'modern' && (
-                <ModernTemplate 
-                  data={resumeData} 
-                  activeSection={activeSection}
-                  atsMode={atsMode}
-                  onEditSection={onEditSection}
-                  sectionOrder={sectionOrder}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  themeColor={themeColor}
-                />
-              )}
-
-              {selectedTemplate === 'executive' && (
-                <ExecutiveTemplate 
-                  data={resumeData} 
-                  activeSection={activeSection}
-                  atsMode={atsMode}
-                  onEditSection={onEditSection}
-                  sectionOrder={sectionOrder}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  themeColor={themeColor}
-                />
-              )}
-
-              {selectedTemplate === 'minimalist' && (
-                <MinimalistTemplate 
-                  data={resumeData} 
-                  activeSection={activeSection}
-                  atsMode={atsMode}
-                  onEditSection={onEditSection}
-                  sectionOrder={sectionOrder}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  themeColor={themeColor}
-                />
-              )}
-
-              {selectedTemplate === 'creative' && (
-                <CreativeTemplate 
-                  data={resumeData} 
-                  activeSection={activeSection}
-                  atsMode={atsMode}
-                  onEditSection={onEditSection}
-                  sectionOrder={sectionOrder}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  themeColor={themeColor}
-                />
-              )}
+              </SectionReorderProvider>
             </div>
           )}
           </div>

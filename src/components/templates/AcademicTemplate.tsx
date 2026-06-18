@@ -1,0 +1,241 @@
+import type { ResumeData } from '../../types/resume'
+import { memo } from 'react'
+import { SECTION_LABELS } from '../../utils/sectionLabels'
+import { formatDate } from '../../utils/dateUtils'
+import { getFullName } from '../../utils/contactUtils'
+import { useTemplateData } from './useTemplateData'
+import PreviewSectionWrapper from '../PreviewSectionWrapper'
+
+interface AcademicTemplateProps {
+  data: ResumeData
+  activeSection?: string | null
+  atsMode?: boolean
+  onEditSection?: (section: string) => void
+  sectionOrder?: string[]
+  onDragStart?: (e: React.DragEvent, sectionId: string) => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDrop?: (sectionId: string) => void
+  themeColor?: string
+}
+
+const AcademicTemplate = memo(function AcademicTemplate({
+  data, activeSection, atsMode, onEditSection,
+  sectionOrder = ['summary', 'experience', 'education', 'projects', 'skills', 'publications', 'languages', 'awards', 'certifications', 'interests', 'references', 'volunteer'],
+  onDragStart, onDragOver, onDrop, themeColor = '#7c3aed'
+}: AcademicTemplateProps) {
+  const {
+    contact, summary, experience, education, skills, projects, languages,
+    awards, certifications, interests, publications, references, volunteer,
+    ats, sectionData,
+  } = useTemplateData(data, activeSection, atsMode, onEditSection, onDragStart, onDragOver, onDrop, sectionOrder)
+
+  const wrap = (sectionId: string, children: React.ReactNode, dragSection?: string) => (
+    <PreviewSectionWrapper
+      sectionId={sectionId}
+      activeSection={activeSection}
+      atsMode={atsMode}
+      atsRating={ats[sectionId]?.rating || ''}
+      atsFeedback={ats[sectionId]?.feedback}
+      onEdit={onEditSection}
+      onDragStart={dragSection ? ((e: React.DragEvent) => onDragStart?.(e, dragSection)) : undefined}
+      onDragOver={onDragOver}
+      onDrop={dragSection ? (() => onDrop?.(dragSection)) : undefined}
+    >
+      {children}
+    </PreviewSectionWrapper>
+  )
+
+  const h2 = (label: string) => (
+    <h2 className="text-[11px] font-serif font-bold tracking-wide text-slate-800 border-b pb-1 mb-3" style={{ borderBottomColor: `${themeColor}40` }}>
+      {label}
+    </h2>
+  )
+
+  const sectionsMap: Record<string, React.ReactNode> = {
+    summary: summary ? wrap('summary', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.summary)}
+        <p className="text-[10px] leading-relaxed text-justify text-slate-700 font-serif">{summary}</p>
+      </div>
+    ), 'summary') : null,
+
+    education: education.length > 0 ? wrap('education', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.education)}
+        <div className="space-y-3">
+          {education.map((edu) => (
+            <div key={edu.id} className="edu-entry">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[11px] font-bold font-serif text-slate-900">{edu.school}</span>
+                <span className="text-[9.5px] text-slate-500 font-serif">{formatDate(edu.graduationDate)}</span>
+              </div>
+              <div className="text-[10px] text-slate-600 font-serif italic">{edu.degree}{edu.location ? ` · ${edu.location}` : ''}{edu.gpa && parseFloat(edu.gpa) >= 3.5 ? ` · GPA: ${edu.gpa}` : ''}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'education') : null,
+
+    publications: publications.length > 0 ? wrap('publications', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.publications)}
+        <div className="space-y-2">
+          {publications.map((p) => (
+            <div key={p.id} className="text-[10px] leading-relaxed text-slate-700 font-serif">
+              <span className="font-bold text-slate-900">{p.title}</span>
+              {p.publisher ? `. ${p.publisher}` : ''}{p.date ? ` (${p.date})` : ''}
+              {p.description && <p className="text-[9.5px] text-slate-600 mt-0.5">{p.description}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'publications') : null,
+
+    experience: experience.length > 0 ? wrap('experience', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.experience)}
+        <div className="space-y-3">
+          {experience.map((exp) => (
+            <div key={exp.id} className="exp-entry">
+              <div className="flex justify-between items-baseline">
+                <div className="text-[10.5px] font-bold font-serif text-slate-900">{exp.jobTitle} — {exp.company}</div>
+                <div className="text-[9px] text-slate-500 font-serif">{formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}</div>
+              </div>
+              <ul className="mt-1 pl-4 space-y-0.5">
+                {exp.bullets.filter(b => b.trim() !== '').map((bullet) => (
+                  <li key={bullet} className="text-[9.5px] leading-relaxed text-slate-700 font-serif">{bullet}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'experience') : null,
+
+    projects: projects.length > 0 ? wrap('projects', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.projects)}
+        <div className="space-y-2">
+          {projects.map((proj) => (
+            <div key={proj.id} className="proj-entry">
+              <div className="text-[10.5px] font-bold font-serif text-slate-900">{proj.name}</div>
+              <p className="text-[9.5px] text-slate-600 mt-0.5">{proj.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'projects') : null,
+
+    skills: skills.length > 0 ? wrap('skills', (
+      <div className="mb-4">
+        {h2(SECTION_LABELS.skills)}
+        <p className="text-[10px] text-slate-700 font-serif">{skills.join(' · ')}</p>
+      </div>
+    ), 'skills') : null,
+
+    languages: languages.length > 0 ? wrap('languages', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.languages)}
+        <p className="text-[10px] text-slate-700 font-serif">{languages.map(l => `${l.name} (${l.proficiency})`).join(' · ')}</p>
+      </div>
+    ), 'languages') : null,
+
+    awards: awards.length > 0 ? wrap('awards', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.awards)}
+        <div className="space-y-1.5">
+          {awards.map((a) => (
+            <div key={a.id} className="flex justify-between items-baseline">
+              <span className="text-[10px] font-serif text-slate-700">{a.title}{a.awarder ? ` — ${a.awarder}` : ''}</span>
+              {a.date && <span className="text-[9px] text-slate-500">{a.date}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'awards') : null,
+
+    certifications: certifications.length > 0 ? wrap('certifications', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.certifications)}
+        <div className="space-y-1.5">
+          {certifications.map((c) => (
+            <div key={c.id} className="flex justify-between items-baseline">
+              <span className="text-[10px] font-serif text-slate-700">{c.title}{c.issuer ? ` — ${c.issuer}` : ''}</span>
+              {c.date && <span className="text-[9px] text-slate-500">{c.date}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    ), 'certifications') : null,
+
+    interests: interests.length > 0 ? wrap('interests', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.interests)}
+        <p className="text-[10px] text-slate-700 font-serif">{interests.map(i => i.name).join(', ')}</p>
+      </div>
+    ), 'interests') : null,
+
+    references: references.length > 0 ? wrap('references', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.references)}
+        <div className="space-y-1.5">
+          {references.map((r) => (
+            <div key={r.id} className="text-[10px] font-serif text-slate-700">{r.name}{r.position ? ` — ${r.position}` : ''}</div>
+          ))}
+        </div>
+      </div>
+    ), 'references') : null,
+
+    volunteer: volunteer.length > 0 ? wrap('volunteer', (
+      <div className="mb-5">
+        {h2(SECTION_LABELS.volunteer)}
+        <div className="space-y-1.5">
+          {volunteer.map((v) => (
+            <div key={v.id} className="text-[10px] font-serif text-slate-700">{v.organization}{v.location ? ` · ${v.location}` : ''}</div>
+          ))}
+        </div>
+      </div>
+    ), 'volunteer') : null,
+  }
+
+  return (
+    <div className="resume-template" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+      <div className="resume-page text-[10px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-4" style={{ paddingTop: 48, paddingBottom: 48 }}>
+        <PreviewSectionWrapper
+          sectionId="contact"
+          activeSection={activeSection}
+          atsMode={atsMode}
+          atsRating={ats.contact.rating}
+          atsFeedback={ats.contact.feedback}
+          onEdit={onEditSection}
+        >
+          <div className="text-center mb-5 pb-3 border-b-2" style={{ borderBottomColor: themeColor }}>
+            <h1 className="text-2xl font-black font-serif tracking-tight" style={{ color: themeColor }}>{getFullName(contact) || 'YOUR NAME'}</h1>
+            <div className="text-[9.5px] text-slate-500 mt-1 font-serif">
+              {[contact.location, contact.email, contact.phone].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+        </PreviewSectionWrapper>
+
+        {sectionData.page1Sections.map((secId) => {
+          const component = sectionsMap[secId]
+          return component ? <div key={secId}>{component}</div> : null
+        })}
+      </div>
+
+      {sectionData.page2Sections.length > 0 && (
+        <>
+          <div className="resume-page-break" />
+          <div className="resume-page resume-page-continuation text-[10px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-4" style={{ paddingTop: 48, paddingBottom: 48, fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+            {sectionData.page2Sections.map((secId) => {
+              const component = sectionsMap[secId]
+              return component ? <div key={secId}>{component}</div> : null
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+})
+
+export default AcademicTemplate

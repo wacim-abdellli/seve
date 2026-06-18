@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { industryKeywords } from '../../utils/keywords'
+import { industryKeywords } from '../../utils/atsConstants'
 import { HelpCircle, Sparkles, Plus, X } from 'lucide-react'
 
 interface SkillsFormProps {
