@@ -161,99 +161,114 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       })
   }, [user])
 
-  // Save to localStorage + background sync to Supabase
-  useEffect(() => {
-    queueMicrotask(() => setIsSaving(true))
-    if (user) setCloudStatus('syncing')
-    const handler = setTimeout(async () => {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
-      setIsSaving(false)
+  // ---------------------------------------------------------------------------
+  // Shared cloud-sync helper (used by both auto-save effect and retrySync)
+  // ---------------------------------------------------------------------------
+  const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
+    for (const p of profiles) {
+      // Check whether this user's row already exists
+      const { data: existing, error: selectError } = await supabase
+        .from('resumes')
+        .select('id')
+        .eq('id', p.id)
+        .eq('user_id', userId)
+        .maybeSingle()
 
-      if (user) {
-        try {
-          const profiles = Object.values(state.resumes)
+      if (selectError) throw selectError
 
-          for (const p of profiles) {
-            // 1. Check if a row already exists for this user + resume id
-            const { data: existing, error: selectError } = await supabase
-              .from('resumes')
-              .select('id')
-              .eq('id', p.id)
-              .eq('user_id', user.id)
-              .maybeSingle()
-
-            if (selectError) throw selectError
-
-            if (existing) {
-              // 2a. Row exists → UPDATE (no ambiguity with RLS)
-              const { error: updateError } = await supabase
-                .from('resumes')
-                .update({
-                  title: p.title,
-                  resume_data: p,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', p.id)
-                .eq('user_id', user.id)
-
-              if (updateError) throw updateError
-            } else {
-              // 2b. Row doesn't exist → INSERT
-              const { error: insertError } = await supabase
-                .from('resumes')
-                .insert({
-                  id: p.id,
-                  user_id: user.id,
-                  title: p.title,
-                  resume_data: p,
-                  updated_at: new Date().toISOString(),
-                })
-
-              if (insertError) {
-                if (insertError.code === '23505') {
-                  // Duplicate key: a row with this ID exists in DB but
-                  // belongs to a different user (RLS hid it from SELECT).
-                  // Self-heal: assign a fresh ID so this user's data can sync.
-                  const newId = crypto.randomUUID()
-                  setState(prev => {
-                    const resume = prev.resumes[p.id]
-                    if (!resume) return prev
-                    const next = { ...prev.resumes }
-                    delete next[p.id]
-                    next[newId] = { ...resume, id: newId }
-                    return {
-                      ...prev,
-                      resumes: next,
-                      selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
-                    }
-                  })
-                  // Let the next auto-save cycle handle the INSERT with the new ID
-                  continue
-                }
-                throw insertError
-              }
-            }
-          }
-
-          setCloudStatus('synced')
-          setCloudError(null)
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message
-            : (err as { message?: string })?.message ?? 'Unknown sync error'
-          console.error('[Seve] Cloud sync failed:', err)
-          setCloudStatus('error')
-          setCloudError(msg)
-        }
+      if (existing) {
+        // Row exists → UPDATE only the mutable columns
+        const { error: updateError } = await supabase
+          .from('resumes')
+          .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+          .eq('id', p.id)
+          .eq('user_id', userId)
+        if (updateError) throw updateError
       } else {
-        setCloudStatus('local')
-        setCloudError(null)
+        // Row missing → INSERT
+        const { error: insertError } = await supabase
+          .from('resumes')
+          .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+
+        if (insertError) {
+          if (insertError.code === '23505') {
+            // 23505 = duplicate key: a row with this ID exists but belongs to
+            // a different user (RLS hides it from SELECT, so we can't UPDATE it).
+            // Self-heal: generate a fresh UUID so this user's data can sync.
+            const newId = crypto.randomUUID()
+            setState(prev => {
+              const resume = prev.resumes[p.id]
+              if (!resume) return prev
+              const next = { ...prev.resumes }
+              delete next[p.id]
+              next[newId] = { ...resume, id: newId }
+              return {
+                ...prev,
+                resumes: next,
+                selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
+              }
+            })
+            // State change will trigger another auto-save with the new ID
+            continue
+          }
+          throw insertError
+        }
       }
-    }, 500)
-    return () => {
-      clearTimeout(handler)
-      setIsSaving(false)
     }
-  }, [state, user])
+  }, [])
+
+  // ---------------------------------------------------------------------------
+  // Auto-save: persist to localStorage immediately, debounce cloud sync 800ms.
+  // "Saving…" indicator is shown only for actual user edits — not on the
+  // initial page load and not when only the auth state changes.
+  // ---------------------------------------------------------------------------
+  const isInitialMountRef = useRef(true)
+  const prevUserIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const isInitialLoad = isInitialMountRef.current
+    const isLoginEvent = user?.id !== prevUserIdRef.current
+
+    isInitialMountRef.current = false
+    prevUserIdRef.current = user?.id ?? null
+
+    // Persist to localStorage right away — don't wait for the debounce timer.
+    // This guarantees data is saved even if the tab is closed before 800ms.
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
+
+    // Only show "Saving…" for genuine user edits (not on mount or login).
+    const isUserEdit = !isInitialLoad && !isLoginEvent
+    if (isUserEdit) {
+      setIsSaving(true)
+      if (user) setCloudStatus('syncing')
+    }
+
+    if (!user) {
+      setCloudStatus('local')
+      setCloudError(null)
+      setIsSaving(false)
+      return
+    }
+
+    // Debounce the cloud write so rapid keystrokes only cause one round-trip.
+    const handler = setTimeout(async () => {
+      setIsSaving(false)
+      try {
+        await syncToCloud(Object.values(state.resumes), user.id)
+        setCloudStatus('synced')
+        setCloudError(null)
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message
+          : (err as { message?: string })?.message ?? 'Unknown sync error'
+        console.error('[Seve] Cloud sync failed:', err)
+        setCloudStatus('error')
+        setCloudError(msg)
+      }
+    }, 800)
+
+    // Cancel the pending write on cleanup — don't flip isSaving here to avoid flicker.
+    return () => clearTimeout(handler)
+  }, [state, user, syncToCloud])
 
 
   const activeResumeId = state.selectedResumeId
@@ -367,50 +382,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setCloudStatus('syncing')
     setCloudError(null)
     try {
-      const profiles = Object.values(state.resumes)
-      for (const p of profiles) {
-        const { data: existing, error: selectError } = await supabase
-          .from('resumes').select('id').eq('id', p.id).eq('user_id', user.id).maybeSingle()
-        if (selectError) throw selectError
-
-        if (existing) {
-          const { error: updateError } = await supabase.from('resumes')
-            .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
-            .eq('id', p.id).eq('user_id', user.id)
-          if (updateError) throw updateError
-        } else {
-          const { error: insertError } = await supabase.from('resumes')
-            .insert({ id: p.id, user_id: user.id, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
-          if (insertError) {
-            if (insertError.code === '23505') {
-              // Orphaned row: same ID, different user. Reassign a fresh ID.
-              const newId = crypto.randomUUID()
-              setState(prev => {
-                const resume = prev.resumes[p.id]
-                if (!resume) return prev
-                const next = { ...prev.resumes }
-                delete next[p.id]
-                next[newId] = { ...resume, id: newId }
-                return {
-                  ...prev,
-                  resumes: next,
-                  selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
-                }
-              })
-              continue
-            }
-            throw insertError
-          }
-        }
-      }
+      await syncToCloud(Object.values(state.resumes), user.id)
       setCloudStatus('synced')
+      setCloudError(null)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? 'Unknown error'
       console.error('[Seve] RetrySync failed:', err)
       setCloudStatus('error')
       setCloudError(msg)
     }
-  }, [user, state.resumes])
+  }, [user, state.resumes, syncToCloud])
+
 
 
   const value = useMemo(() => ({
