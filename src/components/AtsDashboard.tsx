@@ -26,6 +26,9 @@ let globalSemanticScore: number | null = null
 let globalAiStatus: 'idle' | 'loading' | 'computing' | 'ready' | 'error' = 'idle'
 let globalDownloadProgress = 0
 let globalLoadingFile = ''
+let globalHasRunAnalysis = false
+let globalIsAnalyzing = false
+let globalAnalysisStep = ''
 
 export default function AtsDashboard({ 
   atsScore, 
@@ -46,6 +49,11 @@ export default function AtsDashboard({
   const [loadingFile, setLoadingFile] = useState(globalLoadingFile)
   const [aiError, setAiError] = useState<string | null>(null)
   const [isJdDirty, setIsJdDirty] = useState(false)
+
+  // ATS Auditor Scan States
+  const [hasRunAnalysis, setHasRunAnalysis] = useState(globalHasRunAnalysis)
+  const [isAnalyzing, setIsAnalyzing] = useState(globalIsAnalyzing)
+  const [analysisStep, setAnalysisStep] = useState(globalAnalysisStep)
 
   // Animated score counter for traditional ATS Score
   useEffect(() => {
@@ -174,6 +182,40 @@ export default function AtsDashboard({
       jobDescription
     })
   }
+
+  const startAtsScan = () => {
+    globalIsAnalyzing = true
+    setIsAnalyzing(true)
+    globalAnalysisStep = language === 'fr' ? 'Analyse de la structure des sections...' : 'Analyzing resume sections & completeness...'
+    setAnalysisStep(globalAnalysisStep)
+    
+    const steps = [
+      { time: 600, text: language === 'fr' ? 'Recherche de caractères spéciaux et formatage...' : 'Scanning for ATS-breaking symbols & formatting...' },
+      { time: 1200, text: language === 'fr' ? 'Évaluation des verbes d\'action...' : 'Evaluating strong action verbs...' },
+      { time: 1800, text: language === 'fr' ? 'Calcul de la pertinence des mots-clés...' : 'Matching keyword density against job description...' },
+    ]
+
+    steps.forEach((step) => {
+      setTimeout(() => {
+        globalAnalysisStep = step.text
+        setAnalysisStep(step.text)
+      }, step.time)
+    })
+
+    setTimeout(() => {
+      globalIsAnalyzing = false
+      setIsAnalyzing(false)
+      globalHasRunAnalysis = true
+      setHasRunAnalysis(true)
+      showToast(language === 'fr' ? 'Audit ATS terminé !' : 'ATS Audit complete!', 'success')
+    }, 2450)
+  }
+
+  // Reset the audit result when the resume data or job description changes, requiring a re-scan
+  useEffect(() => {
+    globalHasRunAnalysis = false
+    setHasRunAnalysis(false)
+  }, [resumeData, jobDescription])
 
   // Dual-language localizations
   const content = {
@@ -310,6 +352,73 @@ export default function AtsDashboard({
     if (val >= 80) return { label: 'Excellent', style: 'text-emerald-400', barBg: 'bg-emerald-500', desc: content.aiTierHigh }
     if (val >= 60) return { label: 'Good', style: 'text-amber-400', barBg: 'bg-amber-500', desc: content.aiTierMedium }
     return { label: 'Low', style: 'text-rose-400', barBg: 'bg-rose-500', desc: content.aiTierLow }
+  }
+
+  if (isAnalyzing) {
+    return (
+      <div className="h-full flex items-center justify-center p-6 bg-zinc-950/20 font-sans select-none">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes scanner {
+            0% { transform: translateX(-150%); }
+            50% { transform: translateX(150%); }
+            100% { transform: translateX(-150%); }
+          }
+          .scanner-bar {
+            animation: scanner 2s infinite ease-in-out;
+          }
+        ` }} />
+        <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-rose-500/5 blur-2xl pointer-events-none" />
+          <div className="w-16 h-16 rounded-2xl bg-zinc-950 flex items-center justify-center mx-auto text-rose-500 border border-zinc-850 relative">
+            <RefreshCw className="w-6 h-6 animate-spin text-rose-400" />
+            <div className="absolute inset-0 rounded-2xl border border-rose-500/10 animate-ping" />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Auditing Resume...</h3>
+            <div className="min-h-[36px] flex items-center justify-center px-4">
+              <p className="text-[12px] text-zinc-400 font-medium animate-pulse leading-normal">
+                {analysisStep}
+              </p>
+            </div>
+          </div>
+
+          {/* Simulated scanning animation line */}
+          <div className="h-1 bg-zinc-950 rounded-full overflow-hidden border border-zinc-850 p-0.5 max-w-[200px] mx-auto relative">
+            <div className="h-full rounded-full bg-rose-500 scanner-bar w-1/3" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasRunAnalysis) {
+    return (
+      <div className="h-full flex items-center justify-center p-6 bg-zinc-950/20 font-sans select-none">
+        <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden group">
+          <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-rose-500/5 blur-2xl group-hover:bg-rose-500/10 transition-all duration-300 pointer-events-none" />
+          
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-455">
+            <CheckCircle2 className="w-8 h-8 text-rose-400 animate-pulse" />
+          </div>
+          
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white uppercase tracking-wider">Smart ATS Auditor</h2>
+            <p className="text-[12px] text-zinc-400 leading-relaxed font-light">
+              Run a comprehensive 8-point audit on your resume. We will scan layout formatting safety, action verb density, date consistency, and match keywords against your target job.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={startAtsScan}
+            className="w-full bg-rose-600 hover:bg-rose-500 text-white text-[13px] font-bold py-3 px-4 rounded-xl shadow-lg shadow-rose-600/20 transition-all active:scale-98 cursor-pointer"
+          >
+            Start ATS Audit
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

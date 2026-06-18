@@ -556,14 +556,7 @@ function App() {
     }
   }
 
-  // Get score border/text color class based on score
-  const getScoreBadgeStyles = () => {
-    const total = atsScore.total
-    if (total >= 80) return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'
-    if (total >= 60) return 'text-red-400 border-red-500/20 bg-red-500/10'
-    if (total >= 40) return 'text-amber-400 border-amber-500/20 bg-amber-500/10'
-    return 'text-rose-400 border-rose-500/20 bg-rose-500/10'
-  }
+
 
   if (view === 'landing') {
     return <LandingPage onStartBuild={() => setView('workspace')} onViewPrivacy={() => setView('privacy')} />
@@ -645,10 +638,10 @@ function App() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setActiveMode('analyze')}
-            className={`inline-flex items-center gap-1.5 border text-xs font-semibold px-2.5 py-1 rounded-full transition-colors hover:bg-zinc-900/50 cursor-pointer ${getScoreBadgeStyles()}`}
+            className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer"
           >
             <CheckCircle2 size={13} />
-            ATS Rating: {atsScore.total}/100
+            ATS Audit
           </button>
 
           <button
