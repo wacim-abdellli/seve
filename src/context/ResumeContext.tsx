@@ -170,21 +170,57 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setIsSaving(false)
 
       if (user) {
-        const profiles = Object.values(state.resumes)
-        const rows = profiles.map(p => ({
-          id: p.id,
-          user_id: user.id,
-          title: p.title,
-          resume_data: p,
-          updated_at: p.updatedAt,
-        }))
-        const { error } = await supabase.from('resumes').upsert(rows, { onConflict: 'id' })
-        if (error) {
-          setCloudStatus('error')
-          setCloudError(error.message)
-        } else {
+        try {
+          const profiles = Object.values(state.resumes)
+
+          for (const p of profiles) {
+            // 1. Check if a row already exists for this user + resume id
+            const { data: existing, error: selectError } = await supabase
+              .from('resumes')
+              .select('id')
+              .eq('id', p.id)
+              .eq('user_id', user.id)
+              .maybeSingle()
+
+            if (selectError) throw selectError
+
+            if (existing) {
+              // 2a. Row exists → UPDATE (no ambiguity with RLS)
+              const { error: updateError } = await supabase
+                .from('resumes')
+                .update({
+                  title: p.title,
+                  resume_data: p,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', p.id)
+                .eq('user_id', user.id)
+
+              if (updateError) throw updateError
+            } else {
+              // 2b. Row doesn't exist → INSERT
+              const { error: insertError } = await supabase
+                .from('resumes')
+                .insert({
+                  id: p.id,
+                  user_id: user.id,
+                  title: p.title,
+                  resume_data: p,
+                  updated_at: new Date().toISOString(),
+                })
+
+              if (insertError) throw insertError
+            }
+          }
+
           setCloudStatus('synced')
           setCloudError(null)
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message
+            : (err as { message?: string })?.message ?? 'Unknown sync error'
+          console.error('[Seve] Cloud sync failed:', err)
+          setCloudStatus('error')
+          setCloudError(msg)
         }
       } else {
         setCloudStatus('local')
@@ -196,6 +232,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setIsSaving(false)
     }
   }, [state, user])
+
 
   const activeResumeId = state.selectedResumeId
   const activeResume = state.resumes[activeResumeId] || Object.values(state.resumes)[0] || createDefaultResume()
@@ -303,28 +340,37 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     updateActiveResume(prev => ({ ...prev, resumeData: data }))
   }, [updateActiveResume])
 
-  const retrySync = useCallback(() => {
-    if (user) {
-      setCloudStatus('syncing')
-      setCloudError(null)
+  const retrySync = useCallback(async () => {
+    if (!user) return
+    setCloudStatus('syncing')
+    setCloudError(null)
+    try {
       const profiles = Object.values(state.resumes)
-      const rows = profiles.map(p => ({
-        id: p.id,
-        user_id: user.id,
-        title: p.title,
-        resume_data: p,
-        updated_at: p.updatedAt,
-      }))
-      supabase.from('resumes').upsert(rows, { onConflict: 'id' }).then(({ error }) => {
-        if (error) {
-          setCloudStatus('error')
-          setCloudError(error.message)
+      for (const p of profiles) {
+        const { data: existing, error: selectError } = await supabase
+          .from('resumes').select('id').eq('id', p.id).eq('user_id', user.id).maybeSingle()
+        if (selectError) throw selectError
+
+        if (existing) {
+          const { error: updateError } = await supabase.from('resumes')
+            .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+            .eq('id', p.id).eq('user_id', user.id)
+          if (updateError) throw updateError
         } else {
-          setCloudStatus('synced')
+          const { error: insertError } = await supabase.from('resumes')
+            .insert({ id: p.id, user_id: user.id, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+          if (insertError) throw insertError
         }
-      })
+      }
+      setCloudStatus('synced')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? 'Unknown error'
+      console.error('[Seve] RetrySync failed:', err)
+      setCloudStatus('error')
+      setCloudError(msg)
     }
   }, [user, state.resumes])
+
 
   const value = useMemo(() => ({
     resumes: state.resumes,

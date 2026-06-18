@@ -260,7 +260,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
 export default function EditorLayout() {
   const navigate = useNavigate()
   const {
-    resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, retrySync,
+    resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, cloudError, retrySync,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, importResumeData, sectionOrder, updateSectionOrder,
   } = useResume()
@@ -340,12 +340,15 @@ export default function EditorLayout() {
               <span>{pageCount} Pages</span>
             </div>
           )}
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 ${
-            cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
-            : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
-            : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-500'
-          }`}>
+          <div
+            className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 ${
+              cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
+              : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
+              : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
+              : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+            }`}
+            title={cloudStatus === 'error' && cloudError ? `Error: ${cloudError}` : undefined}
+          >
             {cloudStatus === 'error' ? (
               <AlertCircle size={11} className="text-red-400 shrink-0" />
             ) : isSaving || cloudStatus === 'syncing' ? (
@@ -367,6 +370,7 @@ export default function EditorLayout() {
               </button>
             )}
           </div>
+
         </div>
 
         <div className="flex items-center gap-3">
