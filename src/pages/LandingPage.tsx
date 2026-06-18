@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { PageViewsWidget } from '@/components/PageViewsWidget'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -120,7 +121,9 @@ export default function LandingPage() {
                 </Button>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-border/60 w-full max-w-xs text-center lg:text-left">
+              <PageViewsWidget />
+
+              <div className="mt-4 pt-4 border-t border-border/60 w-full max-w-xs text-center lg:text-left">
                 <span className="text-[10px] text-muted-foreground/80 italic">
                   Built by a developer who was tired of paying for resume builders.
                 </span>
@@ -427,16 +430,16 @@ export default function LandingPage() {
               <ShieldCheck size={16} className="text-emerald-500" />
               Privacy Notice
             </button>
-            <a 
-              href="https://github.com/wacim-abdellli/seve" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="hover:text-white transition-colors flex items-center gap-1.5"
-            >
-              <Code size={16} />
-              GitHub
-            </a>
-          </div>
+              <a 
+                href="https://github.com/wacim-abdellli/seve" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <Code size={16} />
+                GitHub
+              </a>
+            </div>
         </div>
       </footer>
     </div>

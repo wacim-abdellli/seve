@@ -15,7 +15,7 @@ export function usePrintResume() {
       const seen = new Set<string>()
       for (const b of bullets) { const t = b.trim(); if (t && seen.has(t)) { newWarnings.push("Work Experience contains duplicate bullet points."); break }; seen.add(t) }
     }
-    if (newWarnings.length === 0 && pageCount > 1) newWarnings.push(`Resume is currently ${pageCount} pages. A 1-page layout is recommended.`)
+    if (newWarnings.length === 0 && pageCount > 2) newWarnings.push(`Resume is currently ${pageCount} pages. Consider trimming content.`)
     const summary = resumeData.summary || ''
     if (newWarnings.length === 0 && summary.trim() && summary.trim().length < 50) newWarnings.push("Professional summary is very short (under 50 characters).")
     const education = resumeData.education || []

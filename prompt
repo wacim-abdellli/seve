@@ -1,56 +1,306 @@
- SEVE: Strategic Audit & Forward Roadmap
+# UX Improvements — Detailed Implementation Plan
 
-  ROLE: You are the Lead Architect for the "Seve" project.
+## Bug 1 — Page Count Badge Shows "2 Pages" When Resume is 1 Page
 
-  CURRENT STATE (The Audit):
-  We have successfully stabilized the v1.0 architecture. The monolith is broken down, ResumeContext handles state, the
-  CSS/PDF Print engine is highly robust, and TypeScript/ESLint errors are at zero. The app is fast, local-first, and
-  production-ready.
+### Root Cause (diagnosed from source code)
 
-  Our overall architecture score is an 8.3/10.
+**File:** `src/components/ResumePreview.tsx`, line 122 + 137
 
-  THE MISSION:
-  We are now moving from "Stabilization" to "Scale & Polish". To achieve a 10/10 SaaS product, we must execute the
-  following strategic roadmap.
+```ts
+const PAGE_HEIGHT_PX = 1123   // ← the constant
+// ...
+const pages = Math.ceil(height / PAGE_HEIGHT_PX)  // Math.ceil is the problem
+```
 
-  Review these upcoming Epics. Await my specific instruction on which Epic to begin implementing.
+**What happens:**
+- The `ExecutiveTemplate` and `CreativeTemplate` have `min-h-[1123px]` on their inner flex wrapper (confirmed in `ExecutiveTemplate.tsx` line 259)
+- The `measurePageCount` function reads `scrollHeight` of the resume content
+- `scrollHeight` for a 1-page executive resume comes back as exactly **1123px** (or 1124px due to borders/subpixels)
+- `Math.ceil(1123 / 1123) = 1` → fine
+- `Math.ceil(1124 / 1123) = 2` → **BUG: shows 2 pages**
 
-  ---
+Even 1 extra pixel from a subpixel border, shadow, or rounding causes `Math.ceil` to jump to page 2.
 
-  🚀 EPIC 1: Cloud Persistence (Phase 12)
-   * The Problem: localStorage is fragile. If users clear their cache, their resumes are destroyed. We cannot build
-     advanced features (sharing, analytics) without user accounts.
-   * The Goal: Implement "Progressive Authentication" using Supabase.
-   * The Architecture: The app must remain "Local-First". Users can build resumes instantly without logging in. If they
-     opt-in to log in, ResumeContext must seamlessly run a background UPSERT to sync localStorage to a Supabase Postgres
-     database.
+### Fix
 
-  🎨 EPIC 2: Frictionless UX (Phase 13+)
-   * The Problem: The current form-based editing (opening a drawer, typing in inputs, closing it) is functional but
-     tedious. The layout is currently rigid.
-   * The Goal: Evolve the Editor Canvas.
-   * The Architecture:
-       1. Drag-and-Drop: Implement native HTML5 DnD on the PreviewSectionWrapper to allow users to visually reorder
-          sections (e.g., move Education above Experience). Update the sectionOrder array in global state.
-       2. Inline Editing (Future): Explore migrating from sidebar forms to direct contentEditable inline editing on the
-          preview canvas itself.
+**File:** `src/components/ResumePreview.tsx`
 
-  🧠 EPIC 3: Semantic ATS Intelligence
-   * The Problem: The current ATS engine (atsEvaluator.ts) is a brilliant but "dumb" rule-based system (regex, length
-     checks, hardcoded keyword matching). It cannot understand the actual quality of an achievement.
-   * The Goal: Upgrade the ATS Brain to understand semantic meaning.
-   * The Architecture: Integrate a lightweight Language Model. We can either explore running a small model entirely in the
-     browser (via WebLLM/Transformers.js to maintain the privacy promise), or set up a secure proxy to an OpenAI/Claude
-     API to evaluate how well a bullet point actually matches the provided Job Description.
+Change line 137 from:
+```ts
+const pages = Math.ceil(height / PAGE_HEIGHT_PX)
+```
+to:
+```ts
+// Add a 12px tolerance buffer to prevent subpixel rounding from falsely triggering 2-page
+const TOLERANCE_PX = 12
+const pages = Math.ceil((height - TOLERANCE_PX) / PAGE_HEIGHT_PX)
+```
 
-  🧹  EPIC 4: Template De-Duplication
-   * The Problem: Files like CreativeTemplate.tsx and ModernTemplate.tsx are approaching ~600 lines. They duplicate a
-     massive amount of JSX and Tailwind classes for rendering basic things like bullet points or dates.
-   * The Goal: DRY (Don't Repeat Yourself) the template rendering system.
-   * The Architecture: Create a suite of micro-components in src/components/ui/resume/ (e.g., <ResumeHeader />,
-     <ResumeExperienceEntry />). The main Template files should simply be layout wrappers (CSS Grid/Flex orchestrators)
-     that import and position these shared micro-components.
+**Also fix line 122** — increase `PAGE_HEIGHT_PX` slightly to account for `min-h-[1123px]` templates. The actual A4 at 96dpi is **1122.52px**, but templates use 1123px. Change the constant:
+```ts
+const PAGE_HEIGHT_PX = 1130  // 1123 + 7px buffer — matches min-h-[1123px] + tolerance
+```
 
-  ---
+**Combined result:**
+```ts
+const PAGE_HEIGHT_PX = 1130
+// ...
+const pages = Math.ceil(height / PAGE_HEIGHT_PX)
+// Math.ceil(1123 / 1130) = 1 ✓
+// Math.ceil(1130 / 1130) = 1 ✓  
+// Math.ceil(1131 / 1130) = 2 ✓ (genuinely 2 pages)
+```
 
-  AGENT DIRECTIVE: Acknowledge receipt of this roadmap. Do not begin coding. Await my command to initiate a specific Epic.
+This is simpler — just raise the threshold by 7px (the margin between 1123px template and actual A4).
+
+**Also fix the warning in `usePrintResume.ts` line 18:**
+The `pageCount > 1` warning fires for 2-page resumes which may be intentional. Change the warning from an automatic warning to an informational note only if the resume clearly overflows (not just borderline). Or change the threshold to `pageCount > 2`:
+
+```ts
+// Before:
+if (newWarnings.length === 0 && pageCount > 1) newWarnings.push(`Resume is currently ${pageCount} pages...`)
+
+// After (only warn if genuinely very long — 2 pages is acceptable):
+// REMOVE this warning entirely OR change to > 2:
+if (newWarnings.length === 0 && pageCount > 2) newWarnings.push(`Resume is currently ${pageCount} pages. Consider trimming content.`)
+```
+
+---
+
+## Bug 2 — "Multi-page" Badge Still Shows When It Shouldn't
+
+**File:** `src/layouts/EditorLayout.tsx`, line 337–342
+
+```tsx
+{pageCount > 1 && (
+  <div className="... animate-pulse ...">
+    <span>Multi-page ({pageCount} Pages)</span>
+  </div>
+)}
+```
+
+After fixing `PAGE_HEIGHT_PX`, the `pageCount` state will return 1 for 1-page resumes. The badge will disappear automatically. **No separate change needed here** — the root fix in `ResumePreview.tsx` cascades to this.
+
+---
+
+## Improvement 3 — Cloud Sync / Saving Badge Redesign
+
+### Current Problems
+- Uses emoji characters (🔄 ☁️ 💾) which render inconsistently across OS
+- The pill badge is small and hard to read
+- The status changes from local → syncing → synced with no smooth animation
+- "Cloud Sync" and "Syncing..." look identical (same amber color for syncing, but synced is emerald which is fine)
+
+### Fix
+
+**File:** `src/layouts/EditorLayout.tsx`, lines 343–366
+
+Replace the entire status badge `<div>` with this improved version:
+
+```tsx
+{/* Cloud / Save Status Badge */}
+<div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 ${
+  cloudStatus === 'error'
+    ? 'bg-red-500/10 border-red-500/30 text-red-400'
+    : isSaving || cloudStatus === 'syncing'
+    ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
+    : cloudStatus === 'synced'
+    ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
+    : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+}`}>
+  {/* Animated icon — use Lucide icons, no emoji */}
+  {cloudStatus === 'error' ? (
+    <AlertCircle size={11} className="text-red-400 shrink-0" />
+  ) : isSaving || cloudStatus === 'syncing' ? (
+    <RefreshCw size={11} className="text-amber-400 shrink-0 animate-spin" />
+  ) : cloudStatus === 'synced' ? (
+    <Cloud size={11} className="text-emerald-400 shrink-0" />
+  ) : (
+    <HardDrive size={11} className="text-zinc-500 shrink-0" />
+  )}
+
+  <span className="leading-none">
+    {cloudStatus === 'error'
+      ? 'Sync failed'
+      : isSaving || cloudStatus === 'syncing'
+      ? 'Saving…'
+      : cloudStatus === 'synced'
+      ? 'Cloud saved'
+      : 'Saved locally'}
+  </span>
+
+  {cloudStatus === 'error' && (
+    <button
+      onClick={retrySync}
+      className="ml-0.5 text-red-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
+    >
+      Retry
+    </button>
+  )}
+</div>
+```
+
+**Import additions needed at top of `EditorLayout.tsx`:**
+Add `Cloud, HardDrive, AlertCircle, RefreshCw` to the lucide-react import (some may already be imported as `RefreshCw` is used elsewhere):
+```ts
+import { ..., Cloud, HardDrive, AlertCircle } from 'lucide-react'
+// RefreshCw is already imported
+```
+
+---
+
+## Improvement 4 — Collapsible Form Panel (Hide Left Column for Full CV View)
+
+This is the most impactful UX change. Allow the user to collapse the "Resume Builder" form panel to give more space to the resume preview.
+
+### Changes needed in `src/pages/EditorPage.tsx`
+
+#### Step 1 — Add state for panel collapse
+
+At the top of the `EditorPage` function, add:
+```tsx
+import { useState } from 'react'   // add if not already imported
+// ...
+const [isFormPanelOpen, setIsFormPanelOpen] = useState(true)
+```
+
+#### Step 2 — Make the form panel div collapsible
+
+Find the desktop form panel div (line 77–111). Change it from a fixed `w-[380px]` div to an animated collapsible:
+
+```tsx
+<motion.div
+  layout
+  animate={{ width: isFormPanelOpen ? 380 : 0, opacity: isFormPanelOpen ? 1 : 0 }}
+  transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
+  className="hidden lg:flex border-r border-zinc-800 bg-card/65 backdrop-blur-md flex-col flex-shrink-0 h-full overflow-hidden no-print"
+  style={{ minWidth: isFormPanelOpen ? 320 : 0, maxWidth: isFormPanelOpen ? 420 : 0 }}
+>
+  {/* existing content unchanged */}
+</motion.div>
+```
+
+#### Step 3 — Add the toggle button
+
+In the preview area div (line 145), add a floating toggle button at the left edge of the preview column:
+
+```tsx
+<div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 relative ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+
+  {/* Panel toggle button — floats at left edge */}
+  <button
+    onClick={() => setIsFormPanelOpen(!isFormPanelOpen)}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden lg:flex w-6 h-16 items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all cursor-pointer shadow-lg"
+    title={isFormPanelOpen ? 'Hide form panel' : 'Show form panel'}
+  >
+    {isFormPanelOpen
+      ? <ChevronLeft size={14} />   /* import ChevronLeft from lucide */
+      : <ChevronRight size={14} />
+    }
+  </button>
+
+  <div className="w-full max-w-[858px]">
+    <ResumePreview ... />
+  </div>
+</div>
+```
+
+**Import:** Add `ChevronLeft` to lucide-react imports in `EditorPage.tsx`:
+```ts
+import { Eye, ChevronRight, ChevronLeft } from 'lucide-react'
+```
+
+---
+
+## Improvement 5 — General UX Declutter
+
+### 5a. Remove the pulsing animation from Multi-page badge
+
+The amber badge with `animate-pulse` is distracting. Remove `animate-pulse` from the badge className in `EditorLayout.tsx` line 338. The dot alone is enough visual indicator.
+
+```tsx
+// Before
+className="... animate-pulse shadow-[0_0_12px_rgba(245,158,11,0.1)]"
+
+// After
+className="... shadow-[0_0_8px_rgba(245,158,11,0.06)]"
+```
+
+### 5b. Make the "Multi-page" badge non-alarming for 2-page resumes
+
+Many professional CVs are 2 pages. The amber pulsing badge is too alarming. Change it to a softer neutral badge:
+
+```tsx
+{pageCount > 1 && (
+  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/80 border border-zinc-700 text-[9px] font-semibold text-zinc-400 tracking-wide">
+    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+    <span>{pageCount} Pages</span>
+  </div>
+)}
+```
+
+### 5c. Header visual cleanup
+
+The header currently has: `Landing | Logo | product Manager | MULTI-PAGE badge | CLOUD SYNC badge | user avatar | ATS Audit | Settings`
+
+That's 8 items which is cluttered. Suggested cleanup:
+
+**In `src/layouts/EditorLayout.tsx` header section:**
+
+1. Move `Settings` icon button **inside** the user avatar dropdown (not a separate button)
+2. Or simply reduce the gap between items and use `gap-2` instead of `gap-3` for the right side
+
+Actually, a smaller change: just remove the outer ring/border from the status badges so they look more like inline text than pill badges. This reduces visual weight significantly.
+
+Change the badge border from `border border-*-500/35` → `border border-*-500/15` (reduce opacity from 35 to 15).
+
+### 5d. SectionSidebar — compact the workspace nav
+
+**File:** `src/components/SectionSidebar.tsx`
+
+The left sidebar "WORKSPACE" section with Edit Resume, Preview, ATS Check links + the "RESUME COMPLETION" bar + "RESUME EDITOR" tips box takes a lot of vertical space.
+
+Suggestion: Collapse the "RESUME EDITOR" tips box by default, showing only a small "?" icon that expands on click. This saves ~120px of sidebar space.
+
+In `SectionSidebar.tsx`, find the "RESUME EDITOR" tips section and wrap it in a collapsible:
+
+```tsx
+const [showEditorTips, setShowEditorTips] = useState(false)
+
+// In JSX, replace the always-visible tips box with:
+<button
+  onClick={() => setShowEditorTips(!showEditorTips)}
+  className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 transition-colors"
+>
+  <span>Resume Editor Tips</span>
+  <ChevronDown size={12} className={`transition-transform ${showEditorTips ? 'rotate-180' : ''}`} />
+</button>
+
+{showEditorTips && (
+  <div className="px-4 pb-4">
+    {/* existing tips content */}
+  </div>
+)}
+```
+
+---
+
+## Summary — Files to Change
+
+| File | Changes |
+|---|---|
+| `src/components/ResumePreview.tsx` | Line 122: change `PAGE_HEIGHT_PX = 1123` → `1130`. Line 137: `Math.ceil(height / PAGE_HEIGHT_PX)` stays but threshold is now correct |
+| `src/hooks/usePrintResume.ts` | Line 18: change `pageCount > 1` → `pageCount > 2` (or remove this warning) |
+| `src/layouts/EditorLayout.tsx` | Lines 343–366: redesign cloud sync badge with Lucide icons. Line 338: remove `animate-pulse`. Line 338: change badge style to neutral gray |
+| `src/pages/EditorPage.tsx` | Add `isFormPanelOpen` state. Make form panel `motion.div` collapsible by animating width. Add toggle chevron button at left edge of preview area |
+| `src/components/SectionSidebar.tsx` | Wrap "RESUME EDITOR" tips box in collapsible with ChevronDown toggle |
+
+---
+
+## Priority Order
+
+1. **Page count bug** (ResumePreview.tsx + usePrintResume.ts) — 5 min fix, highest user impact
+2. **Collapsible form panel** (EditorPage.tsx) — 30 min, transforms the UX
+3. **Cloud sync badge** (EditorLayout.tsx) — 15 min, polish
+4. **Multi-page badge style** (EditorLayout.tsx) — 5 min, polish
+5. **SectionSidebar tips collapse** (SectionSidebar.tsx) — 10 min, minor improvement

@@ -28,6 +28,7 @@ export default function SectionSidebar({
   const { resumeData } = useResume()
   const resumeCompletion = calculateCompletion(resumeData)
   const [showChecklist, setShowChecklist] = useState(false)
+  const [showEditorTips, setShowEditorTips] = useState(false)
   const status = getSectionStatus(resumeData)
 
   const coreSections = [
@@ -232,17 +233,26 @@ export default function SectionSidebar({
               </AnimatePresence>
             </div>
 
-            {/* Helper Card */}
+            {/* Helper Card — collapsible */}
             <div className="px-3 mt-2">
-              <div className="bg-zinc-900 rounded-xl p-4 w-full flex flex-col gap-3 border border-zinc-800/40">
-                <PenLine size={32} className="text-red-400" />
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-white">Resume Editor</h4>
-                  <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed font-sans">
-                    Click any section in the builder overview to edit its content. You can drag and drop sections in the preview to rearrange your resume's layout.
-                  </p>
+              <button
+                onClick={() => setShowEditorTips(!showEditorTips)}
+                className="w-full flex items-center justify-between px-1 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-400 transition-colors cursor-pointer"
+              >
+                <span>Resume Editor Tips</span>
+                <ChevronDown size={12} className={`transition-transform ${showEditorTips ? 'rotate-180' : ''}`} />
+              </button>
+              {showEditorTips && (
+                <div className="bg-zinc-900 rounded-xl p-4 w-full flex flex-col gap-3 border border-zinc-800/40">
+                  <PenLine size={32} className="text-red-400" />
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-white">Resume Editor</h4>
+                    <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed font-sans">
+                      Click any section in the builder overview to edit its content. You can drag and drop sections in the preview to rearrange your resume's layout.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         ) : (

@@ -119,7 +119,7 @@ export default function ResumePreview({
     }
   }, [])
 
-  const PAGE_HEIGHT_PX = 1123
+  const PAGE_HEIGHT_PX = 1130
   // Tracks vertical padding (top + bottom) added by templates' .resume-page div.
   // This padding does NOT scale with font-size, so fit math must exclude it.
   const TEMPLATE_VERTICAL_PADDING = 96

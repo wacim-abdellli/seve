@@ -10,7 +10,7 @@ import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 
@@ -335,33 +335,36 @@ export default function EditorLayout() {
 
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 no-print">
           {pageCount > 1 && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/35 text-[9px] font-bold text-amber-400 uppercase tracking-widest animate-pulse shadow-[0_0_12px_rgba(245,158,11,0.1)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <span>Multi-page ({pageCount} Pages)</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/80 border border-zinc-700 text-[9px] font-semibold text-zinc-400 tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+              <span>{pageCount} Pages</span>
             </div>
           )}
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest ${
-            cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/35 text-red-400'
-            : cloudStatus === 'syncing' ? 'bg-amber-500/10 border-amber-500/35 text-amber-400'
-            : cloudStatus === 'synced' ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-400'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 ${
+            cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
+            : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
+            : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
+            : 'bg-zinc-900 border-zinc-800 text-zinc-500'
           }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${
-              cloudStatus === 'error' ? 'bg-red-500'
-              : isSaving ? 'bg-amber-500 animate-pulse'
-              : cloudStatus === 'synced' ? 'bg-emerald-500'
-              : 'bg-zinc-500'
-            }`} />
-            <span>
-              {cloudStatus === 'error' ? '⚠️ Sync Error'
-                : isSaving ? '🔄 Syncing...'
-                : !user ? '💾 Local Storage'
-                : cloudStatus === 'syncing' ? '🔄 Syncing...'
-                : cloudStatus === 'synced' ? '☁️ Cloud Sync'
-                : '💾 Local Storage'}
+            {cloudStatus === 'error' ? (
+              <AlertCircle size={11} className="text-red-400 shrink-0" />
+            ) : isSaving || cloudStatus === 'syncing' ? (
+              <RefreshCw size={11} className="text-amber-400 shrink-0 animate-spin" />
+            ) : cloudStatus === 'synced' ? (
+              <Cloud size={11} className="text-emerald-400 shrink-0" />
+            ) : (
+              <HardDrive size={11} className="text-zinc-500 shrink-0" />
+            )}
+            <span className="leading-none">
+              {cloudStatus === 'error' ? 'Sync failed'
+                : isSaving || cloudStatus === 'syncing' ? 'Saving…'
+                : cloudStatus === 'synced' ? 'Cloud saved'
+                : 'Saved locally'}
             </span>
             {cloudStatus === 'error' && (
-              <button onClick={retrySync} className="ml-1 underline hover:text-white transition-colors cursor-pointer">Retry</button>
+              <button onClick={retrySync} className="ml-0.5 text-red-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer">
+                Retry
+              </button>
             )}
           </div>
         </div>
@@ -377,6 +380,9 @@ export default function EditorLayout() {
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl z-50 min-w-[180px] animate-fade-in">
                   <div className="px-3 py-2 text-[11px] text-zinc-400 border-b border-zinc-800 truncate">{user.email}</div>
+                  <button onClick={() => { setIsSettingsOpen(true); setShowUserMenu(false) }} className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer">
+                    <Settings size={13} /> Settings
+                  </button>
                   <button onClick={() => { signOut(); setShowUserMenu(false) }} className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer">
                     <LogOut size={13} /> Sign Out
                   </button>
@@ -384,15 +390,17 @@ export default function EditorLayout() {
               )}
             </div>
           ) : (
-            <button onClick={signInWithGoogle} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
-              <LogIn size={13} /> Sign In
-            </button>
+            <>
+              <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer inline-flex items-center justify-center h-8 w-8" title="Settings">
+                <Settings size={15} />
+              </button>
+              <button onClick={signInWithGoogle} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
+                <LogIn size={13} /> Sign In
+              </button>
+            </>
           )}
           <button onClick={() => setActiveMode('analyze')} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
             <CheckCircle2 size={13} /> ATS Audit
-          </button>
-          <button onClick={() => setIsSettingsOpen(true)} title="Settings" className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer inline-flex items-center justify-center h-8 w-8" type="button">
-            <Settings size={15} />
           </button>
         </div>
       </header>

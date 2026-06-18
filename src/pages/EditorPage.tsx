@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Eye, ChevronRight } from 'lucide-react'
+import { Eye, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
 import ResumePreview from '../components/ResumePreview'
 import AtsChecker from '../components/AtsChecker'
@@ -57,6 +58,7 @@ const getSectionPreview = (section: string, data: ResumeData): string => {
 }
 
 export default function EditorPage() {
+  const [isFormPanelOpen, setIsFormPanelOpen] = useState(true)
   const { resumeData, selectedTemplate, jobDescription, updateActiveResume } = useResume()
   const ctx = useOutletContext<EditorContextType>()
 
@@ -76,11 +78,12 @@ export default function EditorPage() {
           <div className="flex h-full w-full overflow-hidden relative bg-transparent">
             <motion.div
               layout
-              initial={{ opacity: 0, scale: 0.995 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, scale: 0.995, width: 380 }}
+              animate={{ opacity: isFormPanelOpen ? 1 : 0, scale: 1, width: isFormPanelOpen ? 380 : 0 }}
               exit={{ opacity: 0, scale: 0.995 }}
-              transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
-              className="hidden lg:flex w-[380px] min-w-[320px] max-w-[420px] border-r border-zinc-800 bg-card/65 backdrop-blur-md flex-col flex-shrink-0 h-full overflow-hidden no-print"
+              transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
+              className="hidden lg:flex border-r border-zinc-800 bg-card/65 backdrop-blur-md flex-col flex-shrink-0 h-full overflow-hidden no-print"
+              style={{ minWidth: isFormPanelOpen ? 320 : 0, maxWidth: isFormPanelOpen ? 420 : 0 }}
             >
               <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0">
                 <h2 className="text-[16px] font-semibold text-white">Resume Builder</h2>
@@ -142,7 +145,14 @@ export default function EditorPage() {
               </div>
             </div>
 
-            <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 relative ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+              <button
+                onClick={() => setIsFormPanelOpen(!isFormPanelOpen)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden lg:flex w-6 h-16 items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all cursor-pointer shadow-lg"
+                title={isFormPanelOpen ? 'Hide form panel' : 'Show form panel'}
+              >
+                {isFormPanelOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+              </button>
               <div className="w-full max-w-[858px]">
                 <ResumePreview
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
