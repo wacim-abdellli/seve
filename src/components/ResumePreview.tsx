@@ -89,7 +89,19 @@ export default function ResumePreview({
   const [showGuides, setShowGuides] = useState(false)
   const [pageCount, setPageCount] = useState(1)
   const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false)
+  const styleMenuRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isStyleMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (styleMenuRef.current && !styleMenuRef.current.contains(e.target as Node)) {
+        setIsStyleMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [isStyleMenuOpen])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -358,7 +370,7 @@ export default function ResumePreview({
             )}
 
             {/* Combined Style Menu Popover */}
-            <div className="relative">
+            <div className="relative" ref={styleMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsStyleMenuOpen(!isStyleMenuOpen)}

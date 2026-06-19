@@ -10,7 +10,7 @@ import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 
@@ -129,6 +129,22 @@ function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarning
   )
 }
 
+const EMPTY_RESUME_TEMPLATE: ResumeData = {
+  contact: { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' },
+  summary: '',
+  experience: [{ id: '', jobTitle: '', company: '', location: '', startDate: '', endDate: '', current: false, bullets: [''] }],
+  education: [{ id: '', degree: '', school: '', location: '', graduationDate: '', gpa: '' }],
+  skills: [''],
+  languages: [{ id: '', name: '', proficiency: '' }],
+  projects: [{ id: '', name: '', description: '', technologies: [''] }],
+  awards: [{ id: '', title: '', awarder: '', date: '', description: '' }],
+  certifications: [{ id: '', title: '', issuer: '', date: '', description: '' }],
+  interests: [{ id: '', name: '', keywords: [''] }],
+  publications: [{ id: '', title: '', publisher: '', date: '', description: '' }],
+  references: [{ id: '', name: '', position: '', phone: '', description: '' }],
+  volunteer: [{ id: '', organization: '', location: '', period: '', description: '' }],
+}
+
 interface SimpleSettingsModalProps {
   selectedTemplate: Template
   onUpdateTemplate: (template: Template) => void
@@ -142,6 +158,13 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
   const [showPasteBox, setShowPasteBox] = useState(false)
   const [pasteValue, setPasteValue] = useState('')
   const [pasteError, setPasteError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyTemplate = () => {
+    navigator.clipboard.writeText(JSON.stringify(EMPTY_RESUME_TEMPLATE, null, 2))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
 
   const handleExport = () => {
     const data = JSON.stringify(resumeData, null, 2)
@@ -194,8 +217,8 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl animate-scale-in">
+    <div onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+      <div onClick={(e) => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
@@ -228,7 +251,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
           </div>
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Data Management</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Download className="w-3.5 h-3.5 text-zinc-400" /> Export
               </button>
@@ -237,6 +260,9 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
               </button>
               <button onClick={() => { setShowPasteBox(!showPasteBox); setPasteError(null) }} className={`h-10 rounded-xl border font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${showPasteBox ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white'}`}>
                 <FileCode className="w-3.5 h-3.5" /> Paste Code
+              </button>
+              <button onClick={handleCopyTemplate} className="h-10 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
+                <Copy className="w-3.5 h-3.5 text-zinc-400" /> {copied ? 'Copied!' : 'Template'}
               </button>
             </div>
             {showPasteBox && (
@@ -329,7 +355,7 @@ export default function EditorLayout() {
               </span>
               <span className="font-serif text-sm font-bold text-white leading-none pl-1.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>eve</span>
             </div>
-            <div className="text-[9px] font-bold px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 uppercase tracking-widest rounded">Studio v2</div>
+            <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 uppercase tracking-wider rounded">FREE</span>
           </div>
           <div className="w-px h-5 bg-border hidden sm:block" />
           <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 max-w-[180px] sm:max-w-[220px]">

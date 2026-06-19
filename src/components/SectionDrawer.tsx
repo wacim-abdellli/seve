@@ -38,85 +38,36 @@ interface SectionDrawerProps {
   onClose: () => void
 }
 
-const sectionMeta = {
-  contact: { 
-    title: 'Contact Info',
-    icon: User,
-    guide: 'Provide accurate and professional contact details. Use a modern, tech-focused email (e.g. name@gmail.com or name.dev) and links to your personal portfolio/website and LinkedIn profile.',
-    example: 'Jane Doe · New York, NY · jane.doe@email.com · +1 (555) 019-2834 · linkedin.com/in/janedoe · janedoe.dev'
-  },
-  summary: { 
-    title: 'Profile Summary',
-    icon: FileText,
-    guide: 'Write a 3-4 sentence professional summary highlighting your top achievements, core skills, and career objective. Avoid personal pronouns (e.g. "I", "my") and focus on action verbs.',
-    example: 'Senior Software Engineer with 8+ years of experience leading cross-functional teams and building high-scale distributed systems. Expert in React, Node.js, and cloud architecture (AWS). Boosted platform performance by 40% and reduced server costs by 15% at previous roles.'
-  },
-  experience: { 
-    title: 'Work Experience',
-    icon: Briefcase,
-    guide: 'Detail your work history in reverse chronological order. Start bullet points with strong action verbs (e.g., "Engineered", "Optimized", "Led") and quantify your accomplishments with metrics (e.g., "reduced latency by 30%").',
-    example: 'Led a team of 4 engineers to design and deploy a real-time messaging pipeline, increasing performance by 25% and handling 10M+ daily active requests. Implemented automated CI/CD workflows reducing deploy times by 40%.'
-  },
-  education: { 
-    title: 'Education History',
-    icon: GraduationCap,
-    guide: 'Add degrees and academic programs. Include your graduation date and GPA if it is 3.5 or above. You can also mention academic honors, scholarships, or relevant coursework.',
-    example: 'M.S. in Computer Science · Stanford University · GPA: 3.8 / 4.0 · Specialized in Distributed Systems and Artificial Intelligence. Recipient of the Merit Graduate Scholarship.'
-  },
-  skills: { 
-    title: 'Skills & Stack',
-    icon: Code2,
-    guide: 'Group your skills by category (e.g., "Languages", "Frameworks", "Tools") to make it readable. List 6-8 core technical skill terms that match your target job description to pass ATS filters.',
-    example: 'Languages: JavaScript, TypeScript, Python, Go · Frameworks: React, Next.js, Node.js, Express, Django · Databases: PostgreSQL, MongoDB, Redis · Cloud: AWS (EC2, S3, Lambda), Docker, Kubernetes'
-  },
-  languages: { 
-    title: 'Languages',
-    icon: Globe,
-    guide: 'List the languages you speak and your proficiency level (e.g., "Native", "Fluent", "Professional", "Conversational"). This demonstrates global readiness and versatility.',
-    example: 'English (Native) · Spanish (Fluent) · French (Conversational)'
-  },
-  projects: { 
-    title: 'Projects',
-    icon: FolderOpen,
-    guide: 'Highlight 1-2 major side projects or open-source contributions. Mention the specific tech stack used and describe the problem you solved, focusing on metrics, performance, and scalability.',
-    example: 'Seve (Resume Builder): Open-source client-side React app with local ATS compatibility parsing, gaining 1.2k+ GitHub stars.'
-  },
-  awards: { 
-    title: 'Awards & Honors',
-    icon: Trophy,
-    guide: 'List prestigious recognitions, promotions, or competition wins. For impact, mention the selectivity or criteria (e.g., "Awarded to top 1% of performers out of 500 applicants").',
-    example: 'Outstanding Engineer of the Year (2024) · Awarded by Google Tech Committee for resolving critical high-severity production incidents, saving $120k+ in potential SLA breach penalties.'
-  },
-  certifications: { 
-    title: 'Certifications',
-    icon: Award,
-    guide: 'List relevant professional credentials, licenses, or course certificates (e.g., AWS Solutions Architect, Certified Scrum Master) to validate your technical expertise.',
-    example: 'AWS Certified Solutions Architect – Professional (ID: AWS-10293, Issued: 2024) · Certified Kubernetes Administrator (CKA)'
-  },
-  interests: { 
-    title: 'Interests',
-    icon: Heart,
-    guide: 'Optionally list 2-3 genuine personal interests or hobbies. Choose interests that demonstrate teamwork, leadership, continuous learning, or problem-solving (e.g. running marathons, chess).',
-    example: 'Long-Distance Running (completed 2 marathons) · Competitive Chess (FIDE rated) · Open Source Contributor'
-  },
-  publications: { 
-    title: 'Publications',
-    icon: BookOpen,
-    guide: 'List published research papers, journal articles, books, patents, or industry white papers you have authored or co-authored, including citation links and dates.',
-    example: 'Optimizing Large Scale Distributed Databases · Published in IEEE Transactions on Cloud Computing (2023) · Authored research on optimizing database queries, reducing average latency by 18%.'
-  },
-  references: { 
-    title: 'References',
-    icon: PhoneCall,
-    guide: 'Add professional references (managers, colleagues, clients) who can vouch for your work ethic, technical skills, and achievements.',
-    example: 'Sarah Jenkins (Director of Engineering at Google) · Email: sjenkins@google.com · Relationship: Direct Manager for 3 years.'
-  },
-  volunteer: { 
-    title: 'Volunteer',
-    icon: HeartHandshake,
-    guide: 'Highlight volunteer work or non-profit engagement. Volunteer experience shows leadership, community care, and is highly valued by modern employers.',
-    example: 'Volunteer Instructor at Girls Who Code (2022–2024) · Taught introductory web development (HTML/CSS/JS) to 40+ high school students, facilitating projects and career mentorship.'
-  },
+const sectionTips: Record<string, string[]> = {
+  contact: ['Use a professional email (name@gmail.com or name@domain)', 'Include LinkedIn + portfolio/website links', 'Keep location to city, state'],
+  summary: ['3-4 sentences max — current role + top achievements + goal', 'No "I", "my", or personal pronouns', 'Lead with your strongest metric'],
+  experience: ['Reverse chronological order — most recent first', 'Start every bullet with a strong action verb', 'Add numbers: %, $, time saved, scale handled'],
+  education: ['Add GPA only if 3.5+', 'Include relevant coursework if entry-level', 'Mention honors, scholarships, or dean\'s list'],
+  skills: ['Group by category (Languages / Frameworks / Tools)', '6-8 core terms that match your target JD', 'Spell exactly as the job description does for ATS'],
+  languages: ['Proficiency: Native / Fluent / Professional / Conversational', 'Include if relevant to the role or company'],
+  projects: ['1-2 major projects with your specific tech stack', 'Focus on what problem you solved + measurable outcome'],
+  awards: ['Mention selectivity (e.g. "top 1% of 500")', 'Include who awarded it + why'],
+  certifications: ['Include cert ID and issuance date', 'Prioritize active/current certifications'],
+  interests: ['2-3 genuine hobbies — optional but humanizing', 'Choose ones that show discipline or teamwork'],
+  publications: ['Include publication venue + date + link', 'Co-authors optional if space is tight'],
+  references: ['Name, title, company, email, and your relationship', 'Ask permission before listing someone'],
+  volunteer: ['Organization + role + time period', 'Highlight measurable impact if possible'],
+}
+
+const sectionMeta: Record<string, { title: string; icon: any; example: string }> = {
+  contact: { title: 'Contact Info', icon: User, example: 'Jane Doe · New York, NY · jane.doe@email.com · linkedin.com/in/janedoe' },
+  summary: { title: 'Profile Summary', icon: FileText, example: 'Senior Engineer with 8+ years leading cross-functional teams. Expert in React, Node.js, AWS. Boosted platform performance by 40%, reduced costs by 15%.' },
+  experience: { title: 'Work Experience', icon: Briefcase, example: 'Led 4 engineers building a real-time messaging pipeline handling 10M+ daily requests. Reduced deploy times by 40% with automated CI/CD.' },
+  education: { title: 'Education History', icon: GraduationCap, example: 'M.S. Computer Science · Stanford · GPA 3.8 · Distributed Systems & AI focus' },
+  skills: { title: 'Skills & Stack', icon: Code2, example: 'Languages: JS, TS, Python · Frameworks: React, Next.js, Node.js · Tools: Docker, AWS, PostgreSQL' },
+  languages: { title: 'Languages', icon: Globe, example: 'English (Native) · Spanish (Fluent) · French (Conversational)' },
+  projects: { title: 'Projects', icon: FolderOpen, example: 'Seve · Open-source React resume builder with ATS parsing · 1.2k+ GitHub stars' },
+  awards: { title: 'Awards & Honors', icon: Trophy, example: 'Outstanding Engineer of the Year (2024) — saved $120k+ in SLA penalties' },
+  certifications: { title: 'Certifications', icon: Award, example: 'AWS Solutions Architect — Professional · CKA certified' },
+  interests: { title: 'Interests', icon: Heart, example: 'Long-Distance Running (2 marathons) · Chess (FIDE rated)' },
+  publications: { title: 'Publications', icon: BookOpen, example: 'Optimizing Distributed Databases · IEEE Cloud Computing (2023)' },
+  references: { title: 'References', icon: PhoneCall, example: 'Sarah Jenkins · Engineering Director @ Google · sjenkins@google.com · Direct Manager 3 yrs' },
+  volunteer: { title: 'Volunteer', icon: HeartHandshake, example: 'Instructor @ Girls Who Code (2022-2024) · Taught web dev to 40+ students' },
 }
 
 export default function SectionDrawer({
@@ -136,7 +87,6 @@ export default function SectionDrawer({
   const meta = sectionMeta[section] || { 
     title: 'Section Editor', 
     icon: Lightbulb, 
-    guide: '', 
     example: '' 
   }
 
@@ -166,24 +116,27 @@ export default function SectionDrawer({
       {/* Drawer Body — scrollable */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 scrollbar-none">
         
-        {/* Real Guide Card */}
-        {meta.guide && (
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-2 no-print select-none">
-            <div className="flex items-center gap-2 text-rose-450 font-bold text-[11px] uppercase tracking-wider">
-              {meta.icon ? <meta.icon className="w-3.5 h-3.5 text-rose-400" /> : <Lightbulb className="w-3.5 h-3.5 text-rose-400" />}
-              <span className="text-zinc-200">{meta.title} Guide</span>
+        {/* Compact tips card */}
+        {sectionTips[section] && (
+          <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-xl px-3.5 py-3 no-print select-none">
+            <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+              <Lightbulb className="w-3 h-3" />
+              Tips
             </div>
-            <p className="text-[12px] text-zinc-400 leading-relaxed font-light font-sans">
-              {meta.guide}
-            </p>
-            {meta.example && (
-              <div className="pt-2 border-t border-zinc-800/60 mt-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">Realistic Example:</span>
-                <p className="text-[11px] text-zinc-350 font-mono bg-zinc-950/40 p-2 rounded-lg leading-relaxed select-text border border-zinc-900/50">
-                  {meta.example}
-                </p>
-              </div>
-            )}
+            <ul className="space-y-1">
+              {sectionTips[section].map((tip, i) => (
+                <li key={i} className="text-[11px] text-zinc-400 flex items-start gap-2">
+                  <span className="text-rose-400/60 mt-0.5 shrink-0">•</span>
+                  {tip}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2.5 pt-2 border-t border-zinc-800/30">
+              <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest block mb-1">Example</span>
+              <p className="text-[10px] text-zinc-500 font-mono leading-relaxed select-text">
+                {meta.example}
+              </p>
+            </div>
           </div>
         )}
         {section === 'contact' && (

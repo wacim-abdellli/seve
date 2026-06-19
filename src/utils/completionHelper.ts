@@ -52,21 +52,7 @@ export function getSectionStatus(resumeData: ResumeData): Record<string, boolean
 
 export function calculateCompletion(resumeData: ResumeData): number {
   const status = getSectionStatus(resumeData)
-  let score = 0
-  if (status.contact) score += 20
-  if (status.summary) score += 15
-  if (status.experience) score += 25
-  if (status.education) score += 15
-  if (status.skills) score += 15
-  if (status.languages) score += 5
-  if (status.projects) score += 5
-  if (status.awards) score += 2
-  if (status.certifications) score += 2
-  if (status.interests) score += 1
-  if (status.publications) score += 2
-  if (status.references) score += 1
-  if (status.volunteer) score += 2
-  
-  // Cap at 100%
-  return Math.min(100, score)
+  const allSections = ['contact', 'summary', 'experience', 'education', 'skills', 'languages', 'projects', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer']
+  const completed = allSections.filter(s => status[s]).length
+  return Math.round((completed / allSections.length) * 100)
 }
