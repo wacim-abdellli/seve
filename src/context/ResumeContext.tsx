@@ -111,78 +111,113 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>('local')
   const [cloudError, setCloudError] = useState<string | null>(null)
   const hasFetchedCloudRef = useRef(false)
+  const hasMergedCloudRef = useRef(false)
+  const isMergingRef = useRef(false)
 
-  // Reset cloud fetch flag when user ID changes (handles A?B login switch)
+  // Keep references to prevent fetchAndMergeCloud from changing identity
+  const stateRef = useRef(state)
+  stateRef.current = state
+  const syncToCloudRef = useRef<any>(null)
+
+  // Reset cloud flags when user ID changes (handles A/B login switch)
   useEffect(() => {
     hasFetchedCloudRef.current = false
+    hasMergedCloudRef.current = false
+    isMergingRef.current = false
   }, [user?.id])
+
+  // Shared cloud fetch & merge helper
+  const fetchAndMergeCloud = useCallback(async (userId: string, signal?: AbortSignal) => {
+    setCloudStatus('syncing')
+    setCloudError(null)
+    try {
+      const { data, error } = await supabase
+        .from('resumes')
+        .select('*', { signal } as any)
+
+      if (error) throw error
+
+      const currentState = stateRef.current
+      let currentResumes = currentState.resumes
+
+      if (data && data.length > 0) {
+        const cloudResumes: Record<string, ResumeProfile> = {}
+        for (const row of data) {
+          cloudResumes[row.id] = row.resume_data as ResumeProfile
+        }
+
+        const merged = { ...currentState.resumes }
+        let hasChanges = false
+        for (const [id, cloudProfile] of Object.entries(cloudResumes)) {
+          if (merged[id]) {
+            if (new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
+              merged[id] = cloudProfile
+              hasChanges = true
+            }
+          } else {
+            merged[id] = cloudProfile
+            hasChanges = true
+          }
+        }
+
+        if (hasChanges) {
+          isMergingRef.current = true
+          setState(prev => ({ ...prev, resumes: merged }))
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ...currentState, resumes: merged }))
+          currentResumes = merged
+        }
+      }
+
+      // Sync the merged state back to the cloud to ensure local-only/new resumes are uploaded
+      await syncToCloudRef.current(Object.values(currentResumes), userId)
+
+      setCloudStatus('synced')
+      setCloudError(null)
+      hasMergedCloudRef.current = true
+    } catch (err: any) {
+      if (signal?.aborted || err?.name === 'AbortError') {
+        return
+      }
+      console.error('Cloud sync fetch failed:', err)
+      throw err
+    }
+  }, [])
 
   // Login Merge: when user is authenticated, merge cloud resumes into local state.
   // Runs on initial mount (if user already auth'd from session cookie) AND on login.
   useEffect(() => {
     if (!user || hasFetchedCloudRef.current) return
+    const userId = user.id
     hasFetchedCloudRef.current = true
 
     const ac = new AbortController()
     let retryAttempt = 0
     const MAX_RETRIES = 3
 
-    setCloudStatus('syncing')
-
-    function fetchCloud() {
-      supabase
-        .from('resumes')
-        .select('*', { signal: ac.signal } as any)
-        .then(({ data, error }) => {
-          if (error) {
-            if (ac.signal.aborted) return
-            console.error('Cloud sync fetch failed:', error.message)
-            if (retryAttempt < MAX_RETRIES) {
-              retryAttempt++
-              const delay = Math.pow(2, retryAttempt) * 1000
-              setTimeout(fetchCloud, delay)
-              return
+    async function attemptFetch() {
+      try {
+        await fetchAndMergeCloud(userId, ac.signal)
+      } catch (err: any) {
+        if (ac.signal.aborted) return
+        if (retryAttempt < MAX_RETRIES) {
+          retryAttempt++
+          const delay = Math.pow(2, retryAttempt) * 1000
+          setTimeout(() => {
+            if (!ac.signal.aborted) {
+              attemptFetch()
             }
-            setCloudStatus('error')
-            setCloudError(error.message)
-            return
-          }
-
-          if (!data || data.length === 0) {
-            setCloudStatus('synced')
-            return
-          }
-
-          const cloudResumes: Record<string, ResumeProfile> = {}
-          for (const row of data) {
-            cloudResumes[row.id] = row.resume_data as ResumeProfile
-          }
-
-          setState(prev => {
-            const merged = { ...prev.resumes }
-
-            for (const [id, cloudProfile] of Object.entries(cloudResumes)) {
-              if (merged[id]) {
-                if (new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
-                  merged[id] = cloudProfile
-                }
-              } else {
-                merged[id] = cloudProfile
-              }
-            }
-
-            const mergedState = { ...prev, resumes: merged }
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedState))
-            return mergedState
-          })
-
-          setCloudStatus('synced')
-        })
+          }, delay)
+          return
+        }
+        const msg = err instanceof Error ? err.message : String(err)
+        setCloudStatus('error')
+        setCloudError(msg)
+      }
     }
 
-    fetchCloud()
+    attemptFetch()
     return () => ac.abort()
-  }, [user])
+  }, [user?.id, fetchAndMergeCloud])
 
   // ---------------------------------------------------------------------------  // ---------------------------------------------------------------------------
   // Shared cloud-sync helper (used by both auto-save effect and retrySync)
@@ -240,6 +275,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  syncToCloudRef.current = syncToCloud
+
   // ---------------------------------------------------------------------------
   // Auto-save: persist to localStorage immediately, debounce cloud sync 800ms.
   // "Saving…" indicator is shown only for actual user edits — not on the
@@ -251,24 +288,33 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const isInitialLoad = isInitialMountRef.current
     const isLoginEvent = user?.id !== prevUserIdRef.current
+    const isMergeUpdate = isMergingRef.current
 
     isInitialMountRef.current = false
     prevUserIdRef.current = user?.id ?? null
+    isMergingRef.current = false
 
     // Persist to localStorage right away — don't wait for the debounce timer.
     // This guarantees data is saved even if the tab is closed before 800ms.
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
 
-    // Only show "Saving…" for genuine user edits (not on mount or login).
-    const isUserEdit = !isInitialLoad && !isLoginEvent
+    // Only show "Saving…" for genuine user edits (not on mount, login, or merge).
+    const isUserEdit = !isInitialLoad && !isLoginEvent && !isMergeUpdate
     if (isUserEdit) {
       setIsSaving(true)
-      if (user) setCloudStatus('syncing')
+      if (user && hasMergedCloudRef.current) setCloudStatus('syncing')
     }
 
     if (!user) {
       setCloudStatus('local')
       setCloudError(null)
+      setIsSaving(false)
+      return
+    }
+
+    // Do NOT auto-save if we haven't successfully fetched and merged from cloud yet,
+    // OR if this state update was just the merge itself.
+    if (!hasMergedCloudRef.current || isMergeUpdate) {
       setIsSaving(false)
       return
     }
@@ -292,7 +338,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
     // Cancel the pending write on cleanup — don't flip isSaving here to avoid flicker.
     return () => clearTimeout(handler)
-  }, [state, user, syncToCloud])
+  }, [state, user?.id, syncToCloud])
 
 
   const activeResumeId = state.selectedResumeId
@@ -409,16 +455,20 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setCloudStatus('syncing')
     setCloudError(null)
     try {
-      await syncToCloud(Object.values(state.resumes), user.id)
-      setCloudStatus('synced')
-      setCloudError(null)
+      if (!hasMergedCloudRef.current) {
+        await fetchAndMergeCloud(user.id)
+      } else {
+        await syncToCloud(Object.values(state.resumes), user.id)
+        setCloudStatus('synced')
+        setCloudError(null)
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? 'Unknown error'
       console.error('[Seve] RetrySync failed:', err)
       setCloudStatus('error')
       setCloudError(msg)
     }
-  }, [user, state.resumes, syncToCloud])
+  }, [user, state.resumes, syncToCloud, fetchAndMergeCloud])
 
 
 
