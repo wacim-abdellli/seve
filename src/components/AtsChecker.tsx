@@ -159,7 +159,26 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
-  const dataRef = useRef<{ r: unknown; j: string } | null>(null)
+  // Local storage keys
+  const LAST_AUDITED_RESUME_KEY = 'seve-last-audited-resume'
+  const LAST_AUDITED_JD_KEY = 'seve-last-audited-jd'
+
+  // Initialize dataRef with persistent last audited state or current props
+  const dataRef = useRef<{ r: unknown; j: string }>(null as any)
+  if (dataRef.current === null) {
+    try {
+      const r = localStorage.getItem(LAST_AUDITED_RESUME_KEY)
+      const j = localStorage.getItem(LAST_AUDITED_JD_KEY)
+      if (r !== null && j !== null) {
+        dataRef.current = { r: JSON.parse(r), j }
+      } else {
+        dataRef.current = { r: resumeData, j: jobDescription }
+      }
+    } catch {
+      dataRef.current = { r: resumeData, j: jobDescription }
+    }
+  }
+
   const scanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scanTimeouts = useRef<ReturnType<typeof setTimeout>[]>([])
   const scanInterval = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -167,10 +186,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
 
   useEffect(() => {
-    // On mount, record data without scanning
-    if (dataRef.current === null) {
-      dataRef.current = { r: resumeData, j: jobDescription }
-      return
+    // Only scan if content actually changed (deep comparison)
+    if (dataRef.current !== null) {
+      const isSameResume = JSON.stringify(dataRef.current.r) === JSON.stringify(resumeData)
+      const isSameJd = dataRef.current.j === jobDescription
+      if (isSameResume && isSameJd) {
+        return
+      }
     }
 
     // Debounce: wait 500ms of no edits before scanning
@@ -194,6 +216,11 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
             setTimeout(() => {
               setIsScanning(false)
               setLastAudited(new Date())
+              // Persist last audited data
+              try {
+                localStorage.setItem(LAST_AUDITED_RESUME_KEY, JSON.stringify(resumeData))
+                localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
+              } catch {}
             }, 200)
           }
         }, d)
