@@ -1,11 +1,84 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { industryKeywords } from '../../utils/atsConstants'
-import { HelpCircle, Sparkles, Plus, X } from 'lucide-react'
+import { HelpCircle, Sparkles, Plus, X, ChevronDown } from 'lucide-react'
 
 interface SkillsFormProps {
   skills: string[]
   jobTitle: string
   onChange: (updated: string[]) => void
+}
+
+const INDUSTRY_LABELS: Record<string, string> = {
+  softwareTech: 'Software & Tech',
+  dataScience: 'Data Science & AI',
+  marketing: 'Marketing',
+  finance: 'Finance & Accounting',
+  healthcare: 'Healthcare',
+  design: 'Design & UI/UX',
+  sales: 'Sales & BizDev',
+  management: 'Management & Ops',
+  education: 'Education & Training',
+  engineering: 'Engineering (Mech/Elec/Civil)',
+  humanResources: 'HR & Recruiting',
+  customerSupport: 'Customer Support',
+  legal: 'Legal & Compliance',
+  writing: 'Writing & Editing',
+  hospitality: 'Hospitality & Food',
+  construction: 'Construction & Trades',
+  supplyChain: 'Supply Chain & Logistics',
+}
+
+const detectCategory = (jobTitle: string): string => {
+  const cleanJob = jobTitle.toLowerCase()
+  if (/marketing|brand|seo|growth|copywrit/i.test(cleanJob)) {
+    return 'marketing'
+  }
+  if (/finance|audit|account|tax|budget|cfa|treasury/i.test(cleanJob)) {
+    return 'finance'
+  }
+  if (/nurse|health|clinical|patient|doctor|medical|dent|pharmac/i.test(cleanJob)) {
+    return 'healthcare'
+  }
+  if (/design|ui|ux|graphics|art|figma|illustrat|creativ/i.test(cleanJob)) {
+    return 'design'
+  }
+  if (/sales|bizdev|retail|cold|account manager|commercial/i.test(cleanJob)) {
+    return 'sales'
+  }
+  if (/manager|project|leader|pmp|agile|scrum|ops|operations/i.test(cleanJob)) {
+    return 'management'
+  }
+  if (/data|science|analyst|machine|learning|ai|python|statistics/i.test(cleanJob)) {
+    return 'dataScience'
+  }
+  if (/teacher|tutor|professor|instructor|education|curriculum|school|academic/i.test(cleanJob)) {
+    return 'education'
+  }
+  if (/mechanical|electrical|civil|hardware|cad|manufacturing|solidworks|autocad/i.test(cleanJob)) {
+    return 'engineering'
+  }
+  if (/recruiter|talent|hr|human resources|payroll|benefits/i.test(cleanJob)) {
+    return 'humanResources'
+  }
+  if (/customer|support|client|service|helpdesk|help desk|ticket/i.test(cleanJob)) {
+    return 'customerSupport'
+  }
+  if (/lawyer|legal|paralegal|compliance|contract|attorney/i.test(cleanJob)) {
+    return 'legal'
+  }
+  if (/writer|editor|copywriter|content|journal/i.test(cleanJob)) {
+    return 'writing'
+  }
+  if (/chef|cook|hotel|restaurant|hospitality|event|catering|waiter/i.test(cleanJob)) {
+    return 'hospitality'
+  }
+  if (/construction|carpenter|plumber|electrician|builder|hvac/i.test(cleanJob)) {
+    return 'construction'
+  }
+  if (/supply|chain|logistics|inventory|procure|warehouse/i.test(cleanJob)) {
+    return 'supplyChain'
+  }
+  return 'softwareTech'
 }
 
 const allAvailableSkills = Array.from(
@@ -18,8 +91,18 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('softwareTech')
+  const [showIndustryDropdown, setShowIndustryDropdown] = useState(false)
+  
   const containerRef = useRef<HTMLDivElement>(null)
+  const industryDropdownRef = useRef<HTMLDivElement>(null)
 
+  // Auto-detect industry when job title changes
+  useEffect(() => {
+    setSelectedCategory(detectCategory(jobTitle))
+  }, [jobTitle])
+
+  // Filter autocomplete suggestions based on user typing
   useEffect(() => {
     if (!inputValue.trim()) {
       queueMicrotask(() => {
@@ -43,10 +126,14 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
     })
   }, [inputValue, skills])
 
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setShowDropdown(false)
+      }
+      if (industryDropdownRef.current && !industryDropdownRef.current.contains(e.target as Node)) {
+        setShowIndustryDropdown(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -90,26 +177,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
   }
 
   const getIndustrySuggestions = (): string[] => {
-    const cleanJob = jobTitle.toLowerCase()
-    let categoryKey = 'softwareTech'
-
-    if (/marketing|brand|seo|growth/i.test(cleanJob)) {
-      categoryKey = 'marketing'
-    } else if (/finance|audit|account|tax|budget/i.test(cleanJob)) {
-      categoryKey = 'finance'
-    } else if (/nurse|health|clinical|patient|doctor|medical/i.test(cleanJob)) {
-      categoryKey = 'healthcare'
-    } else if (/design|ui|ux|graphics|art|figma/i.test(cleanJob)) {
-      categoryKey = 'design'
-    } else if (/sales|bizdev|retail|cold/i.test(cleanJob)) {
-      categoryKey = 'sales'
-    } else if (/manager|project|leader|pmp|agile|scrum/i.test(cleanJob)) {
-      categoryKey = 'management'
-    } else if (/software|dev|engineer|tech|code|react|web/i.test(cleanJob)) {
-      categoryKey = 'softwareTech'
-    }
-
-    const allCategorySkills = industryKeywords[categoryKey] || []
+    const allCategorySkills = industryKeywords[selectedCategory] || []
     return allCategorySkills.filter((s) => !skills.some(existing => existing.toLowerCase() === s.toLowerCase()))
   }
 
@@ -187,7 +255,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
 
       {/* Added Chips */}
       <div className="flex flex-col gap-2">
-        <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+        <h4 className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest">
           Added Skills ({skills.length})
         </h4>
         <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1.5 custom-scrollbar py-1">
@@ -207,32 +275,73 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
             </div>
           ))}
           {skills.length === 0 && (
-            <p className="text-xs text-zinc-550 italic font-light">No skills registered yet.</p>
+            <p className="text-xs text-zinc-555 italic font-light">No skills registered yet.</p>
           )}
         </div>
       </div>
 
-      {/* Recommended Suggestions */}
-      {industrySuggestions.length > 0 && (
-        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/20 flex flex-col gap-3">
+      {/* Recommended Suggestions with Custom Dropdown Selector */}
+      <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/20 flex flex-col gap-3 relative">
+        <div className="flex items-center justify-between">
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5">
-            <Sparkles size={13} className="text-rose-455" />
-            Recommended for {jobTitle ? `"${jobTitle}"` : 'your profile'}
+            <Sparkles size={13} className="text-rose-455 animate-pulse" />
+            Recommended Skills
           </h4>
-          <div className="flex flex-wrap gap-2 max-h-[130px] overflow-y-auto pr-1.5 custom-scrollbar">
-            {industrySuggestions.slice(0, 15).map((skill) => (
-              <button
-                key={skill}
-                type="button"
-                onClick={() => addSkill(skill)}
-                className="text-xs font-medium py-1 px-2.5 bg-zinc-905 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 h-7 rounded-lg transition-colors cursor-pointer"
-              >
-                + {skill}
-              </button>
-            ))}
+          
+          {/* Custom Dropdown Selector */}
+          <div ref={industryDropdownRef} className="relative z-20">
+            <button
+              type="button"
+              onClick={() => setShowIndustryDropdown(!showIndustryDropdown)}
+              className="flex items-center gap-1.5 border border-zinc-800 bg-zinc-900 px-2 py-1 rounded-md text-[10px] font-semibold text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer"
+            >
+              <span>{INDUSTRY_LABELS[selectedCategory] || 'Industry'}</span>
+              <ChevronDown size={10} className={`opacity-60 transition-transform duration-250 ${showIndustryDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showIndustryDropdown && (
+              <div className="absolute right-0 top-[110%] w-[200px] max-h-[220px] overflow-y-auto bg-zinc-900 border border-zinc-855 rounded-lg shadow-2xl custom-scrollbar py-1 animate-scale-in">
+                {Object.entries(INDUSTRY_LABELS).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(key)
+                      setShowIndustryDropdown(false)
+                    }}
+                    className={`w-full text-left px-3 py-1.5 text-[10px] font-medium border-b border-zinc-850/40 last:border-b-0 transition-colors cursor-pointer ${
+                      key === selectedCategory
+                        ? 'bg-rose-955/30 text-rose-400 font-bold border-l-2 border-rose-500 pl-2.5'
+                        : 'text-zinc-300 hover:bg-zinc-850'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        <div className="flex flex-wrap gap-1.5 max-h-[130px] overflow-y-auto pr-1.5 custom-scrollbar">
+          {industrySuggestions.slice(0, 20).map((skill) => (
+            <button
+              key={skill}
+              type="button"
+              onClick={() => addSkill(skill)}
+              className="text-[10px] font-semibold py-1 px-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-750 text-zinc-300 hover:text-white h-7 rounded-lg transition-all hover:scale-[1.03] active:scale-[0.97] flex items-center gap-1 cursor-pointer"
+            >
+              <Plus size={10} className="text-zinc-500" />
+              {skill}
+            </button>
+          ))}
+          {industrySuggestions.length === 0 && (
+            <p className="text-[10px] text-zinc-550 italic font-light py-2">
+              All recommended skills added for this industry.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -139,6 +139,11 @@ export const industryKeywords: Record<string, string[]> = {
     'Agile', 'Scrum', 'DevOps', 'System Design', 'Algorithms', 'Data Structures', 'Testing', 'Jest',
     'Redux', 'HTML5', 'CSS3', 'Next.js', 'Vite', 'Frontend', 'Backend', 'Full Stack', 'Cloud Computing'
   ],
+  dataScience: [
+    'Python', 'R Programming', 'Machine Learning', 'Deep Learning', 'SQL', 'Pandas', 'NumPy', 'SciPy',
+    'TensorFlow', 'PyTorch', 'Data Visualization', 'Tableau', 'Power BI', 'Data Engineering', 'Spark',
+    'Hadoop', 'Data Mining', 'Big Data', 'Statistics', 'NLP', 'Computer Vision', 'Predictive Modeling'
+  ],
   marketing: [
     'SEO', 'SEM', 'Google Analytics', 'Content Strategy', 'Social Media', 'Email Marketing', 'Branding',
     'Copywriting', 'Campaign Management', 'Market Research', 'PPC', 'CRM', 'A/B Testing', 'Conversion Rate',
@@ -152,7 +157,7 @@ export const industryKeywords: Record<string, string[]> = {
   healthcare: [
     'Patient Care', 'Clinical', 'HIPAA', 'Electronic Health Records', 'EHR', 'EMR', 'Nursing', 'Diagnostics',
     'Treatment Planning', 'Healthcare Administration', 'Patient Advocacy', 'Medical Terminology', 'Infection Control',
-    'Cardiopulmonary Resuscitation', 'CPR', 'Vital Signs', 'Medical Billing', 'Pharmacology'
+    'CPR', 'Vital Signs', 'Medical Billing', 'Pharmacology', 'Patient Safety', 'First Aid'
   ],
   design: [
     'UI/UX', 'Figma', 'Adobe Creative Suite', 'Photoshop', 'Illustrator', 'Prototyping', 'Typography',
@@ -168,5 +173,51 @@ export const industryKeywords: Record<string, string[]> = {
     'Leadership', 'Strategic Planning', 'Project Management', 'Agile', 'PMP', 'Operations Management',
     'Resource Allocation', 'Stakeholder Management', 'Team Building', 'Change Management', 'Risk Assessment',
     'Process Improvement', 'KPIs', 'Performance Metrics', 'Vendor Management', 'Budget Management'
+  ],
+  education: [
+    'Curriculum Design', 'Pedagogy', 'Classroom Management', 'Lesson Planning', 'Tutoring', 'Student Assessment',
+    'Special Education', 'E-learning', 'Educational Technology', 'Instructional Design', 'Parent-Teacher Relations',
+    'Child Development', 'Literacy Instruction', 'STEM Education', 'Academic Advising', 'Differentiated Instruction'
+  ],
+  engineering: [
+    'AutoCAD', 'SolidWorks', 'MATLAB', 'LabVIEW', 'Circuit Design', 'Finite Element Analysis', 'FEA', 'CFD',
+    'Mechanical Design', 'PLC Programming', 'Project Engineering', 'Quality Assurance', 'Lean Six Sigma',
+    'CAD/CAM', 'Robotics', 'Thermodynamics', 'Electrical Engineering', 'Structural Engineering', 'Technical Drawings'
+  ],
+  humanResources: [
+    'Talent Acquisition', 'Onboarding', 'Employee Relations', 'HRIS', 'Payroll Administration', 'Benefits Administration',
+    'Conflict Resolution', 'Performance Management', 'Labor Laws', 'HR Compliance', 'Workforce Planning',
+    'Succession Planning', 'HR Policy Development', 'HR Analytics', 'FMLA', 'Compensation & Benefits'
+  ],
+  customerSupport: [
+    'Zendesk', 'Help Desk Support', 'Ticket Resolution', 'Customer Retention', 'Intercom', 'Technical Support',
+    'Call Center Operations', 'CRM Systems', 'Conflict Resolution', 'Active Listening', 'SLA Management',
+    'Customer Satisfaction', 'Troubleshooting', 'Product Knowledge', 'Escalation Procedures'
+  ],
+  legal: [
+    'Legal Research', 'Contract Drafting', 'Compliance Audits', 'Litigation Support', 'Intellectual Property',
+    'Regulatory Compliance', 'Risk Mitigation', 'Corporate Law', 'Westlaw', 'LexisNexis', 'Document Review',
+    'Legal Writing', 'Due Diligence', 'Corporate Governance', 'Employment Law', 'Contract Negotiation'
+  ],
+  writing: [
+    'Technical Writing', 'Copywriting', 'Editing', 'Proofreading', 'Content Creation', 'SEO Writing',
+    'Creative Writing', 'Journalism', 'Grant Writing', 'Blogging', 'Research Writing', 'Localization',
+    'Content Strategy', 'Ghostwriting', 'Social Media Copy', 'AP Style'
+  ],
+  hospitality: [
+    'Guest Relations', 'Food Safety', 'ServSafe', 'POS Systems', 'Event Planning', 'Front Desk Operations',
+    'Hospitality Management', 'Inventory Control', 'Customer Service', 'Culinary Arts', 'Catering Operations',
+    'Menu Planning', 'Banquet Coordination', 'Reservation Systems', 'Housekeeping Management'
+  ],
+  construction: [
+    'Blueprint Reading', 'OSHA Compliance', 'Safety Regulations', 'Project Estimation', 'HVAC Systems',
+    'Plumbing', 'Carpentry', 'Electrical Wiring', 'Subcontractor Coordination', 'Site Inspections',
+    'Project Scheduling', 'Masonry', 'Drywall Installation', 'Power Tools', 'Heavy Equipment Operation'
+  ],
+  supplyChain: [
+    'Inventory Management', 'Procurement', 'Logistics', 'Warehouse Operations', 'Vendor Negotiations',
+    'SAP ERP', 'Material Requirements Planning', 'MRP', 'Demand Forecasting', 'Freight Forwarding',
+    'Shipping & Receiving', 'Global Sourcing', 'Distribution Management', 'Supplier Relationship Management',
+    'Customs Compliance'
   ]
 }
