@@ -1,0 +1,99 @@
+{
+  "contact": {
+    "fullName": "Alexandra Chen",
+    "email": "alex.chen@email.com",
+    "phone": "+1-555-234-5678",
+    "linkedin": "https://linkedin.com/in/alexchen",
+    "location": "San Francisco, CA"
+  },
+  "summary": "Senior full-stack engineer with 8 years experience building distributed systems and leading engineering teams. Designed a real-time analytics platform that cut infrastructure costs by 35%. Proficient in React, TypeScript, Node.js, Go, and AWS.",
+  "experience": [
+    {
+      "jobTitle": "Senior Software Engineer",
+      "company": "Stripe",
+      "location": "San Francisco, CA",
+      "startDate": "01/2021",
+      "endDate": "Present",
+      "bullets": [
+        "Architected payment pipeline migration to event-driven microservices on AWS EKS, cutting p99 latency by 42% while maintaining 99.99% uptime",
+        "Designed fraud detection system that flags $12M+ in annual fraudulent charges across 50M+ daily transactions",
+        "Mentored 6 engineers through structured growth plans, yielding 3 internal promotions within 18 months",
+        "Optimized PostgreSQL query performance across 200 shards, reducing read latency from 850ms to 45ms"
+      ]
+    },
+    {
+      "jobTitle": "Software Engineer II",
+      "company": "Datadog",
+      "location": "New York, NY",
+      "startDate": "06/2018",
+      "endDate": "12/2020",
+      "bullets": [
+        "Built distributed tracing UI handling 10B+ daily spans with React and D3.js, cutting incident resolution time by 35%",
+        "Engineered custom query engine in Go and Elasticsearch for sub-second search across 5PB of log data",
+        "Led initiative redesigning metrics dashboards, improving load speed by 65% and lifting daily users by 22%"
+      ]
+    },
+    {
+      "jobTitle": "Software Engineer",
+      "company": "Microsoft",
+      "location": "Redmond, WA",
+      "startDate": "09/2016",
+      "endDate": "05/2018",
+      "bullets": [
+        "Developed Azure DevOps analytics pipeline serving 15,000 teams with 99.97% uptime across 200M monthly build records",
+        "Created automated regression framework that cut release cycles from 14 days to 3 days catching 94% of defects",
+        "Drove adoption of typed languages across 3 product teams, reducing production incidents by 40%"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "M.S. in Computer Science",
+      "school": "Stanford University",
+      "location": "Stanford, CA",
+      "graduationDate": "06/2016",
+      "gpa": "3.9"
+    },
+    {
+      "degree": "B.S. in Computer Engineering",
+      "school": "UC Berkeley",
+      "location": "Berkeley, CA",
+      "graduationDate": "05/2014",
+      "gpa": "3.8"
+    }
+  ],
+  "skills": [
+    "React", "TypeScript", "Node.js", "Go", "Python",
+    "PostgreSQL", "MongoDB", "Redis", "Elasticsearch",
+    "AWS", "Docker", "Kubernetes", "Terraform",
+    "Kafka", "Flink", "CI/CD", "Git", "Linux"
+  ],
+  "languages": [
+    { "name": "English", "proficiency": "Native" },
+    { "name": "Mandarin Chinese", "proficiency": "Fluent" },
+    { "name": "French", "proficiency": "Conversational" }
+  ],
+  "projects": [
+    {
+      "name": "KafkaFlow",
+      "description": "Open-source tool for monitoring Kafka consumer lag, processing 100K messages per second with sub-second detection",
+      "technologies": ["Go", "React", "Kafka"]
+    }
+  ],
+  "certifications": [
+    { "title": "AWS Solutions Architect – Professional", "issuer": "Amazon Web Services", "date": "2023" },
+    { "title": "Certified Kubernetes Administrator", "issuer": "CNCF", "date": "2022" }
+  ],
+  "publications": [
+    { "title": "Low-Latency Event Sourcing for Distributed Payment Systems", "publisher": "IEEE Cloud Computing", "date": "2024" }
+  ],
+  "awards": [
+    { "title": "Engineering Impact Award", "issuer": "Stripe", "date": "2023" }
+  ],
+  "interests": [
+    "Long-distance running", "Competitive chess", "Open-source contribution"
+  ],
+  "references": [
+    { "name": "Dr. Sarah Mitchell", "title": "Engineering Director", "company": "Stripe", "contact": "sarah.mitchell@stripe.com" }
+  ]
+}

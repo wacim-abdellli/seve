@@ -10,7 +10,16 @@ export const STRONG_VERBS = new Set([
   'established', 'transformed', 'spearheaded', 'drove', 'deployed',
   'engineered', 'analyzed', 'produced', 'trained', 'mentored',
   'directed', 'facilitated', 'collaborated', 'resolved', 'maintained',
-  'monitored', 'supported', 'authored'
+  'monitored', 'supported', 'authored', 'scaled', 'architected',
+  'pioneered', 'championed', 'accelerated', 'orchestrated',
+  'consolidated', 'expedited', 'integrated', 'mobilized',
+  'reorganized', 'restructured', 'revamped', 'revitalized',
+  'simplified', 'standardized', 'unified', 'configured',
+  'formulated', 'instituted', 'navigated', 'elevated',
+  'supercharged', 'catalyzed', 'modernized', 'overhauled',
+  'grew', 'expanded', 'boosted', 'upgraded', 'refined',
+  'constructed', 'founded', 'initiated', 'established',
+  'administered', 'chaired', 'headed', 'recruited', 'hired',
 ])
 
 export const FR_STRONG_VERBS = new Set([

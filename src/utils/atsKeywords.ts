@@ -60,8 +60,8 @@ export interface MatchResult {
 }
 
 export function tokenize(text: string): string[] {
-  return (text.toLowerCase().match(/\b\w+\b/g) || [])
-    .filter(w => w.length > 1)
+  const raw = text.toLowerCase().match(/\b[a-z][a-z.+#/-]{2,}\b/g) || []
+  return [...new Set(raw)]
 }
 
 export function matchKeywords(jdTokens: string[], resumeTokens: string[]): MatchResult {
@@ -90,13 +90,16 @@ export function matchKeywords(jdTokens: string[], resumeTokens: string[]): Match
       }
     }
 
+    let foundSynonym = false
     for (const [key, vals] of Object.entries(SYNONYM_MAP)) {
       if (vals.includes(token) && resumeSet.has(key)) {
         matched.push(token)
         partial.push({ jdTerm: token, resumeTerm: key })
-        continue
+        foundSynonym = true
+        break
       }
     }
+    if (foundSynonym) continue
 
     missing.push(token)
   }

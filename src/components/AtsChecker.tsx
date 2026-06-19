@@ -159,53 +159,62 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
-  const hasInitialized = useRef(false)
+  const dataRef = useRef<{ r: unknown; j: string } | null>(null)
+  const scanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scanTimeouts = useRef<ReturnType<typeof setTimeout>[]>([])
+  const scanInterval = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
-  const resultKey = useMemo(() =>
-    atsScore.total + '|' + (atsScore.reportV2?.breakdown?.map(b => b.score).join(',') || ''),
-  [atsScore])
 
   useEffect(() => {
-    if (!hasInitialized.current) {
-      hasInitialized.current = true
+    // On mount, record data without scanning
+    if (dataRef.current === null) {
+      dataRef.current = { r: resumeData, j: jobDescription }
       return
     }
 
-    setIsScanning(true)
-    setScanStage(0)
-    setResumeScanVersion(v => v + 1)
-    setScanLogs([])
+    // Debounce: wait 500ms of no edits before scanning
+    if (scanTimer.current) clearTimeout(scanTimer.current)
+    scanTimer.current = setTimeout(() => {
+      dataRef.current = { r: resumeData, j: jobDescription }
 
-    const timeouts: ReturnType<typeof setTimeout>[] = []
-    let d = 0
-    const delays = [600, 450, 500, 400, 450, 350, 300, 350, 400, 300, 250, 200]
-    delays.forEach((ms, i) => {
-      d += ms
-      const t = setTimeout(() => {
-        setScanStage(i + 1)
-        if (i === delays.length - 1) {
-          setTimeout(() => {
-            setIsScanning(false)
-            setLastAudited(new Date())
-          }, 200)
-        }
-      }, d)
-      timeouts.push(t)
-    })
+      setIsScanning(true)
+      setScanStage(0)
+      setResumeScanVersion(v => v + 1)
+      setScanLogs([])
 
-    let logIdx = 0
-    const logInterval = setInterval(() => {
-      setScanLogs(prev => {
-        if (logIdx >= SCAN_STAGES.length) return prev
-        const next = [...prev, SCAN_STAGES[logIdx].log]
-        logIdx++
-        return next.slice(-5)
+      scanTimeouts.current = []
+      let d = 0
+      const delays = [800, 650, 600, 550, 500, 480, 450, 420, 400, 380, 350, 300]
+      delays.forEach((ms, i) => {
+        d += ms
+        const t = setTimeout(() => {
+          setScanStage(i + 1)
+          if (i === delays.length - 1) {
+            setTimeout(() => {
+              setIsScanning(false)
+              setLastAudited(new Date())
+            }, 200)
+          }
+        }, d)
+        scanTimeouts.current.push(t)
       })
-    }, 420)
 
-    return () => { timeouts.forEach(clearTimeout); clearInterval(logInterval) }
-  }, [resultKey])
+      scanInterval.current = setInterval(() => {
+        setScanLogs(prev => {
+          const idx = prev.length
+          if (idx >= SCAN_STAGES.length) return prev
+          return [...prev, SCAN_STAGES[idx].log].slice(-5)
+        })
+      }, 520)
+    }, 500)
+
+    return () => {
+      if (scanTimer.current) clearTimeout(scanTimer.current)
+      scanTimeouts.current.forEach(clearTimeout)
+      if (scanInterval.current) clearInterval(scanInterval.current)
+    }
+  }, [resumeData, jobDescription])
 
   const report = atsScore.reportV2
   const animatedScore = useCountUp(atsScore.total, 1200)

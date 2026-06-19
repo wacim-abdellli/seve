@@ -2,7 +2,7 @@ import type { ResumeData, AtsScore, SkillsMatrixItem, AtsIssue, AtsCategoryScore
 import { classifyDomain, computeDomainPenalty } from './roleClassifier'
 import { computeSemanticRelevance } from './semanticScorer'
 import { estimatePageCount, getSectionHeights } from './layoutHelper'
-import { INDUSTRY_PROFILES, detectIndustry, applyProfileAdjustments } from './atsIndustry'
+import { INDUSTRY_PROFILES, detectIndustry } from './atsIndustry'
 import { tokenize, matchKeywords } from './atsKeywords'
 import {
   USABLE_PER_PAGE, STRONG_VERBS, FR_STRONG_VERBS, STOPWORDS, FR_STOPWORDS,
@@ -870,7 +870,7 @@ function scoreCompleteness(resume: ResumeData, lang: string): AtsCategoryScore {
 
 function extractMeaningfulKeywords(jdText: string): string[] {
   const tokens = jdText.toLowerCase().match(/\b[a-z][a-z.+#/-]{2,}\b/g) ?? []
-  return [...new Set(tokens.filter(t => !JD_STOPWORDS.has(t) && t.length > 3))]
+  return [...new Set(tokens.filter(t => !JD_STOPWORDS.has(t) && t.length > 2))]
 }
 
 export function weightKeyword(keyword: string): 'high' | 'medium' | 'low' {
@@ -1036,6 +1036,26 @@ function scoreFormatting(resume: ResumeData, lang: string): AtsCategoryScore {
     issues.push(...skillIssues)
   }
 
+  // Word repetition check — flag words used 3+ times across resume text
+  const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || []
+  const freq: Record<string, number> = {}
+  for (const w of words) freq[w] = (freq[w] || 0) + 1
+  const repeated = Object.entries(freq).filter(([, n]) => n >= 3).sort(([, a], [, b]) => b - a).slice(0, 5)
+  if (repeated.length > 0) {
+    score -= 3
+    const top = repeated.slice(0, 3).map(([w, n]) => `${w} (${n}x)`).join(', ')
+    issues.push({
+      id: 'formatting-repetition',
+      type: 'suggestion',
+      category: 'style',
+      issue: lang === 'fr' ? `Mots répétés: ${top}` : `Repeated words: ${top}`,
+      fix: 'Replace repeated words with synonyms for better readability and vocabulary range.',
+      section: 'experience',
+      severityScore: 30,
+      autoFixable: false,
+    })
+  }
+
   const specialChars = text.match(/[★✓►◆■●▪▲▼◆◇○◎●★☆™®©]/g)
   if (specialChars) {
     score -= 5
@@ -1134,7 +1154,7 @@ function scoreActionVerbs(resume: ResumeData, lang: string): AtsCategoryScore {
 
   const score = Math.round((goodBullets / totalBullets) * max)
 
-  if (score < 8) {
+  if (score < 5) {
         issues.push({
       id: 'verbs-weak',
       type: 'warning',
@@ -1345,7 +1365,11 @@ function scoreLength(resume: ResumeData, lang: string, fontSize: number = 10): A
   const wordCount = text.split(/\s+/).filter(Boolean).length
   const years = resume.experience.reduce((sum, e) => {
     const start = parseInt(e.startDate?.split('/')[1] || '0') || 0
-    const end = parseInt(e.endDate?.split('/')[1] || '0') || 0
+    if (start === 0) return sum
+    const endStr = e.endDate
+    const end = /present|current/i.test(endStr || '')
+      ? new Date().getFullYear()
+      : parseInt(endStr?.split('/')[1] || '0') || 0
     return sum + Math.max(0, end - start)
   }, 0)
 
@@ -1456,36 +1480,42 @@ function scoreReadability(resume: ResumeData, lang: string): AtsCategoryScore {
   const issues: AtsIssue[] = []
   const max = 5
   const text = extractResumeText(resume)
-  const sentences = text.split(/[.!?]+/).filter(Boolean).length || 1
   const words = text.split(/\s+/).filter(Boolean)
   const wordCount = words.length || 1
   const syllables = words.reduce((sum, w) => sum + countSyllables(w), 0)
 
+  // Count sentences properly: bullets are individual sentences, summary has real periods, etc.
+  let sentenceCount = 0
+  if (resume.summary) sentenceCount += resume.summary.split(/[.!?]+/).filter(Boolean).length
+  resume.experience.forEach(exp => { sentenceCount += exp.bullets.filter(b => b.trim()).length })
+  resume.projects?.forEach(p => { if (p.description?.trim()) sentenceCount++ })
+  const sentences = Math.max(1, sentenceCount)
+
   const fkgl = 0.39 * (wordCount / sentences) + 11.8 * (syllables / wordCount) - 15.59
 
-  // Flesch-Kincaid grade scoring (in the readability evaluator)
+  // Flesch-Kincaid grade scoring calibrated for resume text
   const readabilityScore = (gradeLevel: number): number => {
-    if (gradeLevel <= 10) return 5       // ideal: grade 8-10
-    if (gradeLevel <= 12) return 4       // acceptable
-    if (gradeLevel <= 14) return 3       // warning zone
-    if (gradeLevel <= 16) return 1.5     // poor — Grade 17 current score
-    return 0                             // unusable for NLP parsing
+    if (gradeLevel <= 14) return 5
+    if (gradeLevel <= 18) return 4
+    if (gradeLevel <= 22) return 3
+    if (gradeLevel <= 26) return 2
+    return 1
   }
 
   const gradeLevel = Math.floor(fkgl)
   const score = readabilityScore(gradeLevel)
 
-  if (fkgl > 14) {
+  if (fkgl > 22) {
     issues.push({
       id: 'readability-complex',
       type: 'suggestion',
       category: 'style',
-      issue: lang === 'fr' ? 'CV trop complexe (niveau > 14)' : 'Resume too complex (grade > 14)',
-      fix: lang === 'fr' ? 'Utilisez un langage plus simple. Remplacez le jargon par des termes courants.' : 'Use simpler language. Replace jargon with plain terms.',
+      issue: lang === 'fr' ? 'CV trop complexe (niveau > 22)' : 'Resume complex (grade > 22)',
+      fix: lang === 'fr' ? 'Utilisez un langage plus simple. Remplacez le jargon par des termes courants.' : 'Shorten sentences and simplify technical jargon where possible.',
       severityScore: 25,
       autoFixable: false,
     })
-  } else if (fkgl < 8) {
+  } else if (fkgl < 6) {
     issues.push({
       id: 'readability-simple',
       type: 'suggestion',
@@ -1853,9 +1883,15 @@ export function generateAtsReportV2(
     bulletQuality, readability,
   ]
 
-  // Apply industry-specific weight adjustments
+  // Apply industry-specific weight adjustments (but don't revive zero-weight dimensions)
   if (profile) {
-    categories = applyProfileAdjustments(categories, profile)
+    categories = categories.map(cat => {
+      const adj = profile.weightAdjustments[cat.key]
+      if (adj !== undefined && cat.weight > 0) {
+        return { ...cat, weight: adj }
+      }
+      return cat
+    })
   }
 
   // Parseability
@@ -1871,6 +1907,10 @@ export function generateAtsReportV2(
   total = Math.max(0, total + domainPenalty)
   if (domainPenalty <= -35) {
     total = Math.min(total, 55)
+  }
+  // Without a job description, cap at 75 — a resume can't be fully evaluated without a target role
+  if (!jd.trim() && total > 75) {
+    total = 75
   }
 
   const { grade, gradeLabel } = getGrade(total)
