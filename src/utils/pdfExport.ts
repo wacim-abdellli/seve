@@ -10,6 +10,10 @@ export async function exportResumeToPdf(
   const originalWidth = element.style.width
   const originalMargin = element.style.margin
   const originalPadding = element.style.padding
+  const originalPosition = element.style.position
+  const originalLeft = element.style.left
+  const originalTop = element.style.top
+  const originalBackground = element.style.background
 
   // 2. Temporarily strip viewport zoom scale and force unscaled 100% dimensions (794px)
   element.style.transform = 'none'
@@ -17,6 +21,10 @@ export async function exportResumeToPdf(
   element.style.width = '794px'
   element.style.margin = '0'
   element.style.padding = '0'
+  element.style.position = 'relative'
+  element.style.left = '0'
+  element.style.top = '0'
+  element.style.background = '#ffffff'
 
   // 3. Configure html2pdf options
   const opt = {
@@ -28,6 +36,7 @@ export async function exportResumeToPdf(
       useCORS: true,
       letterRendering: true,
       logging: false,
+      backgroundColor: '#ffffff',
     },
     jsPDF: {
       unit: 'in',
@@ -50,5 +59,9 @@ export async function exportResumeToPdf(
     element.style.width = originalWidth
     element.style.margin = originalMargin
     element.style.padding = originalPadding
+    element.style.position = originalPosition
+    element.style.left = originalLeft
+    element.style.top = originalTop
+    element.style.background = originalBackground
   }
 }
