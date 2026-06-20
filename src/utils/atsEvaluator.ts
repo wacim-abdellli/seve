@@ -3,7 +3,7 @@ import { classifyDomain, computeDomainPenalty } from './roleClassifier'
 import { computeSemanticRelevance } from './semanticScorer'
 import { estimatePageCount, getSectionHeights } from './layoutHelper'
 import { INDUSTRY_PROFILES, detectIndustry } from './atsIndustry'
-import { tokenize, matchKeywords } from './atsKeywords'
+import { tokenize, matchKeywords, expandResumeSkills } from './atsKeywords'
 import {
   USABLE_PER_PAGE, STRONG_VERBS, FR_STRONG_VERBS, STOPWORDS, FR_STOPWORDS,
   EN_PRONOUNS_REGEX, FR_PRONOUNS_REGEX, WEAK_TO_STRONG_EN, WEAK_TO_STRONG_FR,
@@ -394,12 +394,22 @@ export function calculateSkillsMatrix(resume: ResumeData, jobDescription: string
     }
   ]
 
+  const allConfigKeywords = SKILL_CATEGORIES_CONFIG.reduce((acc, cat) => {
+    return acc.concat(cat.keywords)
+  }, [] as string[])
+
+  const directResumeKeywords = new Set(
+    allConfigKeywords.filter(kw => checkPresence(lowerResume, kw))
+  )
+
+  const expandedResumeKeywords = expandResumeSkills(directResumeKeywords)
+
   return SKILL_CATEGORIES_CONFIG.map(cat => {
     // Find which words in this category are in JD
     const jdWords = cat.keywords.filter(kw => checkPresence(lowerJd, kw))
     
     // Find which words in this category are in Resume
-    const resumeWords = cat.keywords.filter(kw => checkPresence(lowerResume, kw))
+    const resumeWords = cat.keywords.filter(kw => checkPresence(lowerResume, kw) || expandedResumeKeywords.has(kw))
 
     let candidateScore
     let requiredScore

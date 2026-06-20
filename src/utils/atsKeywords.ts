@@ -59,13 +59,76 @@ export interface MatchResult {
   partial: { jdTerm: string; resumeTerm: string }[]
 }
 
+export const SKILL_IMPLICATIONS: Record<string, string[]> = {
+  mongodb: ['nosql', 'database', 'sql'],
+  postgresql: ['sql', 'database', 'rdbms'],
+  mysql: ['sql', 'database', 'rdbms'],
+  sqlite: ['sql', 'database'],
+  oracle: ['sql', 'database', 'rdbms'],
+  mariadb: ['sql', 'database', 'rdbms'],
+  dynamodb: ['nosql', 'database'],
+  cassandra: ['nosql', 'database'],
+  redis: ['nosql', 'database', 'caching'],
+  nextjs: ['react', 'javascript', 'js', 'frontend', 'web'],
+  'next.js': ['react', 'javascript', 'js', 'frontend', 'web'],
+  react: ['javascript', 'js', 'frontend', 'web'],
+  reactjs: ['javascript', 'js', 'frontend', 'web'],
+  angular: ['typescript', 'javascript', 'js', 'frontend', 'web'],
+  vue: ['javascript', 'js', 'frontend', 'web'],
+  svelte: ['javascript', 'js', 'frontend', 'web'],
+  typescript: ['javascript', 'js'],
+  ts: ['javascript', 'js'],
+  express: ['nodejs', 'node', 'javascript', 'js', 'api', 'backend'],
+  nestjs: ['typescript', 'ts', 'nodejs', 'node', 'javascript', 'js', 'api', 'backend'],
+  springboot: ['java', 'backend'],
+  spring: ['java', 'backend'],
+  django: ['python', 'api', 'backend'],
+  flask: ['python', 'api', 'backend'],
+  fastapi: ['python', 'api', 'backend'],
+  laravel: ['php', 'backend'],
+  rails: ['ruby', 'backend'],
+  kubernetes: ['docker', 'containers', 'devops'],
+  k8s: ['docker', 'containers', 'devops'],
+  docker: ['containers', 'devops'],
+  terraform: ['infrastructure as code', 'devops', 'cloud'],
+  aws: ['cloud', 'devops'],
+  gcp: ['cloud', 'devops'],
+  azure: ['cloud', 'devops'],
+  github: ['git', 'version control'],
+  gitlab: ['git', 'version control'],
+  scrum: ['agile'],
+  kanban: ['agile'],
+  redux: ['react', 'javascript', 'state management'],
+  graphql: ['api'],
+}
+
+export function expandResumeSkills(resumeSkills: Set<string>): Set<string> {
+  const expanded = new Set<string>(resumeSkills)
+  let size = 0
+  
+  // Recursively add implications
+  while (expanded.size > size) {
+    size = expanded.size
+    for (const skill of [...expanded]) {
+      const implied = SKILL_IMPLICATIONS[skill]
+      if (implied) {
+        for (const imp of implied) {
+          expanded.add(imp)
+        }
+      }
+    }
+  }
+  return expanded
+}
+
 export function tokenize(text: string): string[] {
   const raw = text.toLowerCase().match(/\b[a-z][a-z.+#/-]{2,}\b/g) || []
   return [...new Set(raw)]
 }
 
 export function matchKeywords(jdTokens: string[], resumeTokens: string[]): MatchResult {
-  const resumeSet = new Set(resumeTokens)
+  const baseResumeSet = new Set(resumeTokens)
+  const resumeSet = expandResumeSkills(baseResumeSet)
   const matched: string[] = []
   const missing: string[] = []
   const partial: { jdTerm: string; resumeTerm: string }[] = []
