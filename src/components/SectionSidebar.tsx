@@ -75,7 +75,7 @@ export default function SectionSidebar({
           <div className="h-16 flex items-center justify-center border-b border-zinc-800 flex-shrink-0">
             <span className="relative font-serif text-xl font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
               S
-              <span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#e11d48]" />
+              <span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#e0314f] shadow-[0_0_8px_#e0314f]" />
             </span>
           </div>
 
@@ -90,7 +90,7 @@ export default function SectionSidebar({
                   onClick={() => onModeChange(mode.id)}
                   className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-155 relative ${
                     isActive
-                      ? 'bg-red-500/10 text-red-400'
+                      ? 'bg-[#e0314f]/10 text-[#e0314f]'
                       : 'text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'
                   }`}
                   title={mode.label}
@@ -98,7 +98,7 @@ export default function SectionSidebar({
                   {isActive && (
                     <motion.div
                       layoutId="active-mode-glow-collapsed"
-                      className="absolute inset-0 bg-red-500/5 rounded-xl pointer-events-none"
+                      className="absolute inset-0 bg-[#e0314f]/5 rounded-xl pointer-events-none"
                       transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
                     />
                   )}
@@ -110,9 +110,9 @@ export default function SectionSidebar({
 
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-10 h-10">
-              <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
-                <circle cx="20" cy="20" r="17" fill="none" stroke="rgb(39 39 42)" strokeWidth="3" />
-                <circle cx="20" cy="20" r="17" fill="none" stroke="#e11d48" strokeWidth="3"
+              <svg className="w-10 h-10 -rotate-90 drop-shadow-[0_0_4px_rgba(224,49,79,0.2)]" viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="17" fill="none" stroke="rgb(24 24 27)" strokeWidth="2.5" />
+                <circle cx="20" cy="20" r="17" fill="none" stroke="#e0314f" strokeWidth="2.5"
                   strokeDasharray={`${2 * Math.PI * 17}`}
                   strokeDashoffset={`${2 * Math.PI * 17 * (1 - resumeCompletion / 100)}`}
                   strokeLinecap="round"
@@ -131,7 +131,7 @@ export default function SectionSidebar({
             <div className="flex items-center select-none">
               <span className="relative font-serif text-2xl font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 S
-                <span className="absolute top-0 -right-1.5 w-2 h-2 rounded-full bg-[#e11d48]" />
+                <span className="absolute top-0 -right-1.5 w-2 h-2 rounded-full bg-[#e0314f] shadow-[0_0_10px_#e0314f]" />
               </span>
               <span className="font-serif text-2xl font-bold text-white leading-none pl-0.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 eve
@@ -152,16 +152,16 @@ export default function SectionSidebar({
                     key={mode.id}
                     type="button"
                     onClick={() => onModeChange(mode.id)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg mx-2 text-sm transition-all duration-155 relative h-10 ${
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg mx-2 text-sm transition-all duration-155 relative h-10 font-display ${
                       isActive
-                        ? 'bg-red-500/10 text-red-400 font-medium border-l-2 border-red-500'
+                        ? 'bg-[#e0314f]/10 text-[#e0314f] font-extrabold border-l-2 border-[#e0314f]'
                         : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                     }`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="active-mode-glow"
-                        className="absolute inset-0 bg-red-500/5 rounded-lg pointer-events-none"
+                        className="absolute inset-0 bg-[#e0314f]/5 rounded-lg pointer-events-none"
                         transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
                       />
                     )}
@@ -189,8 +189,8 @@ export default function SectionSidebar({
                       </span>
                       <span className="text-white font-bold text-xs">{resumeCompletion}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-500" style={{ width: `${resumeCompletion}%` }} />
+                    <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[#e0314f] to-rose-400 rounded-full transition-all duration-500" style={{ width: `${resumeCompletion}%` }} />
                     </div>
                   </button>
 
@@ -217,7 +217,7 @@ export default function SectionSidebar({
                               const isComplete = status[sec.id]
                               return (
                                 <button key={sec.id} type="button" onClick={() => onOpenSection(sec.id)} className="w-full text-left flex items-start gap-2 p-1.5 hover:bg-zinc-800/50 rounded-lg transition-all group/item cursor-pointer">
-                                  {isComplete ? <CheckCircle className="w-3.5 h-3.5 text-rose-500 mt-0.5 flex-shrink-0" /> : <Circle className="w-3.5 h-3.5 text-zinc-700 mt-0.5 flex-shrink-0" />}
+                                  {isComplete ? <CheckCircle className="w-3.5 h-3.5 text-[#e0314f] mt-0.5 flex-shrink-0" /> : <Circle className="w-3.5 h-3.5 text-zinc-700 mt-0.5 flex-shrink-0" />}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-center">
                                       <span className={`text-[13px] font-medium leading-none transition-colors ${isComplete ? 'text-zinc-300 group-hover/item:text-white' : 'text-zinc-500 group-hover/item:text-zinc-350'}`}>{sec.label}</span>
@@ -239,7 +239,7 @@ export default function SectionSidebar({
                                 const isComplete = status[sec.id]
                                 return (
                                   <button key={sec.id} type="button" onClick={() => onOpenSection(sec.id)} className="text-left flex items-center gap-1.5 p-1 hover:bg-zinc-800/50 rounded-md transition-all group/item cursor-pointer truncate">
-                                    {isComplete ? <CheckCircle className="w-3 h-3 text-rose-500 flex-shrink-0" /> : <Circle className="w-3 h-3 text-zinc-700 flex-shrink-0" />}
+                                    {isComplete ? <CheckCircle className="w-3 h-3 text-[#e0314f] flex-shrink-0" /> : <Circle className="w-3 h-3 text-zinc-700 flex-shrink-0" />}
                                     <span className={`text-[11px] font-medium leading-none truncate transition-colors ${isComplete ? 'text-zinc-300 group-hover/item:text-white' : 'text-zinc-500 group-hover/item:text-zinc-350'}`}>{sec.label}</span>
                                   </button>
                                 )

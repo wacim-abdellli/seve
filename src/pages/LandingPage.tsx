@@ -87,7 +87,7 @@ export default function LandingPage() {
             <div className="flex items-center">
               <span className="relative font-serif text-3xl font-black text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 S
-                <span className="absolute top-0 -right-2.5 w-2.5 h-2.5 rounded-full bg-[#e11d48]" />
+                <span className="absolute top-0 -right-2.5 w-2.5 h-2.5 rounded-full bg-[#e0314f] shadow-[0_0_8px_#e0314f]" />
               </span>
               <span className="font-serif text-3xl font-black text-white leading-none pl-2.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 eve
@@ -104,7 +104,7 @@ export default function LandingPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Client-Side & Private
             </span>
-            <Button onClick={() => navigate('/editor')} size="sm" className="font-bold">
+            <Button onClick={() => navigate('/editor')} size="sm" className="font-extrabold text-white bg-zinc-950 border border-zinc-800 hover:border-[#e0314f]/50 hover:bg-zinc-900 transition-all font-display rounded-lg">
               Build Your Resume
             </Button>
           </div>
@@ -117,14 +117,14 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Column: Headline and Call-To-Action */}
-            <div className="lg:col-span-6 text-center lg:text-left flex flex-col items-center lg:items-start">
+            <div className="lg:col-span-6 text-center lg:text-left flex flex-col items-center lg:items-start font-sans">
               <Badge variant="outline" className="mb-6 rounded-full border-border bg-zinc-900/50 px-3 py-1 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs text-muted-foreground font-medium">Smart ATS Checker — No Signup Required</span>
+                <span className="text-xs text-muted-foreground font-medium font-display">Smart ATS Checker — No Signup Required</span>
               </Badge>
               
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight max-w-xl">
-                The resume builder that <span className="bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent">gets you hired.</span>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight max-w-xl font-display">
+                The resume builder that <span className="bg-gradient-to-r from-rose-400 via-[#e0314f] to-[#901427] bg-clip-text text-transparent">gets you hired.</span>
               </h2>
               
               <p className="text-sm md:text-base text-muted-foreground font-light max-w-lg mt-6 leading-relaxed">
@@ -132,7 +132,7 @@ export default function LandingPage() {
               </p>
               
               <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <Button onClick={() => navigate('/editor')} className="font-bold gap-2 text-red-400 bg-red-950/20 border border-red-800/60 hover:bg-red-900/35 hover:text-red-300 shadow-[0_0_24px_rgba(224,49,79,0.15)] h-11 px-6 transition-all">
+                <Button onClick={() => navigate('/editor')} className="font-extrabold gap-2 text-white bg-gradient-to-r from-[#e0314f] to-[#901427] hover:opacity-95 hover:scale-[1.02] shadow-[0_0_30px_rgba(224,49,79,0.3)] border border-[#e0314f]/35 h-11 px-7 transition-all duration-300 font-display rounded-xl">
                   Build Your Resume
                   <ArrowRight size={16} />
                 </Button>
@@ -188,21 +188,21 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="bg-zinc-900/40 border border-border/80 rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-zinc-900/45 border border-border/80 rounded-xl p-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="relative w-9 h-9 flex items-center justify-center">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="18" cy="18" r="15" className="stroke-zinc-800 fill-transparent" strokeWidth="2.5" />
-                        <circle cx="18" cy="18" r="15" className="stroke-red-500 fill-transparent" strokeWidth="2.5" strokeDasharray={2 * Math.PI * 15} strokeDashoffset={2 * Math.PI * 15 * 0.15} />
+                      <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_6px_rgba(224,49,79,0.35)]">
+                        <circle cx="18" cy="18" r="15" className="stroke-zinc-800/80 fill-transparent" strokeWidth="2" />
+                        <circle cx="18" cy="18" r="15" className="stroke-[#e0314f] fill-transparent" strokeWidth="2" strokeDasharray={2 * Math.PI * 15} strokeDashoffset={2 * Math.PI * 15 * (1 - 0.85)} strokeLinecap="round" />
                       </svg>
-                      <span className="absolute text-[9px] font-black text-white">85%</span>
+                      <span className="absolute text-[9px] font-black text-white font-display">85%</span>
                     </div>
                     <div>
-                      <div className="text-[10px] font-bold text-white">Smart ATS Audit Grade</div>
-                      <div className="text-[9px] text-muted-foreground">High Interview Probability</div>
+                      <div className="text-[10px] font-bold text-white font-display">Smart ATS Audit Grade</div>
+                      <div className="text-[9px] text-muted-foreground font-mono">High Interview Probability</div>
                     </div>
                   </div>
-                  <Badge className="text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border-emerald-500/20 py-0.5 px-2">
+                  <Badge className="text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border-emerald-500/20 py-0.5 px-2 font-display">
                     READY FOR ATS
                   </Badge>
                 </div>

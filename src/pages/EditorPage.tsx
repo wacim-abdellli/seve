@@ -96,7 +96,11 @@ export default function EditorPage() {
                         <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        {isComplete ? <span className="text-[12px] text-emerald-400">● Done</span> : <span className="text-[12px] text-zinc-650">○ Edit</span>}
+                        {isComplete ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 select-none font-display">Done</span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-zinc-950/20 border border-zinc-800 border-dashed text-zinc-500 select-none font-display">Edit</span>
+                        )}
                         <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </button>
@@ -128,7 +132,11 @@ export default function EditorPage() {
                         <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        {isComplete ? <span className="text-[12px] text-emerald-400">● Done</span> : <span className="text-[12px] text-zinc-650">○ Edit</span>}
+                        {isComplete ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 select-none font-display">Done</span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-zinc-950/20 border border-zinc-800 border-dashed text-zinc-500 select-none font-display">Edit</span>
+                        )}
                         <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </button>
