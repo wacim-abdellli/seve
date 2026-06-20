@@ -10,7 +10,7 @@ import {
   Target, Sparkles, ArrowRight, Lightbulb, BarChart3,
   AlertTriangle, ShieldAlert, TrendingUp,
   ChevronDown, ChevronUp, ChevronRight, BookOpen,
-  Plus, Check, FileText, Briefcase, Copy
+  Plus, Check, FileText, Briefcase, Copy, Zap, Shield
 } from 'lucide-react'
 import { ISSUE_EXPLANATIONS, POWER_VERBS, FORMATTING_RULES } from '../utils/atsGuideData'
 
@@ -1074,21 +1074,24 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-950/80 rounded-lg border border-zinc-800/40 mb-4 shrink-0">
                           <button
                             onClick={() => setGuideTab('formula')}
-                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'formula' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${guideTab === 'formula' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           >
-                            📝 Formula
+                            <Sparkles size={11} className={guideTab === 'formula' ? 'text-indigo-400' : 'text-zinc-500'} />
+                            Formula
                           </button>
                           <button
                             onClick={() => setGuideTab('verbs')}
-                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'verbs' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${guideTab === 'verbs' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           >
-                            ⚡ Power Verbs
+                            <Zap size={11} className={guideTab === 'verbs' ? 'text-indigo-400' : 'text-zinc-500'} />
+                            Power Verbs
                           </button>
                           <button
                             onClick={() => setGuideTab('format')}
-                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'format' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${guideTab === 'format' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           >
-                            🛡️ Safety Rules
+                            <Shield size={11} className={guideTab === 'format' ? 'text-indigo-400' : 'text-zinc-500'} />
+                            Safety Rules
                           </button>
                         </div>
 
