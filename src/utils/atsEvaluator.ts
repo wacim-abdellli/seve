@@ -633,6 +633,56 @@ function extractResumeText(resume: ResumeData): string {
   return text
 }
 
+/**
+ * Count substantive content words in a resume (excludes contact info fields
+ * like name, email, phone, LinkedIn URL which inflate word count).
+ */
+function countContentWords(resume: ResumeData): number {
+  let text = ''
+  // Summary
+  text += ` ${resume.summary || ''}`
+  // Experience (job title + company + location + all bullets)
+  resume.experience.forEach(exp => {
+    text += ` ${exp.jobTitle} ${exp.company} ${exp.location}`
+    text += ` ${exp.bullets.join(' ')}`
+  })
+  // Education
+  resume.education.forEach(edu => {
+    text += ` ${edu.degree} ${edu.school} ${edu.location}`
+  })
+  // Skills
+  text += ` ${resume.skills.join(' ')}`
+  // Projects
+  if (resume.projects) {
+    resume.projects.forEach(p => {
+      text += ` ${p.name} ${p.description} ${p.technologies.join(' ')}`
+    })
+  }
+  // Certifications
+  if (resume.certifications) {
+    resume.certifications.forEach(c => { text += ` ${c.title} ${c.issuer}` })
+  }
+  // Languages
+  if (resume.languages) {
+    resume.languages.forEach(l => { text += ` ${l.name}` })
+  }
+  return text.split(/\s+/).filter(w => w.length > 0).length
+}
+
+/**
+ * Count total meaningful bullet points across all experience entries.
+ * Only counts bullets with at least 15 characters (excludes stubs like "test" or "job 1").
+ */
+function countMeaningfulBullets(resume: ResumeData): number {
+  let count = 0
+  resume.experience.forEach(exp => {
+    exp.bullets.forEach(b => {
+      if (b.trim().length >= 15) count++
+    })
+  })
+  return count
+}
+
 export function evaluateSectionAts(
   sectionId: string,
   resumeData: ResumeData,
@@ -1026,9 +1076,14 @@ export function evaluateSkillsQuality(resume: ResumeData): AtsIssue[] {
 
 function scoreFormatting(resume: ResumeData, lang: string): AtsCategoryScore {
   const issues: AtsIssue[] = []
-  let score = 20
   const max = 20
   const text = extractResumeText(resume)
+  const cw = countContentWords(resume)
+
+  // Content-proportional base: empty resume gets 0, not 20
+  // Ramp from 0 to 20 over 0–300 content words
+  let score = Math.min(max, Math.round((cw / 300) * max))
+  if (cw < 50) score = Math.min(score, 3) // almost nothing written
 
   const skillIssues = evaluateSkillsQuality(resume)
   if (skillIssues.length > 0) {
@@ -1304,7 +1359,21 @@ function scoreDateConsistency(resume: ResumeData, lang: string): AtsCategoryScor
   })
 
   if (allDates.length === 0) {
-    return { key: 'dateConsistency', label: 'Date Consistency', score: max, max, weight: DIMENSION_WEIGHTS.dateConsistency, issues }
+    // No dates at all = terrible, not "perfect consistency"
+    const hasAnyExperience = resume.experience.length > 0 || resume.education.length > 0
+    if (hasAnyExperience) {
+      issues.push({
+        id: 'dates-completely-missing',
+        type: 'critical',
+        category: 'completeness',
+        issue: lang === 'fr' ? 'Aucune date trouvée dans le CV' : 'No dates found in the resume',
+        fix: lang === 'fr' ? 'Ajoutez les dates de début et fin pour chaque expérience et formation' : 'Add start/end dates for every experience and education entry',
+        section: 'experience',
+        severityScore: 85,
+        autoFixable: false,
+      })
+    }
+    return { key: 'dateConsistency', label: 'Date Consistency', score: hasAnyExperience ? 0 : max, max, weight: DIMENSION_WEIGHTS.dateConsistency, issues }
   }
 
   const formats = allDates.map(d => detectDateFormat(d, lang as 'en' | 'fr'))
@@ -1376,7 +1445,17 @@ function scoreLength(resume: ResumeData, lang: string, fontSize: number = 10): A
   let target: string
   let score: number
 
-  if (years <= 5) {
+  // Use content words (excludes contact info) for more honest counting
+  const contentWc = countContentWords(resume)
+
+  // Critically short — this is barely a resume
+  if (contentWc < 50) {
+    score = 0
+    target = lang === 'fr' ? 'Minimum 200 mots de contenu' : 'Minimum 200 words of content'
+  } else if (contentWc < 150) {
+    score = 1
+    target = lang === 'fr' ? '1 page (~300-400 mots)' : '1 page (~300-400 words)'
+  } else if (years <= 5) {
     if (wordCount < 250) { score = 2; target = lang === 'fr' ? '1 page (~300-400 mots)' : '1 page (~300-400 words)' }
     else if (wordCount > 750) { score = 3; target = lang === 'fr' ? '1 page (max 700 mots)' : '1 page (max 700 words)' }
     else { score = 5; target = lang === 'fr' ? '1 page' : '1 page' }
@@ -1482,6 +1561,21 @@ function scoreReadability(resume: ResumeData, lang: string): AtsCategoryScore {
   const text = extractResumeText(resume)
   const words = text.split(/\s+/).filter(Boolean)
   const wordCount = words.length || 1
+
+  // Can't evaluate readability of near-empty content
+  const cw = countContentWords(resume)
+  if (cw < 80) {
+    issues.push({
+      id: 'readability-insufficient-content',
+      type: 'warning',
+      category: 'completeness',
+      issue: lang === 'fr' ? 'Contenu insuffisant pour évaluer la lisibilité' : 'Not enough content to evaluate readability',
+      fix: lang === 'fr' ? 'Ajoutez plus de contenu descriptif (min. 80 mots)' : 'Add more descriptive content (minimum 80 words)',
+      severityScore: 40,
+      autoFixable: false,
+    })
+    return { key: 'readability', label: 'Readability', score: cw < 30 ? 0 : 1, max, weight: DIMENSION_WEIGHTS.readability, issues }
+  }
   const syllables = words.reduce((sum, w) => sum + countSyllables(w), 0)
 
   // Count sentences properly: bullets are individual sentences, summary has real periods, etc.
@@ -1530,6 +1624,167 @@ function scoreReadability(resume: ResumeData, lang: string): AtsCategoryScore {
   return { key: 'readability', label: 'Readability', score, max, weight: DIMENSION_WEIGHTS.readability, issues }
 }
 
+function scoreContentDepth(resume: ResumeData, lang: string): AtsCategoryScore {
+  const issues: AtsIssue[] = []
+  const max = 15
+  let score = 0
+
+  // 1. Summary depth (0-3 points)
+  const summaryWords = (resume.summary || '').trim().split(/\s+/).filter(w => w.length > 0).length
+  if (summaryWords >= 25) {
+    score += 3
+  } else if (summaryWords >= 10) {
+    score += 1
+    issues.push({
+      id: 'depth-summary-thin',
+      type: 'warning',
+      category: 'completeness',
+      issue: lang === 'fr' ? `Résumé trop court (${summaryWords} mots)` : `Summary too thin (${summaryWords} words)`,
+      fix: lang === 'fr' ? 'Écrivez un résumé de 2-4 phrases (30+ mots) décrivant votre profil' : 'Write a 2-4 sentence summary (30+ words) describing your profile and value',
+      section: 'summary',
+      severityScore: 50,
+      autoFixable: false,
+    })
+  } else {
+    issues.push({
+      id: 'depth-summary-missing',
+      type: 'critical',
+      category: 'completeness',
+      issue: lang === 'fr' ? 'Résumé professionnel absent ou quasi-vide' : 'Professional summary is missing or nearly empty',
+      fix: lang === 'fr' ? 'Ajoutez un résumé professionnel de 2-4 phrases' : 'Add a 2-4 sentence professional summary highlighting your key strengths',
+      section: 'summary',
+      severityScore: 70,
+      autoFixable: false,
+    })
+  }
+
+  // 2. Experience bullet depth (0-5 points)
+  const totalExperiences = resume.experience.length
+  if (totalExperiences > 0) {
+    const meaningfulBullets = countMeaningfulBullets(resume)
+    const totalBullets = resume.experience.reduce((sum, e) => sum + e.bullets.length, 0)
+
+    // Expect at least 3 meaningful bullets per experience entry
+    const expectedBullets = totalExperiences * 3
+    const bulletRatio = meaningfulBullets / expectedBullets
+    const bulletScore = Math.min(5, Math.round(bulletRatio * 5))
+    score += bulletScore
+
+    if (meaningfulBullets === 0) {
+      issues.push({
+        id: 'depth-no-bullets',
+        type: 'critical',
+        category: 'completeness',
+        issue: lang === 'fr' ? 'Aucune description dans les expériences' : 'Experience entries have no meaningful bullet points',
+        fix: lang === 'fr' ? 'Ajoutez 3-5 puces décrivant vos réalisations pour chaque poste' : 'Add 3-5 bullet points describing achievements for each role',
+        section: 'experience',
+        severityScore: 90,
+        autoFixable: false,
+      })
+    } else if (bulletRatio < 0.5) {
+      issues.push({
+        id: 'depth-few-bullets',
+        type: 'warning',
+        category: 'completeness',
+        issue: lang === 'fr' ? `Trop peu de descriptions (${meaningfulBullets} puces pour ${totalExperiences} postes)` : `Too few bullet points (${meaningfulBullets} for ${totalExperiences} roles)`,
+        fix: lang === 'fr' ? 'Ajoutez au moins 3 puces par poste' : 'Add at least 3 bullet points per role',
+        section: 'experience',
+        severityScore: 65,
+        autoFixable: false,
+      })
+    }
+
+    // Check for stub bullets (very short, placeholder-like)
+    const stubBullets = resume.experience.reduce((sum, e) =>
+      sum + e.bullets.filter(b => b.trim().length > 0 && b.trim().length < 15).length, 0)
+    if (stubBullets > 0 && totalBullets > 0) {
+      issues.push({
+        id: 'depth-stub-bullets',
+        type: 'warning',
+        category: 'formatting',
+        issue: lang === 'fr' ? `${stubBullets} puce(s) trop courtes` : `${stubBullets} bullet(s) are too short (under 15 characters)`,
+        fix: lang === 'fr' ? 'Chaque puce doit faire au moins 15 caractères et décrire un résultat' : 'Each bullet should be at least 15 characters and describe a concrete achievement',
+        section: 'experience',
+        severityScore: 45,
+        autoFixable: false,
+      })
+    }
+  } else {
+    // No experience at all — already caught by completeness but add a depth issue
+    issues.push({
+      id: 'depth-no-experience',
+      type: 'critical',
+      category: 'completeness',
+      issue: lang === 'fr' ? 'Aucune expérience professionnelle' : 'No work experience entries',
+      fix: lang === 'fr' ? 'Ajoutez au moins une expérience professionnelle' : 'Add at least one work experience entry with detailed bullet points',
+      section: 'experience',
+      severityScore: 90,
+      autoFixable: false,
+    })
+  }
+
+  // 3. Skills depth (0-3 points)
+  const skillCount = resume.skills?.length || 0
+  if (skillCount >= 6) {
+    score += 3
+  } else if (skillCount >= 3) {
+    score += 1
+    issues.push({
+      id: 'depth-few-skills',
+      type: 'warning',
+      category: 'completeness',
+      issue: lang === 'fr' ? `Seulement ${skillCount} compétences listées` : `Only ${skillCount} skills listed`,
+      fix: lang === 'fr' ? 'Listez au moins 6 compétences clés' : 'List at least 6 core skills relevant to your target role',
+      section: 'skills',
+      severityScore: 50,
+      autoFixable: false,
+    })
+  } else {
+    issues.push({
+      id: 'depth-no-skills',
+      type: 'critical',
+      category: 'completeness',
+      issue: lang === 'fr' ? 'Section compétences vide ou quasi-vide' : 'Skills section is empty or nearly empty',
+      fix: lang === 'fr' ? 'Ajoutez vos compétences techniques et soft skills' : 'Add your technical skills and soft skills',
+      section: 'skills',
+      severityScore: 80,
+      autoFixable: false,
+    })
+  }
+
+  // 4. Education depth (0-2 points)
+  const eduCount = resume.education?.length || 0
+  if (eduCount > 0) {
+    const hasValidEdu = resume.education.some(e => e.degree?.trim().length > 2 && e.school?.trim().length > 2)
+    if (hasValidEdu) {
+      score += 2
+    } else {
+      score += 1
+      issues.push({
+        id: 'depth-edu-incomplete',
+        type: 'warning',
+        category: 'completeness',
+        issue: lang === 'fr' ? 'Formation incomplète (diplôme ou école manquant)' : 'Education entry is incomplete (missing degree or school name)',
+        fix: lang === 'fr' ? 'Renseignez le diplôme et l\'établissement' : 'Fill in both the degree name and school name',
+        section: 'education',
+        severityScore: 45,
+        autoFixable: false,
+      })
+    }
+  }
+
+  // 5. Overall content word check (0-2 points)
+  const cw = countContentWords(resume)
+  if (cw >= 200) {
+    score += 2
+  } else if (cw >= 100) {
+    score += 1
+  }
+  // No issue here — other checks already cover it
+
+  return { key: 'contentDepth', label: 'Content Depth', score: Math.min(score, max), max, weight: 0.15, issues }
+}
+
 /* ═══════════════════════════════════════════
    Phase 1: Weighted Total + generateAtsReport()
    ═══════════════════════════════════════════ */
@@ -1570,11 +1825,12 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   const length = scoreLength(resume, lang, 10)
   const bulletQuality = scoreBulletQuality(resume)
   const readability = scoreReadability(resume, lang)
+  const contentDepth = scoreContentDepth(resume, lang)
 
   const categories = [
     completeness, keywords, semantic, formatting, actionVerbs,
     quantifiedResults, contactInfo, dateConsistency, length,
-    bulletQuality, readability,
+    bulletQuality, readability, contentDepth,
   ]
 
   let total = calculateTotal(categories)
@@ -1584,6 +1840,16 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   total = Math.max(0, total + domainPenalty)
   if (domainPenalty <= -35) {
     total = Math.min(total, 55)
+  }
+
+  // Global minimum-content gate
+  const globalContentWords = countContentWords(resume)
+  if (globalContentWords < 30) {
+    total = Math.min(total, 10)
+  } else if (globalContentWords < 80) {
+    total = Math.min(total, 25)
+  } else if (globalContentWords < 150) {
+    total = Math.min(total, 40)
   }
 
   const { grade, gradeLabel } = getGrade(total)
@@ -1876,11 +2142,12 @@ export function generateAtsReportV2(
   const length = scoreLength(resume, lang, fontSize)
   const bulletQuality = scoreBulletQuality(resume)
   const readability = scoreReadability(resume, lang)
+  const contentDepth = scoreContentDepth(resume, lang)
 
   let categories: AtsCategoryScore[] = [
     completeness, keywords, semantic, formatting, actionVerbs,
     quantifiedResults, contactInfo, dateConsistency, length,
-    bulletQuality, readability,
+    bulletQuality, readability, contentDepth,
   ]
 
   // Apply industry-specific weight adjustments (but don't revive zero-weight dimensions)
@@ -1911,6 +2178,18 @@ export function generateAtsReportV2(
   // Without a job description, cap at 75 — a resume can't be fully evaluated without a target role
   if (!jd.trim() && total > 75) {
     total = 75
+  }
+
+  // ── Global minimum-content gate ──
+  // A resume with barely any content cannot score well regardless of individual dimensions.
+  // This prevents "perfect formatting on empty page" inflation.
+  const globalContentWords = countContentWords(resume)
+  if (globalContentWords < 30) {
+    total = Math.min(total, 10) // basically blank
+  } else if (globalContentWords < 80) {
+    total = Math.min(total, 25) // barely started
+  } else if (globalContentWords < 150) {
+    total = Math.min(total, 40) // skeleton only
   }
 
   const { grade, gradeLabel } = getGrade(total)

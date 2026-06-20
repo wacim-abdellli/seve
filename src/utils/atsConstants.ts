@@ -107,17 +107,18 @@ export const WEAK_VERB_STARTERS = /^(was|were|been|being|had|has|have|am|is|are|
 export const STRONG_VERB_SUGGESTIONS = 'Led • Built • Developed • Engineered • Optimized • Delivered • Created • Designed • Implemented • Launched • Drove • Established • Generated • Produced • Transformed • Spearheaded'
 
 export const DIMENSION_WEIGHTS: Record<string, number> = {
-  completeness: 0.15,
+  completeness: 0.12,
   keywords: 0.20,
   semantic: 0.20,
-  formatting: 0.15,
+  formatting: 0.10,
   actionVerbs: 0.08,
   quantifiedResults: 0.08,
-  contactInfo: 0.04,
-  dateConsistency: 0.05,
+  contactInfo: 0.03,
+  dateConsistency: 0.04,
   length: 0.05,
   bulletQuality: 0.00,
-  readability: 0.05,
+  readability: 0.03,
+  contentDepth: 0.15,
 }
 
 export const JD_STOPWORDS = new Set([
