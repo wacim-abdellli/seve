@@ -199,19 +199,30 @@ h1, h2, h3, h4, h5, h6 {
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
 }
 
+/* Global Input Focus Override (Carbon & Crimson Theme) */
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: rgba(224, 49, 79, 0.4) !important;
+  box-shadow: 0 0 8px rgba(224, 49, 79, 0.15) !important;
+}
+
 /* Custom Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(224, 49, 79, 0.4) #12131a;
+}
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: #12131a;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(224, 49, 79, 0.4);
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #e0314f;
 }
 
 /* Form Panel Scrollbar Styling (Rule 9) */
@@ -225,17 +236,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 .form-panel:hover {
   scrollbar-width: thin;
+  scrollbar-color: rgba(224, 49, 79, 0.4) #12131a;
 }
 .form-panel:hover::-webkit-scrollbar {
   display: block;
   width: 4px;
 }
 .form-panel:hover::-webkit-scrollbar-track {
-  background: transparent;
+  background: #12131a;
 }
 .form-panel:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(224, 49, 79, 0.4);
   border-radius: 999px;
+}
+.form-panel:hover::-webkit-scrollbar-thumb:hover {
+  background: #e0314f;
 }
 
 /* Utility Classes */

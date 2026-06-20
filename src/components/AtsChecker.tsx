@@ -48,35 +48,31 @@ function ScoreGauge({ score, gradeLabel }: { score: number; gradeLabel: string }
   const stroke = 10
   const r = (size - stroke * 2) / 2
   const c = r * 2 * Math.PI
-  const color = score >= 90 ? '#10b981' : score >= 70 ? '#6366f1' : score >= 55 ? '#f59e0b' : '#ef4444'
+  const color = score >= 90 ? '#10b981' : score >= 75 ? '#f59e0b' : '#e0314f'
   
   return (
     <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
-      {/* Gradient track background */}
-      <svg width={size} height={size} className="absolute -rotate-90" style={{ opacity: 0.15 }}>
-        <defs>
-          <linearGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="30%" stopColor="#f59e0b" />
-            <stop offset="60%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#10b981" />
-          </linearGradient>
-        </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#trackGradient)" strokeWidth={stroke} />
+      {/* Dynamic ambient backdrop blur glow */}
+      <div 
+        className="absolute rounded-full blur-3xl opacity-20 transition-all duration-700 pointer-events-none" 
+        style={{ width: size + 28, height: size + 28, background: color }} 
+      />
+      <svg width={size} height={size} className="absolute -rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={stroke} />
       </svg>
       <svg width={size} height={size} className="-rotate-90 relative z-10">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(24 24 27)" strokeWidth={stroke} />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
           strokeLinecap="round" strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c - (score / 100) * c }}
           transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
+          style={{ filter: `drop-shadow(0 0 8px ${color}50)` }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-        <span className="text-3xl font-bold text-white tabular-nums tracking-tight leading-none">{score}</span>
-        <span className="text-[9px] text-zinc-500 font-medium mt-0.5">{gradeLabel}</span>
+        <span className="text-[44px] font-black text-white tabular-nums tracking-tight leading-none font-display">{score}</span>
+        <span className="text-[8px] font-black text-zinc-500 tracking-widest uppercase mt-1 font-display">{gradeLabel}</span>
       </div>
     </div>
   )
@@ -1343,7 +1339,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                         {/* Keyword list categories */}
                         <div className="space-y-4">
-                          <h4 className="text-xs font-semibold text-zinc-400">Indexed Skills & Keywords Matrix</h4>
+                          <h4 className="text-[10px] font-black uppercase tracking-wider text-zinc-400 font-display">Indexed Skills & Keywords Matrix</h4>
                           <div className="space-y-3">
                             {skillsMatrix.map((item) => {
                               const matchPercent = item.required > 0 ? Math.round((item.matched.length / (item.matched.length + item.missing.length || 1)) * 100) : 100
@@ -1351,53 +1347,55 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={item.subject}
-                                  className="bg-zinc-900/20 border border-zinc-800/30 rounded-xl p-4 space-y-3"
+                                  className="bg-zinc-950/40 border border-zinc-800/35 rounded-2xl p-4 space-y-4 shadow-inner"
                                 >
                                   {/* Item Header */}
                                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                                     <div>
-                                      <h5 className="text-xs font-semibold text-white">{item.subject}</h5>
-                                      <p className="text-[10px] text-zinc-500 mt-0.5">
+                                      <h5 className="text-xs font-extrabold text-zinc-200 font-display tracking-wide">{item.subject}</h5>
+                                      <p className="text-[9px] text-zinc-500 mt-0.5 font-mono">
                                         Matched {item.matched.length} of {item.matched.length + item.missing.length} keywords.
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-3 w-full sm:w-auto mt-1 sm:mt-0">
-                                      <div className="w-24 sm:w-28 h-1.5 bg-zinc-950 rounded-full overflow-hidden shrink-0">
+                                      <div className="w-24 sm:w-28 h-1.5 bg-zinc-900 rounded-full overflow-hidden shrink-0">
                                         <div
                                           className={`h-full rounded-full ${matchPercent >= 80 ? 'bg-emerald-500' : matchPercent >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                                           style={{ width: `${matchPercent}%` }}
                                         />
                                       </div>
-                                      <span className={`text-[10px] font-semibold tabular-nums ${matchPercent >= 80 ? 'text-emerald-400' : matchPercent >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                                      <span className={`text-[10px] font-semibold tabular-nums font-mono ${matchPercent >= 80 ? 'text-emerald-400' : matchPercent >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
                                         {matchPercent}%
                                       </span>
                                     </div>
                                   </div>
 
                                   {/* Keywords lists */}
-                                  <div className="space-y-2.5 pt-2.5 border-t border-zinc-800/30">
+                                  <div className="space-y-3.5 pt-3.5 border-t border-zinc-800/30">
                                     {/* Matched Keywords */}
                                     {item.matched.length > 0 && (
-                                      <div className="space-y-1.5">
-                                        <p className="text-[9px] font-medium text-emerald-500/70 uppercase flex items-center gap-1.5">
-                                          <Check size={9} />
+                                      <div className="space-y-2">
+                                        <p className="text-[8px] font-black text-emerald-500/70 uppercase tracking-widest font-display flex items-center gap-1.5">
+                                          <Check size={9} strokeWidth={3} />
                                           Matched ({item.matched.length})
                                         </p>
-                                        <div className="flex flex-wrap gap-1.5">
+                                        <div className="flex flex-wrap gap-2">
                                           {item.matched.map((kw, kwIdx) => {
                                             const spec = weightKeyword(kw)
-                                            const specColor = spec === 'high' 
-                                              ? 'bg-indigo-500/15 text-indigo-300' 
-                                              : spec === 'medium'
-                                              ? 'bg-blue-500/15 text-blue-300'
-                                              : 'bg-zinc-800 text-zinc-400'
                                             return (
                                               <span
                                                 key={kwIdx}
-                                                className="text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full inline-flex items-center gap-1.5"
+                                                className="text-[9px] font-medium bg-zinc-950 border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-400 px-2.5 py-1 rounded-full inline-flex items-center gap-2 transition-all duration-300 shadow-sm shadow-emerald-950/10 hover:shadow-emerald-950/20 cursor-default"
                                               >
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                                                 {kw}
-                                                <span className={`px-1 rounded text-[7px] font-semibold uppercase ${specColor}`}>
+                                                <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wide border ${
+                                                  spec === 'high' 
+                                                    ? 'bg-rose-500/10 border-rose-500/10 text-rose-400' 
+                                                    : spec === 'medium'
+                                                    ? 'bg-amber-500/10 border-amber-500/10 text-amber-400'
+                                                    : 'bg-zinc-800 border-zinc-700 text-zinc-500'
+                                                }`}>
                                                   {spec}
                                                 </span>
                                               </span>
@@ -1409,18 +1407,19 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                                     {/* Missing Keywords */}
                                     {item.missing.length > 0 && (
-                                      <div className="space-y-1.5 pt-1">
-                                        <p className="text-[9px] font-medium text-zinc-500 uppercase flex items-center gap-1.5">
-                                          <Plus size={9} />
+                                      <div className="space-y-2">
+                                        <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest font-display flex items-center gap-1.5">
+                                          <Plus size={9} strokeWidth={3} />
                                           Missing ({item.missing.length})
                                         </p>
-                                        <div className="flex flex-wrap gap-1.5">
+                                        <div className="flex flex-wrap gap-2">
                                           {item.missing.map((kw, kwIdx) => (
                                             <span
                                               key={kwIdx}
-                                              className="text-[9px] font-medium bg-zinc-900 border border-dashed border-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full"
-                                              title="Add this skill keyword to experience or skills list"
+                                              className="text-[9px] font-medium bg-zinc-950/40 border border-dashed border-zinc-800 text-zinc-500 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 transition-all duration-300 hover:border-rose-500/30 hover:text-rose-400 hover:bg-rose-500/5 select-none cursor-help"
+                                              title="Incorporate this keyword to improve score density"
                                             >
+                                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-700 shrink-0" />
                                               {kw}
                                             </span>
                                           ))}
