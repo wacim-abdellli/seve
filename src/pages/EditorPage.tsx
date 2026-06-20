@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Eye, ChevronRight } from 'lucide-react'
+import { Eye, ChevronRight, ArrowLeft } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
 import ResumePreview from '../components/ResumePreview'
 import { getSectionStatus } from '../utils/completionHelper'
@@ -139,6 +139,17 @@ export default function EditorPage() {
 
             <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
               <div className="w-full max-w-[858px]">
+                {mobileView === 'preview' && (
+                  <div className="lg:hidden mb-3 no-print">
+                    <button 
+                      onClick={() => setMobileView('edit')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-450 hover:text-white bg-zinc-900/60 border border-zinc-800 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-800/80 transition-all"
+                    >
+                      <ArrowLeft size={13} />
+                      <span>Back to Sections</span>
+                    </button>
+                  </div>
+                )}
                 <ResumePreview
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
                   onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
