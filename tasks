@@ -1,0 +1,237 @@
+# 📐 Template Audit & Page Break Fix
+
+## The Problem (What You See)
+
+When your resume content exceeds 1 page:
+- **Page 1**: Content runs off the bottom edge
+- **Page 2**: Shows just a few leftover sections (Awards, Certifications, Publications, References) with **massive empty white space** below
+
+This happens in **ALL 10 templates** because they all share the same broken layout logic.
+
+---
+
+## Root Cause Analysis
+
+### 1. `getPageBreakSections()` is a no-op
+[layoutHelper.ts:63](file:///c:/Users/pc/Desktop/seve/src/utils/layoutHelper.ts#L63) literally says:
+```typescript
+return { page1Sections: activeSections, page2Sections: [] }
+```
+It **always** puts everything on page 1 and **never** splits to page 2. The comment says "Let the browser decide" but the browser can't decide intelligently — it just cuts wherever the page boundary falls.
+
+### 2. `resume-page` CSS has `min-height: 1123px` (A4) but `height: auto`
+[index.css:780-785](file:///c:/Users/pc/Desktop/seve/src/index.css#L780-L785): The screen CSS makes the resume page **at least** 1123px (one A4 page) tall, but allows it to grow endlessly. So when you have 1.3 pages of content, it's a single 1400px-tall div. The browser then splits it at 1123px, leaving ~300px on page 2 — and the `min-height: 1123px` on page 2 creates all that blank space.
+
+### 3. Page-break CSS exists but is incomplete
+[index.css:802-816](file:///c:/Users/pc/Desktop/seve/src/index.css#L802-L816): There ARE `break-inside: avoid` rules for `.exp-entry`, `.edu-entry`, `.proj-entry`, `.preview-section-wrapper`, and headings. BUT:
+- **Section wrapper divs** (the `mb-5` divs in templates like `<div className="mb-5">`) don't have any CSS class for page-break hints
+- The small sections (awards, certifications, languages, references) use generic divs without `break-inside: avoid`
+
+---
+
+## The Fix — 3 Changes
+
+### Change 1: Make `getPageBreakSections()` actually split content
+
+**FILE**: [layoutHelper.ts](file:///c:/Users/pc/Desktop/seve/src/utils/layoutHelper.ts)
+
+**REPLACE the entire `getPageBreakSections` function** (lines 45-64) with:
+
+```typescript
+export function getPageBreakSections(
+  resumeData: ResumeData,
+  sectionOrder: string[],
+  fontSize: number = 10
+): {
+  page1Sections: string[];
+  page2Sections: string[];
+} {
+  const hasContent = (key: string): boolean => {
+    if (key === 'summary') return !!(resumeData.summary && resumeData.summary.trim() !== '')
+    if (key === 'skills') return !!(resumeData.skills && resumeData.skills.length > 0)
+    const val = (resumeData as unknown as Record<string, unknown>)[key]
+    return Array.isArray(val) && val.length > 0
+  }
+
+  const activeSections = sectionOrder.filter(hasContent)
+  const heights = getSectionHeights(resumeData, fontSize)
+
+  // A4 usable height in px (1123px total - ~96px padding top/bottom)
+  const PAGE_1_BUDGET = USABLE_PER_PAGE
+  const page1Sections: string[] = []
+  const page2Sections: string[] = []
+  let usedHeight = 0
+
+  // Contact header always takes ~80px, accounted for in budget
+  const contactHeight = heights.contact || 80
+  usedHeight += contactHeight
+
+  for (const sec of activeSections) {
+    const sectionHeight = heights[sec] || 60
+
+    if (usedHeight + sectionHeight <= PAGE_1_BUDGET) {
+      // Fits on page 1
+      page1Sections.push(sec)
+      usedHeight += sectionHeight
+    } else {
+      // Doesn't fit — push to page 2
+      page2Sections.push(sec)
+    }
+  }
+
+  // OPTIMIZATION: If page 2 has very little content (< 20% of a page),
+  // try to pull the last section from page 1 to page 2 to balance better
+  // (prevents a mostly-empty page 2)
+  // Actually: if page2 total is tiny, keep everything on page1 and let CSS handle it.
+  const page2TotalHeight = page2Sections.reduce((sum, sec) => sum + (heights[sec] || 60), 0)
+  if (page2Sections.length > 0 && page2TotalHeight < USABLE_PER_PAGE * 0.15) {
+    // Page 2 would be < 15% full — just put everything on page 1
+    // Let the browser's natural overflow handle the tiny spillover
+    return { page1Sections: [...page1Sections, ...page2Sections], page2Sections: [] }
+  }
+
+  return { page1Sections, page2Sections }
+}
+```
+
+Also update the function signature for `getPageBreakSections` usage in [useTemplateData.ts:73](file:///c:/Users/pc/Desktop/seve/src/components/templates/useTemplateData.ts#L73):
+```typescript
+// OLD:
+const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
+// NEW:
+const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder, 10)
+```
+
+---
+
+### Change 2: Fix page 2 CSS — don't force min-height on continuation pages
+
+**FILE**: [index.css](file:///c:/Users/pc/Desktop/seve/src/index.css)
+
+**ADD** inside the `@media screen` block (after line 796, before the closing `}`):
+
+```css
+  /* Page 2+ should shrink to fit content, not force full A4 height */
+  .resume-page-continuation {
+    min-height: auto !important;
+  }
+```
+
+This ensures page 2 doesn't show massive white space when it only has a few sections.
+
+---
+
+### Change 3: Add `resume-section` class to ALL section wrappers in ALL templates
+
+Every section wrapper `<div className="mb-5">` (or `mb-4`, `mb-3`) in every template needs a CSS class so we can target it for page-break avoidance.
+
+**FILE**: [index.css](file:///c:/Users/pc/Desktop/seve/src/index.css)
+
+**ADD** to the page break rules at the bottom (after line 810):
+
+```css
+/* Keep small sections (awards, certifications, languages, etc.) together */
+.resume-section {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+/* But allow large sections (experience, projects) to break between entries */
+.resume-section-breakable {
+  /* Allow breaks between entries, but not mid-entry */
+}
+.resume-section-breakable .exp-entry,
+.resume-section-breakable .edu-entry,
+.resume-section-breakable .proj-entry {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+```
+
+Then in **every template**, update section wrappers:
+
+**For SMALL sections** (languages, skills, awards, certifications, interests, publications, references, volunteer) — change `<div className="mb-5">` to `<div className="mb-5 resume-section">`.
+
+**For LARGE sections** (experience, projects, education) — change `<div className="mb-5">` to `<div className="mb-5 resume-section-breakable">`.
+
+Here's the exact mapping for ALL 10 templates:
+
+| Template | Sections using `resume-section` (keep together) | Sections using `resume-section-breakable` (can break between entries) |
+|---|---|---|
+| ClassicTemplate | summary, skills, languages, awards, certifications, interests, publications, references, volunteer | experience, education, projects |
+| ModernTemplate | same pattern | same pattern |
+| ExecutiveTemplate | same pattern | same pattern |
+| MinimalistTemplate | same pattern | same pattern |
+| CreativeTemplate | same pattern | same pattern |
+| CompactTemplate | same pattern | same pattern |
+| ProfessionalTemplate | same pattern | same pattern |
+| TechnicalTemplate | same pattern | same pattern |
+| AcademicTemplate | same pattern | same pattern |
+| CleanTemplate | same pattern | same pattern |
+
+**Example for ClassicTemplate** (apply same logic to ALL 10):
+
+```diff
+ // summary
+-    <div className="mb-5">
++    <div className="mb-5 resume-section">
+
+ // experience
+-    <div className="mb-5">
++    <div className="mb-5 resume-section-breakable">
+
+ // education
+-    <div className="mb-5">
++    <div className="mb-5 resume-section-breakable">
+
+ // skills
+-    <div className="mb-5">
++    <div className="mb-5 resume-section">
+
+ // projects
+-    <div className="mb-5">
++    <div className="mb-5 resume-section-breakable">
+
+ // languages, awards, certifications, interests, publications, references, volunteer
+-    <div className="mb-5">
++    <div className="mb-5 resume-section">
+```
+
+---
+
+## Additional Template Issues Found
+
+### Issue: Height estimation is imprecise
+The `getSectionHeights()` function estimates heights using character count. This is inherently inaccurate because:
+- Different fonts render different widths
+- Padding/margins vary between templates
+- Multi-column templates (Executive, Creative) have different line widths
+
+**Mitigation**: The 15% threshold in Change 1 handles edge cases — if page 2 would be nearly empty, we keep everything on page 1 and let natural overflow handle it.
+
+### Issue: Two-column templates (Executive, Creative) need special handling
+These templates have a left sidebar + right main column. The page split should respect the column layout. Currently `page2Left` and `page2Right` variables exist in those templates but since `page2Sections` is always empty, they never work.
+
+After Change 1, they WILL work because `page2Sections` will actually contain sections. Verify that `page2Left` and `page2Right` render correctly.
+
+---
+
+## Verification Plan
+
+1. **Build**: `npm run build` — zero errors
+2. **Test Case 1 — Just over 1 page**: Fill a resume with enough content to barely overflow page 1. Page 2 should show the remaining sections without massive blank space.
+3. **Test Case 2 — Way over 1 page**: Fill a resume with lots of experience entries. Sections should split cleanly — experience entries should NOT be cut in the middle.
+4. **Test Case 3 — Exactly 1 page**: Fill a resume that fits exactly on 1 page. No page 2 should appear.
+5. **Test all 10 templates** with the same resume data. Each should handle the page break gracefully.
+6. **Print/PDF test**: Use Ctrl+P → Save as PDF. The PDF should have proper page breaks with no cut sections.
+
+---
+
+## Files Modified Summary
+
+| File | What Changes |
+|---|---|
+| [layoutHelper.ts](file:///c:/Users/pc/Desktop/seve/src/utils/layoutHelper.ts) | Replace `getPageBreakSections()` to actually split sections |
+| [useTemplateData.ts](file:///c:/Users/pc/Desktop/seve/src/components/templates/useTemplateData.ts) | Pass fontSize param |
+| [index.css](file:///c:/Users/pc/Desktop/seve/src/index.css) | Add `.resume-page-continuation` min-height fix + `.resume-section` page-break rules |
+| All 10 template files | Add `resume-section` / `resume-section-breakable` classes to section wrapper divs |

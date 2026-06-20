@@ -109,11 +109,12 @@ export default function ResumePreview({
     const handleResize = () => {
       if (!containerRef.current) return
       const containerWidth = containerRef.current.clientWidth
-      const padding = 112 // 56px margin buffer on each side
+      const isMobile = window.innerWidth < 640
+      const padding = isMobile ? 16 : 112 // 8px margin buffer on mobile, 56px on desktop
       const availableWidth = containerWidth - padding
       if (availableWidth > 0 && availableWidth < 794) {
         const computedZoom = Number((availableWidth / 794).toFixed(2))
-        setZoom(Math.max(0.4, Math.min(1, computedZoom)))
+        setZoom(Math.max(0.25, Math.min(1, computedZoom)))
       } else {
         setZoom(1)
       }
@@ -571,7 +572,7 @@ export default function ResumePreview({
       {/* Aspect-ratio restricted A4 paper container */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto bg-[#0d0d0f] bg-[radial-gradient(ellipse_at_top,_#1a1a2e_0%,_transparent_60%)] flex items-start justify-center p-8 print-container relative rounded-b-xl border border-zinc-800/80 shadow-inner"
+        className="flex-1 overflow-auto bg-[#0d0d0f] bg-[radial-gradient(ellipse_at_top,_#1a1a2e_0%,_transparent_60%)] flex items-start justify-center p-4 md:p-8 print-container relative rounded-b-xl border border-zinc-800/80 shadow-inner"
       >
         {/* Shadow wrapper for depth */}
         <div className="relative">

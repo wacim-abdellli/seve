@@ -44,7 +44,8 @@ export function estimatePageCount(resumeData: ResumeData, sectionOrder: string[]
 
 export function getPageBreakSections(
   resumeData: ResumeData,
-  sectionOrder: string[]
+  sectionOrder: string[],
+  _fontSize: number = 10
 ): {
   page1Sections: string[];
   page2Sections: string[];
@@ -58,7 +59,7 @@ export function getPageBreakSections(
 
   const activeSections = sectionOrder.filter(hasContent)
 
-  // CSS @media print handles page breaking via page-break-inside: avoid on section entries.
-  // We do NOT split sections in JS — estimates are unreliable. Let the browser decide.
+  // ALL content goes in a single page container.
+  // CSS break-inside:avoid + html2pdf handle pagination.
   return { page1Sections: activeSections, page2Sections: [] }
 }

@@ -59,14 +59,14 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
 
   const sectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? wrap('summary', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2('Professional Summary')}
         <p className="text-[9.5px] leading-relaxed text-slate-700 text-justify font-serif">{summary}</p>
       </div>
     ), 'summary') : null,
 
     experience: experience.length > 0 ? wrap('experience', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {h2('Experience')}
         <div className="space-y-3">
           {experience.map((exp) => (
@@ -88,7 +88,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'experience') : null,
 
     education: education.length > 0 ? wrap('education', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {h2('Education')}
         <div className="space-y-3">
           {education.map((edu) => (
@@ -109,7 +109,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'education') : null,
 
     projects: projects.length > 0 ? wrap('projects', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {h2('Projects')}
         <div className="space-y-2">
           {projects.map((proj) => (
@@ -126,7 +126,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'projects') : null,
 
     languages: languages.length > 0 ? wrap('languages', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('Languages')}
         <p className="text-[9.5px] leading-relaxed text-slate-700" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' } as React.CSSProperties}>
           {languages.map((lang, idx) => (
@@ -137,14 +137,14 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'languages') : null,
 
     skills: skills.length > 0 ? wrap('skills', (
-      <div className="mb-2">
+      <div className="mb-2 resume-section">
         {h2('Skills')}
         <ResumeSkillsList skills={skills} separator=" , " className="text-[9.5px] leading-relaxed text-slate-700" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' } as React.CSSProperties} />
       </div>
     ), 'skills') : null,
 
     awards: awards.length > 0 ? wrap('awards', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('Awards')}
         <div className="space-y-2">
           {awards.map((a) => (
@@ -162,7 +162,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'awards') : null,
 
     certifications: certifications.length > 0 ? wrap('certifications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('Certifications')}
         <div className="space-y-2">
           {certifications.map((c) => (
@@ -180,7 +180,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'certifications') : null,
 
     interests: interests.length > 0 ? wrap('interests', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('Interests')}
         <p className="text-[9.5px] leading-relaxed text-slate-700">
           {interests.map((i, idx) => (
@@ -191,7 +191,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'interests') : null,
 
     publications: publications.length > 0 ? wrap('publications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('Publications')}
         <div className="space-y-2">
           {publications.map((p) => (
@@ -209,7 +209,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'publications') : null,
 
     references: references.length > 0 ? wrap('references', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('References')}
         <div className="space-y-2">
           {references.map((r) => (
@@ -227,7 +227,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
     ), 'references') : null,
 
     volunteer: volunteer.length > 0 ? wrap('volunteer', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2Late('Volunteer')}
         <div className="space-y-2">
           {volunteer.map((v) => (
@@ -274,17 +274,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
         })}
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation font-sans text-[10px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
-            {sectionData.page2Sections.map((secId) => {
-              const component = sectionsMap[secId]
-              return component ? <div key={secId}>{component}</div> : null
-            })}
-          </div>
-        </>
-      )}
+
     </div>
   )
 })

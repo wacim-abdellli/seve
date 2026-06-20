@@ -60,14 +60,14 @@ const ModernTemplate = memo(function ModernTemplate({
 
   const sectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? renderPreviewWrapper('summary', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.summary} color={themeColor} />
         <p className="text-[10px] leading-relaxed text-justify text-slate-750">{summary}</p>
       </div>
     ), 'summary') : null,
 
     experience: experience.length > 0 ? renderPreviewWrapper('experience', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         <SectionHeading label={SECTION_LABELS.experience} color={themeColor} />
         <div className="space-y-4">
           {experience.map((exp) => (
@@ -89,7 +89,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'experience') : null,
 
     education: education.length > 0 ? renderPreviewWrapper('education', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         <SectionHeading label={SECTION_LABELS.education} color={themeColor} />
         <div className="space-y-4">
           {education.map((edu) => (
@@ -110,14 +110,14 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'education') : null,
 
     skills: skills.length > 0 ? renderPreviewWrapper('skills', (
-      <div className="mb-2">
+      <div className="mb-2 resume-section">
         <SectionHeading label={SECTION_LABELS.skills} color={themeColor} />
         <ResumeSkillsList skills={skills} className="text-[10px] leading-relaxed text-slate-700" />
       </div>
     ), 'skills') : null,
 
     projects: projects.length > 0 ? renderPreviewWrapper('projects', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         <SectionHeading label={SECTION_LABELS.projects} color={themeColor} />
         <div className="space-y-3.5">
           {projects.map((proj) => (
@@ -136,7 +136,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'projects') : null,
 
     languages: languages.length > 0 ? renderPreviewWrapper('languages', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.languages} color={themeColor} />
         <p className="text-[10px] leading-relaxed text-slate-700">
           {languages.map((lang, idx) => (
@@ -147,7 +147,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'languages') : null,
 
     awards: awards.length > 0 ? renderPreviewWrapper('awards', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.awards} color={themeColor} />
         <div className="space-y-3">
           {awards.map((a) => (
@@ -165,7 +165,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'awards') : null,
 
     certifications: certifications.length > 0 ? renderPreviewWrapper('certifications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.certifications} color={themeColor} />
         <div className="space-y-3">
           {certifications.map((c) => (
@@ -183,7 +183,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'certifications') : null,
 
     interests: interests.length > 0 ? renderPreviewWrapper('interests', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.interests} color={themeColor} />
         <p className="text-[10px] leading-relaxed text-slate-700">
           {interests.map((i, idx) => (
@@ -194,7 +194,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'interests') : null,
 
     publications: publications.length > 0 ? renderPreviewWrapper('publications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.publications} color={themeColor} />
         <div className="space-y-3">
           {publications.map((p) => (
@@ -212,7 +212,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'publications') : null,
 
     references: references.length > 0 ? renderPreviewWrapper('references', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.references} color={themeColor} />
         <div className="space-y-3">
           {references.map((r) => (
@@ -230,7 +230,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ), 'references') : null,
 
     volunteer: volunteer.length > 0 ? renderPreviewWrapper('volunteer', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.volunteer} color={themeColor} />
         <div className="space-y-3">
           {volunteer.map((v) => (
@@ -279,17 +279,7 @@ const ModernTemplate = memo(function ModernTemplate({
         })}
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation font-sans text-[10px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-5" style={{ paddingTop: 48, paddingBottom: 48 }}>
-            {sectionData.page2Sections.map((secId) => {
-              const component = sectionsMap[secId]
-              return component ? <div key={secId}>{component}</div> : null
-            })}
-          </div>
-        </>
-      )}
+
     </div>
   )
 })

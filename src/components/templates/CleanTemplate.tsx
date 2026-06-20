@@ -54,14 +54,14 @@ const CleanTemplate = memo(function CleanTemplate({
 
   const sectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? wrap('summary', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.summary)}
         <p className="text-[10px] leading-relaxed text-justify text-slate-600 font-light">{summary}</p>
       </div>
     ), 'summary') : null,
 
     experience: experience.length > 0 ? wrap('experience', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section-breakable">
         {h2(SECTION_LABELS.experience)}
         <div className="space-y-4">
           {experience.map((exp) => (
@@ -79,7 +79,7 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'experience') : null,
 
     education: education.length > 0 ? wrap('education', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section-breakable">
         {h2(SECTION_LABELS.education)}
         <div className="space-y-2">
           {education.map((edu) => (
@@ -96,14 +96,14 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'education') : null,
 
     skills: skills.length > 0 ? wrap('skills', (
-      <div className="mb-4">
+      <div className="mb-4 resume-section">
         {h2(SECTION_LABELS.skills)}
         <ResumeSkillsList skills={skills} separator="  ·  " className="text-[10px] text-slate-600 font-light leading-relaxed" />
       </div>
     ), 'skills') : null,
 
     projects: projects.length > 0 ? wrap('projects', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section-breakable">
         {h2(SECTION_LABELS.projects)}
         <div className="space-y-3">
           {projects.map((proj) => (
@@ -120,14 +120,14 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'projects') : null,
 
     languages: languages.length > 0 ? wrap('languages', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.languages)}
         <p className="text-[10px] text-slate-600 font-light">{languages.map(l => `${l.name} (${l.proficiency})`).join(' · ')}</p>
       </div>
     ), 'languages') : null,
 
     awards: awards.length > 0 ? wrap('awards', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.awards)}
         <div className="space-y-1.5">
           {awards.map((a) => (
@@ -141,7 +141,7 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'awards') : null,
 
     certifications: certifications.length > 0 ? wrap('certifications', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.certifications)}
         <div className="space-y-1.5">
           {certifications.map((c) => (
@@ -155,14 +155,14 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'certifications') : null,
 
     interests: interests.length > 0 ? wrap('interests', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.interests)}
         <p className="text-[10px] text-slate-600 font-light">{interests.map(i => i.name).join(', ')}</p>
       </div>
     ), 'interests') : null,
 
     publications: publications.length > 0 ? wrap('publications', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.publications)}
         <div className="space-y-1.5">
           {publications.map((p) => (
@@ -173,7 +173,7 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'publications') : null,
 
     references: references.length > 0 ? wrap('references', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.references)}
         <div className="space-y-1.5">
           {references.map((r) => (
@@ -184,7 +184,7 @@ const CleanTemplate = memo(function CleanTemplate({
     ), 'references') : null,
 
     volunteer: volunteer.length > 0 ? wrap('volunteer', (
-      <div className="mb-6">
+      <div className="mb-6 resume-section">
         {h2(SECTION_LABELS.volunteer)}
         <div className="space-y-1.5">
           {volunteer.map((v) => (
@@ -220,17 +220,7 @@ const CleanTemplate = memo(function CleanTemplate({
         })}
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation text-[10px] leading-relaxed text-slate-600 p-12 select-text max-w-full space-y-5" style={{ paddingTop: 56, paddingBottom: 56, fontFamily: "'Inter', system-ui, sans-serif" }}>
-            {sectionData.page2Sections.map((secId) => {
-              const component = sectionsMap[secId]
-              return component ? <div key={secId}>{component}</div> : null
-            })}
-          </div>
-        </>
-      )}
+
     </div>
   )
 })

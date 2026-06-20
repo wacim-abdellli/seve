@@ -54,14 +54,14 @@ const CompactTemplate = memo(function CompactTemplate({
 
   const sectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? wrap('summary', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.summary)}
         <p className="text-[8.5px] leading-relaxed text-slate-700">{summary}</p>
       </div>
     ), 'summary') : null,
 
     experience: experience.length > 0 ? wrap('experience', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section-breakable">
         {h2(SECTION_LABELS.experience)}
         <div className="space-y-2">
           {experience.map((exp) => (
@@ -78,7 +78,7 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'experience') : null,
 
     education: education.length > 0 ? wrap('education', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section-breakable">
         {h2(SECTION_LABELS.education)}
         <div className="space-y-1">
           {education.map((edu) => (
@@ -92,14 +92,14 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'education') : null,
 
     skills: skills.length > 0 ? wrap('skills', (
-      <div className="mb-2">
+      <div className="mb-2 resume-section">
         {h2(SECTION_LABELS.skills)}
         <ResumeSkillsList skills={skills} separator=" | " className="text-[8.5px] text-slate-700" />
       </div>
     ), 'skills') : null,
 
     projects: projects.length > 0 ? wrap('projects', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section-breakable">
         {h2(SECTION_LABELS.projects)}
         <div className="space-y-1.5">
           {projects.map((proj) => (
@@ -116,7 +116,7 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'projects') : null,
 
     languages: languages.length > 0 ? wrap('languages', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.languages)}
         <p className="text-[8.5px] text-slate-700">
           {languages.map((lang, idx) => (
@@ -127,7 +127,7 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'languages') : null,
 
     awards: awards.length > 0 ? wrap('awards', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.awards)}
         {awards.map((a) => (
           <div key={a.id} className="text-[8.5px] text-slate-700">{a.title}{a.awarder ? ` — ${a.awarder}` : ''}</div>
@@ -136,7 +136,7 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'awards') : null,
 
     certifications: certifications.length > 0 ? wrap('certifications', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.certifications)}
         {certifications.map((c) => (
           <div key={c.id} className="text-[8.5px] text-slate-700">{c.title}{c.issuer ? ` — ${c.issuer}` : ''}</div>
@@ -145,14 +145,14 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'certifications') : null,
 
     interests: interests.length > 0 ? wrap('interests', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.interests)}
         <p className="text-[8.5px] text-slate-700">{interests.map(i => i.name).join(', ')}</p>
       </div>
     ), 'interests') : null,
 
     publications: publications.length > 0 ? wrap('publications', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.publications)}
         {publications.map((p) => (
           <div key={p.id} className="text-[8.5px] text-slate-700">{p.title}{p.publisher ? ` — ${p.publisher}` : ''}</div>
@@ -161,7 +161,7 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'publications') : null,
 
     volunteer: volunteer.length > 0 ? wrap('volunteer', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.volunteer)}
         {volunteer.map((v) => (
           <div key={v.id} className="text-[8.5px] text-slate-700">{v.organization}{v.location ? ` — ${v.location}` : ''}</div>
@@ -170,7 +170,7 @@ const CompactTemplate = memo(function CompactTemplate({
     ), 'volunteer') : null,
 
     references: references.length > 0 ? wrap('references', (
-      <div className="mb-3">
+      <div className="mb-3 resume-section">
         {h2(SECTION_LABELS.references)}
         {references.map((r) => (
           <div key={r.id} className="text-[8.5px] text-slate-700">{r.name}{r.position ? ` — ${r.position}` : ''}</div>
@@ -204,17 +204,7 @@ const CompactTemplate = memo(function CompactTemplate({
         })}
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation text-[8.5px] leading-normal text-slate-800 p-8 select-text max-w-full" style={{ paddingTop: 36, paddingBottom: 36, fontFamily: 'system-ui, sans-serif' }}>
-            {sectionData.page2Sections.map((secId) => {
-              const component = sectionsMap[secId]
-              return component ? <div key={secId}>{component}</div> : null
-            })}
-          </div>
-        </>
-      )}
+
     </div>
   )
 })

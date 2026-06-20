@@ -70,7 +70,7 @@ export function useTemplateData(
     ats[section] = { rating: result.rating, feedback: result.feedback }
   }
 
-  const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
+  const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder, 10)
 
   const sectionData: TemplateSectionData = {
     atsRating: '',

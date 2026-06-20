@@ -54,14 +54,14 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
 
   const sectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? wrap('summary', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.summary)}
         <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{summary}</p>
       </div>
     ), 'summary') : null,
 
     skills: skills.length > 0 ? wrap('skills', (
-      <div className="mb-4">
+      <div className="mb-4 resume-section">
         {h2(SECTION_LABELS.skills)}
         <div className="flex flex-wrap gap-x-3 gap-y-1">
           {skills.map((sk) => (
@@ -72,7 +72,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'skills') : null,
 
     experience: experience.length > 0 ? wrap('experience', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {h2(SECTION_LABELS.experience)}
         <div className="space-y-3">
           {experience.map((exp) => (
@@ -90,7 +90,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'experience') : null,
 
     projects: projects.length > 0 ? wrap('projects', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {h2(SECTION_LABELS.projects)}
         <div className="space-y-2">
           {projects.map((proj) => (
@@ -107,7 +107,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'projects') : null,
 
     education: education.length > 0 ? wrap('education', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {h2(SECTION_LABELS.education)}
         <div className="space-y-1.5">
           {education.map((edu) => (
@@ -124,14 +124,14 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'education') : null,
 
     languages: languages.length > 0 ? wrap('languages', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.languages)}
         <p className="text-[9.5px] text-slate-700">{languages.map(l => `${l.name} (${l.proficiency})`).join(' · ')}</p>
       </div>
     ), 'languages') : null,
 
     awards: awards.length > 0 ? wrap('awards', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.awards)}
         <div className="space-y-1">
           {awards.map((a) => (
@@ -142,7 +142,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'awards') : null,
 
     certifications: certifications.length > 0 ? wrap('certifications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.certifications)}
         <div className="space-y-1">
           {certifications.map((c) => (
@@ -153,14 +153,14 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'certifications') : null,
 
     interests: interests.length > 0 ? wrap('interests', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.interests)}
         <p className="text-[9.5px] text-slate-700">{interests.map(i => i.name).join(', ')}</p>
       </div>
     ), 'interests') : null,
 
     publications: publications.length > 0 ? wrap('publications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.publications)}
         <div className="space-y-1">
           {publications.map((p) => (
@@ -171,7 +171,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'publications') : null,
 
     references: references.length > 0 ? wrap('references', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.references)}
         <div className="space-y-1">
           {references.map((r) => (
@@ -182,7 +182,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     ), 'references') : null,
 
     volunteer: volunteer.length > 0 ? wrap('volunteer', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {h2(SECTION_LABELS.volunteer)}
         <div className="space-y-1">
           {volunteer.map((v) => (
@@ -222,17 +222,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
         })}
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation text-[9.5px] leading-normal text-slate-800 p-10 select-text max-w-full space-y-4" style={{ paddingTop: 48, paddingBottom: 48, fontFamily: "'SF Mono', 'Cascadia Code', 'Consolas', monospace" }}>
-            {sectionData.page2Sections.map((secId) => {
-              const component = sectionsMap[secId]
-              return component ? <div key={secId}>{component}</div> : null
-            })}
-          </div>
-        </>
-      )}
+
     </div>
   )
 })

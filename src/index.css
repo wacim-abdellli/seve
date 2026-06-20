@@ -399,6 +399,17 @@ h1, h2, h3, h4, h5, h6 {
     color-adjust: exact !important;
   }
 
+  /* ── 12. Continuation pages: no forced height in print ─────────── */
+  .resume-page-continuation {
+    min-height: auto !important;
+    height: auto !important;
+  }
+  .resume-page-continuation .flex,
+  .resume-page-continuation .grid {
+    min-height: auto !important;
+    height: auto !important;
+  }
+
 }
 
 /* Particle Burst for Score Milestones */
@@ -794,6 +805,7 @@ h1, h2, h3, h4, h5, h6 {
   .resume-page + .resume-page {
     margin-top: 32px !important;
   }
+
 }
 
 /* -----------------------------------------------------
@@ -813,6 +825,18 @@ h1, h2, h3, h4, h5, h6,
 .section-heading {
   page-break-after: avoid !important;
   break-after: avoid !important;
+}
+
+.resume-section {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+.resume-section-breakable .exp-entry,
+.resume-section-breakable .edu-entry,
+.resume-section-breakable .proj-entry {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 
 

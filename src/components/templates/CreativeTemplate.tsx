@@ -71,7 +71,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
 
   const leftSectionsMap: Record<string, React.ReactNode> = {
     skills: skills.length > 0 ? wrap('skills', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {leftH2(SECTION_LABELS.skills)}
         <div className="flex flex-wrap gap-1 mt-2">
           {skills.map((sk) => (
@@ -84,7 +84,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     )) : null,
 
     languages: languages.length > 0 ? wrap('languages', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {leftH2(SECTION_LABELS.languages)}
         <p className="text-[9px] text-slate-700 mt-2 leading-relaxed">
           {languages.map((l, idx) => (
@@ -95,7 +95,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     )) : null,
 
     interests: interests.length > 0 ? wrap('interests', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {leftH2(SECTION_LABELS.interests)}
         <p className="text-[9px] text-slate-700 mt-2 leading-relaxed">
           {interests.map((i, idx) => (
@@ -106,7 +106,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     )) : null,
 
     certifications: certifications.length > 0 ? wrap('certifications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {leftH2(SECTION_LABELS.certifications)}
         <div className="mt-2 space-y-2">
           {certifications.map((c) => (
@@ -122,14 +122,14 @@ const CreativeTemplate = memo(function CreativeTemplate({
 
   const sectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? wrap('summary', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.summary)}
         <p className="text-[9.5px] leading-relaxed text-justify text-slate-700">{summary}</p>
       </div>
     ), 'summary') : null,
 
     experience: experience.length > 0 ? wrap('experience', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {rightH2(SECTION_LABELS.experience)}
         <div className="space-y-3">
           {experience.map((exp) => (
@@ -151,7 +151,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     ), 'experience') : null,
 
     education: education.length > 0 ? wrap('education', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {rightH2(SECTION_LABELS.education)}
         <div className="space-y-2">
           {education.map((edu) => (
@@ -172,7 +172,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     ), 'education') : null,
 
     projects: projects.length > 0 ? wrap('projects', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {rightH2(SECTION_LABELS.projects)}
         <div className="space-y-2">
           {projects.map((proj) => (
@@ -189,7 +189,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     ), 'projects') : null,
 
     awards: awards.length > 0 ? wrap('awards', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.awards)}
         <div className="space-y-2">
           {awards.map((a) => (
@@ -207,7 +207,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     ), 'awards') : null,
 
     publications: publications.length > 0 ? wrap('publications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.publications)}
         <div className="space-y-2">
           {publications.map((p) => (
@@ -225,7 +225,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     ), 'publications') : null,
 
     references: references.length > 0 ? wrap('references', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.references)}
         <div className="space-y-2">
           {references.map((r) => (
@@ -240,7 +240,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
     ), 'references') : null,
 
     volunteer: volunteer.length > 0 ? wrap('volunteer', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.volunteer)}
         <div className="space-y-2">
           {volunteer.map((v) => (
@@ -257,8 +257,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
 
   const page1Left = leftSectionKeys.filter(k => sectionData.page1Sections.includes(k))
   const page1Right = sectionData.page1Sections.filter(k => !leftSectionKeys.includes(k))
-  const page2Left = leftSectionKeys.filter(k => sectionData.page2Sections.includes(k))
-  const page2Right = sectionData.page2Sections.filter(k => !leftSectionKeys.includes(k))
+
 
   const renderLeft = (keys: string[]) => keys.map(secId => (
     <div key={secId}>{leftSectionsMap[secId]}</div>
@@ -302,19 +301,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
         </div>
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="grid grid-cols-[220px_1fr] resume-page resume-page-continuation font-sans text-[9.5px] leading-normal text-slate-800 select-text max-w-full" style={{ padding: 0 }}>
-            <div className="min-h-full p-6 pt-8" style={{ backgroundColor: '#f2f2f2', borderRightWidth: 1, borderRightColor: '#e2e8f0', borderRightStyle: 'solid' }}>
-              {renderLeft(page2Left)}
-            </div>
-            <div className="flex-1 p-10 space-y-5">
-              {renderRight(page2Right)}
-            </div>
-          </div>
-        </>
-      )}
+
     </div>
   )
 })

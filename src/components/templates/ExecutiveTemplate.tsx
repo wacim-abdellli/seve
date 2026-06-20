@@ -63,11 +63,11 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
 
   const leftSectionsMap: Record<string, React.ReactNode> = {
     education: education.length > 0 ? wrap('education', (
-      <div className="mb-4">
+      <div className="mb-4 resume-section-breakable">
         {leftH2(SECTION_LABELS.education)}
         <div className="mt-2 space-y-2">
           {education.map((edu) => (
-            <div key={edu.id}>
+            <div key={edu.id} className="edu-entry">
               <div className="font-bold text-slate-900 text-[9.5px]">{edu.school}</div>
               <div className="text-[8.5px] text-slate-700 italic">{edu.degree}</div>
               <div className="text-[8px] font-semibold" style={{ color: themeColor }}>{formatDate(edu.graduationDate)}</div>
@@ -78,14 +78,14 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     )) : null,
 
     skills: skills.length > 0 ? wrap('skills', (
-      <div className="mb-4">
+      <div className="mb-4 resume-section">
         {leftH2(SECTION_LABELS.skills)}
         <ResumeSkillsList skills={skills} className="text-[9px] text-slate-700 mt-1 leading-relaxed" />
       </div>
     )) : null,
 
     languages: languages.length > 0 ? wrap('languages', (
-      <div className="mb-4">
+      <div className="mb-4 resume-section">
         {leftH2(SECTION_LABELS.languages)}
         <p className="text-[9px] text-slate-700 mt-1">
           {languages.map((lang, idx) => (
@@ -96,7 +96,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     )) : null,
 
     interests: interests.length > 0 ? wrap('interests', (
-      <div className="mb-4">
+      <div className="mb-4 resume-section">
         {leftH2(SECTION_LABELS.interests)}
         <p className="text-[9px] text-slate-700 mt-1">
           {interests.map((i, idx) => (
@@ -109,14 +109,14 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
 
   const rightSectionsMap: Record<string, React.ReactNode> = {
     summary: summary ? wrap('summary', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.summary)}
         <p className="text-[10px] leading-relaxed text-justify text-slate-700">{summary}</p>
       </div>
     ), 'summary') : null,
 
     experience: experience.length > 0 ? wrap('experience', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {rightH2(SECTION_LABELS.experience)}
         <div className="space-y-3">
           {experience.map((exp) => (
@@ -138,7 +138,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     ), 'experience') : null,
 
     projects: projects.length > 0 ? wrap('projects', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section-breakable">
         {rightH2(SECTION_LABELS.projects)}
         <div className="space-y-2">
           {projects.map((proj) => (
@@ -155,7 +155,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     ), 'projects') : null,
 
     awards: awards.length > 0 ? wrap('awards', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.awards)}
         <div className="space-y-2">
           {awards.map((a) => (
@@ -173,7 +173,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     ), 'awards') : null,
 
     certifications: certifications.length > 0 ? wrap('certifications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.certifications)}
         <div className="space-y-2">
           {certifications.map((c) => (
@@ -191,7 +191,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     ), 'certifications') : null,
 
     publications: publications.length > 0 ? wrap('publications', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.publications)}
         <div className="space-y-2">
           {publications.map((p) => (
@@ -209,7 +209,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     ), 'publications') : null,
 
     references: references.length > 0 ? wrap('references', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.references)}
         <div className="space-y-2">
           {references.map((r) => (
@@ -224,7 +224,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     ), 'references') : null,
 
     volunteer: volunteer.length > 0 ? wrap('volunteer', (
-      <div className="mb-5">
+      <div className="mb-5 resume-section">
         {rightH2(SECTION_LABELS.volunteer)}
         <div className="space-y-2">
           {volunteer.map((v) => (
@@ -241,8 +241,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
 
   const page1Left = leftSectionKeys.filter(k => sectionData.page1Sections.includes(k))
   const page1Right = sectionData.page1Sections.filter(k => !leftSectionKeys.includes(k))
-  const page2Left = leftSectionKeys.filter(k => sectionData.page2Sections.includes(k))
-  const page2Right = sectionData.page2Sections.filter(k => !leftSectionKeys.includes(k))
+
 
   const renderLeft = (keys: string[]) => keys.map(secId => (
     <div key={secId}>{leftSectionsMap[secId]}</div>
@@ -284,21 +283,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
         </div>
       </div>
 
-      {sectionData.page2Sections.length > 0 && (
-        <>
-          <div className="resume-page-break" />
-          <div className="resume-page resume-page-continuation font-sans text-[10px] leading-normal text-slate-800 select-text max-w-full" style={{ padding: 0 }}>
-            <div className="flex min-h-[1123px]">
-              <div className="w-[220px] shrink-0 p-5 pt-8" style={{ backgroundColor: '#f2f2f2', borderRight: '1px solid #e2e8f0' }}>
-                {renderLeft(page2Left)}
-              </div>
-              <div className="flex-1 p-5 pt-8 min-w-0">
-                {renderRight(page2Right)}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+
     </div>
   )
 })
