@@ -93,8 +93,8 @@ export default function LandingPage() {
                 eve
               </span>
             </div>
-            <div className="h-6 w-px bg-border mx-1" />
-            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5">
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5 hidden sm:inline">
               Resume Builder
             </span>
           </div>

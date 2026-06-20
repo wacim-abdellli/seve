@@ -370,7 +370,8 @@ export default function EditorLayout() {
       <header className="relative z-40 flex items-center justify-between px-6 py-3 bg-zinc-950/80 backdrop-blur-md border-b border-border sticky top-0 no-print flex-shrink-0">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors font-semibold cursor-pointer">
-            <ArrowLeft size={14} /> Landing
+            <ArrowLeft size={14} />
+            <span className="hidden sm:inline">Landing</span>
           </button>
           <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
@@ -380,18 +381,18 @@ export default function EditorLayout() {
               </span>
               <span className="font-serif text-sm font-bold text-white leading-none pl-1.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>eve</span>
             </div>
-            <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 uppercase tracking-wider rounded">FREE</span>
+            <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 uppercase tracking-wider rounded hidden sm:inline-block">FREE</span>
           </div>
           <div className="w-px h-5 bg-border hidden sm:block" />
-          <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 max-w-[180px] sm:max-w-[220px]">
+          <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 p-2 sm:px-3 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center">
             <FolderOpen size={13} className="text-rose-500 shrink-0" />
-            <span className="truncate">{activeResume?.title || 'My Resume'}</span>
+            <span className="truncate hidden sm:inline">{activeResume?.title || 'My Resume'}</span>
           </button>
           <div className="w-px h-5 bg-border hidden sm:block" />
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex"
             title="Undo (Ctrl+Z)"
           >
             <Undo2 size={16} />
@@ -399,14 +400,14 @@ export default function EditorLayout() {
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex"
             title="Redo (Ctrl+Y)"
           >
             <Redo2 size={16} />
           </button>
         </div>
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 no-print">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-3 no-print">
           {pageCount > 1 && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/80 border border-zinc-700 text-[9px] font-semibold text-zinc-400 tracking-wide">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
@@ -428,7 +429,7 @@ export default function EditorLayout() {
             ) : cloudStatus === 'synced' ? (
               <Cloud size={11} className="text-emerald-400 shrink-0" />
             ) : (
-              <HardDrive size={11} className="text-zinc-500 shrink-0" />
+              <HardDrive size={11} className="text-zinc-550 shrink-0" />
             )}
             <span className="leading-none max-w-[240px] truncate" title={cloudError ?? undefined}>
               {cloudStatus === 'error'
@@ -446,13 +447,34 @@ export default function EditorLayout() {
 
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Save Status Indicator */}
+          <div 
+            className="lg:hidden flex items-center justify-center mr-1"
+            title={
+              cloudStatus === 'error' ? (cloudError ?? 'Sync failed')
+              : isSaving || cloudStatus === 'syncing' ? 'Saving...'
+              : cloudStatus === 'synced' ? 'Cloud saved'
+              : 'Saved locally'
+            }
+          >
+            {cloudStatus === 'error' ? (
+              <AlertCircle size={14} className="text-red-400 shrink-0 animate-pulse" />
+            ) : isSaving || cloudStatus === 'syncing' ? (
+              <RefreshCw size={14} className="text-amber-400 shrink-0 animate-spin" />
+            ) : cloudStatus === 'synced' ? (
+              <Cloud size={14} className="text-emerald-400 shrink-0" />
+            ) : (
+              <HardDrive size={14} className="text-zinc-550 shrink-0" />
+            )}
+          </div>
+
           {user ? (
             <div className="relative">
-              <button onClick={() => setShowUserMenu(!showUserMenu)} onBlur={() => setTimeout(() => setShowUserMenu(false), 150)} className="flex items-center gap-2 border border-zinc-800 text-xs font-semibold px-2 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
+              <button onClick={() => setShowUserMenu(!showUserMenu)} onBlur={() => setTimeout(() => setShowUserMenu(false), 150)} className="flex items-center gap-2 border border-zinc-800 text-xs font-semibold p-1.5 sm:px-2 sm:py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
                 <img src={user.user_metadata?.avatar_url} alt="" className="w-5 h-5 rounded-full" referrerPolicy="no-referrer" />
-                <span className="max-w-[80px] truncate">{user.user_metadata?.full_name || user.email}</span>
-                <ChevronDown size={12} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                <span className="max-w-[80px] truncate hidden sm:inline">{user.user_metadata?.full_name || user.email}</span>
+                <ChevronDown size={12} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''} hidden sm:inline`} />
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl z-50 min-w-[180px] animate-fade-in">
@@ -468,18 +490,20 @@ export default function EditorLayout() {
             </div>
           ) : (
             <>
-              <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer inline-flex items-center justify-center h-8 w-8" title="Settings">
+              <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer items-center justify-center h-8 w-8 hidden md:inline-flex" title="Settings">
                 <Settings size={15} />
               </button>
-              <button onClick={signInWithGoogle} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
-                <LogIn size={13} /> Sign In
+              <button onClick={signInWithGoogle} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold p-2 sm:px-3 sm:py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer justify-center">
+                <LogIn size={13} />
+                <span className="hidden sm:inline">Sign In</span>
               </button>
             </>
           )}
-          <button onClick={handleDirectPdfExport} className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs px-4 py-1.5 rounded-full transition-all cursor-pointer shadow-lg shadow-rose-600/10">
-            <Download size={13} /> PDF
+          <button onClick={handleDirectPdfExport} className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs p-2 sm:px-4 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-lg shadow-rose-600/10 justify-center">
+            <Download size={13} />
+            <span className="hidden sm:inline">PDF</span>
           </button>
-          <button onClick={() => setActiveMode('analyze')} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
+          <button onClick={() => setActiveMode('analyze')} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer hidden md:inline-flex">
             <CheckCircle2 size={13} /> ATS Audit
           </button>
         </div>

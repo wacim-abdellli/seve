@@ -86,6 +86,7 @@ export default function ResumePreview({
   const { showToast } = useToast()
   const [atsMode, setAtsMode] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const [contentHeight, setContentHeight] = useState(1123)
   const [showGuides, setShowGuides] = useState(false)
   const [pageCount, setPageCount] = useState(1)
   const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false)
@@ -149,6 +150,20 @@ export default function ResumePreview({
 
     const pageEls = resumeContentRef.current.querySelectorAll('.resume-page')
 
+    let height = 0
+    if (pageEls.length > 0) {
+      pageEls.forEach((el) => {
+        height += el.scrollHeight
+      })
+      height += (pageEls.length - 1) * 32 // Add gap margins between pages
+    } else {
+      const measureTarget =
+        resumeContentRef.current.querySelector('.resume-template-wrapper') ??
+        resumeContentRef.current
+      height = measureTarget.scrollHeight
+    }
+    setContentHeight(height)
+
     if (pageEls.length > 1) {
       const count = pageEls.length
       setPageCount(count)
@@ -156,12 +171,6 @@ export default function ResumePreview({
       return
     }
 
-    const measureTarget =
-      pageEls[0] ??
-      resumeContentRef.current.querySelector('.resume-template-wrapper') ??
-      resumeContentRef.current
-
-    const height = measureTarget.scrollHeight
     const pages = Math.max(1, Math.ceil(height / A4_SCREEN_THRESHOLD))
     setPageCount(pages)
     if (onPageCountChangeRef.current) onPageCountChangeRef.current(pages)
@@ -329,9 +338,8 @@ export default function ResumePreview({
               </button>
             </div>
           </div>
-
           {/* CENTER GROUP: Unified Zoom controls */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-0.5 h-8 flex-shrink-0 shadow-sm z-30">
+          <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-0.5 h-8 flex-shrink-0 shadow-sm z-30">
             <button 
               onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
               className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
@@ -375,7 +383,7 @@ export default function ResumePreview({
               <button
                 type="button"
                 onClick={() => setIsStyleMenuOpen(!isStyleMenuOpen)}
-                className={`flex items-center gap-1.5 px-3 h-8 text-[11px] font-extrabold uppercase tracking-wider rounded-xl transition-all cursor-pointer border ${
+                className={`flex items-center justify-center gap-1.5 h-8 w-8 sm:w-auto sm:px-3 text-[11px] font-extrabold uppercase tracking-wider rounded-xl transition-all cursor-pointer border ${
                   isStyleMenuOpen 
                     ? 'bg-rose-500/10 border-rose-500/35 text-rose-400 shadow-sm' 
                     : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:text-white hover:bg-zinc-800/80'
@@ -383,8 +391,8 @@ export default function ResumePreview({
                 title="Design Styles & Formatting"
               >
                 <Sliders className="w-3.5 h-3.5 text-rose-450" />
-                <span>Style</span>
-                <ChevronDown className="w-3 h-3 text-zinc-500 shrink-0" />
+                <span className="hidden sm:inline">Style</span>
+                <ChevronDown className="w-3 h-3 text-zinc-550 shrink-0 hidden sm:inline" />
               </button>
 
               <AnimatePresence>
@@ -553,15 +561,15 @@ export default function ResumePreview({
             {/* Export PDF Button (opens browser print dialog) */}
             {onExportPdf && (
               <>
-                <div className="w-px h-4 bg-zinc-800/80 flex-shrink-0" />
+                <div className="w-px h-4 bg-zinc-800/80 flex-shrink-0 hidden sm:block" />
                 <button 
                   onClick={onExportPdf}
-                  className="h-8 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
+                  className="h-8 w-8 sm:w-auto sm:px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center sm:gap-1.5"
                   type="button"
                   title="Open browser print dialog"
                 >
-                  <Download className="w-3 h-3" />
-                  <span>Print</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Print</span>
                 </button>
               </>
             )}
@@ -572,10 +580,16 @@ export default function ResumePreview({
       {/* Aspect-ratio restricted A4 paper container */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto bg-[#0d0d0f] bg-[radial-gradient(ellipse_at_top,_#1a1a2e_0%,_transparent_60%)] flex items-start justify-center p-4 md:p-8 print-container relative rounded-b-xl border border-zinc-800/80 shadow-inner"
+        className="flex-1 overflow-auto bg-[#0d0d0f] bg-[radial-gradient(ellipse_at_top,_#1a1a2e_0%,_transparent_60%)] flex items-start justify-center p-2 sm:p-4 md:p-8 print-container relative rounded-b-xl border border-zinc-800/80 shadow-inner"
       >
         {/* Shadow wrapper for depth */}
-        <div className="relative">
+        <div 
+          className="relative transition-all duration-300"
+          style={{
+            width: zoom < 1 ? `${794 * zoom}px` : '794px',
+            height: zoom < 1 ? `${contentHeight * zoom}px` : 'auto',
+          }}
+        >
           {/* Glow effect behind paper */}
           <div className="absolute inset-0 -m-4 bg-rose-500/5 rounded-3xl blur-2xl pointer-events-none" />
 
@@ -584,8 +598,17 @@ export default function ResumePreview({
             id="resume-print-area" 
             ref={resumeContentRef}
             data-resume-preview
-            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', '--template-font-size': `${templateFontSize}px`, '--template-font-weight': templateFontWeight } as React.CSSProperties}
-            className="relative resume-preview w-[794px] bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
+            style={{ 
+              transform: `scale(${zoom})`, 
+              transformOrigin: 'top left', 
+              width: '794px',
+              position: zoom < 1 ? 'absolute' : 'relative',
+              left: 0,
+              top: 0,
+              '--template-font-size': `${templateFontSize}px`, 
+              '--template-font-weight': templateFontWeight 
+            } as React.CSSProperties}
+            className="relative resume-preview bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
           >
 
             {/* Layout Guides Overlay */}

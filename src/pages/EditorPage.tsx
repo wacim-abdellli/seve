@@ -137,7 +137,7 @@ export default function EditorPage() {
               </div>
             </div>
 
-            <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-6 flex items-start justify-center print-block min-w-0 relative ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
               <div className="w-full max-w-[858px]">
                 <ResumePreview
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
@@ -156,29 +156,36 @@ export default function EditorPage() {
         )}
 
         {activeMode === 'preview' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden bg-card/65 backdrop-blur-md p-5 no-print">
-            <div className="flex items-center justify-between border-b border-border pb-3 mb-4 flex-shrink-0">
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-card/65 backdrop-blur-md p-3 sm:p-5 no-print">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-3 mb-4 flex-shrink-0 gap-3">
               <div>
                 <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
                   <Eye size={16} className="text-red-400" /> Document Preview & Export
                 </h2>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Choose your styling template and preview your resume</p>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Style Template:</label>
-                <select value={selectedTemplate} onChange={(e) => updateActiveResume(prev => ({ ...prev, selectedTemplate: e.target.value as Template }))} className="h-8 rounded-md border border-input bg-zinc-950 px-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-ring">
-                  <option value="classic">Classic (Serif)</option>
-                  <option value="modern">Modern (Tech/Sans)</option>
-                  <option value="executive">Executive (Leadership)</option>
-                  <option value="minimalist">Minimalist (Clean)</option>
-                  <option value="creative">Creative (Accented)</option>
-                </select>
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground hidden sm:inline">Style Template:</label>
+                  <select value={selectedTemplate} onChange={(e) => updateActiveResume(prev => ({ ...prev, selectedTemplate: e.target.value as Template }))} className="h-8 rounded-md border border-input bg-zinc-950 px-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-ring">
+                    <option value="classic">Classic</option>
+                    <option value="modern">Modern</option>
+                    <option value="executive">Executive</option>
+                    <option value="minimalist">Minimalist</option>
+                    <option value="creative">Creative</option>
+                    <option value="compact">Compact</option>
+                    <option value="professional">Professional</option>
+                    <option value="technical">Technical</option>
+                    <option value="academic">Academic</option>
+                    <option value="clean">Clean</option>
+                  </select>
+                </div>
                 <button onClick={handlePrint} className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 cursor-pointer">
                   <Eye size={13} /> Export PDF
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto bg-zinc-950/20 p-6 flex justify-center items-start min-w-0">
+            <div className="flex-1 overflow-y-auto bg-zinc-950/20 p-3 sm:p-6 flex justify-center items-start min-w-0">
               <div className="w-full max-w-[858px]">
                 <ResumePreview
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
