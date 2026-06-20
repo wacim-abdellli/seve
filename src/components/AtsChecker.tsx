@@ -753,7 +753,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       {/* Critical Issues Section */}
                       {criticalIssues.length > 0 && (
                         <div className="space-y-2.5">
-                          <h4 className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                          <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
                             <ShieldAlert size={13} className="text-red-400" />
                             Critical ({criticalIssues.length})
                           </h4>
@@ -776,8 +776,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     <div className="flex gap-2.5 items-start min-w-0">
                                       <div className="w-2 h-2 rounded-full bg-red-400 mt-1.5 shrink-0" />
                                       <div>
-                                        <h5 className="text-xs font-medium text-zinc-205">{issue.issue}</h5>
-                                        <p className="text-[10px] text-zinc-550 mt-0.5 leading-relaxed">{issue.fix}</p>
+                                        <h5 className="text-sm font-semibold text-zinc-200">{issue.issue}</h5>
+                                        <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{issue.fix}</p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
@@ -787,7 +787,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             e.stopPropagation()
                                             onNavigateToSection(issue.section!)
                                           }}
-                                          className="text-[9px] font-medium text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-2 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                          className="text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                         >
                                           Fix <ArrowRight size={9} />
                                         </button>
@@ -812,27 +812,27 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           {help && (
                                             <div className="space-y-2.5">
                                               <div>
-                                                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Why it matters for ATS:</p>
-                                                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{help.whyItMatters}</p>
+                                                <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Why it matters for ATS:</p>
+                                                <p className="text-xs text-zinc-355 mt-1 leading-relaxed">{help.whyItMatters}</p>
                                               </div>
                                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                                 <div className="bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[8px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
-                                                  <p className="text-[10px] text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
+                                                  <span className="text-[9px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
+                                                  <p className="text-xs text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
                                                 </div>
                                                 <div className="bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[8px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
-                                                  <p className="text-[10px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
+                                                  <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
+                                                  <p className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
                                                 </div>
                                               </div>
                                             </div>
                                           )}
                                           {hasDetails && (
                                             <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/35">
-                                              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Items needing review:</p>
+                                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Items needing review:</p>
                                               <ul className="space-y-1">
                                                 {issue.details?.map((detail, dIdx) => (
-                                                  <li key={dIdx} className="text-[10px] text-zinc-400 border-l-2 border-red-400/50 pl-2.5 leading-relaxed py-0.5">
+                                                  <li key={dIdx} className="text-xs text-zinc-400 border-l-2 border-red-400/50 pl-2.5 leading-relaxed py-0.5">
                                                     {detail}
                                                   </li>
                                                 ))}
@@ -852,12 +852,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                       {/* Warnings Section */}
                       <div className="space-y-2.5">
-                        <h4 className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
                           <AlertTriangle size={13} className="text-amber-400" />
                           Warnings ({warningIssues.length})
                         </h4>
                         {warningIssues.length === 0 ? (
-                          <div className="rounded-lg bg-zinc-900/20 border border-zinc-800/30 p-4 text-center text-zinc-500 text-xs">
+                          <div className="rounded-lg bg-zinc-900/20 border border-zinc-800/30 p-4 text-center text-zinc-505 text-xs">
                             No formatting warnings. Layout looks clean.
                           </div>
                         ) : (
@@ -880,8 +880,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     <div className="flex gap-2.5 items-start min-w-0">
                                       <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
                                       <div>
-                                        <h5 className="text-xs font-medium text-zinc-200">{issue.issue}</h5>
-                                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">{issue.fix}</p>
+                                        <h5 className="text-sm font-semibold text-zinc-200">{issue.issue}</h5>
+                                        <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{issue.fix}</p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
@@ -891,7 +891,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             e.stopPropagation()
                                             onNavigateToSection(issue.section!)
                                           }}
-                                          className="text-[9px] font-medium text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-2 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                          className="text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                         >
                                           Edit <ArrowRight size={9} />
                                         </button>
@@ -916,27 +916,27 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           {help && (
                                             <div className="space-y-2.5">
                                               <div>
-                                                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Why it matters for ATS:</p>
-                                                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{help.whyItMatters}</p>
+                                                <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Why it matters for ATS:</p>
+                                                <p className="text-xs text-zinc-355 mt-1 leading-relaxed">{help.whyItMatters}</p>
                                               </div>
                                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                                 <div className="bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[8px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
-                                                  <p className="text-[10px] text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
+                                                  <span className="text-[9px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
+                                                  <p className="text-xs text-zinc-505 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
                                                 </div>
                                                 <div className="bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[8px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
-                                                  <p className="text-[10px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
+                                                  <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
+                                                  <p className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
                                                 </div>
                                               </div>
                                             </div>
                                           )}
                                           {hasDetails && (
                                             <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/35">
-                                              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Items needing review:</p>
+                                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Items needing review:</p>
                                               <ul className="space-y-1">
                                                 {issue.details?.map((detail, dIdx) => (
-                                                  <li key={dIdx} className="text-[10px] text-zinc-400 border-l-2 border-zinc-700 pl-2.5 leading-relaxed py-0.5">
+                                                  <li key={dIdx} className="text-xs text-zinc-400 border-l-2 border-zinc-700 pl-2.5 leading-relaxed py-0.5">
                                                     {detail}
                                                   </li>
                                                 ))}
@@ -956,12 +956,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                       {/* Suggestions Section */}
                       <div className="space-y-2.5">
-                        <h4 className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
                           <Lightbulb size={13} className="text-indigo-400" />
                           Suggestions ({suggestionIssues.length})
                         </h4>
                         {suggestionIssues.length === 0 ? (
-                          <div className="rounded-lg bg-zinc-900/20 border border-zinc-800/30 p-4 text-center text-zinc-500 text-xs">
+                          <div className="rounded-lg bg-zinc-900/20 border border-zinc-800/30 p-4 text-center text-zinc-505 text-xs">
                             No suggestions. Your writing is solid.
                           </div>
                         ) : (
@@ -984,8 +984,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     <div className="flex gap-2.5 items-start min-w-0">
                                       <div className="w-2 h-2 rounded-full bg-zinc-500 mt-1.5 shrink-0" />
                                       <div>
-                                        <h5 className="text-xs font-medium text-zinc-300">{issue.issue}</h5>
-                                        <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">{issue.fix}</p>
+                                        <h5 className="text-sm font-semibold text-zinc-200">{issue.issue}</h5>
+                                        <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{issue.fix}</p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
@@ -995,7 +995,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             e.stopPropagation()
                                             onNavigateToSection(issue.section!)
                                           }}
-                                          className="text-[9px] font-medium text-zinc-500 hover:text-white bg-zinc-800/30 hover:bg-zinc-800/50 px-2 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                          className="text-xs font-medium text-zinc-500 hover:text-white bg-zinc-800/30 hover:bg-zinc-800/50 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                         >
                                           Edit <ArrowRight size={9} />
                                         </button>
@@ -1020,27 +1020,27 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           {help && (
                                             <div className="space-y-2.5">
                                               <div>
-                                                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Why it matters for ATS:</p>
-                                                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{help.whyItMatters}</p>
+                                                <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Why it matters for ATS:</p>
+                                                <p className="text-xs text-zinc-350 mt-1 leading-relaxed">{help.whyItMatters}</p>
                                               </div>
                                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                                 <div className="bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[8px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
-                                                  <p className="text-[10px] text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
+                                                  <span className="text-[9px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
+                                                  <p className="text-xs text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
                                                 </div>
                                                 <div className="bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[8px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
-                                                  <p className="text-[10px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
+                                                  <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
+                                                  <p className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
                                                 </div>
                                               </div>
                                             </div>
                                           )}
                                           {hasDetails && (
                                             <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/35">
-                                              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Items to consider:</p>
+                                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Items to consider:</p>
                                               <ul className="space-y-1">
                                                 {issue.details?.map((detail, dIdx) => (
-                                                  <li key={dIdx} className="text-[10px] text-zinc-500 border-l-2 border-zinc-700/50 pl-2.5 leading-relaxed py-0.5">
+                                                  <li key={dIdx} className="text-xs text-zinc-400 border-l-2 border-zinc-700/50 pl-2.5 leading-relaxed py-0.5">
                                                     {detail}
                                                   </li>
                                                 ))}
@@ -1065,8 +1065,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         <div className="flex items-center gap-2 mb-3">
                           <BookOpen size={14} className="text-indigo-400" />
                           <div>
-                            <h4 className="text-xs font-semibold text-white">ATS Excellence Guide</h4>
-                            <p className="text-[10px] text-zinc-500">Writing standard &amp; format compliance</p>
+                            <h4 className="text-sm font-semibold text-white">ATS Excellence Guide</h4>
+                            <p className="text-xs text-zinc-400">Writing standard &amp; format compliance</p>
                           </div>
                         </div>
 
@@ -1074,19 +1074,19 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-950/80 rounded-lg border border-zinc-800/40 mb-4 shrink-0">
                           <button
                             onClick={() => setGuideTab('formula')}
-                            className={`py-1 text-[9px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'formula' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'formula' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           >
                             📝 Formula
                           </button>
                           <button
                             onClick={() => setGuideTab('verbs')}
-                            className={`py-1 text-[9px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'verbs' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'verbs' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           >
                             ⚡ Power Verbs
                           </button>
                           <button
                             onClick={() => setGuideTab('format')}
-                            className={`py-1 text-[9px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'format' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer ${guideTab === 'format' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                           >
                             🛡️ Safety Rules
                           </button>
@@ -1096,54 +1096,54 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         {guideTab === 'formula' && (
                           <div className="space-y-4">
                             <div className="space-y-1">
-                              <p className="text-[11px] font-medium text-zinc-300">The X-Y-Z Action Formula</p>
-                              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                              <p className="text-xs font-semibold text-zinc-200">The X-Y-Z Action Formula</p>
+                              <p className="text-xs text-zinc-400 leading-relaxed">
                                 Google recommends writing bullet points using this structure to prove scale, method, and results.
                               </p>
                             </div>
 
                             {/* X-Y-Z Formula Visual Card */}
-                            <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg font-mono text-[9px] leading-relaxed text-zinc-400 space-y-1 text-center">
-                              <span className="text-white font-semibold block mb-0.5 text-[10px]">Accomplished [X]</span>
-                              <span className="text-zinc-500 block">as measured by [Y]</span>
-                              <span className="text-zinc-500 block">by doing [Z]</span>
+                            <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg font-mono text-xs leading-relaxed text-zinc-400 space-y-1 text-center">
+                              <span className="text-white font-semibold block mb-0.5 text-[12px]">Accomplished [X]</span>
+                              <span className="text-zinc-400 block">as measured by [Y]</span>
+                              <span className="text-zinc-450 block">by doing [Z]</span>
                             </div>
 
                             {/* Interactive XYZ Builder */}
                             <div className="space-y-3 pt-2 border-t border-zinc-800/40">
-                              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Interactive Bullet Builder</p>
+                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Interactive Bullet Builder</p>
                               
                               <div className="space-y-2">
                                 <div>
-                                  <label className="text-[8px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">What did you accomplish? (X)</label>
+                                  <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">What did you accomplish? (X)</label>
                                   <input
                                     type="text"
                                     value={xyzX}
                                     onChange={(e) => setXyzX(e.target.value)}
                                     placeholder="e.g., reduced database query latency"
-                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-[10px] text-white focus:outline-none focus:border-indigo-500/50"
+                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
                                   />
                                 </div>
                                 
                                 <div>
-                                  <label className="text-[8px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">How was it measured? (Y)</label>
+                                  <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">How was it measured? (Y)</label>
                                   <input
                                     type="text"
                                     value={xyzY}
                                     onChange={(e) => setXyzY(e.target.value)}
                                     placeholder="e.g., by 40% (saving 12 hours of processing time)"
-                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-[10px] text-white focus:outline-none focus:border-indigo-500/50"
+                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
                                   />
                                 </div>
                                 
                                 <div>
-                                  <label className="text-[8px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">What action/method did you take? (Z)</label>
+                                  <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">What action/method did you take? (Z)</label>
                                   <input
                                     type="text"
                                     value={xyzZ}
                                     onChange={(e) => setXyzZ(e.target.value)}
                                     placeholder="e.g., implementing query index caching and Redis stores"
-                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-[10px] text-white focus:outline-none focus:border-indigo-500/50"
+                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
                                   />
                                 </div>
                               </div>
@@ -1163,13 +1163,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           setCopiedBullet(true)
                                           setTimeout(() => setCopiedBullet(false), 2000)
                                         }}
-                                        className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-505 hover:text-white transition-colors cursor-pointer"
+                                        className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                                         title="Copy bullet point"
                                       >
                                         {copiedBullet ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
                                       </button>
                                     </div>
-                                    <p className="text-[10px] text-zinc-400 font-mono pr-7 leading-relaxed">
+                                    <p className="text-xs text-zinc-300 font-mono pr-7 leading-relaxed">
                                       {(() => {
                                         const firstWordCapitalized = (xyzZ.trim().split(/\s+/)[0] || '').replace(/^[a-z]/, (char) => char.toUpperCase())
                                         const zRest = xyzZ.trim().substring(firstWordCapitalized.length)
@@ -1180,7 +1180,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     </p>
                                   </div>
                                   {copiedBullet && (
-                                    <p className="text-[9px] text-emerald-400 font-semibold text-right">Copied to clipboard!</p>
+                                    <p className="text-xs text-emerald-400 font-semibold text-right">Copied to clipboard!</p>
                                   )}
                                 </div>
                               )}
@@ -1191,8 +1191,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         {guideTab === 'verbs' && (
                           <div className="space-y-4">
                             <div className="space-y-1">
-                              <p className="text-[11px] font-medium text-zinc-300">Verb Reference Directory</p>
-                              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                              <p className="text-xs font-semibold text-zinc-200">Verb Reference Directory</p>
+                              <p className="text-xs text-zinc-400 leading-relaxed">
                                 Avoid beginning bullets with soft expressions. Click any verb below to copy it instantly.
                               </p>
                             </div>
@@ -1203,7 +1203,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                 <button
                                   key={c.category}
                                   onClick={() => setSelectedVerbCat(c.category)}
-                                  className={`px-2 py-0.5 rounded text-[8px] font-bold transition-all cursor-pointer ${selectedVerbCat === c.category ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-950 border border-zinc-850 text-zinc-500 hover:text-zinc-300'}`}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${selectedVerbCat === c.category ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-950 border border-zinc-850 text-zinc-500 hover:text-zinc-300'}`}
                                 >
                                   {c.category}
                                 </button>
@@ -1221,7 +1221,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                       setCopiedVerb(verb)
                                       setTimeout(() => setCopiedVerb(null), 1500)
                                     }}
-                                    className="px-2 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-[10px] text-zinc-400 hover:text-white hover:border-zinc-705 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5"
+                                    className="px-2 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-705 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5"
                                   >
                                     {verb}
                                     {copiedVerb === verb ? (
@@ -1233,7 +1233,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                 ))}
                               </div>
                               {copiedVerb && (
-                                <p className="text-[9px] text-emerald-400 font-semibold text-right">Copied "{copiedVerb}"!</p>
+                                <p className="text-xs text-emerald-400 font-semibold text-right">Copied "{copiedVerb}"!</p>
                               )}
                             </div>
                           </div>
@@ -1242,8 +1242,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         {guideTab === 'format' && (
                           <div className="space-y-4">
                             <div className="space-y-1">
-                              <p className="text-[11px] font-medium text-zinc-300">Format &amp; Layout Compliance</p>
-                              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                              <p className="text-xs font-semibold text-zinc-200">Format &amp; Layout Compliance</p>
+                              <p className="text-xs text-zinc-400 leading-relaxed">
                                 Keep styling safe to avoid layout parsing collisions or OCR data omissions.
                               </p>
                             </div>
@@ -1251,13 +1251,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                             <div className="space-y-3">
                               {/* DOS LIST */}
                               <div className="space-y-1.5">
-                                <span className="text-[8px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                                   <CheckCircle2 size={10} className="text-emerald-400" />
                                   Dos (ATS Safe)
                                 </span>
                                 <ul className="space-y-1 pl-1">
                                   {FORMATTING_RULES.dos.map((item, idx) => (
-                                    <li key={idx} className="text-[9px] text-zinc-400 leading-relaxed list-none pl-3 relative">
+                                    <li key={idx} className="text-xs text-zinc-400 leading-relaxed list-none pl-3 relative">
                                       <span className="absolute left-0 text-emerald-500/50">•</span>
                                       {item}
                                     </li>
@@ -1267,13 +1267,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                               {/* DON'TS LIST */}
                               <div className="space-y-1.5 pt-2 border-t border-zinc-850">
-                                <span className="text-[8px] font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
                                   <XCircle size={10} className="text-red-400" />
                                   Don'ts (Parser Risk)
                                 </span>
                                 <ul className="space-y-1 pl-1">
                                   {FORMATTING_RULES.donts.map((item, idx) => (
-                                    <li key={idx} className="text-[9px] text-zinc-400 leading-relaxed list-none pl-3 relative">
+                                    <li key={idx} className="text-xs text-zinc-400 leading-relaxed list-none pl-3 relative">
                                       <span className="absolute left-0 text-red-500/50">•</span>
                                       {item}
                                     </li>
