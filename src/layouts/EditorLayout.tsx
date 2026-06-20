@@ -10,8 +10,9 @@ import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { exportResumeToPdf } from '../utils/pdfExport'
 
 
 type SectionKey = string
@@ -294,6 +295,7 @@ export default function EditorLayout() {
     resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, cloudError, retrySync,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, importResumeData, sectionOrder, updateSectionOrder,
+    undo, redo, canUndo, canRedo,
   } = useResume()
   const { user, signInWithGoogle, signOut } = useAuth()
 
@@ -310,6 +312,29 @@ export default function EditorLayout() {
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
 
   useEffect(() => { localStorage.setItem('seve_theme_color', themeColor) }, [themeColor])
+
+  const handleDirectPdfExport = async () => {
+    const previewEl = document.querySelector('[data-resume-preview]') as HTMLElement | null
+    if (!previewEl) return
+    const contactName = resumeData.contact?.fullName?.trim() || 'resume'
+    const safeName = contactName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
+    await exportResumeToPdf(previewEl, `${safeName}_resume.pdf`)
+  }
+
+  // Keyboard shortcuts: Ctrl+P → PDF export, Ctrl+S → suppress browser save
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault()
+        handleDirectPdfExport()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [handleDirectPdfExport])
 
   const openDrawer = (sec: SectionType) => setActiveStudioSection(sec)
   const closeDrawer = () => setActiveStudioSection(null)
@@ -361,6 +386,23 @@ export default function EditorLayout() {
           <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 max-w-[180px] sm:max-w-[220px]">
             <FolderOpen size={13} className="text-rose-500 shrink-0" />
             <span className="truncate">{activeResume?.title || 'My Resume'}</span>
+          </button>
+          <div className="w-px h-5 bg-border hidden sm:block" />
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={16} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 size={16} />
           </button>
         </div>
 
@@ -434,6 +476,9 @@ export default function EditorLayout() {
               </button>
             </>
           )}
+          <button onClick={handleDirectPdfExport} className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs px-4 py-1.5 rounded-full transition-all cursor-pointer shadow-lg shadow-rose-600/10">
+            <Download size={13} /> PDF
+          </button>
           <button onClick={() => setActiveMode('analyze')} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
             <CheckCircle2 size={13} /> ATS Audit
           </button>

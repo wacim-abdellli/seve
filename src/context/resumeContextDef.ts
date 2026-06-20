@@ -23,6 +23,10 @@ export interface ResumeContextType {
   updateSectionOrder: (newOrder: string[]) => void
   importResumeData: (data: ResumeData) => void
   retrySync: () => void
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 }
 
 export const ResumeContext = createContext<ResumeContextType | undefined>(undefined)

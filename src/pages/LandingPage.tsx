@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Layers,
   Activity,
+  Brain,
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
@@ -50,6 +51,22 @@ export default function LandingPage() {
     {
       q: 'Is my personal data secure?',
       a: 'Completely. Your resume data is stored locally inside your browser\'s localStorage and never uploaded to our servers.'
+    },
+    {
+      q: 'Can I use Seve on my phone or tablet?',
+      a: 'Yes. Seve is fully responsive and works in any modern mobile browser. You can build and edit your resume on the go, though a desktop experience is recommended for the best editing workflow.'
+    },
+    {
+      q: 'How do I download my resume as a PDF?',
+      a: 'Once your resume is ready, click the export/download button in the editor. Seve uses your browser\'s built-in print dialog, where you can select "Save as PDF" as the destination. This keeps the tool lightweight with zero server dependency.'
+    },
+    {
+      q: 'Which template works best for my industry?',
+      a: 'Classic and Executive templates perform best in traditional industries like finance, law, and government. Modern, Technical, and Creative templates are optimized for tech, startups, and design roles. The ATS checker scores all templates equally — they all pass.'
+    },
+    {
+      q: 'Can I create multiple resumes?',
+      a: 'Yes. You can create, duplicate, rename, and manage multiple resume profiles from the dashboard. Each one is saved independently in your browser, letting you maintain tailored versions for different job applications.'
     }
   ]
 
@@ -85,7 +102,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline text-xs text-muted-foreground font-medium flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Client-Side & Open Source
+              Client-Side & Private
             </span>
             <Button onClick={() => navigate('/editor')} size="sm" className="font-bold">
               Build Your Resume
@@ -196,6 +213,67 @@ export default function LandingPage() {
         </div>
       </main>
 
+      {/* How It Works — 3-Step Flow */}
+      <section className="py-16 md:py-24 border-t border-border z-10 relative">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-red-400 mb-2">How It Works</h2>
+            <h3 className="text-2xl md:text-3xl font-extrabold text-white">Three steps. Zero friction.</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                step: '01',
+                title: 'Pick a Template',
+                desc: 'Choose from 10 professional, ATS-verified layouts designed for every industry.',
+                color: 'text-red-400',
+              },
+              {
+                step: '02',
+                title: 'Fill Your Content',
+                desc: 'Use the interactive editor with smart skill suggestions, auto-save, and real-time preview.',
+                color: 'text-amber-400',
+              },
+              {
+                step: '03',
+                title: 'Export & Apply',
+                desc: 'Run the ATS checker, fix issues with one click, and download a pixel-perfect PDF.',
+                color: 'text-emerald-400',
+              },
+            ].map((item, i) => (
+              <div key={i} className="text-center md:text-left flex flex-col items-center md:items-start gap-4">
+                <div className="flex items-center gap-3">
+                  <span className={`text-3xl font-black ${item.color} opacity-60`}>{item.step}</span>
+                  <div className="hidden md:block w-12 h-px bg-border" />
+                </div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wide">{item.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed font-light max-w-xs">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Stats Bar */}
+      <section className="py-12 border-t border-border bg-zinc-950/30 z-10 relative">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { value: '10', label: 'Professional Templates' },
+              { value: '12', label: 'ATS Scoring Dimensions' },
+              { value: '17', label: 'Industry Skill Databases' },
+              { value: '$0', label: 'Forever Free' },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <span className="text-2xl md:text-3xl font-black text-white">{stat.value}</span>
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 3. Core Features Section */}
       <section className="py-16 md:py-24 border-t border-border bg-zinc-950/20 z-10 relative">
         <div className="max-w-7xl mx-auto px-6">
@@ -223,7 +301,12 @@ export default function LandingPage() {
               {
                 icon: Layers,
                 title: 'Professional Layouts',
-                desc: 'Choose from 5 clean, single and multi-column templates engineered for high readability and print-to-PDF output.'
+                desc: 'Choose from 10 clean, single and multi-column templates engineered for high readability and print-to-PDF output.'
+              },
+              {
+                icon: Brain,
+                title: 'Industry Skills DB',
+                desc: 'Smart autocomplete with skills from 17 industries, auto-detected from your target job title for precise keyword matching.'
               },
             ].map((feat, i) => (
               <Card key={i} className="flex flex-col gap-4 p-5 bg-card/40 border-border/80 hover:border-zinc-700/80 transition-colors">
@@ -421,7 +504,7 @@ export default function LandingPage() {
       {/* 5. Footer */}
       <footer className="py-12 border-t border-border bg-background z-10 relative no-print">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-muted-foreground">
-          <div>© {new Date().getFullYear()} Seve. Free and open source.</div>
+          <div>© {new Date().getFullYear()} Seve. Free and private.</div>
           <div className="flex items-center gap-6">
             <button 
               onClick={() => navigate('/privacy')} 

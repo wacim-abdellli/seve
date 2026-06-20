@@ -1782,7 +1782,7 @@ function scoreContentDepth(resume: ResumeData, lang: string): AtsCategoryScore {
   }
   // No issue here — other checks already cover it
 
-  return { key: 'contentDepth', label: 'Content Depth', score: Math.min(score, max), max, weight: 0.15, issues }
+  return { key: 'contentDepth', label: 'Content Depth', score: Math.min(score, max), max, weight: DIMENSION_WEIGHTS.contentDepth, issues }
 }
 
 /* ═══════════════════════════════════════════

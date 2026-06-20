@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage'
 import PrivacyPage from './pages/PrivacyPage'
 import EditorPage from './pages/EditorPage'
 import EditorLayout from './layouts/EditorLayout'
+import NotFoundPage from './pages/NotFoundPage'
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -78,11 +79,18 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
 }
 
 function AppContent() {
-  const [showSplash, setShowSplash] = useState(true)
+  const [showSplash, setShowSplash] = useState(() => {
+    return !localStorage.getItem('seve_visited')
+  })
+
+  const handleSplashDone = () => {
+    localStorage.setItem('seve_visited', '1')
+    setShowSplash(false)
+  }
 
   return (
     <>
-      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onDone={handleSplashDone} />}
       <div style={{ display: showSplash ? 'none' : 'block', height: '100vh' }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -90,6 +98,7 @@ function AppContent() {
           <Route element={<EditorLayout />}>
             <Route path="/editor" element={<EditorPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
     </>

@@ -132,7 +132,7 @@ export default function PrivacyPage() {
                 <h3 className="text-base font-bold text-white m-0">Total Transparency</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
-                The entire source code is fully open-source. Anyone can audit the network requests and verify that the application operates entirely within your browser sandboxes.
+                The entire application runs locally in your browser. Anyone can verify that no data leaves your device — all network requests are auditable through your browser's developer tools.
               </p>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function PrivacyPage() {
         }}
       >
         <div className="text-xs text-zinc-400">
-          © {new Date().getFullYear()} Seve. Free and open source.
+          © {new Date().getFullYear()} Seve. Free and private.
         </div>
       </footer>
     </div>

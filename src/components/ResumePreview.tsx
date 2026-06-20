@@ -211,7 +211,7 @@ export default function ResumePreview({
       showToast(`Font adjusted to ${newFontSize}pt to fit 1 page`, 'success')
     }
   }
-  
+
   // Section Order — comes from context via props
   const activeSectionKeys: SectionKey[] = [
     'summary', 'experience', 'projects', 'education', 'skills',
@@ -549,18 +549,18 @@ export default function ResumePreview({
               </AnimatePresence>
             </div>
 
-            {/* Export PDF Button */}
+            {/* Export PDF Button (opens browser print dialog) */}
             {onExportPdf && (
               <>
                 <div className="w-px h-4 bg-zinc-800/80 flex-shrink-0" />
                 <button 
                   onClick={onExportPdf}
-                  className="h-8 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-rose-600/10 flex items-center gap-1.5"
+                  className="h-8 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
                   type="button"
-                  title="Export PDF Document"
+                  title="Open browser print dialog"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export</span>
+                  <Download className="w-3 h-3" />
+                  <span>Print</span>
                 </button>
               </>
             )}
@@ -582,6 +582,7 @@ export default function ResumePreview({
           <div 
             id="resume-print-area" 
             ref={resumeContentRef}
+            data-resume-preview
             style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', '--template-font-size': `${templateFontSize}px`, '--template-font-weight': templateFontWeight } as React.CSSProperties}
             className="relative resume-preview w-[794px] bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
           >

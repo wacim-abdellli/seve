@@ -1,10 +1,11 @@
+import { lazy, Suspense } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, ChevronRight } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
 import ResumePreview from '../components/ResumePreview'
-import AtsChecker from '../components/AtsChecker'
 import { getSectionStatus } from '../utils/completionHelper'
+const AtsChecker = lazy(() => import('../components/AtsChecker'))
 import type { EditorContextType } from '../layouts/EditorLayout'
 import type { ResumeData, Template } from '../types/resume'
 import type { SectionType } from '../components/SectionSidebar'
@@ -196,13 +197,19 @@ export default function EditorPage() {
         )}
 
         {activeMode === 'analyze' && (
-          <AtsChecker
-            resumeData={resumeData}
-            jobDescription={jobDescription}
-            templateFontSize={templateFontSize}
-            onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
-            onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}
-          />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="w-5 h-5 rounded-full border-2 border-red-500/30 border-t-red-400 animate-spin" />
+            </div>
+          }>
+            <AtsChecker
+              resumeData={resumeData}
+              jobDescription={jobDescription}
+              templateFontSize={templateFontSize}
+              onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
+              onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}
+            />
+          </Suspense>
         )}
       </motion.div>
     </AnimatePresence>

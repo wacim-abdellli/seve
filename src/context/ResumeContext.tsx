@@ -348,6 +348,89 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const jobDescription = activeResume.jobDescription
   const sectionOrder = activeResume.sectionOrder
 
+  // Undo/Redo for resume data
+  // Uses ref-based history tracking with direct AppState updates — no dual-state-sync
+  const historyRef = useRef<ResumeData[]>([resumeData])
+  const historyIndexRef = useRef(0)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
+  const pushHistory = useCallback((data: ResumeData) => {
+    historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1)
+    historyRef.current.push(data)
+    if (historyRef.current.length > 30) {
+      historyRef.current.shift()
+    } else {
+      historyIndexRef.current++
+    }
+    setCanUndo(true)
+    setCanRedo(false)
+  }, [])
+
+  const handleUndo = useCallback(() => {
+    if (historyIndexRef.current > 0) {
+      historyIndexRef.current--
+      const historicalData = historyRef.current[historyIndexRef.current]
+      setState(prev => {
+        const active = prev.resumes[prev.selectedResumeId]
+        if (!active) return prev
+        return {
+          ...prev,
+          resumes: {
+            ...prev.resumes,
+            [active.id]: { ...active, resumeData: historicalData, updatedAt: new Date().toISOString() },
+          },
+        }
+      })
+      setCanUndo(historyIndexRef.current > 0)
+      setCanRedo(historyIndexRef.current < historyRef.current.length - 1)
+    }
+  }, [])
+
+  const handleRedo = useCallback(() => {
+    if (historyIndexRef.current < historyRef.current.length - 1) {
+      historyIndexRef.current++
+      const historicalData = historyRef.current[historyIndexRef.current]
+      setState(prev => {
+        const active = prev.resumes[prev.selectedResumeId]
+        if (!active) return prev
+        return {
+          ...prev,
+          resumes: {
+            ...prev.resumes,
+            [active.id]: { ...active, resumeData: historicalData, updatedAt: new Date().toISOString() },
+          },
+        }
+      })
+      setCanUndo(historyIndexRef.current > 0)
+      setCanRedo(historyIndexRef.current < historyRef.current.length - 1)
+    }
+  }, [])
+
+  // Reset history on resume switch
+  useEffect(() => {
+    historyRef.current = [resumeData]
+    historyIndexRef.current = 0
+    setCanUndo(false)
+    setCanRedo(false)
+  }, [activeResume?.id])
+
+  // Keyboard shortcuts: Ctrl+Z/Y for undo/redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        handleRedo()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [handleUndo, handleRedo])
+
   const selectResume = useCallback((id: string) => {
     setState(prev => ({ ...prev, selectedResumeId: id }))
   }, [])
@@ -439,16 +522,18 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const updateResumeData = useCallback((data: ResumeData) => {
+    pushHistory(data)
     updateActiveResume(prev => ({ ...prev, resumeData: data }))
-  }, [updateActiveResume])
+  }, [pushHistory, updateActiveResume])
 
   const updateSectionOrder = useCallback((newOrder: string[]) => {
     updateActiveResume(prev => ({ ...prev, sectionOrder: newOrder }))
   }, [updateActiveResume])
 
   const importResumeData = useCallback((data: ResumeData) => {
+    pushHistory(data)
     updateActiveResume(prev => ({ ...prev, resumeData: data }))
-  }, [updateActiveResume])
+  }, [pushHistory, updateActiveResume])
 
   const retrySync = useCallback(async () => {
     if (!user) return
@@ -493,11 +578,16 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     updateSectionOrder,
     importResumeData,
     retrySync,
+    undo: handleUndo,
+    redo: handleRedo,
+    canUndo,
+    canRedo,
   }), [
     state.resumes, state.selectedResumeId, activeResume, resumeData,
     selectedTemplate, jobDescription, sectionOrder, isSaving, cloudStatus, cloudError,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, updateResumeData, updateSectionOrder, importResumeData, retrySync,
+    handleUndo, handleRedo, canUndo, canRedo,
   ])
 
   return (
