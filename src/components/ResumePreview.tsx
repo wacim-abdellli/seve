@@ -153,7 +153,7 @@ export default function ResumePreview({
   }, [])
 
   const A4_PX = 1122
-  const A4_SCREEN_THRESHOLD = 1160
+  const A4_SCREEN_THRESHOLD = 1122
   // Tracks vertical padding (top + bottom) added by templates' .resume-page div.
   // This padding does NOT scale with font-size, so fit math must exclude it.
   const TEMPLATE_VERTICAL_PADDING = 96
@@ -667,6 +667,19 @@ export default function ResumePreview({
                 <div className="absolute left-0 right-0 h-px bg-zinc-400/10" style={{ bottom: '10.58mm' }} />
               </div>
             )}
+
+            {/* Page Break Indicators (Screen-only) */}
+            {!isEmpty && pageCount > 1 && Array.from({ length: pageCount - 1 }).map((_, index) => (
+              <div
+                key={index}
+                className="absolute left-0 right-0 border-t-2 border-dashed border-rose-500/35 z-40 no-print pointer-events-none flex items-center justify-end pr-8 select-none"
+                style={{ top: `${(index + 1) * A4_PX}px`, height: 0 }}
+              >
+                <span className="text-[8px] font-black text-rose-600 bg-white px-2 py-0.5 rounded-full border border-rose-200 shadow-md tracking-wider uppercase font-sans -translate-y-1/2">
+                  Page Break {index + 1} / {index + 2}
+                </span>
+              </div>
+            ))}
 
 
 
