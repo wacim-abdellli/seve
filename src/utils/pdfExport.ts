@@ -30,6 +30,19 @@ export async function exportResumeToPdf(
   clone.style.top = '0'
   clone.style.background = '#ffffff'
 
+  // Force min-height and height to auto on the resume pages inside the clone
+  // to prevent standard screen min-height (1123px) + border rounding from exceeding
+  // the A4 page limit and triggering an accidental empty second page. Also strip borders/shadows.
+  const resumePages = clone.querySelectorAll('.resume-page')
+  resumePages.forEach(el => {
+    const pageEl = el as HTMLElement
+    pageEl.style.setProperty('min-height', 'auto', 'important')
+    pageEl.style.setProperty('height', 'auto', 'important')
+    pageEl.style.setProperty('border', 'none', 'important')
+    pageEl.style.setProperty('border-radius', '0', 'important')
+    pageEl.style.setProperty('box-shadow', 'none', 'important')
+  })
+
   // 4. Append to DOM
   container.appendChild(clone)
   document.body.appendChild(container)
