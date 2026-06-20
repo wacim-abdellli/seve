@@ -4,29 +4,33 @@ export async function exportResumeToPdf(
   element: HTMLElement,
   filename: string = 'resume.pdf'
 ): Promise<void> {
-  // 1. Store original styles of the live on-screen element
-  const originalTransform = element.style.transform
-  const originalTransformOrigin = element.style.transformOrigin
-  const originalWidth = element.style.width
-  const originalMargin = element.style.margin
-  const originalPadding = element.style.padding
-  const originalPosition = element.style.position
-  const originalLeft = element.style.left
-  const originalTop = element.style.top
-  const originalBackground = element.style.background
+  // 1. Create a container and position it offscreen to avoid screen flicker/zoom
+  const container = document.createElement('div')
+  container.style.position = 'absolute'
+  container.style.left = '-9999px'
+  container.style.top = '-9999px'
+  container.style.width = '794px'
+  container.style.overflow = 'hidden'
 
-  // 2. Temporarily strip viewport zoom scale and force unscaled 100% dimensions (794px)
-  element.style.transform = 'none'
-  element.style.transformOrigin = 'unset'
-  element.style.width = '794px'
-  element.style.margin = '0'
-  element.style.padding = '0'
-  element.style.position = 'relative'
-  element.style.left = '0'
-  element.style.top = '0'
-  element.style.background = '#ffffff'
+  // 2. Clone the live element to capture its exact state
+  const clone = element.cloneNode(true) as HTMLElement
 
-  // 3. Configure html2pdf options
+  // 3. Strip zoom scale and force 100% relative layout on the clone
+  clone.style.transform = 'none'
+  clone.style.transformOrigin = 'unset'
+  clone.style.width = '794px'
+  clone.style.margin = '0'
+  clone.style.padding = '0'
+  clone.style.position = 'relative'
+  clone.style.left = '0'
+  clone.style.top = '0'
+  clone.style.background = '#ffffff'
+
+  // 4. Append to DOM
+  container.appendChild(clone)
+  document.body.appendChild(container)
+
+  // 5. Configure html2pdf options
   const opt = {
     margin: 0,
     filename,
@@ -50,18 +54,10 @@ export async function exportResumeToPdf(
   }
 
   try {
-    // 4. Generate PDF from the live, unscaled element
-    await html2pdf().set(opt).from(element).save()
+    // 6. Generate PDF from the offscreen clone
+    await html2pdf().set(opt).from(clone).save()
   } finally {
-    // 5. Restore original styles back to the live preview
-    element.style.transform = originalTransform
-    element.style.transformOrigin = originalTransformOrigin
-    element.style.width = originalWidth
-    element.style.margin = originalMargin
-    element.style.padding = originalPadding
-    element.style.position = originalPosition
-    element.style.left = originalLeft
-    element.style.top = originalTop
-    element.style.background = originalBackground
+    // 7. Clean up the offscreen container from the DOM
+    document.body.removeChild(container)
   }
 }
