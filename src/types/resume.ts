@@ -136,6 +136,9 @@ export interface ResumeProfile {
   selectedTemplate: Template
   jobDescription: string
   sectionOrder: string[]
+  themeColor?: string
+  templateFontSize?: number
+  templateFontWeight?: number
 }
 
 export interface AppState {

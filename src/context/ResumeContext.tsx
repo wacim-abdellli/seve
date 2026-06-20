@@ -40,6 +40,9 @@ function createDefaultResume(): ResumeProfile {
     selectedTemplate: 'classic',
     jobDescription: '',
     sectionOrder: [...DEFAULT_SECTION_ORDER],
+    themeColor: '#e11d48',
+    templateFontSize: 10,
+    templateFontWeight: 400,
   }
 }
 
@@ -465,6 +468,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           selectedTemplate: 'classic',
           jobDescription: '',
           sectionOrder: [...DEFAULT_SECTION_ORDER],
+          themeColor: '#e11d48',
+          templateFontSize: 10,
+          templateFontWeight: 400,
         },
       },
       selectedResumeId: newId,

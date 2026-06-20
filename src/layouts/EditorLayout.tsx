@@ -302,16 +302,28 @@ export default function EditorLayout() {
   const [activeMode, setActiveMode] = useState<'studio' | 'preview' | 'analyze'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
   const [pageCount, setPageCount] = useState(1)
-  const [templateFontSize, setTemplateFontSize] = useState(10)
-  const [templateFontWeight, setTemplateFontWeight] = useState(400)
+  
+  const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#e11d48'
+  const setThemeColor = (color: string) => {
+    localStorage.setItem('seve_theme_color', color)
+    updateActiveResume(prev => ({ ...prev, themeColor: color }))
+  }
+
+  const templateFontSize = activeResume?.templateFontSize || 10
+  const setTemplateFontSize = (size: number) => {
+    updateActiveResume(prev => ({ ...prev, templateFontSize: size }))
+  }
+
+  const templateFontWeight = activeResume?.templateFontWeight || 400
+  const setTemplateFontWeight = (weight: number) => {
+    updateActiveResume(prev => ({ ...prev, templateFontWeight: weight }))
+  }
+
   const { activeWarnings, showPrintModal, handlePrint: handlePrintModal, dismissWarnings, exportAnyway, dismissPrintModal, confirmPrint } = usePrintResume()
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [themeColor, setThemeColor] = useState<string>(() => localStorage.getItem('seve_theme_color') || '#e11d48')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
-
-  useEffect(() => { localStorage.setItem('seve_theme_color', themeColor) }, [themeColor])
 
   const handleDirectPdfExport = async () => {
     const previewEl = document.querySelector('[data-resume-preview]') as HTMLElement | null
@@ -387,6 +399,9 @@ export default function EditorLayout() {
           <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 p-2 sm:px-3 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center">
             <FolderOpen size={13} className="text-rose-500 shrink-0" />
             <span className="truncate hidden sm:inline">{activeResume?.title || 'My Resume'}</span>
+            <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono ml-0.5 shrink-0 flex items-center justify-center min-w-4 h-4">
+              {Object.keys(resumes || {}).length}
+            </span>
           </button>
           <div className="w-px h-5 bg-border hidden sm:block" />
           <button
