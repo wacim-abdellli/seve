@@ -78,8 +78,8 @@ export default function EditorPage() {
             <div className="hidden lg:flex border-r border-zinc-800 bg-card/65 backdrop-blur-md flex-col flex-shrink-0 h-full overflow-hidden no-print w-[380px]"
             >
               <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0">
-                <h2 className="text-[16px] font-semibold text-white">Resume Builder</h2>
-                <p className="text-[12px] text-zinc-500 mt-0.5">Click any section to edit</p>
+                <h2 className="text-[18px] font-semibold text-white">Resume Builder</h2>
+                <p className="text-[13px] text-zinc-500 mt-0.5">Click any section to edit</p>
               </div>
               <div className="flex-1 overflow-y-auto form-panel">
                 {overviewSections.map((section) => {
@@ -92,11 +92,11 @@ export default function EditorPage() {
                         <Icon className="w-4 h-4 transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-medium text-white">{section.title}</p>
-                        <p className="text-[12px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
+                        <p className="text-[15px] font-medium text-white">{section.title}</p>
+                        <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        {isComplete ? <span className="text-[11px] text-emerald-400">● Done</span> : <span className="text-[11px] text-zinc-650">○ Edit</span>}
+                        {isComplete ? <span className="text-[12px] text-emerald-400">● Done</span> : <span className="text-[12px] text-zinc-650">○ Edit</span>}
                         <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </button>
@@ -108,8 +108,8 @@ export default function EditorPage() {
             <div className={`w-full bg-card/65 backdrop-blur-md flex flex-col h-full overflow-hidden no-print lg:hidden ${mobileView === 'preview' ? 'hidden' : 'flex'}`}>
               <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0 flex items-center justify-between">
                 <div>
-                  <h2 className="text-[16px] font-semibold text-white">Resume Builder</h2>
-                  <p className="text-[12px] text-zinc-500 mt-0.5">Click any section to edit</p>
+                  <h2 className="text-[18px] font-semibold text-white">Resume Builder</h2>
+                  <p className="text-[13px] text-zinc-500 mt-0.5">Click any section to edit</p>
                 </div>
                 <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-8 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer">View Resume</button>
               </div>
@@ -124,11 +124,11 @@ export default function EditorPage() {
                         <Icon className="w-4 h-4 transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-medium text-white">{section.title}</p>
-                        <p className="text-[12px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
+                        <p className="text-[15px] font-medium text-white">{section.title}</p>
+                        <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        {isComplete ? <span className="text-[11px] text-emerald-400">● Done</span> : <span className="text-[11px] text-zinc-650">○ Edit</span>}
+                        {isComplete ? <span className="text-[12px] text-emerald-400">● Done</span> : <span className="text-[12px] text-zinc-650">○ Edit</span>}
                         <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </button>

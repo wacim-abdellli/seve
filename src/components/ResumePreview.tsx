@@ -86,6 +86,14 @@ export default function ResumePreview({
   const { showToast } = useToast()
   const [atsMode, setAtsMode] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const [isManualZoom, setIsManualZoom] = useState(false)
+  const isManualZoomRef = useRef(false)
+  
+  useEffect(() => {
+    isManualZoomRef.current = isManualZoom
+  }, [isManualZoom])
+
+  const lastWindowWidthRef = useRef(window.innerWidth)
   const [contentHeight, setContentHeight] = useState(1123)
   const [showGuides, setShowGuides] = useState(false)
   const [pageCount, setPageCount] = useState(1)
@@ -109,6 +117,17 @@ export default function ResumePreview({
 
     const handleResize = () => {
       if (!containerRef.current) return
+      
+      const currentWindowWidth = window.innerWidth
+      const windowResized = currentWindowWidth !== lastWindowWidthRef.current
+      lastWindowWidthRef.current = currentWindowWidth
+      
+      if (windowResized) {
+        setIsManualZoom(false)
+      } else if (isManualZoomRef.current) {
+        return
+      }
+
       const containerWidth = containerRef.current.clientWidth
       const isMobile = window.innerWidth < 640
       const padding = isMobile ? 16 : 112 // 8px margin buffer on mobile, 56px on desktop
@@ -341,7 +360,10 @@ export default function ResumePreview({
           {/* CENTER GROUP: Unified Zoom controls */}
           <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-0.5 h-8 flex-shrink-0 shadow-sm z-30">
             <button 
-              onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))}
+              onClick={() => {
+                setIsManualZoom(true)
+                setZoom(prev => Math.max(0.5, prev - 0.1))
+              }}
               className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
               type="button"
               title="Zoom out"
@@ -349,11 +371,35 @@ export default function ResumePreview({
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-[11px] text-zinc-300 font-mono px-2 min-w-[38px] text-center select-none font-extrabold">
+            <button
+              onClick={() => {
+                setIsManualZoom(false)
+                setTimeout(() => {
+                  if (containerRef.current) {
+                    const containerWidth = containerRef.current.clientWidth
+                    const isMobile = window.innerWidth < 640
+                    const padding = isMobile ? 16 : 112
+                    const availableWidth = containerWidth - padding
+                    if (availableWidth > 0 && availableWidth < 794) {
+                      const computedZoom = Number((availableWidth / 794).toFixed(2))
+                      setZoom(Math.max(0.25, Math.min(1, computedZoom)))
+                    } else {
+                      setZoom(1)
+                    }
+                  }
+                }, 0)
+              }}
+              className="text-[11px] text-indigo-400 hover:text-white px-2 min-w-[38px] text-center select-none font-extrabold cursor-pointer hover:bg-zinc-800/50 rounded transition-colors"
+              title="Click to reset to Auto-Fit"
+              type="button"
+            >
               {Math.round(zoom * 100)}%
-            </span>
+            </button>
             <button 
-              onClick={() => setZoom(prev => Math.min(1.5, prev + 0.1))}
+              onClick={() => {
+                setIsManualZoom(true)
+                setZoom(prev => Math.min(1.5, prev + 0.1))
+              }}
               className="p-1 text-zinc-500 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full"
               type="button"
               title="Zoom in"
