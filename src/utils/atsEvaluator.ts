@@ -902,6 +902,7 @@ function scoreCompleteness(resume: ResumeData, lang: string): AtsCategoryScore {
   if (resume.projects && resume.projects.length > 0) {
     const undatedProjects = resume.projects.filter(p => !p.startDate && !p.endDate && !p.date)
     if (undatedProjects.length > 0) {
+      score = Math.max(0, score - 1)
       issues.push({
         id: 'projects-no-dates',
         type: 'warning',
@@ -1282,6 +1283,7 @@ function scoreContactInfo(resume: ResumeData, lang: string): AtsCategoryScore {
     const resumeText = extractResumeText(resume)
     const allCapsUrlPattern = /HTTPS?:\/\/[A-Z0-9./-]+/
     if (allCapsUrlPattern.test(resumeText)) {
+      score = Math.max(0, score - 1)
       issues.push({
         id: 'contact-caps-url',
         type: 'warning',
@@ -2164,8 +2166,19 @@ export function generateAtsReportV2(
   // Parseability
   const { score: atsParseability, issues: parseabilityIssues } = scoreAtsParseability(resume)
 
-  // Add parseability as an 11th dimension, or just add its issues
-    // We don't add parseability as a separate category, just pass its issues
+  // Apply minor penalties to categories for parseability issues so they directly affect the score
+  parseabilityIssues.forEach(issue => {
+    if (issue.id === 'parseability-unicode') {
+      const idx = categories.findIndex(c => c.key === 'formatting')
+      if (idx !== -1) categories[idx].score = Math.max(0, categories[idx].score - 1)
+    } else if (issue.id.startsWith('parseability-section')) {
+      const idx = categories.findIndex(c => c.key === 'completeness')
+      if (idx !== -1) categories[idx].score = Math.max(0, categories[idx].score - 1)
+    } else if (issue.id === 'parseability-contact-position') {
+      const idx = categories.findIndex(c => c.key === 'contactInfo')
+      if (idx !== -1) categories[idx].score = Math.max(0, categories[idx].score - 1)
+    }
+  })
 
   let total = calculateTotal(categories)
   const resumeClassification = classifyDomain(text)
