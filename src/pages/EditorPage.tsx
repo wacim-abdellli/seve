@@ -105,7 +105,7 @@ export default function EditorPage() {
               </div>
             </div>
 
-            <div className="w-full bg-card/65 backdrop-blur-md flex flex-col h-full overflow-hidden no-print lg:hidden">
+            <div className={`w-full bg-card/65 backdrop-blur-md flex flex-col h-full overflow-hidden no-print lg:hidden ${mobileView === 'preview' ? 'hidden' : 'flex'}`}>
               <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0 flex items-center justify-between">
                 <div>
                   <h2 className="text-[16px] font-semibold text-white">Resume Builder</h2>
