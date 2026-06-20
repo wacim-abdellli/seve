@@ -34,11 +34,10 @@ export async function exportResumeToPdf(
   const opt = {
     margin: 0,
     filename,
-    image: { type: 'jpeg' as const, quality: 0.98 },
+    image: { type: 'png' as const },
     html2canvas: {
-      scale: 2,
+      scale: 4, // 4x resolution for Retina-level crispness
       useCORS: true,
-      letterRendering: true,
       logging: false,
       backgroundColor: '#ffffff',
     },
