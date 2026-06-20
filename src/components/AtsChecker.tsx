@@ -163,20 +163,19 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const LAST_AUDITED_RESUME_KEY = 'seve-last-audited-resume'
   const LAST_AUDITED_JD_KEY = 'seve-last-audited-jd'
 
-  // Initialize dataRef with persistent last audited state or current props
-  const dataRef = useRef<{ r: unknown; j: string }>(null as any)
-  if (dataRef.current === null) {
+  // Initialize dataRef with persistent last audited state (if it exists)
+  const dataRef = useRef<{ r: unknown; j: string } | null>(null)
+  const hasInitializedRef = useRef(false)
+
+  if (!hasInitializedRef.current) {
+    hasInitializedRef.current = true
     try {
       const r = localStorage.getItem(LAST_AUDITED_RESUME_KEY)
       const j = localStorage.getItem(LAST_AUDITED_JD_KEY)
       if (r !== null && j !== null) {
         dataRef.current = { r: JSON.parse(r), j }
-      } else {
-        dataRef.current = { r: resumeData, j: jobDescription }
       }
-    } catch {
-      dataRef.current = { r: resumeData, j: jobDescription }
-    }
+    } catch {}
   }
 
   const scanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -186,7 +185,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
 
   useEffect(() => {
-    // Only scan if content actually changed (deep comparison)
+    // Only skip scan if we have a saved audited state and the content matches it
     if (dataRef.current !== null) {
       const isSameResume = JSON.stringify(dataRef.current.r) === JSON.stringify(resumeData)
       const isSameJd = dataRef.current.j === jobDescription
@@ -195,12 +194,14 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       }
     }
 
+    // Set isScanning to true immediately to show the loading screen without delay
+    setIsScanning(true)
+
     // Debounce: wait 500ms of no edits before scanning
     if (scanTimer.current) clearTimeout(scanTimer.current)
     scanTimer.current = setTimeout(() => {
       dataRef.current = { r: resumeData, j: jobDescription }
 
-      setIsScanning(true)
       setScanStage(0)
       setResumeScanVersion(v => v + 1)
       setScanLogs([])
