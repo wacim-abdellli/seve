@@ -360,12 +360,12 @@ h1, h2, h3, h4, h5, h6 {
     text-transform: none !important;
   }
 
-  .resume-page ul {
+  .resume-page ul:not(.list-none) {
     list-style: disc !important;
     padding-left: 14pt !important;
     margin: 3pt 0 5pt 0 !important;
   }
-  .resume-page li {
+  .resume-page li:not(.list-none) {
     display: list-item !important;
     list-style: disc !important;
     line-height: 1.45 !important;
