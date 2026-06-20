@@ -15,6 +15,10 @@ export async function exportResumeToPdf(
   // 2. Clone the live element to capture its exact state
   const clone = element.cloneNode(true) as HTMLElement
 
+  // Remove all screen-only (no-print) elements from the clone before generating the PDF
+  const noPrintElements = clone.querySelectorAll('.no-print')
+  noPrintElements.forEach(el => el.remove())
+
   // 3. Strip zoom scale and force 100% relative layout on the clone
   clone.style.transform = 'none'
   clone.style.transformOrigin = 'unset'
