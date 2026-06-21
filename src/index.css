@@ -208,16 +208,10 @@
   color: var(--template-body-color) !important;
   padding: var(--template-page-padding) !important;
 }
-#resume-print-area h1, #resume-print-area h3, #resume-print-area h4, #resume-print-area h5, #resume-print-area h6,
-.resume-template-print-wrapper h1, .resume-template-print-wrapper h3, .resume-template-print-wrapper h4, .resume-template-print-wrapper h5, .resume-template-print-wrapper h6 {
+#resume-print-area h1, #resume-print-area h2, #resume-print-area h3, #resume-print-area h4, #resume-print-area h5, #resume-print-area h6,
+.resume-template-print-wrapper h1, .resume-template-print-wrapper h2, .resume-template-print-wrapper h3, .resume-template-print-wrapper h4, .resume-template-print-wrapper h5, .resume-template-print-wrapper h6 {
   font-family: var(--template-heading-font) !important;
   color: var(--template-heading-color) !important;
-  text-transform: var(--template-heading-case) !important;
-}
-#resume-print-area h2,
-.resume-template-print-wrapper h2 {
-  font-family: var(--template-heading-font) !important;
-  color: var(--template-theme-color) !important;
   text-transform: var(--template-heading-case) !important;
 }
 #resume-print-area svg,
