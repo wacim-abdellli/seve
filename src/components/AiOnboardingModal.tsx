@@ -121,7 +121,7 @@ Instructions for the AI:
         animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
         exit={{ opacity: 0, scale: 0.95, y: 15, filter: 'blur(8px)' }}
         transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
-        className="relative w-full max-w-[620px] bg-[#0c0d12] border border-[#e0314f]/25 rounded-2xl shadow-[0_0_50px_rgba(224,49,79,0.08)] p-6 md:p-8 overflow-hidden z-10 flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-[580px] bg-[#0c0d12] border border-[#e0314f]/25 rounded-2xl shadow-[0_0_50px_rgba(224,49,79,0.08)] p-6 md:p-8 overflow-hidden z-10 flex flex-col max-h-[90vh]"
       >
         {/* Glow ambient */}
         <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#e0314f]/5 rounded-full blur-3xl pointer-events-none" />
@@ -149,7 +149,7 @@ Instructions for the AI:
         </div>
 
         {/* Scrollable Step list */}
-        <div className="flex-1 overflow-y-auto pr-1 space-y-5 custom-scrollbar mb-6">
+        <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar mb-6">
           {/* Step 1 */}
           <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-xl space-y-3 relative group hover:border-[#e0314f]/20 transition-colors">
             <div className="flex items-start gap-3">
@@ -223,7 +223,7 @@ Instructions for the AI:
                 3
               </div>
               <div className="flex-1">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Paste the Result Here</h4>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Paste the JSON Result</h4>
                 <p className="text-[11px] text-zinc-400 leading-normal mt-0.5 font-light">
                   Once your AI generates the populated JSON code, copy it and paste it into the box below.
                 </p>
@@ -239,14 +239,14 @@ Instructions for the AI:
               />
 
               {validationError && (
-                <div className="flex items-center gap-1.5 text-[10px] text-rose-455 font-bold bg-rose-500/5 border border-rose-950/30 p-2 rounded-lg">
+                <div className="flex items-center gap-1.5 text-[10px] text-rose-400 font-bold bg-rose-500/5 border border-rose-950/30 p-2 rounded-lg">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>Invalid JSON: {validationError}</span>
                 </div>
               )}
 
               {parsedData && (
-                <div className="flex items-center gap-1.5 text-[10px] text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-950/30 p-2 rounded-lg">
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-950/30 p-2 rounded-lg animate-fade-in">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>Valid CV schema parsed successfully! Ready to import.</span>
                 </div>
@@ -259,7 +259,7 @@ Instructions for the AI:
         <div className="border-t border-zinc-900/60 pt-4 flex flex-col sm:flex-row gap-2 flex-shrink-0 relative font-display">
           <button
             onClick={handleDismiss}
-            className="flex-1 h-10 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-450 hover:text-white font-bold text-xs transition-colors cursor-pointer"
+            className="flex-1 h-10 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white font-bold text-xs transition-colors cursor-pointer"
           >
             Start Manual (Scratch)
           </button>
@@ -268,8 +268,8 @@ Instructions for the AI:
             disabled={!parsedData}
             className={`flex-1 h-10 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer ${
               parsedData
-                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/20 active:scale-98'
-                : 'bg-zinc-900 border border-zinc-800 text-zinc-550 cursor-not-allowed'
+                ? 'bg-[#e0314f] hover:bg-[#e54b64] text-white shadow-rose-950/20 active:scale-98 animate-pulse'
+                : 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed'
             }`}
           >
             <FileCode className="w-4 h-4" />

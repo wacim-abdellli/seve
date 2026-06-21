@@ -48,14 +48,16 @@ function ScoreGauge({ score, gradeLabel }: { score: number; gradeLabel: string }
   const stroke = 10
   const r = (size - stroke * 2) / 2
   const c = r * 2 * Math.PI
-  const color = score >= 90 ? '#10b981' : score >= 75 ? '#f59e0b' : '#e0314f'
+  const color = score >= 90 ? '#10b981' : score >= 75 ? '#f59e0b' : '#ef4444'
   
   return (
-    <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
-      {/* Dynamic ambient backdrop blur glow */}
-      <div 
-        className="absolute rounded-full blur-3xl opacity-20 transition-all duration-700 pointer-events-none" 
-        style={{ width: size + 28, height: size + 28, background: color }} 
+    <div className="relative inline-flex items-center justify-center shrink-0 select-none" style={{ width: size, height: size }}>
+      {/* Dynamic ambient backdrop blur glow with pulse effect */}
+      <motion.div 
+        className="absolute rounded-full blur-2xl opacity-20 pointer-events-none" 
+        style={{ width: size + 20, height: size + 20, background: color }}
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
       <svg width={size} height={size} className="absolute -rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={stroke} />
@@ -71,8 +73,8 @@ function ScoreGauge({ score, gradeLabel }: { score: number; gradeLabel: string }
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-        <span className="text-[44px] font-black text-white tabular-nums tracking-tight leading-none font-display">{score}</span>
-        <span className="text-[8px] font-black text-zinc-500 tracking-widest uppercase mt-1 font-display">{gradeLabel}</span>
+        <span className="text-[44px] font-black text-white tabular-nums tracking-tight leading-none font-display select-none">{score}</span>
+        <span className="text-[8px] font-black text-zinc-400 tracking-widest uppercase mt-1.5 font-display select-none">{gradeLabel}</span>
       </div>
     </div>
   )
@@ -81,29 +83,33 @@ function ScoreGauge({ score, gradeLabel }: { score: number; gradeLabel: string }
 /* ─── Metric Tile ─── */
 function MetricTile({ icon: Icon, label, value, description, colorClass = "text-zinc-400" }: { icon: LucideIcon; label: string; value: string | number; description?: string; colorClass?: string }) {
   const tintMap: Record<string, string> = {
-    'text-indigo-400': 'bg-indigo-500/8',
-    'text-emerald-400': 'bg-emerald-500/8',
-    'text-cyan-400': 'bg-cyan-500/8',
-    'text-amber-400': 'bg-amber-500/8',
-    'text-red-400': 'bg-red-500/8',
+    'text-indigo-400': 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    'text-emerald-400': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    'text-cyan-400': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    'text-amber-400': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    'text-red-400': 'bg-red-500/10 text-red-400 border-red-500/20',
   }
-  const bgClass = tintMap[colorClass] || 'bg-zinc-800/40'
+  const statusTheme = tintMap[colorClass] || 'bg-zinc-800/30 text-zinc-400 border-zinc-700/30'
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-xl bg-zinc-900/35 border border-zinc-800/35 p-3.5 hover:border-zinc-700/45 transition-all">
-      <div className="flex items-center gap-2.5">
-        <div className={`w-7 h-7 rounded-lg ${bgClass} flex items-center justify-center shrink-0`}>
-          <Icon size={13} className={colorClass} />
+    <motion.div 
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="flex flex-col gap-3 rounded-xl bg-zinc-900/20 border border-zinc-800/40 p-4 shadow-sm hover:border-zinc-700/60 hover:bg-zinc-900/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.35)] transition-all duration-200"
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-8 h-8 rounded-lg ${statusTheme.split(' ')[0]} border ${statusTheme.split(' ').slice(2).join(' ')} flex items-center justify-center shrink-0`}>
+          <Icon size={14} className={colorClass} />
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] font-medium text-zinc-500 uppercase tracking-wide">{label}</p>
-          <p className="text-sm font-semibold text-white mt-px truncate">{value}</p>
+          <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
+          <p className="text-sm font-bold text-white mt-0.5 truncate">{value}</p>
         </div>
       </div>
       {description && (
-        <p className="text-[10px] text-zinc-600 leading-relaxed border-t border-zinc-800/30 pt-2">{description}</p>
+        <p className="text-[10px] text-zinc-450 leading-relaxed border-t border-zinc-800/40 pt-2">{description}</p>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -119,14 +125,14 @@ const SECTION_LABELS: Record<string, string> = {
 }
 
 const BAR_COLORS: Record<string, string> = {
-  completeness: 'bg-indigo-500',
-  keywords: 'bg-emerald-500',
-  formatting: 'bg-cyan-500',
-  actionVerbs: 'bg-violet-500',
-  quantifiedResults: 'bg-pink-500',
-  contactInfo: 'bg-blue-500',
-  dateConsistency: 'bg-amber-500',
-  length: 'bg-orange-500',
+  completeness: 'bg-gradient-to-r from-indigo-600 to-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.2)]',
+  keywords: 'bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]',
+  formatting: 'bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.2)]',
+  actionVerbs: 'bg-gradient-to-r from-violet-600 to-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.2)]',
+  quantifiedResults: 'bg-gradient-to-r from-pink-600 to-pink-400 shadow-[0_0_8px_rgba(236,72,153,0.2)]',
+  contactInfo: 'bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.2)]',
+  dateConsistency: 'bg-gradient-to-r from-amber-600 to-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.2)]',
+  length: 'bg-gradient-to-r from-orange-600 to-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.2)]',
 }
 
 export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDescription, onNavigateToSection, templateFontSize }: AtsCheckerProps) {
@@ -145,6 +151,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [selectedVerbCat, setSelectedVerbCat] = useState('Tech & Dev')
   const [copiedVerb, setCopiedVerb] = useState<string | null>(null)
   const [copiedBullet, setCopiedBullet] = useState(false)
+  const [verbSearchQuery, setVerbSearchQuery] = useState('')
 
   const SCAN_STAGES = [
     { label: 'Parsing document tree', pct: 8, log: 'reading DOM layout... 6 blocks mapped' },
@@ -351,41 +358,65 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       </header>
 
       {/* ═══ Navigation Tabs ═══ */}
-      <nav className="flex px-5 border-b border-zinc-900 bg-zinc-950/20 shrink-0">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${activeTab === 'overview' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
-        >
-          <BarChart3 size={12} />
-          Overview
-        </button>
-        <button
-          onClick={() => setActiveTab('audit')}
-          className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${activeTab === 'audit' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
-        >
-          <CheckCircle2 size={12} />
-          Checklist
-          {!isScanning && totalIssuesCount > 0 && (
-            <span className={`px-1 py-px text-[7px] font-semibold rounded-full ${criticalIssues.length > 0 ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'}`}>
-              {totalIssuesCount}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('keywords')}
-          className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${activeTab === 'keywords' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
-        >
-          <Target size={12} />
-          Keywords
-          {jobDescription && (
-            <span className="px-1 py-px text-[7px] font-semibold bg-emerald-500/15 text-emerald-400 rounded-full">Linked</span>
-          )}
-        </button>
-      </nav>
+      <div className="px-5 py-3 border-b border-zinc-900/60 bg-zinc-950/40 shrink-0">
+        <div className="inline-flex p-1 bg-zinc-900/40 border border-zinc-800/50 rounded-xl">
+          {(['overview', 'audit', 'keywords'] as const).map((tab) => {
+            const isActive = activeTab === tab
+            const isAudit = tab === 'audit'
+            const isKeywords = tab === 'keywords'
+            const labelText = isAudit ? 'checklist' : tab
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="relative px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeAtsTab"
+                    className="absolute inset-0 bg-zinc-800/80 border border-zinc-700/45 rounded-lg shadow-sm"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className={`relative z-10 flex items-center gap-1.5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-zinc-400 hover:text-zinc-200'}`}>
+                  {tab === 'overview' && <BarChart3 size={13} />}
+                  {isAudit && <CheckCircle2 size={13} />}
+                  {isKeywords && <Target size={13} />}
+                  
+                  <span className="capitalize">{labelText}</span>
+                  
+                  {isAudit && !isScanning && totalIssuesCount > 0 && (
+                    <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded-full transition-colors duration-200 ${
+                      isActive 
+                        ? criticalIssues.length > 0 
+                          ? 'bg-red-500/25 text-red-400 border border-red-500/20' 
+                          : 'bg-amber-500/25 text-amber-400 border border-amber-500/20'
+                        : criticalIssues.length > 0 
+                        ? 'bg-red-500/10 text-red-500/70 border border-red-500/5' 
+                        : 'bg-amber-500/10 text-amber-500/75 border border-amber-500/5'
+                    }`}>
+                      {totalIssuesCount}
+                    </span>
+                  )}
+                  
+                  {isKeywords && jobDescription && (
+                    <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded-full transition-colors duration-200 ${
+                      isActive ? 'bg-emerald-500/25 text-emerald-400 border border-emerald-500/20' : 'bg-emerald-500/10 text-emerald-500/70 border border-emerald-500/5'
+                    }`}>
+                      Linked
+                    </span>
+                  )}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       {/* ═══ Content Area ═══ */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[960px] mx-auto p-6 space-y-6">
+        <div className="max-w-[1380px] mx-auto p-6 space-y-6">
 
           {/* ─── JD Input Accordion ─── */}
           <AnimatePresence>
@@ -441,34 +472,28 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                 className="flex flex-col items-center justify-center py-6"
               >
                 <div className="w-full max-w-sm">
-                  <div className="relative rounded-xl border border-zinc-800/30 bg-zinc-950/80 p-5 overflow-hidden">
+                  <div className="relative rounded-2xl border border-zinc-800/40 bg-zinc-950/80 p-6 overflow-hidden backdrop-blur-md shadow-2xl">
                     {/* Scanning line sweep */}
                     <motion.div
-                      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none"
+                      className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none"
                       animate={{ top: ['0%', '100%', '0%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                     />
 
                     <div className="flex flex-col items-center gap-4 relative">
-
-                      {/* Circular progress */}
-                      <div className="relative w-24 h-24">
-                        <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-                          <circle cx="48" cy="48" r="42" fill="none" stroke="rgb(24 24 27)" strokeWidth="5" />
+ 
+                       {/* Circular progress */}
+                       <div className="relative w-24 h-24">
+                         <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                           <circle cx="48" cy="48" r="42" fill="none" stroke="rgb(24 24 27)" strokeWidth="4" />
                           <motion.circle
-                            cx="48" cy="48" r="42" fill="none" stroke="url(#scanGradient)" strokeWidth="5"
+                            cx="48" cy="48" r="42" fill="none" stroke="#2dd4bf" strokeWidth="4"
                             strokeLinecap="round"
                             strokeDasharray={`${2 * Math.PI * 42}`}
                             animate={{ strokeDashoffset: `${2 * Math.PI * 42 * (1 - SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].pct / 100)}` }}
                             transition={{ duration: 0.6, ease: 'easeOut' }}
+                            style={{ filter: 'drop-shadow(0 0 6px rgba(45, 212, 191, 0.35))' }}
                           />
-                          <defs>
-                            <linearGradient id="scanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#38bdf8" />
-                              <stop offset="50%" stopColor="#2dd4bf" />
-                              <stop offset="100%" stopColor="#34d399" />
-                            </linearGradient>
-                          </defs>
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <motion.span
@@ -482,7 +507,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                           </motion.span>
                         </div>
                       </div>
-
+ 
                       {/* Stage label */}
                       <div className="text-center h-10 flex flex-col items-center justify-center">
                         <motion.p
@@ -495,11 +520,11 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                           {SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].label}
                         </motion.p>
                       </div>
-
+ 
                       {/* Progress bar */}
                       <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
                         <motion.div
-                          className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400"
+                          className="h-full rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
                           animate={{ width: `${SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].pct}%` }}
                           transition={{ duration: 0.5, ease: 'easeOut' }}
                         />
@@ -508,9 +533,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       {/* Live log — terminal style */}
                       <div className="w-full bg-zinc-950 rounded-lg border border-zinc-800/20 p-3 min-h-[72px]">
                         <div className="flex items-center gap-1.5 mb-2">
-                          <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                          <span className="text-[7px] font-medium text-zinc-600 uppercase">scan</span>
-                          <span className="text-[7px] text-zinc-700 font-mono ml-auto">{Math.min(scanStage + 1, SCAN_STAGES.length)}/{SCAN_STAGES.length}</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest">scan log</span>
+                          <span className="text-[7px] text-zinc-650 font-mono ml-auto">{Math.min(scanStage + 1, SCAN_STAGES.length)}/{SCAN_STAGES.length}</span>
                         </div>
                         <div className="space-y-0.5">
                           {scanLogs.map((log, i) => (
@@ -699,7 +724,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                     )}
 
                     {/* ─── Category Breakdown ─── */}
-                    <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-xl overflow-hidden">
+                    <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-xl overflow-hidden shadow-sm hover:border-zinc-700/40 transition-all duration-300">
                       <div className="px-5 pt-5 pb-3 flex items-center justify-between border-b border-zinc-800/30">
                         <h3 className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
                           <BarChart3 size={13} className="text-indigo-400" />
@@ -714,14 +739,18 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                           const isDisabled = cat.weight === 0
 
                           return (
-                            <div key={cat.key} className={`flex flex-col gap-1.5 ${isDisabled ? 'opacity-30' : ''}`}>
+                            <motion.div 
+                              key={cat.key} 
+                              whileHover={{ x: 2 }}
+                              className={`flex flex-col gap-1.5 transition-opacity ${isDisabled ? 'opacity-30' : ''}`}
+                            >
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-zinc-400">{SECTION_LABELS[cat.key] || cat.label}</span>
-                                <span className="font-medium text-zinc-300 tabular-nums">
+                                <span className="text-zinc-450 font-medium">{SECTION_LABELS[cat.key] || cat.label}</span>
+                                <span className="font-bold text-zinc-300 tabular-nums">
                                   {isDisabled ? 'Excluded' : `${cat.score}/${cat.max}`}
                                 </span>
                               </div>
-                              <div className="relative h-2 bg-zinc-950 rounded-full overflow-hidden">
+                              <div className="relative h-2 bg-zinc-950 rounded-full">
                                 {!isDisabled && (
                                   <motion.div
                                     initial={{ width: 0 }}
@@ -731,7 +760,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   />
                                 )}
                               </div>
-                            </div>
+                            </motion.div>
                           )
                         })}
                       </div>
@@ -748,12 +777,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       
                       {/* Critical Issues Section */}
                       {criticalIssues.length > 0 && (
-                        <div className="space-y-2.5">
-                          <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-                            <ShieldAlert size={13} className="text-red-400" />
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                            <ShieldAlert size={14} className="text-red-400" />
                             Critical ({criticalIssues.length})
                           </h4>
-                          <div className="space-y-2.5">
+                          <div className="space-y-3">
                             {criticalIssues.map((issue) => {
                               const isExpanded = !!expandedIssues[issue.id]
                               const help = ISSUE_EXPLANATIONS[issue.id]
@@ -763,29 +792,31 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={issue.id}
-                                  className="bg-red-950/5 border border-red-500/10 rounded-lg overflow-hidden"
+                                  className="bg-red-950/5 border border-red-500/15 hover:border-red-500/30 rounded-xl overflow-hidden transition-all duration-200"
                                 >
                                   <div
-                                    className={`p-3.5 flex gap-3 justify-between items-start md:items-center ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-red-500/5' : ''}`}
+                                    className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-red-500/5' : ''}`}
                                     onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
                                   >
-                                    <div className="flex gap-2.5 items-start min-w-0">
-                                      <div className="w-2 h-2 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                    <div className="flex gap-3 items-start min-w-0">
+                                      <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/25 flex items-center justify-center shrink-0 mt-0.5">
+                                        <ShieldAlert size={14} className="text-red-400" />
+                                      </div>
                                       <div>
-                                        <h5 className="text-sm font-semibold text-zinc-200">{issue.issue}</h5>
-                                        <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{issue.fix}</p>
+                                        <h5 className="text-sm font-semibold text-zinc-100">{issue.issue}</h5>
+                                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{issue.fix}</p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-2.5 shrink-0 mt-1">
                                       {issue.section && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             onNavigateToSection(issue.section!)
                                           }}
-                                          className="text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                          className="text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                         >
-                                          Fix <ArrowRight size={9} />
+                                          Fix <ArrowRight size={10} />
                                         </button>
                                       )}
                                       {hasHelpOrDetails && (
@@ -796,39 +827,43 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     </div>
                                   </div>
 
-                                  <AnimatePresence>
+                                  <AnimatePresence initial={false}>
                                     {isExpanded && hasHelpOrDetails && (
                                       <motion.div
                                         initial={{ height: 0 }}
                                         animate={{ height: 'auto' }}
                                         exit={{ height: 0 }}
-                                        className="overflow-hidden border-t border-red-500/10"
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                        className="overflow-hidden"
                                       >
-                                        <div className="p-3.5 bg-zinc-950/45 space-y-3">
+                                        <div className="p-4 bg-zinc-950/65 border-t border-red-500/10 space-y-4">
                                           {help && (
-                                            <div className="space-y-2.5">
+                                            <div className="space-y-3">
                                               <div>
-                                                <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Why it matters for ATS:</p>
-                                                <p className="text-xs text-zinc-355 mt-1 leading-relaxed">{help.whyItMatters}</p>
+                                                <p className="text-[10px] font-bold text-zinc-505 uppercase tracking-wider flex items-center gap-1.5">
+                                                  <Lightbulb size={11} className="text-indigo-400" />
+                                                  Why it matters for ATS:
+                                                </p>
+                                                <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">{help.whyItMatters}</p>
                                               </div>
-                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                                <div className="bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[9px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
-                                                  <p className="text-xs text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
+                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div className="bg-red-500/5 border border-red-500/10 p-3 rounded-lg">
+                                                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
+                                                  <p className="text-xs text-zinc-450 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
                                                 </div>
-                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
-                                                  <p className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
+                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg">
+                                                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
+                                                  <p className="text-xs text-zinc-350 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
                                                 </div>
                                               </div>
                                             </div>
                                           )}
                                           {hasDetails && (
-                                            <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/35">
-                                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Items needing review:</p>
-                                              <ul className="space-y-1">
+                                            <div className="space-y-2 pt-2 border-t border-zinc-900/60">
+                                              <p className="text-[10px] font-bold text-zinc-505 uppercase tracking-wider">Items needing review:</p>
+                                              <ul className="space-y-1.5">
                                                 {issue.details?.map((detail, dIdx) => (
-                                                  <li key={dIdx} className="text-xs text-zinc-400 border-l-2 border-red-400/50 pl-2.5 leading-relaxed py-0.5">
+                                                  <li key={dIdx} className="text-xs text-zinc-300 border-l-2 border-red-500/40 pl-3 leading-relaxed py-0.5">
                                                     {detail}
                                                   </li>
                                                 ))}
@@ -847,17 +882,17 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       )}
 
                       {/* Warnings Section */}
-                      <div className="space-y-2.5">
-                        <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-                          <AlertTriangle size={13} className="text-amber-400" />
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          <AlertTriangle size={14} className="text-amber-400" />
                           Warnings ({warningIssues.length})
                         </h4>
                         {warningIssues.length === 0 ? (
-                          <div className="rounded-lg bg-zinc-900/20 border border-zinc-800/30 p-4 text-center text-zinc-505 text-xs">
+                          <div className="rounded-xl bg-zinc-900/10 border border-zinc-800/30 p-5 text-center text-zinc-500 text-xs">
                             No formatting warnings. Layout looks clean.
                           </div>
                         ) : (
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {warningIssues.map((issue) => {
                               const isExpanded = !!expandedIssues[issue.id]
                               const help = ISSUE_EXPLANATIONS[issue.id]
@@ -867,29 +902,31 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={issue.id}
-                                  className="bg-zinc-900/20 border border-zinc-800/30 rounded-lg overflow-hidden"
+                                  className="bg-amber-950/5 border border-amber-500/15 hover:border-amber-500/25 rounded-xl overflow-hidden transition-all duration-200"
                                 >
                                   <div 
-                                    className={`p-3.5 flex gap-3 justify-between items-start md:items-center ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-900/30' : ''}`}
+                                    className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-amber-500/5' : ''}`}
                                     onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
                                   >
-                                    <div className="flex gap-2.5 items-start min-w-0">
-                                      <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                                    <div className="flex gap-3 items-start min-w-0">
+                                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0 mt-0.5">
+                                        <AlertTriangle size={14} className="text-amber-400" />
+                                      </div>
                                       <div>
-                                        <h5 className="text-sm font-semibold text-zinc-200">{issue.issue}</h5>
-                                        <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{issue.fix}</p>
+                                        <h5 className="text-sm font-semibold text-zinc-100">{issue.issue}</h5>
+                                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{issue.fix}</p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-2.5 shrink-0 mt-1">
                                       {issue.section && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             onNavigateToSection(issue.section!)
                                           }}
-                                          className="text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                          className="text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                         >
-                                          Edit <ArrowRight size={9} />
+                                          Edit <ArrowRight size={10} />
                                         </button>
                                       )}
                                       {hasHelpOrDetails && (
@@ -900,39 +937,43 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     </div>
                                   </div>
 
-                                  <AnimatePresence>
+                                  <AnimatePresence initial={false}>
                                     {isExpanded && hasHelpOrDetails && (
                                       <motion.div
                                         initial={{ height: 0 }}
                                         animate={{ height: 'auto' }}
                                         exit={{ height: 0 }}
-                                        className="overflow-hidden border-t border-zinc-800/30"
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                        className="overflow-hidden"
                                       >
-                                        <div className="p-3.5 bg-zinc-950/45 space-y-3">
+                                        <div className="p-4 bg-zinc-950/65 border-t border-zinc-800/30 space-y-4">
                                           {help && (
-                                            <div className="space-y-2.5">
+                                            <div className="space-y-3">
                                               <div>
-                                                <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Why it matters for ATS:</p>
-                                                <p className="text-xs text-zinc-355 mt-1 leading-relaxed">{help.whyItMatters}</p>
+                                                <p className="text-[10px] font-bold text-zinc-505 uppercase tracking-wider flex items-center gap-1.5">
+                                                  <Lightbulb size={11} className="text-indigo-400" />
+                                                  Why it matters for ATS:
+                                                </p>
+                                                <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">{help.whyItMatters}</p>
                                               </div>
-                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                                <div className="bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[9px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
-                                                  <p className="text-xs text-zinc-505 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
+                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div className="bg-red-500/5 border border-red-500/10 p-3 rounded-lg">
+                                                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
+                                                  <p className="text-xs text-zinc-450 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
                                                 </div>
-                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
-                                                  <p className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
+                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg">
+                                                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
+                                                  <p className="text-xs text-zinc-350 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
                                                 </div>
                                               </div>
                                             </div>
                                           )}
                                           {hasDetails && (
-                                            <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/35">
-                                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Items needing review:</p>
-                                              <ul className="space-y-1">
+                                            <div className="space-y-2 pt-2 border-t border-zinc-900/60">
+                                              <p className="text-[10px] font-bold text-zinc-505 uppercase tracking-wider">Items needing review:</p>
+                                              <ul className="space-y-1.5">
                                                 {issue.details?.map((detail, dIdx) => (
-                                                  <li key={dIdx} className="text-xs text-zinc-400 border-l-2 border-zinc-700 pl-2.5 leading-relaxed py-0.5">
+                                                  <li key={dIdx} className="text-xs text-zinc-300 border-l-2 border-zinc-700 pl-3 leading-relaxed py-0.5">
                                                     {detail}
                                                   </li>
                                                 ))}
@@ -951,17 +992,17 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       </div>
 
                       {/* Suggestions Section */}
-                      <div className="space-y-2.5">
-                        <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-                          <Lightbulb size={13} className="text-indigo-400" />
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                          <Lightbulb size={14} className="text-indigo-400" />
                           Suggestions ({suggestionIssues.length})
                         </h4>
                         {suggestionIssues.length === 0 ? (
-                          <div className="rounded-lg bg-zinc-900/20 border border-zinc-800/30 p-4 text-center text-zinc-505 text-xs">
+                          <div className="rounded-xl bg-zinc-900/10 border border-zinc-800/30 p-5 text-center text-zinc-500 text-xs">
                             No suggestions. Your writing is solid.
                           </div>
                         ) : (
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {suggestionIssues.map((issue) => {
                               const isExpanded = !!expandedIssues[issue.id]
                               const help = ISSUE_EXPLANATIONS[issue.id]
@@ -971,29 +1012,31 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={issue.id}
-                                  className="bg-zinc-900/10 border border-zinc-800/20 rounded-lg overflow-hidden"
+                                  className="bg-zinc-900/10 border border-zinc-800/35 hover:border-zinc-700/40 rounded-xl overflow-hidden transition-all duration-200"
                                 >
                                   <div 
-                                    className={`p-3.5 flex gap-3 justify-between items-start md:items-center ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-900/25' : ''}`}
+                                    className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-900/20' : ''}`}
                                     onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
                                   >
-                                    <div className="flex gap-2.5 items-start min-w-0">
-                                      <div className="w-2 h-2 rounded-full bg-zinc-500 mt-1.5 shrink-0" />
+                                    <div className="flex gap-3 items-start min-w-0">
+                                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                                        <Lightbulb size={14} className="text-indigo-400" />
+                                      </div>
                                       <div>
-                                        <h5 className="text-sm font-semibold text-zinc-200">{issue.issue}</h5>
-                                        <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{issue.fix}</p>
+                                        <h5 className="text-sm font-semibold text-zinc-100">{issue.issue}</h5>
+                                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{issue.fix}</p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-2.5 shrink-0 mt-1">
                                       {issue.section && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             onNavigateToSection(issue.section!)
                                           }}
-                                          className="text-xs font-medium text-zinc-500 hover:text-white bg-zinc-800/30 hover:bg-zinc-800/50 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                          className="text-xs font-semibold text-zinc-450 hover:text-white bg-zinc-800/30 hover:bg-zinc-850 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                                         >
-                                          Edit <ArrowRight size={9} />
+                                          Edit <ArrowRight size={10} />
                                         </button>
                                       )}
                                       {hasHelpOrDetails && (
@@ -1004,39 +1047,43 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     </div>
                                   </div>
 
-                                  <AnimatePresence>
+                                  <AnimatePresence initial={false}>
                                     {isExpanded && hasHelpOrDetails && (
                                       <motion.div
                                         initial={{ height: 0 }}
                                         animate={{ height: 'auto' }}
                                         exit={{ height: 0 }}
-                                        className="overflow-hidden border-t border-zinc-800/20"
+                                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                        className="overflow-hidden"
                                       >
-                                        <div className="p-3.5 bg-zinc-950/45 space-y-3">
+                                        <div className="p-4 bg-zinc-950/65 border-t border-zinc-800/20 space-y-4">
                                           {help && (
-                                            <div className="space-y-2.5">
+                                            <div className="space-y-3">
                                               <div>
-                                                <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Why it matters for ATS:</p>
-                                                <p className="text-xs text-zinc-350 mt-1 leading-relaxed">{help.whyItMatters}</p>
+                                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                  <Lightbulb size={11} className="text-indigo-400" />
+                                                  Why it matters for ATS:
+                                                </p>
+                                                <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">{help.whyItMatters}</p>
                                               </div>
-                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                                <div className="bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[9px] font-semibold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
-                                                  <p className="text-xs text-zinc-500 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
+                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div className="bg-red-500/5 border border-red-500/10 p-3 rounded-lg">
+                                                  <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider block mb-1">✕ Bad Example</span>
+                                                  <p className="text-xs text-zinc-455 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
                                                 </div>
-                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-2.5 rounded-lg">
-                                                  <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
-                                                  <p className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
+                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg">
+                                                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">✓ Optimized</span>
+                                                  <p className="text-xs text-zinc-350 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
                                                 </div>
                                               </div>
                                             </div>
                                           )}
                                           {hasDetails && (
-                                            <div className="space-y-1.5 pt-1.5 border-t border-zinc-800/35">
-                                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Items to consider:</p>
-                                              <ul className="space-y-1">
+                                            <div className="space-y-2 pt-2 border-t border-zinc-900/60">
+                                              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Items to consider:</p>
+                                              <ul className="space-y-1.5">
                                                 {issue.details?.map((detail, dIdx) => (
-                                                  <li key={dIdx} className="text-xs text-zinc-400 border-l-2 border-zinc-700/50 pl-2.5 leading-relaxed py-0.5">
+                                                  <li key={dIdx} className="text-xs text-zinc-300 border-l-2 border-zinc-700/50 pl-3 leading-relaxed py-0.5">
                                                     {detail}
                                                   </li>
                                                 ))}
@@ -1057,38 +1104,42 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                     {/* Right Column: ATS Writing & Formatting Guide */}
                     <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-6">
-                      <div className="bg-zinc-905/35 border border-zinc-800/45 rounded-xl p-5">
+                      <div className="bg-zinc-900/20 border border-zinc-800/45 rounded-xl p-5 shadow-sm hover:border-zinc-700/40 transition-all duration-300">
                         <div className="flex items-center gap-2 mb-3">
                           <BookOpen size={14} className="text-indigo-400" />
                           <div>
                             <h4 className="text-sm font-semibold text-white">ATS Excellence Guide</h4>
-                            <p className="text-xs text-zinc-400">Writing standard &amp; format compliance</p>
+                            <p className="text-xs text-zinc-500">Writing standard &amp; format compliance</p>
                           </div>
                         </div>
 
                         {/* Guide Navigation */}
-                        <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-950/80 rounded-lg border border-zinc-800/40 mb-4 shrink-0">
-                          <button
-                            onClick={() => setGuideTab('formula')}
-                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${guideTab === 'formula' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                          >
-                            <Sparkles size={11} className={guideTab === 'formula' ? 'text-indigo-400' : 'text-zinc-500'} />
-                            Formula
-                          </button>
-                          <button
-                            onClick={() => setGuideTab('verbs')}
-                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${guideTab === 'verbs' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                          >
-                            <Zap size={11} className={guideTab === 'verbs' ? 'text-indigo-400' : 'text-zinc-500'} />
-                            Power Verbs
-                          </button>
-                          <button
-                            onClick={() => setGuideTab('format')}
-                            className={`py-1.5 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${guideTab === 'format' ? 'bg-zinc-900 text-indigo-400 border border-zinc-800/40 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                          >
-                            <Shield size={11} className={guideTab === 'format' ? 'text-indigo-400' : 'text-zinc-500'} />
-                            Safety Rules
-                          </button>
+                        <div className="grid grid-cols-3 gap-1 p-1 bg-zinc-950/80 rounded-xl border border-zinc-800/40 mb-4 shrink-0 relative">
+                          {(['formula', 'verbs', 'format'] as const).map((tab) => {
+                            const isActive = guideTab === tab;
+                            const Icon = tab === 'formula' ? Sparkles : tab === 'verbs' ? Zap : Shield;
+                            const label = tab === 'formula' ? 'Formula' : tab === 'verbs' ? 'Power Verbs' : 'Safety Rules';
+                            return (
+                              <button
+                                key={tab}
+                                onClick={() => setGuideTab(tab)}
+                                className="relative py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 select-none outline-none"
+                                style={{ WebkitTapHighlightColor: 'transparent' }}
+                              >
+                                {isActive && (
+                                  <motion.div
+                                    layoutId="activeGuideTab"
+                                    className="absolute inset-0 bg-zinc-900 border border-zinc-800/50 rounded-lg shadow-sm"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                  />
+                                )}
+                                <span className={`relative z-10 flex items-center gap-1.5 transition-colors duration-200 ${isActive ? 'text-indigo-400' : 'text-zinc-500 hover:text-zinc-350'}`}>
+                                  <Icon size={11} className={isActive ? 'text-indigo-400' : 'text-zinc-500'} />
+                                  {label}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
 
                         {/* Tab Contents */}
@@ -1102,7 +1153,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                             </div>
 
                             {/* X-Y-Z Formula Visual Card */}
-                            <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg font-mono text-xs leading-relaxed text-zinc-400 space-y-1 text-center">
+                            <div className="p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl font-mono text-xs leading-relaxed text-zinc-400 space-y-1 text-center">
                               <span className="text-white font-semibold block mb-0.5 text-[12px]">Accomplished [X]</span>
                               <span className="text-zinc-400 block">as measured by [Y]</span>
                               <span className="text-zinc-450 block">by doing [Z]</span>
@@ -1110,39 +1161,39 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                             {/* Interactive XYZ Builder */}
                             <div className="space-y-3 pt-2 border-t border-zinc-800/40">
-                              <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Interactive Bullet Builder</p>
+                              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Interactive Bullet Builder</p>
                               
-                              <div className="space-y-2">
+                              <div className="space-y-2.5">
                                 <div>
-                                  <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">What did you accomplish? (X)</label>
+                                  <label className="text-[9px] font-semibold text-zinc-450 uppercase tracking-wider block mb-1">What did you accomplish? (X)</label>
                                   <input
                                     type="text"
                                     value={xyzX}
                                     onChange={(e) => setXyzX(e.target.value)}
                                     placeholder="e.g., reduced database query latency"
-                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                    className="w-full bg-zinc-950/60 border border-zinc-800/80 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                                   />
                                 </div>
                                 
                                 <div>
-                                  <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">How was it measured? (Y)</label>
+                                  <label className="text-[9px] font-semibold text-zinc-455 uppercase tracking-wider block mb-1">How was it measured? (Y)</label>
                                   <input
                                     type="text"
                                     value={xyzY}
                                     onChange={(e) => setXyzY(e.target.value)}
                                     placeholder="e.g., by 40% (saving 12 hours of processing time)"
-                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                    className="w-full bg-zinc-950/60 border border-zinc-800/80 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                                   />
                                 </div>
                                 
                                 <div>
-                                  <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1">What action/method did you take? (Z)</label>
+                                  <label className="text-[9px] font-semibold text-zinc-455 uppercase tracking-wider block mb-1">What action/method did you take? (Z)</label>
                                   <input
                                     type="text"
                                     value={xyzZ}
                                     onChange={(e) => setXyzZ(e.target.value)}
                                     placeholder="e.g., implementing query index caching and Redis stores"
-                                    className="w-full bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                    className="w-full bg-zinc-950/60 border border-zinc-800/80 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                                   />
                                 </div>
                               </div>
@@ -1150,8 +1201,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               {/* Assembled output preview */}
                               {(xyzX || xyzY || xyzZ) && (
                                 <div className="space-y-2 pt-2">
-                                  <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 relative group">
-                                    <div className="absolute right-2 top-2">
+                                  <div className="bg-zinc-950/80 border border-zinc-800/85 hover:border-indigo-500/30 rounded-xl p-4 relative group transition-all duration-300">
+                                    <div className="absolute right-3 top-3">
                                       <button
                                         onClick={() => {
                                           const firstWordCapitalized = (xyzZ.trim().split(/\s+/)[0] || '').replace(/^[a-z]/, (char) => char.toUpperCase())
@@ -1162,13 +1213,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           setCopiedBullet(true)
                                           setTimeout(() => setCopiedBullet(false), 2000)
                                         }}
-                                        className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                                        className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-white transition-colors cursor-pointer"
                                         title="Copy bullet point"
                                       >
-                                        {copiedBullet ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                                        {copiedBullet ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                                       </button>
                                     </div>
-                                    <p className="text-xs text-zinc-300 font-mono pr-7 leading-relaxed">
+                                    <p className="text-xs text-zinc-300 font-mono pr-9 leading-relaxed whitespace-pre-wrap">
                                       {(() => {
                                         const firstWordCapitalized = (xyzZ.trim().split(/\s+/)[0] || '').replace(/^[a-z]/, (char) => char.toUpperCase())
                                         const zRest = xyzZ.trim().substring(firstWordCapitalized.length)
@@ -1196,45 +1247,124 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               </p>
                             </div>
 
-                            {/* Verb category picker */}
-                            <div className="flex flex-wrap gap-1 border-b border-zinc-850 pb-2.5">
-                              {POWER_VERBS.map((c) => (
-                                <button
-                                  key={c.category}
-                                  onClick={() => setSelectedVerbCat(c.category)}
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${selectedVerbCat === c.category ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-950 border border-zinc-850 text-zinc-500 hover:text-zinc-300'}`}
-                                >
-                                  {c.category}
-                                </button>
-                              ))}
-                            </div>
-
-                            {/* Verb selection list */}
-                            <div className="space-y-2">
-                              <div className="flex flex-wrap gap-1.5">
-                                {POWER_VERBS.find((c) => c.category === selectedVerbCat)?.verbs.map((verb) => (
-                                  <button
-                                    key={verb}
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(verb)
-                                      setCopiedVerb(verb)
-                                      setTimeout(() => setCopiedVerb(null), 1500)
-                                    }}
-                                    className="px-2 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-705 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5"
-                                  >
-                                    {verb}
-                                    {copiedVerb === verb ? (
-                                      <Check size={9} className="text-emerald-400" />
-                                    ) : (
-                                      <Copy size={9} className="text-zinc-600" />
-                                    )}
-                                  </button>
-                                ))}
+                            {/* Search Power Verbs */}
+                            <div className="relative mb-3">
+                              <input
+                                type="text"
+                                value={verbSearchQuery}
+                                onChange={(e) => setVerbSearchQuery(e.target.value)}
+                                placeholder="Search 150+ action verbs..."
+                                className="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-lg pl-8 pr-8 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
+                              />
+                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
                               </div>
-                              {copiedVerb && (
-                                <p className="text-xs text-emerald-400 font-semibold text-right">Copied "{copiedVerb}"!</p>
+                              {verbSearchQuery && (
+                                <button 
+                                  onClick={() => setVerbSearchQuery('')}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-550 hover:text-zinc-300 text-[10px] bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded-md"
+                                >
+                                  Clear
+                                </button>
                               )}
                             </div>
+
+                            {(() => {
+                              if (verbSearchQuery.trim()) {
+                                const query = verbSearchQuery.toLowerCase().trim();
+                                const allVerbs = POWER_VERBS.reduce((acc, cat) => {
+                                  const matches = cat.verbs.filter(v => v.toLowerCase().includes(query));
+                                  if (matches.length > 0) {
+                                    acc.push({ category: cat.category, verbs: matches });
+                                  }
+                                  return acc;
+                                }, [] as { category: string; verbs: string[] }[]);
+
+                                if (allVerbs.length === 0) {
+                                  return (
+                                    <div className="py-6 text-center text-xs text-zinc-500 border border-dashed border-zinc-850 rounded-xl">
+                                      No matching verbs found for "{verbSearchQuery}"
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div className="space-y-3.5 max-h-48 overflow-y-auto pr-1">
+                                    {allVerbs.map(group => (
+                                      <div key={group.category} className="space-y-1.5">
+                                        <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest block">{group.category}</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {group.verbs.map(verb => (
+                                            <button
+                                              key={verb}
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(verb)
+                                                setCopiedVerb(verb)
+                                                setTimeout(() => setCopiedVerb(null), 1500)
+                                              }}
+                                              className="px-2 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5"
+                                            >
+                                              {verb}
+                                              {copiedVerb === verb ? (
+                                                <Check size={9} className="text-emerald-400" />
+                                              ) : (
+                                                <Copy size={9} className="text-zinc-650" />
+                                              )}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="space-y-4">
+                                  {/* Verb category picker */}
+                                  <div className="flex flex-wrap gap-1 border-b border-zinc-850 pb-2.5">
+                                    {POWER_VERBS.map((c) => (
+                                      <button
+                                        key={c.category}
+                                        onClick={() => setSelectedVerbCat(c.category)}
+                                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${selectedVerbCat === c.category ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-950 border border-zinc-850 text-zinc-500 hover:text-zinc-300'}`}
+                                      >
+                                        {c.category}
+                                      </button>
+                                    ))}
+                                  </div>
+
+                                  {/* Verb selection list */}
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {POWER_VERBS.find((c) => c.category === selectedVerbCat)?.verbs.map((verb) => (
+                                        <button
+                                          key={verb}
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(verb)
+                                            setCopiedVerb(verb)
+                                            setTimeout(() => setCopiedVerb(null), 1500)
+                                          }}
+                                          className="px-2 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5"
+                                        >
+                                          {verb}
+                                          {copiedVerb === verb ? (
+                                            <Check size={9} className="text-emerald-400" />
+                                          ) : (
+                                            <Copy size={9} className="text-zinc-650" />
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            {copiedVerb && (
+                              <p className="text-xs text-emerald-400 font-semibold text-right">Copied "{copiedVerb}"!</p>
+                            )}
                           </div>
                         )}
 
@@ -1247,37 +1377,37 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               </p>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                               {/* DOS LIST */}
-                              <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <CheckCircle2 size={10} className="text-emerald-400" />
+                              <div className="space-y-2.5">
+                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                                  <CheckCircle2 size={12} className="text-emerald-400" />
                                   Dos (ATS Safe)
                                 </span>
-                                <ul className="space-y-1 pl-1">
+                                <div className="space-y-2">
                                   {FORMATTING_RULES.dos.map((item, idx) => (
-                                    <li key={idx} className="text-xs text-zinc-400 leading-relaxed list-none pl-3 relative">
-                                      <span className="absolute left-0 text-emerald-500/50">•</span>
-                                      {item}
-                                    </li>
+                                    <div key={idx} className="text-xs text-zinc-300 leading-relaxed flex items-start gap-2.5 p-2 bg-emerald-500/5 border border-emerald-500/10 rounded-lg">
+                                      <Check size={13} className="text-emerald-400 shrink-0 mt-0.5" strokeWidth={3} />
+                                      <span>{item}</span>
+                                    </div>
                                   ))}
-                                </ul>
+                                </div>
                               </div>
 
                               {/* DON'TS LIST */}
-                              <div className="space-y-1.5 pt-2 border-t border-zinc-850">
-                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <XCircle size={10} className="text-red-400" />
+                              <div className="space-y-2.5 pt-3 border-t border-zinc-850">
+                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1.5">
+                                  <XCircle size={12} className="text-red-400" />
                                   Don'ts (Parser Risk)
                                 </span>
-                                <ul className="space-y-1 pl-1">
+                                <div className="space-y-2">
                                   {FORMATTING_RULES.donts.map((item, idx) => (
-                                    <li key={idx} className="text-xs text-zinc-400 leading-relaxed list-none pl-3 relative">
-                                      <span className="absolute left-0 text-red-500/50">•</span>
-                                      {item}
-                                    </li>
+                                    <div key={idx} className="text-xs text-zinc-300 leading-relaxed flex items-start gap-2.5 p-2 bg-red-500/5 border border-red-500/10 rounded-lg">
+                                      <XCircle size={13} className="text-red-400 shrink-0 mt-0.5" />
+                                      <span>{item}</span>
+                                    </div>
                                   ))}
-                                </ul>
+                                </div>
                               </div>
                             </div>
                           </div>

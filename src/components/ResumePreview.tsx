@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import type { ResumeData, ResumeStylePreferences, Template } from '../types/resume'
 import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
 
@@ -6,18 +7,16 @@ import TemplateRenderer from './TemplateRenderer'
 import { SectionReorderProvider } from './PreviewSectionWrapper'
 import { useToast } from '../hooks/useToast'
 import { 
-  Sparkles, 
-  FileText, 
-  User, 
-  Briefcase, 
-  GraduationCap, 
-  Wrench, 
-  ZoomIn, 
-  ZoomOut, 
+  Sparkles,
+  FileText,
+  UploadCloud,
+  Brain,
+  ArrowRight,
+  ZoomIn,
+  ZoomOut,
   Grid3x3,
   Download,
-  Minimize2,
-  UploadCloud
+  Minimize2
 } from 'lucide-react'
 
 interface ResumePreviewProps {
@@ -85,6 +84,7 @@ export default function ResumePreview({
   const [zoom, setZoom] = useState(1)
   const [isManualZoom, setIsManualZoom] = useState(false)
   const isManualZoomRef = useRef(false)
+  const [dismissed, setDismissed] = useState(false)
   
   useEffect(() => {
     isManualZoomRef.current = isManualZoom
@@ -498,109 +498,78 @@ export default function ResumePreview({
 
 
 
-          {isEmpty ? (
-            /* Premium Visual Empty State Mockup */
-            <div className="h-full flex flex-col justify-between py-10 px-8 text-slate-400 font-sans border-2 border-dashed border-slate-200 rounded-lg relative overflow-hidden select-none no-print min-h-[1123px]">
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-red-500/5 rounded-full blur-2xl" />
-              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-red-500/5 rounded-full blur-2xl" />
+          {isEmpty && !dismissed ? (
+            <div className="h-full flex flex-col items-center justify-center p-8 select-none no-print min-h-[1123px] relative overflow-hidden">
+              <div className="absolute -right-20 -top-20 w-60 h-60 bg-[#e0314f]/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
-              {/* Header Mock */}
-              <div className="space-y-4 text-center pb-8 border-b border-slate-100">
-                <div className="mx-auto w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-400">
-                  <User className="w-5 h-5 text-red-400" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-7 w-48 bg-slate-100 rounded-md mx-auto animate-pulse" />
-                  <div className="h-3.5 w-64 bg-slate-50 rounded mx-auto" />
-                </div>
-              </div>
-
-              {/* Body Mock */}
-              <div className="flex-1 py-10 space-y-10">
-                {/* Summary Mock */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-2 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                    <FileText className="w-4 h-4 text-zinc-400" /> Professional Summary
+              <motion.div
+                initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4 }}
+                className="w-full max-w-[520px] space-y-6"
+              >
+                <div className="text-center space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-[#e0314f]/10 border border-[#e0314f]/25 flex items-center justify-center mx-auto shadow-lg shadow-[#e0314f]/5">
+                    <Sparkles className="w-7 h-7 text-[#e0314f]" />
                   </div>
-                  <div className="space-y-2">
-                    <div className="h-3.5 w-full bg-slate-100/70 rounded" />
-                    <div className="h-3.5 w-[90%] bg-slate-100/70 rounded" />
-                    <div className="h-3.5 w-[75%] bg-slate-100/70 rounded" />
-                  </div>
+                  <h2 className="text-2xl font-extrabold text-white tracking-tight font-display">Welcome to Seve</h2>
+                  <p className="text-sm text-zinc-400 font-light leading-relaxed max-w-xs mx-auto">
+                    Import an existing resume or start fresh. Your data stays on your device.
+                  </p>
                 </div>
 
-                {/* Experience Mock */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                    <Briefcase className="w-4 h-4 text-zinc-400" /> Work History
-                  </div>
-                  <div className="border-l border-slate-100 pl-4 ml-2 space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div className="h-4 w-36 bg-slate-100 rounded" />
-                        <div className="h-3 w-20 bg-slate-50 rounded" />
-                      </div>
-                      <div className="h-3 w-24 bg-slate-50 rounded" />
-                      <div className="space-y-1.5 pt-1.5">
-                        <div className="h-3 w-full bg-slate-100/70 rounded" />
-                        <div className="h-3 w-[85%] bg-slate-100/70 rounded" />
-                      </div>
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={onTriggerImport}
+                    className="w-full group flex items-center gap-4 p-4 bg-zinc-950/70 border border-zinc-800 hover:border-[#e0314f]/30 hover:bg-zinc-900/80 rounded-xl text-left transition-all cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#e0314f]/10 border border-[#e0314f]/20 flex items-center justify-center text-[#e0314f] shrink-0 group-hover:bg-[#e0314f]/15 group-hover:border-[#e0314f]/30 transition-all">
+                      <UploadCloud className="w-5 h-5" />
                     </div>
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white">Import Existing Resume</p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">Upload .txt/.json or paste your old CV text — we'll extract the details</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-[#e0314f] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onTriggerImport}
+                    className="w-full group flex items-center gap-4 p-4 bg-zinc-950/70 border border-zinc-800 hover:border-purple-500/30 hover:bg-zinc-900/80 rounded-xl text-left transition-all cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0 group-hover:bg-purple-500/15 group-hover:border-purple-500/30 transition-all">
+                      <Brain className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white">AI Fast Fill</p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">Use ChatGPT/Claude to generate a structured resume from your old CV</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDismissed(true)}
+                    className="w-full group flex items-center gap-4 p-4 bg-zinc-950/70 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/80 rounded-xl text-left transition-all cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center text-zinc-400 shrink-0 group-hover:bg-zinc-800 group-hover:border-zinc-600 transition-all">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white">Start from Scratch</p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">Build your resume manually using the section editor on the left</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </button>
                 </div>
 
-                {/* Education & Skills Mock */}
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                      <GraduationCap className="w-4 h-4 text-zinc-400" /> Education
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="h-3.5 w-28 bg-slate-100 rounded" />
-                      <div className="h-3 w-20 bg-slate-50 rounded" />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                      <Wrench className="w-4 h-4 text-zinc-400" /> Skills
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      <div className="h-6 w-16 bg-slate-100 rounded-full" />
-                      <div className="h-6 w-12 bg-slate-100 rounded-full" />
-                      <div className="h-6 w-20 bg-slate-100 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Instruction Overlay */}
-              <div className="absolute inset-0 bg-white/40 backdrop-blur-[1.5px] flex flex-col items-center justify-center p-6 text-center">
-                <div className="bg-zinc-900 text-red-400 rounded-2xl p-6 shadow-2xl max-w-sm border border-zinc-800/80 space-y-4 animate-scale-in">
-                  <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-400 mx-auto">
-                    <Sparkles className="w-6 h-6 animate-pulse" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h3 className="text-sm font-extrabold tracking-tight">Your Resume Preview</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed font-light">
-                      Start filling in the form sections or chat with the AI coach on the left panel to watch your resume build here live!
-                    </p>
-                  </div>
-
-                  {onTriggerImport && (
-                    <div className="pt-3 border-t border-zinc-800/60 flex flex-col gap-2 w-full">
-                      <span className="text-[9px] text-zinc-550 font-bold uppercase tracking-wider block">— OR —</span>
-                      <button
-                        type="button"
-                        onClick={onTriggerImport}
-                        className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-rose-600/10 cursor-pointer"
-                      >
-                        <UploadCloud className="w-3.5 h-3.5" />
-                        Import PDF/Word Resume
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+                <p className="text-[10px] text-zinc-600 text-center">
+                  Your data is processed entirely in-browser. Nothing is uploaded to any server.
+                </p>
+              </motion.div>
             </div>
           ) : (
             /* Normal Template Rendering with Drag-and-drop handlers */
