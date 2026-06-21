@@ -42,7 +42,7 @@ export default function LandingPage() {
   const faqItems = [
     {
       q: 'Is Seve really free?',
-      a: 'Yes. The core editor, professional templates, local keyword matching, and ATS compatibility checker are 100% free, requiring no credit card, subscription, or sign-up.'
+      a: 'Yes. The core editor, professional templates, local keyword matching, and ATS compatibility checker are 100% free to try, requiring no credit card or subscription.'
     },
     {
       q: 'How does the ATS compatibility checker work?',
@@ -50,7 +50,7 @@ export default function LandingPage() {
     },
     {
       q: 'Is my personal data secure?',
-      a: 'Completely. Your resume data is stored locally inside your browser\'s localStorage and never uploaded to our servers.'
+      a: 'Completely. Your resume data is saved locally inside your browser and can be synced securely to the cloud when you sign in, ensuring you never lose your progress.'
     },
     {
       q: 'Can I use Seve on my phone or tablet?',
@@ -120,7 +120,7 @@ export default function LandingPage() {
             <div className="lg:col-span-6 text-center lg:text-left flex flex-col items-center lg:items-start font-sans">
               <Badge variant="outline" className="mb-6 rounded-full border-border bg-zinc-900/50 px-3 py-1 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs text-muted-foreground font-medium font-display">Smart ATS Checker — No Signup Required</span>
+                <span className="text-xs text-muted-foreground font-medium font-display">Smart ATS Checker — Real-Time Audit</span>
               </Badge>
               
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight max-w-xl font-display">
@@ -128,7 +128,7 @@ export default function LandingPage() {
               </h2>
               
               <p className="text-sm md:text-base text-muted-foreground font-light max-w-lg mt-6 leading-relaxed">
-                Beautiful templates, smart ATS checker, and optional AI tools — all in your browser. No paywalls, no tracking, no sign-up required.
+                Beautiful templates, smart ATS checker, and optional AI tools — all in your browser. No paywalls, no tracking, free to try.
               </p>
               
               <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -281,7 +281,7 @@ export default function LandingPage() {
             <h2 className="text-xs font-bold uppercase tracking-widest text-red-400 mb-2">Core Features</h2>
             <h3 className="text-2xl md:text-3xl font-extrabold text-white">Everything you need. Genuinely free.</h3>
             <p className="text-sm text-muted-foreground mt-4 leading-relaxed font-light">
-              No mock pricing, no hidden tiers, no sign-up gates. Just a highly specialized client-side utility built to help you land interviews.
+              No mock pricing, no hidden tiers. Just a highly specialized client-side utility built to help you land interviews.
             </p>
           </div>
      
