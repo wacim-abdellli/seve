@@ -458,6 +458,14 @@ export default function ResumePreview({
               top: 0,
               '--template-font-size': `${templateFontSize}px`, 
               '--template-font-weight': templateFontWeight,
+              '--template-font-weight-thin': Math.max(100, templateFontWeight - 300),
+              '--template-font-weight-extralight': Math.max(100, templateFontWeight - 200),
+              '--template-font-weight-light': Math.max(200, templateFontWeight - 100),
+              '--template-font-weight-medium': Math.min(800, templateFontWeight + 100),
+              '--template-font-weight-semibold': Math.min(800, templateFontWeight + 200),
+              '--template-font-weight-bold': Math.min(900, templateFontWeight + 300),
+              '--template-font-weight-extrabold': Math.min(900, templateFontWeight + 400),
+              '--template-font-weight-black': Math.min(900, templateFontWeight + 500),
               ...(stylePrefs ? stylePrefsToCssVars(stylePrefs) : {}),
             } as React.CSSProperties}
             className="relative resume-preview bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"

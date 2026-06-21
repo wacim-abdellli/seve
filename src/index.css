@@ -113,6 +113,43 @@
   font-size: var(--template-font-size) !important;
   font-weight: var(--template-font-weight) !important;
 }
+
+#resume-print-area .font-thin,
+.resume-template-print-wrapper .font-thin {
+  font-weight: var(--template-font-weight-thin, 100) !important;
+}
+#resume-print-area .font-extralight,
+.resume-template-print-wrapper .font-extralight {
+  font-weight: var(--template-font-weight-extralight, 200) !important;
+}
+#resume-print-area .font-light,
+.resume-template-print-wrapper .font-light {
+  font-weight: var(--template-font-weight-light, 300) !important;
+}
+#resume-print-area .font-normal,
+.resume-template-print-wrapper .font-normal {
+  font-weight: var(--template-font-weight, 400) !important;
+}
+#resume-print-area .font-medium,
+.resume-template-print-wrapper .font-medium {
+  font-weight: var(--template-font-weight-medium, 500) !important;
+}
+#resume-print-area .font-semibold,
+.resume-template-print-wrapper .font-semibold {
+  font-weight: var(--template-font-weight-semibold, 600) !important;
+}
+#resume-print-area .font-bold,
+.resume-template-print-wrapper .font-bold {
+  font-weight: var(--template-font-weight-bold, 700) !important;
+}
+#resume-print-area .font-extrabold,
+.resume-template-print-wrapper .font-extrabold {
+  font-weight: var(--template-font-weight-extrabold, 800) !important;
+}
+#resume-print-area .font-black,
+.resume-template-print-wrapper .font-black {
+  font-weight: var(--template-font-weight-black, 900) !important;
+}
 #resume-print-area .text-\[10px\],
 .resume-template-print-wrapper .text-\[10px\] {
   font-size: var(--template-font-size) !important;
@@ -177,10 +214,32 @@
   color: var(--template-heading-color) !important;
   text-transform: var(--template-heading-case) !important;
 }
+#resume-print-area .resume-section,
+#resume-print-area .resume-section-breakable,
+#resume-print-area .preview-section,
+.resume-template-print-wrapper .resume-section,
+.resume-template-print-wrapper .resume-section-breakable,
+.resume-template-print-wrapper .preview-section {
+  margin-bottom: 0 !important;
+}
+
+#resume-print-area .preview-section + .preview-section,
 #resume-print-area .resume-section + .resume-section,
-.resume-template-print-wrapper .resume-section + .resume-section {
+#resume-print-area .resume-section-breakable + .resume-section-breakable,
+#resume-print-area .resume-page > * + *,
+#resume-print-area div:has(> .preview-section) + div:has(> .preview-section),
+#resume-print-area div:has(> .resume-section) + div:has(> .resume-section),
+#resume-print-area div:has(> .resume-section-breakable) + div:has(> .resume-section-breakable),
+.resume-template-print-wrapper .preview-section + .preview-section,
+.resume-template-print-wrapper .resume-section + .resume-section,
+.resume-template-print-wrapper .resume-section-breakable + .resume-section-breakable,
+.resume-template-print-wrapper .resume-page > * + *,
+.resume-template-print-wrapper div:has(> .preview-section) + div:has(> .preview-section),
+.resume-template-print-wrapper div:has(> .resume-section) + div:has(> .resume-section),
+.resume-template-print-wrapper div:has(> .resume-section-breakable) + div:has(> .resume-section-breakable) {
   margin-top: var(--template-section-spacing) !important;
 }
+
 #resume-print-area li,
 .resume-template-print-wrapper li {
   margin-top: var(--template-item-spacing) !important;

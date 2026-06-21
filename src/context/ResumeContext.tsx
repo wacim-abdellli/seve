@@ -107,12 +107,13 @@ function loadInitialState(): AppState {
 
 
 
-export type CloudStatus = 'local' | 'syncing' | 'synced' | 'error'
+export type CloudStatus = 'local' | 'syncing' | 'synced' | 'error' | 'unsaved'
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { showToast } = useToast()
   const [state, setState] = useState<AppState>(loadInitialState)
+  const [lastSyncedState, setLastSyncedState] = useState<AppState>(state)
   const [isSaving, setIsSaving] = useState(false)
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>('local')
   const [cloudError, setCloudError] = useState<string | null>(null)
@@ -177,6 +178,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       // Sync the merged state back to the cloud to ensure local-only/new resumes are uploaded
       await syncToCloudRef.current(Object.values(currentResumes), userId)
 
+      setLastSyncedState({ resumes: currentResumes, selectedResumeId: currentState.selectedResumeId })
       setCloudStatus('synced')
       setCloudError(null)
       hasMergedCloudRef.current = true
@@ -292,7 +294,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const prevUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    const isInitialLoad = isInitialMountRef.current
     const isLoginEvent = user?.id !== prevUserIdRef.current
     const isMergeUpdate = isMergingRef.current
 
@@ -300,51 +301,65 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     prevUserIdRef.current = user?.id ?? null
     isMergingRef.current = false
 
-    // Persist to localStorage right away — don't wait for the debounce timer.
-    // This guarantees data is saved even if the tab is closed before 800ms.
+    // Persist to localStorage right away
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
-
-    // Only show "Saving…" for genuine user edits (not on mount, login, or merge).
-    const isUserEdit = !isInitialLoad && !isLoginEvent && !isMergeUpdate
-    if (isUserEdit) {
-      setIsSaving(true)
-      if (user && hasMergedCloudRef.current) setCloudStatus('syncing')
-    }
 
     if (!user) {
       setCloudStatus('local')
       setCloudError(null)
-      setIsSaving(false)
       return
     }
 
-    // Do NOT auto-save if we haven't successfully fetched and merged from cloud yet,
-    // OR if this state update was just the merge itself.
-    if (!hasMergedCloudRef.current || isMergeUpdate) {
-      setIsSaving(false)
-      return
+    if (isLoginEvent) {
+      setLastSyncedState(state)
     }
 
-    // Debounce the cloud write so rapid keystrokes only cause one round-trip.
-    const handler = setTimeout(async () => {
-      setIsSaving(false)
-      try {
-        await syncToCloud(Object.values(state.resumes), user.id)
+    // Determine cloud status based on unsaved changes
+    if (hasMergedCloudRef.current && !isMergeUpdate) {
+      const hasChanges = JSON.stringify(state.resumes) !== JSON.stringify(lastSyncedState.resumes)
+      if (hasChanges) {
+        setCloudStatus('unsaved')
+      } else {
         setCloudStatus('synced')
-        setCloudError(null)
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message
-          : (err as { message?: string })?.message ?? 'Unknown sync error'
-        console.error('[Seve] Cloud sync failed:', err)
-        setCloudStatus('error')
-        setCloudError(msg)
-        showToast('Cloud sync failed', 'error')
       }
-    }, 800)
+    }
+  }, [state, user?.id, lastSyncedState])
 
-    // Cancel the pending write on cleanup — don't flip isSaving here to avoid flicker.
-    return () => clearTimeout(handler)
-  }, [state, user?.id, syncToCloud])
+  const saveChangesToCloud = useCallback(async () => {
+    if (!user) return
+    setIsSaving(true)
+    setCloudStatus('syncing')
+    setCloudError(null)
+    try {
+      await syncToCloud(Object.values(state.resumes), user.id)
+      setLastSyncedState(state)
+      setCloudStatus('synced')
+      setCloudError(null)
+      showToast('Changes saved to cloud', 'success')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message
+        : (err as { message?: string })?.message ?? 'Unknown sync error'
+      console.error('[Seve] Cloud save failed:', err)
+      setCloudStatus('error')
+      setCloudError(msg)
+      showToast('Cloud save failed', 'error')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [state, user, syncToCloud, showToast])
+
+  const discardChanges = useCallback(() => {
+    if (window.confirm('Are you sure you want to discard all unsaved changes for this session? This will revert your resume to the last saved cloud version.')) {
+      setState(lastSyncedState)
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(lastSyncedState))
+      showToast('Changes discarded', 'info')
+    }
+  }, [lastSyncedState, showToast])
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!user) return false
+    return JSON.stringify(state.resumes) !== JSON.stringify(lastSyncedState.resumes)
+  }, [state.resumes, lastSyncedState.resumes, user])
 
 
   const activeResumeId = state.selectedResumeId
@@ -560,9 +575,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       if (!hasMergedCloudRef.current) {
         await fetchAndMergeCloud(user.id)
       } else {
-        await syncToCloud(Object.values(state.resumes), user.id)
-        setCloudStatus('synced')
-        setCloudError(null)
+        await saveChangesToCloud()
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? 'Unknown error'
@@ -570,7 +583,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setCloudStatus('error')
       setCloudError(msg)
     }
-  }, [user, state.resumes, syncToCloud, fetchAndMergeCloud])
+  }, [user, fetchAndMergeCloud, saveChangesToCloud])
 
 
 
@@ -600,12 +613,16 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     redo: handleRedo,
     canUndo,
     canRedo,
+    hasUnsavedChanges,
+    saveChangesToCloud,
+    discardChanges,
   }), [
     state.resumes, state.selectedResumeId, activeResume, resumeData,
     selectedTemplate, jobDescription, sectionOrder, isSaving, cloudStatus, cloudError,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, updateStylePrefs, updateResumeData, updateSectionOrder, importResumeData, retrySync,
     handleUndo, handleRedo, canUndo, canRedo,
+    hasUnsavedChanges, saveChangesToCloud, discardChanges,
   ])
 
   return (

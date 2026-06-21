@@ -28,6 +28,9 @@ export interface ResumeContextType {
   redo: () => void
   canUndo: boolean
   canRedo: boolean
+  hasUnsavedChanges: boolean
+  saveChangesToCloud: () => Promise<void>
+  discardChanges: () => void
 }
 
 export const ResumeContext = createContext<ResumeContextType | undefined>(undefined)

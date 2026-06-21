@@ -17,6 +17,7 @@ export default function ResumeBulletList({ bullets, className = '', itemClassNam
     .replace(/\blist-disc\b/g, '')
     .replace(/\b-indent-\S+\b/g, '')
     .replace(/\bpl-\S+\b/g, '')
+    .replace(/\bml-\S+\b/g, '')
     .trim()
 
   return (

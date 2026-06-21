@@ -267,12 +267,12 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
             >
               <h1 className="text-xl font-black tracking-tight text-slate-900 break-words">{getFullName(contact) || 'YOUR NAME'}</h1>
               <div className="h-0.5 w-12 rounded my-2.5" style={{ backgroundColor: themeColor }} />
-              <div className="space-y-1.5 text-[9px] text-slate-700">
+              <div className="space-y-1.5 text-[9px] text-slate-700 break-words [word-break:break-word]">
                 {contact.location && <div><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Location</span>{contact.location}</div>}
-                {contact.email && <div><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Email</span>{contact.email}</div>}
+                {contact.email && <div className="break-all"><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Email</span>{contact.email}</div>}
                 {contact.phone && <div><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Phone</span>{contact.phone}</div>}
-                {contact.linkedin && <div><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">LinkedIn</span>{contact.linkedin}</div>}
-                {contact.website && <div><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Website</span>{contact.website}</div>}
+                {contact.linkedin && <div className="break-all"><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">LinkedIn</span>{contact.linkedin.replace(/^(https?:\/\/)?(www\.)?/i, '')}</div>}
+                {contact.website && <div className="break-all"><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Website</span>{contact.website.replace(/^(https?:\/\/)?(www\.)?/i, '')}</div>}
               </div>
             </PreviewSectionWrapper>
             <div className="mt-5 space-y-3">{renderLeft(page1Left)}</div>

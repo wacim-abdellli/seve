@@ -384,6 +384,7 @@ export default function EditorLayout() {
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, updateStylePrefs, importResumeData, sectionOrder, updateSectionOrder,
     undo, redo, canUndo, canRedo,
+    saveChangesToCloud, discardChanges,
   } = useResume()
   const { user, signInWithGoogle, signOut } = useAuth()
 
@@ -544,6 +545,7 @@ export default function EditorLayout() {
               cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
               : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
               : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
+              : cloudStatus === 'unsaved' ? 'bg-rose-500/10 border-rose-500/35 text-rose-455'
               : 'bg-zinc-900 border-zinc-800 text-zinc-500'
             }`}
           >
@@ -553,6 +555,8 @@ export default function EditorLayout() {
               <RefreshCw size={11} className="text-amber-400 shrink-0 animate-spin" />
             ) : cloudStatus === 'synced' ? (
               <Cloud size={11} className="text-emerald-400 shrink-0" />
+            ) : cloudStatus === 'unsaved' ? (
+              <AlertCircle size={11} className="text-rose-400 shrink-0" />
             ) : (
               <HardDrive size={11} className="text-zinc-550 shrink-0" />
             )}
@@ -561,6 +565,7 @@ export default function EditorLayout() {
                 ? (cloudError ? `Error: ${cloudError}` : 'Sync failed')
                 : isSaving || cloudStatus === 'syncing' ? 'Saving…'
                 : cloudStatus === 'synced' ? 'Cloud saved'
+                : cloudStatus === 'unsaved' ? 'Unsaved changes'
                 : 'Saved locally'}
             </span>
             {cloudStatus === 'error' && (
@@ -570,16 +575,43 @@ export default function EditorLayout() {
             )}
           </div>
 
+          {cloudStatus === 'unsaved' && !isSaving && (
+            <div className="flex items-center gap-2 animate-fade-in">
+              <button
+                onClick={saveChangesToCloud}
+                className="h-6 px-2.5 rounded-full bg-[#e0314f] hover:bg-[#e54b64] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all shadow-md shadow-rose-950/20 cursor-pointer flex items-center gap-1 active:scale-95"
+              >
+                Save
+              </button>
+              <button
+                onClick={discardChanges}
+                className="h-6 px-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+              >
+                Discard
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Mobile Save Status Indicator */}
+          {cloudStatus === 'unsaved' && !isSaving && (
+            <div className="lg:hidden flex items-center gap-1.5 mr-1">
+              <button
+                onClick={saveChangesToCloud}
+                className="h-7 px-2 rounded-lg bg-[#e0314f] hover:bg-[#e54b64] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+              >
+                Save
+              </button>
+            </div>
+          )}
           <div 
             className="lg:hidden flex items-center justify-center mr-1"
             title={
               cloudStatus === 'error' ? (cloudError ?? 'Sync failed')
               : isSaving || cloudStatus === 'syncing' ? 'Saving...'
               : cloudStatus === 'synced' ? 'Cloud saved'
+              : cloudStatus === 'unsaved' ? 'Unsaved changes'
               : 'Saved locally'
             }
           >
@@ -589,6 +621,8 @@ export default function EditorLayout() {
               <RefreshCw size={14} className="text-amber-400 shrink-0 animate-spin" />
             ) : cloudStatus === 'synced' ? (
               <Cloud size={14} className="text-emerald-400 shrink-0" />
+            ) : cloudStatus === 'unsaved' ? (
+              <AlertCircle size={14} className="text-rose-450 shrink-0 animate-pulse" />
             ) : (
               <HardDrive size={14} className="text-zinc-550 shrink-0" />
             )}
@@ -675,6 +709,14 @@ export default function EditorLayout() {
                style={{
                  '--template-font-size': `${templateFontSize}px`,
                  '--template-font-weight': templateFontWeight,
+                 '--template-font-weight-thin': Math.max(100, templateFontWeight - 300),
+                 '--template-font-weight-extralight': Math.max(100, templateFontWeight - 200),
+                 '--template-font-weight-light': Math.max(200, templateFontWeight - 100),
+                 '--template-font-weight-medium': Math.min(800, templateFontWeight + 100),
+                 '--template-font-weight-semibold': Math.min(800, templateFontWeight + 200),
+                 '--template-font-weight-bold': Math.min(900, templateFontWeight + 300),
+                 '--template-font-weight-extrabold': Math.min(900, templateFontWeight + 400),
+                 '--template-font-weight-black': Math.min(900, templateFontWeight + 500),
                  ...stylePrefsToCssVars(stylePrefs),
                } as React.CSSProperties}>
           <TemplateRenderer type={selectedTemplate} data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />
