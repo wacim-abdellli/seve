@@ -491,13 +491,13 @@ export default function EditorLayout() {
       </div>
 
       <header className="relative z-40 flex items-center justify-between px-6 py-3 bg-zinc-950/80 backdrop-blur-md border-b border-border sticky top-0 no-print flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors font-semibold cursor-pointer">
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 justify-start min-w-0">
+          <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors font-semibold cursor-pointer shrink-0">
             <ArrowLeft size={14} />
             <span className="hidden sm:inline">Landing</span>
           </button>
-          <div className="w-px h-5 bg-border" />
-          <div className="flex items-center gap-2">
+          <div className="w-px h-5 bg-border shrink-0" />
+          <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center select-none">
               <span className="relative font-serif text-sm font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#e11d48]" />
@@ -506,19 +506,19 @@ export default function EditorLayout() {
             </div>
             <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 uppercase tracking-wider rounded hidden sm:inline-block">FREE</span>
           </div>
-          <div className="w-px h-5 bg-border hidden sm:block" />
-          <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 p-2 sm:px-3 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center">
+          <div className="w-px h-5 bg-border hidden sm:block shrink-0" />
+          <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 p-2 sm:px-3 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center min-w-0">
             <FolderOpen size={13} className="text-rose-500 shrink-0" />
-            <span className="truncate hidden sm:inline">{activeResume?.title || 'My Resume'}</span>
+            <span className="truncate hidden sm:inline max-w-[80px] md:max-w-[120px]">{activeResume?.title || 'My Resume'}</span>
             <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono ml-0.5 shrink-0 flex items-center justify-center min-w-4 h-4">
               {Object.keys(resumes || {}).length}
             </span>
           </button>
-          <div className="w-px h-5 bg-border hidden sm:block" />
+          <div className="w-px h-5 bg-border hidden md:block shrink-0" />
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex"
+            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex shrink-0"
             title="Undo (Ctrl+Z)"
           >
             <Undo2 size={16} />
@@ -526,14 +526,14 @@ export default function EditorLayout() {
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex"
+            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex shrink-0"
             title="Redo (Ctrl+Y)"
           >
             <Redo2 size={16} />
           </button>
         </div>
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-3 no-print">
+        <div className="hidden lg:flex items-center justify-center gap-3 no-print px-4 flex-shrink-0">
           {pageCount > 1 && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/80 border border-zinc-700 text-[9px] font-semibold text-zinc-400 tracking-wide">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
@@ -593,7 +593,7 @@ export default function EditorLayout() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center justify-end gap-2 sm:gap-3 flex-1 min-w-0">
           {/* Mobile Save Status Indicator */}
           {cloudStatus === 'unsaved' && !isSaving && (
             <div className="lg:hidden flex items-center gap-1.5 mr-1">

@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, ChevronRight, ArrowLeft, Type } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
-import ResumePreview, { templatesList, themeColors } from '../components/ResumePreview'
+import ResumePreview, { templatesList } from '../components/ResumePreview'
 import DesignStylePanel from '../components/DesignStylePanel'
 import { getSectionStatus } from '../utils/completionHelper'
 const AtsChecker = lazy(() => import('../components/AtsChecker'))
@@ -92,46 +92,6 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Colors */}
-        <div className="space-y-3 pt-4 border-t border-zinc-800/40">
-          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-450 block select-none font-display">Theme Accent</label>
-          <div className="flex flex-wrap gap-3">
-            {themeColors.map((color) => {
-              const isSelected = themeColor === color.value
-              return (
-                <button
-                  key={color.value}
-                  type="button"
-                  onClick={() => setThemeColor(color.value)}
-                  style={{ backgroundColor: color.value }}
-                  className={`w-7 h-7 rounded-full transition-all duration-150 relative cursor-pointer flex items-center justify-center hover:scale-110 active:scale-95 ${
-                    isSelected ? 'ring-2 ring-[#e0314f] ring-offset-2 ring-offset-zinc-950 shadow-lg' : 'border border-white/5'
-                  }`}
-                  title={color.label}
-                />
-              )
-            })}
-            <label
-              className="w-7 h-7 rounded-full bg-zinc-950 border border-zinc-850 cursor-pointer flex items-center justify-center hover:scale-110 hover:border-zinc-700 transition-all duration-150 relative overflow-hidden"
-              title="Custom color"
-              style={!themeColors.find(c => c.value === themeColor) ? { 
-                backgroundColor: themeColor,
-                border: 'none',
-                boxShadow: '0 0 0 2px #e0314f'
-              } : undefined}
-            >
-              <span className="text-xs font-black text-zinc-400 leading-none pointer-events-none select-none">+</span>
-              <input
-                type="color"
-                value={themeColor}
-                onChange={(e) => setThemeColor(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                aria-label="Theme accent color"
-              />
-            </label>
-          </div>
-        </div>
-
         {/* Size */}
         <div className="space-y-3 pt-4 border-t border-zinc-800/40">
           <label className="text-[11px] font-black uppercase tracking-wider text-zinc-450 block select-none font-display">Base Font Size</label>
@@ -203,7 +163,7 @@ export default function EditorPage() {
         </div>
 
         {/* Design Style Panel */}
-        <DesignStylePanel stylePrefs={stylePrefs} updateStylePrefs={updateStylePrefs} />
+        <DesignStylePanel stylePrefs={stylePrefs} updateStylePrefs={updateStylePrefs} themeColor={themeColor} setThemeColor={setThemeColor} />
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import type { ResumeStylePreferences } from '../types/resume'
 import { ChevronDown, Type, AlignLeft, Palette, Eye } from 'lucide-react'
+import { themeColors } from './ResumePreview'
 
 function AccordionSection({ title, icon, defaultOpen = false, children }: { title: string; icon: ReactNode; defaultOpen?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -25,6 +26,8 @@ function AccordionSection({ title, icon, defaultOpen = false, children }: { titl
 interface Props {
   stylePrefs: ResumeStylePreferences
   updateStylePrefs: (updater: (prev: ResumeStylePreferences) => ResumeStylePreferences) => void
+  themeColor: string
+  setThemeColor: (color: string) => void
 }
 
 const FONT_OPTIONS = [
@@ -130,7 +133,7 @@ function ToggleControl({ label, description, value, onChange }: { label: string;
   )
 }
 
-export default function DesignStylePanel({ stylePrefs, updateStylePrefs }: Props) {
+export default function DesignStylePanel({ stylePrefs, updateStylePrefs, themeColor, setThemeColor }: Props) {
   const update = (field: keyof ResumeStylePreferences, value: unknown) => {
     updateStylePrefs((prev) => ({ ...prev, [field]: value }))
   }
@@ -196,6 +199,45 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs }: Props
 
       {/* Colors & Dividers */}
       <AccordionSection title="Colors & Dividers" icon={<Palette size={14} />} defaultOpen={false}>
+        <div className="space-y-2 pb-2 border-b border-zinc-800/40">
+          <span className="text-[11px] font-bold text-zinc-400 block">Theme Accent</span>
+          <div className="flex flex-wrap gap-2">
+            {themeColors.map((color) => {
+              const isSelected = themeColor === color.value
+              return (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setThemeColor(color.value)}
+                  style={{ backgroundColor: color.value }}
+                  className={`w-6 h-6 rounded-full transition-all duration-150 relative cursor-pointer flex items-center justify-center hover:scale-110 active:scale-95 ${
+                    isSelected ? 'ring-2 ring-rose-500 ring-offset-2 ring-offset-zinc-950 shadow-lg' : 'border border-white/5'
+                  }`}
+                  title={color.label}
+                />
+              )
+            })}
+            <label
+              className="w-6 h-6 rounded-full bg-zinc-950 border border-zinc-850 cursor-pointer flex items-center justify-center hover:scale-110 hover:border-zinc-700 transition-all duration-150 relative overflow-hidden"
+              title="Custom color"
+              style={!themeColors.find(c => c.value === themeColor) ? { 
+                backgroundColor: themeColor,
+                border: 'none',
+                boxShadow: '0 0 0 2px #f43f5e'
+              } : undefined}
+            >
+              <span className="text-xs font-black text-zinc-400 leading-none pointer-events-none select-none">+</span>
+              <input
+                type="color"
+                value={themeColor}
+                onChange={(e) => setThemeColor(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                aria-label="Theme accent color"
+              />
+            </label>
+          </div>
+        </div>
+
         <ColorControl label="Body Text" value={stylePrefs.bodyTextColor} onChange={(v) => update('bodyTextColor', v)} />
         <ColorControl label="Headings" value={stylePrefs.headingColor} onChange={(v) => update('headingColor', v)} />
         <ColorControl label="Divider Color" value={stylePrefs.dividerColor || '#cbd5e1'} onChange={(v) => update('dividerColor', v)} />
