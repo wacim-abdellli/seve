@@ -423,7 +423,7 @@ export default function EditorLayout() {
       return
     }
     try {
-      const previewEl = document.querySelector('[data-resume-preview]') as HTMLElement | null
+      const previewEl = (document.querySelector('[data-resume-preview]') || document.querySelector('.resume-template-print-wrapper')) as HTMLElement | null
       if (!previewEl) {
         alert('Resume preview element not found.')
         return
