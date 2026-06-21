@@ -12,10 +12,12 @@ import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2 } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { exportResumeToPdf } from '../utils/pdfExport'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
+import AiOnboardingModal from '../components/AiOnboardingModal'
+
 
 
 type SectionKey = string
@@ -392,6 +394,15 @@ export default function EditorLayout() {
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
   const [pageCount, setPageCount] = useState(1)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAiGuide, setShowAiGuide] = useState(false)
+
+  useEffect(() => {
+    const onboarded = localStorage.getItem('seve_ai_onboarded')
+    if (onboarded === null) {
+      setShowAiGuide(true)
+    }
+  }, [])
+
   
   const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#e11d48'
   const setThemeColor = (color: string) => {
@@ -491,9 +502,12 @@ export default function EditorLayout() {
       </div>
 
       <header className="relative z-40 flex items-center justify-between px-6 py-3 bg-zinc-950/80 backdrop-blur-md border-b border-border sticky top-0 no-print flex-shrink-0">
-        <div className="flex items-center gap-3 sm:gap-4 flex-1 justify-start min-w-0">
-          <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors font-semibold cursor-pointer shrink-0">
-            <ArrowLeft size={14} />
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-1 justify-start min-w-0">
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-3 rounded-full transition-all cursor-pointer shrink-0"
+          >
+            <ArrowLeft size={13} className="shrink-0" />
             <span className="hidden sm:inline">Landing</span>
           </button>
           <div className="w-px h-5 bg-border shrink-0" />
@@ -507,7 +521,10 @@ export default function EditorLayout() {
             <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 uppercase tracking-wider rounded hidden sm:inline-block">FREE</span>
           </div>
           <div className="w-px h-5 bg-border hidden sm:block shrink-0" />
-          <button onClick={() => setIsResumeManagerOpen(true)} className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800 p-2 sm:px-3 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center min-w-0">
+          <button 
+            onClick={() => setIsResumeManagerOpen(true)} 
+            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-3 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center min-w-0 shrink-0"
+          >
             <FolderOpen size={13} className="text-rose-500 shrink-0" />
             <span className="truncate hidden sm:inline max-w-[80px] md:max-w-[120px]">{activeResume?.title || 'My Resume'}</span>
             <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono ml-0.5 shrink-0 flex items-center justify-center min-w-4 h-4">
@@ -518,20 +535,21 @@ export default function EditorLayout() {
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex shrink-0"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-transparent disabled:hover:bg-transparent transition-colors hidden md:inline-flex shrink-0 cursor-pointer"
             title="Undo (Ctrl+Z)"
           >
-            <Undo2 size={16} />
+            <Undo2 size={14} className="shrink-0" />
           </button>
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="p-2 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors hidden md:inline-flex shrink-0"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-transparent disabled:hover:bg-transparent transition-colors hidden md:inline-flex shrink-0 cursor-pointer"
             title="Redo (Ctrl+Y)"
           >
-            <Redo2 size={16} />
+            <Redo2 size={14} className="shrink-0" />
           </button>
         </div>
+
 
         <div className="hidden lg:flex items-center justify-center gap-3 no-print px-4 flex-shrink-0">
           {pageCount > 1 && (
@@ -593,7 +611,7 @@ export default function EditorLayout() {
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 sm:gap-3 flex-1 min-w-0">
+        <div className="flex items-center justify-end gap-2 shrink-0">
           {/* Mobile Save Status Indicator */}
           {cloudStatus === 'unsaved' && !isSaving && (
             <div className="lg:hidden flex items-center gap-1.5 mr-1">
@@ -622,21 +640,29 @@ export default function EditorLayout() {
             ) : cloudStatus === 'synced' ? (
               <Cloud size={14} className="text-emerald-400 shrink-0" />
             ) : cloudStatus === 'unsaved' ? (
-              <AlertCircle size={14} className="text-rose-450 shrink-0 animate-pulse" />
+              <AlertCircle size={14} className="text-rose-455 shrink-0 animate-pulse" />
             ) : (
               <HardDrive size={14} className="text-zinc-550 shrink-0" />
             )}
           </div>
 
-          <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-all cursor-pointer items-center justify-center h-8 w-8 inline-flex" title="Settings">
-            <Settings size={15} />
+          <button 
+            onClick={() => setIsSettingsOpen(true)} 
+            className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
+            title="Settings"
+          >
+            <Settings size={14} className="shrink-0" />
           </button>
           {user && (
-            <div className="relative">
-              <button onClick={() => setShowUserMenu(!showUserMenu)} onBlur={() => setTimeout(() => setShowUserMenu(false), 150)} className="flex items-center gap-2 border border-zinc-800 text-xs font-semibold p-1.5 sm:px-2 sm:py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
-                <img src={user.user_metadata?.avatar_url} alt="" className="w-5 h-5 rounded-full" referrerPolicy="no-referrer" />
-                <span className="max-w-[80px] truncate hidden sm:inline">{user.user_metadata?.full_name || user.email}</span>
-                <ChevronDown size={12} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''} hidden sm:inline`} />
+            <div className="relative shrink-0">
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)} 
+                onBlur={() => setTimeout(() => setShowUserMenu(false), 150)} 
+                className="flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-2.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <img src={user.user_metadata?.avatar_url} alt="" className="w-4 h-4 rounded-full shrink-0" referrerPolicy="no-referrer" />
+                <span className="max-w-[70px] truncate hidden sm:inline">{user.user_metadata?.full_name || user.email}</span>
+                <ChevronDown size={11} className={`transition-transform shrink-0 ${showUserMenu ? 'rotate-180' : ''} hidden sm:inline`} />
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl z-50 min-w-[180px] animate-fade-in">
@@ -648,12 +674,26 @@ export default function EditorLayout() {
               )}
             </div>
           )}
-          <button onClick={handleDirectPdfExport} className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs p-2 sm:px-4 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-lg shadow-rose-600/10 justify-center">
-            <Download size={13} />
-            <span className="hidden sm:inline">PDF</span>
+          <button 
+            onClick={handleDirectPdfExport} 
+            className="flex items-center justify-center h-8 gap-1 bg-[#e0314f] hover:bg-[#e54b64] text-white font-extrabold text-[11px] px-3.5 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0"
+          >
+            <Download size={13} className="shrink-0" />
+            <span className="hidden sm:inline">Export PDF</span>
           </button>
-          <button onClick={() => setActiveMode('analyze')} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold px-3 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer hidden md:inline-flex">
-            <CheckCircle2 size={13} /> ATS Audit
+          <button 
+            onClick={() => setShowAiGuide(true)} 
+            className="flex items-center justify-center h-8 gap-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/25 hover:border-purple-500/40 text-purple-300 hover:text-purple-200 font-extrabold text-[11px] px-3.5 rounded-full transition-all cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.06)] whitespace-nowrap shrink-0"
+          >
+            <Sparkles size={12} className="animate-pulse text-purple-400 shrink-0" />
+            <span>AI Fill Guide</span>
+          </button>
+          <button 
+            onClick={() => setActiveMode('analyze')} 
+            className={`flex items-center justify-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] px-3.5 rounded-full transition-all cursor-pointer hidden md:flex whitespace-nowrap shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-850 border-zinc-700 text-white' : ''}`}
+          >
+            <CheckCircle2 size={13} className="shrink-0" />
+            <span>ATS Audit</span>
           </button>
         </div>
       </header>
@@ -729,6 +769,14 @@ export default function EditorLayout() {
       {activeWarnings && <ExportWarningModal warnings={activeWarnings} onClose={dismissWarnings} onExportAnyway={exportAnyway} />}
       {showPrintModal && <PrintSettingsModal onClose={dismissPrintModal} onContinue={confirmPrint} />}
       {showAuthModal && <DownloadAuthModal onClose={() => setShowAuthModal(false)} onSignIn={signInWithGoogle} />}
+      <AnimatePresence>
+        {showAiGuide && (
+          <AiOnboardingModal
+            onClose={() => setShowAiGuide(false)}
+            onImport={(data) => importResumeData(data)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
