@@ -469,7 +469,7 @@ export default function ResumePreview({
               '--template-theme-color': themeColor,
               ...(stylePrefs ? stylePrefsToCssVars(stylePrefs) : {}),
             } as React.CSSProperties}
-            className={`relative resume-preview bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0 cut-style-${stylePrefs?.sectionCutStyle || 'none'}`}
+            className={`relative resume-preview bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0 cut-style-${stylePrefs?.sectionCutStyle || 'none'} ${stylePrefs?.bodyFont ? 'has-custom-body-font' : ''} ${stylePrefs?.headingFont ? 'has-custom-heading-font' : ''}`}
           >
 
             {/* Layout Guides Overlay */}

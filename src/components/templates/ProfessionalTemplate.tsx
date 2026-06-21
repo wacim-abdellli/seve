@@ -207,7 +207,7 @@ const ProfessionalTemplate = memo(function ProfessionalTemplate({
           atsFeedback={ats.contact.feedback}
           onEdit={onEditSection}
         >
-          <div className="mb-4 pb-3 border-b-2" style={{ borderBottomColor: themeColor }}>
+          <div className="mb-4 pb-3 border-b-2" style={{ borderBottomColor: 'var(--template-divider-color)' }}>
             <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: themeColor }}>{getFullName(contact) || 'YOUR NAME'}</h1>
             <div className="text-[9px] text-slate-500 mt-1">
               {[contact.email, contact.phone, contact.location].filter(Boolean).join(' · ')}

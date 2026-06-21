@@ -2,8 +2,8 @@ import type { ResumeStylePreferences } from '../types/resume'
 
 export function stylePrefsToCssVars(prefs: ResumeStylePreferences): React.CSSProperties {
   return {
-    '--template-heading-font': prefs.headingFont,
-    '--template-body-font': prefs.bodyFont,
+    '--template-heading-font': prefs.headingFont || 'inherit',
+    '--template-body-font': prefs.bodyFont || 'inherit',
     '--template-line-height': String(prefs.lineHeight),
     '--template-letter-spacing': prefs.letterSpacing,
     '--template-heading-case': prefs.headingCase === 'normal' ? 'none' : prefs.headingCase,

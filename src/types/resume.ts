@@ -148,8 +148,8 @@ export interface ResumeStylePreferences {
 }
 
 export const DEFAULT_STYLE_PREFS: ResumeStylePreferences = {
-  headingFont: 'Outfit',
-  bodyFont: 'Inter',
+  headingFont: '',
+  bodyFont: '',
   lineHeight: 1.25,
   letterSpacing: 'normal',
   headingCase: 'uppercase',

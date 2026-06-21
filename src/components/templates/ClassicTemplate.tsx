@@ -261,7 +261,7 @@ const ClassicTemplate = memo(function ClassicTemplate({
           atsFeedback={ats.contact.feedback}
           onEdit={onEditSection}
         >
-          <div className="text-center mb-6 border-b-2 pb-3" style={{ borderBottomColor: borderColor }}>
+          <div className="text-center mb-6 border-b-2 pb-3" style={{ borderBottomColor: 'var(--template-divider-color)' }}>
             <h1 className="text-2xl font-extrabold font-serif tracking-widest text-slate-950">{getFullName(contact) || 'YOUR NAME'}</h1>
             <div className="text-[10px] text-slate-600 tracking-wider flex flex-wrap justify-center gap-x-2.5 mt-1">
               {contact.location && <span>{contact.location}</span>}

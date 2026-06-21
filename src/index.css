@@ -202,19 +202,27 @@
 /* Template style preference overrides */
 #resume-print-area .resume-page,
 .resume-template-print-wrapper .resume-page {
-  font-family: var(--template-body-font) !important;
   line-height: var(--template-line-height) !important;
   letter-spacing: var(--template-letter-spacing) !important;
   color: var(--template-body-color) !important;
-  padding: var(--template-page-padding) !important;
+  padding: var(--template-page-padding);
+}
+
+#resume-print-area.has-custom-body-font .resume-page,
+.resume-template-print-wrapper.has-custom-body-font .resume-page {
+  font-family: var(--template-body-font) !important;
 }
 
 /* 1. Primary Text & Headings (h1 - h6) */
 #resume-print-area h1, #resume-print-area h2, #resume-print-area h3, #resume-print-area h4, #resume-print-area h5, #resume-print-area h6,
 .resume-template-print-wrapper h1, .resume-template-print-wrapper h2, .resume-template-print-wrapper h3, .resume-template-print-wrapper h4, .resume-template-print-wrapper h5, .resume-template-print-wrapper h6 {
-  font-family: var(--template-heading-font) !important;
   color: var(--template-heading-color) !important;
   text-transform: var(--template-heading-case) !important;
+}
+
+#resume-print-area.has-custom-heading-font h1, #resume-print-area.has-custom-heading-font h2, #resume-print-area.has-custom-heading-font h3, #resume-print-area.has-custom-heading-font h4, #resume-print-area.has-custom-heading-font h5, #resume-print-area.has-custom-heading-font h6,
+.resume-template-print-wrapper.has-custom-heading-font h1, .resume-template-print-wrapper.has-custom-heading-font h2, .resume-template-print-wrapper.has-custom-heading-font h3, .resume-template-print-wrapper.has-custom-heading-font h4, .resume-template-print-wrapper.has-custom-heading-font h5, .resume-template-print-wrapper.has-custom-heading-font h6 {
+  font-family: var(--template-heading-font) !important;
 }
 
 /* Also map bold content titles (e.g. Job titles, Company names, Degree titles) to Headings Color */
@@ -313,36 +321,9 @@
 #resume-print-area .border-b-2,
 .resume-template-print-wrapper .border-b,
 .resume-template-print-wrapper .border-b-2 {
-  border-bottom-style: var(--template-divider-style) !important;
-  border-bottom-width: var(--template-divider-width) !important;
-  border-bottom-color: var(--template-divider-color) !important;
-}
-
-#resume-print-area .border-t,
-#resume-print-area .border-t-2,
-.resume-template-print-wrapper .border-t,
-.resume-template-print-wrapper .border-t-2 {
-  border-top-style: var(--template-divider-style) !important;
-  border-top-width: var(--template-divider-width) !important;
-  border-top-color: var(--template-divider-color) !important;
-}
-
-#resume-print-area .border-r,
-#resume-print-area .border-r-2,
-.resume-template-print-wrapper .border-r,
-.resume-template-print-wrapper .border-r-2 {
-  border-right-style: var(--template-divider-style) !important;
-  border-right-width: var(--template-divider-width) !important;
-  border-right-color: var(--template-divider-color) !important;
-}
-
-#resume-print-area .border-l,
-#resume-print-area .border-l-2,
-.resume-template-print-wrapper .border-l,
-.resume-template-print-wrapper .border-l-2 {
-  border-left-style: var(--template-divider-style) !important;
-  border-left-width: var(--template-divider-width) !important;
-  border-left-color: var(--template-divider-color) !important;
+  border-bottom-style: var(--template-divider-style);
+  border-bottom-width: var(--template-divider-width);
+  border-bottom-color: var(--template-divider-color);
 }
 
 /* Custom Section Separation Cut Styles */
@@ -521,7 +502,7 @@ input:focus, textarea:focus, select:focus {
   /* ── 2. Page setup: zero margin (template padding does spacing) ─ */
   @page {
     size: A4 portrait;
-    margin: 12mm 0mm !important;
+    margin: 0 !important;
   }
 
   html, body {

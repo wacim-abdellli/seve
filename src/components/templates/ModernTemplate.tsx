@@ -259,7 +259,7 @@ const ModernTemplate = memo(function ModernTemplate({
           atsFeedback={ats.contact.feedback}
           onEdit={onEditSection}
         >
-          <div className="mb-5 relative pb-3 border-b-2" style={{ borderBottomColor: themeColor }}>
+          <div className="mb-5 relative pb-3 border-b-2" style={{ borderBottomColor: 'var(--template-divider-color)' }}>
             <h1 className="text-3xl font-extrabold text-slate-950 tracking-tight mb-1.5">
               {getFullName(contact) || 'YOUR NAME'}
             </h1>

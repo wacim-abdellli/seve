@@ -256,7 +256,7 @@ const MinimalistTemplate = memo(function MinimalistTemplate({
           atsFeedback={ats.contact.feedback}
           onEdit={onEditSection}
         >
-          <div className="mb-5 text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: themeColor || '#111111' }}>
+          <div className="mb-5 text-left border-b-2 pb-2 mb-2" style={{ borderBottomColor: 'var(--template-divider-color)' }}>
             <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-slate-950">{getFullName(contact) || 'YOUR NAME'}</h1>
             <div className="text-[9.5px] text-slate-500 uppercase tracking-widest mt-1">
               {contact.location && <span>{contact.location}</span>}

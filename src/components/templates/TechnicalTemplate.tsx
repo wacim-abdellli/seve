@@ -204,7 +204,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
           atsFeedback={ats.contact.feedback}
           onEdit={onEditSection}
         >
-          <div className="mb-4 pb-3 border-b-2" style={{ borderBottomColor: themeColor }}>
+          <div className="mb-4 pb-3 border-b-2" style={{ borderBottomColor: 'var(--template-divider-color)' }}>
             <h1 className="text-xl font-black tracking-tight text-slate-900">{getFullName(contact) || 'YOUR NAME'}</h1>
             <div className="text-[8.5px] text-slate-500 mt-1">
               {contact.email && <span>{contact.email}</span>}

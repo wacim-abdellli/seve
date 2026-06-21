@@ -31,9 +31,19 @@ interface Props {
 }
 
 const FONT_OPTIONS = [
-  'Inter', 'Outfit', 'Plus Jakarta Sans', 'Manrope', 'DM Sans', 'Space Grotesk',
-  'EB Garamond', 'Merriweather', 'Lora', 'Playfair Display',
-  'JetBrains Mono', 'Fira Code',
+  { value: '', label: 'Template Default' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Outfit', label: 'Outfit' },
+  { value: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans' },
+  { value: 'Manrope', label: 'Manrope' },
+  { value: 'DM Sans', label: 'DM Sans' },
+  { value: 'Space Grotesk', label: 'Space Grotesk' },
+  { value: 'EB Garamond', label: 'EB Garamond' },
+  { value: 'Merriweather', label: 'Merriweather' },
+  { value: 'Lora', label: 'Lora' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'JetBrains Mono', label: 'JetBrains Mono' },
+  { value: 'Fira Code', label: 'Fira Code' },
 ]
 
 function StepperControl({ label, value, onChange, min, max, step = 1, unit }: { label: string; value: number; onChange: (v: number) => void; min: number; max: number; step?: number; unit?: string }) {
@@ -147,13 +157,13 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs, themeCo
         <SelectControl
           label="Heading Font"
           value={stylePrefs.headingFont}
-          options={FONT_OPTIONS.map((f) => ({ value: f, label: f }))}
+          options={FONT_OPTIONS}
           onChange={(v) => update('headingFont', v)}
         />
         <SelectControl
           label="Body Font"
           value={stylePrefs.bodyFont}
-          options={FONT_OPTIONS.map((f) => ({ value: f, label: f }))}
+          options={FONT_OPTIONS}
           onChange={(v) => update('bodyFont', v)}
         />
         <StepperControl label="Line Height" value={stylePrefs.lineHeight} onChange={(v) => update('lineHeight', v)} min={1} max={2} step={0.05} />

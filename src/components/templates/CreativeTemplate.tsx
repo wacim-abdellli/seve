@@ -1,5 +1,5 @@
 import type { ResumeData } from '../../types/resume'
-import { memo } from 'react'
+import { memo, Fragment } from 'react'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
@@ -259,13 +259,14 @@ const CreativeTemplate = memo(function CreativeTemplate({
   const page1Right = sectionData.page1Sections.filter(k => !leftSectionKeys.includes(k))
 
 
-  const renderLeft = (keys: string[]) => keys.map(secId => (
-    <div key={secId}>{leftSectionsMap[secId]}</div>
-  ))
+  const renderLeft = (keys: string[]) => keys.map(secId => {
+    const el = leftSectionsMap[secId]
+    return el ? <Fragment key={secId}>{el}</Fragment> : null
+  })
 
   const renderRight = (keys: string[]) => keys.map(secId => {
-    const component = sectionsMap[secId]
-    return component ? <div key={secId}>{component}</div> : null
+    const el = sectionsMap[secId]
+    return el ? <Fragment key={secId}>{el}</Fragment> : null
   })
 
   return (
@@ -281,7 +282,7 @@ const CreativeTemplate = memo(function CreativeTemplate({
             atsFeedback={ats.contact.feedback}
             onEdit={onEditSection}
           >
-            <div className="mb-6">
+            <div>
               <h1 className="text-sm font-extrabold text-slate-900">{getFullName(contact) || 'YOUR NAME'}</h1>
               <div className="mt-3 space-y-2.5">
                 <div className="flex items-center gap-2 text-[9px] text-slate-700"><Mail size={12} className="shrink-0" style={{ color: themeColor }} />{contact.email}</div>

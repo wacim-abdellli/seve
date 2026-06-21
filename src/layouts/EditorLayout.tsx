@@ -705,7 +705,7 @@ export default function EditorLayout() {
 
       {createPortal(
         <div className="resume-print-wrapper hidden print:block">
-          <div className={`resume-template-print-wrapper template-${selectedTemplate} cut-style-${stylePrefs?.sectionCutStyle || 'none'}`}
+          <div className={`resume-template-print-wrapper template-${selectedTemplate} cut-style-${stylePrefs?.sectionCutStyle || 'none'} ${stylePrefs?.bodyFont ? 'has-custom-body-font' : ''} ${stylePrefs?.headingFont ? 'has-custom-heading-font' : ''}`}
                style={{
                  '--template-font-size': `${templateFontSize}px`,
                  '--template-font-weight': templateFontWeight,

@@ -1,5 +1,5 @@
 import type { ResumeData } from '../../types/resume'
-import { memo } from 'react'
+import { memo, Fragment } from 'react'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
@@ -243,13 +243,14 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
   const page1Right = sectionData.page1Sections.filter(k => !leftSectionKeys.includes(k))
 
 
-  const renderLeft = (keys: string[]) => keys.map(secId => (
-    <div key={secId}>{leftSectionsMap[secId]}</div>
-  ))
+  const renderLeft = (keys: string[]) => keys.map(secId => {
+    const el = leftSectionsMap[secId]
+    return el ? <Fragment key={secId}>{el}</Fragment> : null
+  })
 
   const renderRight = (keys: string[]) => keys.map(secId => {
-    const component = rightSectionsMap[secId]
-    return component ? <div key={secId}>{component}</div> : null
+    const el = rightSectionsMap[secId]
+    return el ? <Fragment key={secId}>{el}</Fragment> : null
   })
 
   return (
@@ -275,7 +276,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
                 {contact.website && <div className="break-all"><span className="text-[7px] font-bold text-slate-500 uppercase tracking-wider block">Website</span>{contact.website.replace(/^(https?:\/\/)?(www\.)?/i, '')}</div>}
               </div>
             </PreviewSectionWrapper>
-            <div className="mt-5 space-y-3">{renderLeft(page1Left)}</div>
+            {renderLeft(page1Left)}
           </div>
           <div className="flex-1 p-5 pt-8 min-w-0">
             {renderRight(page1Right)}
