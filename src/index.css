@@ -208,20 +208,60 @@
   color: var(--template-body-color) !important;
   padding: var(--template-page-padding) !important;
 }
+
+/* 1. Primary Text & Headings (h1 - h6) */
 #resume-print-area h1, #resume-print-area h2, #resume-print-area h3, #resume-print-area h4, #resume-print-area h5, #resume-print-area h6,
 .resume-template-print-wrapper h1, .resume-template-print-wrapper h2, .resume-template-print-wrapper h3, .resume-template-print-wrapper h4, .resume-template-print-wrapper h5, .resume-template-print-wrapper h6 {
   font-family: var(--template-heading-font) !important;
   color: var(--template-heading-color) !important;
   text-transform: var(--template-heading-case) !important;
 }
+
+/* Also map bold content titles (e.g. Job titles, Company names, Degree titles) to Headings Color */
+#resume-print-area .text-slate-900,
+#resume-print-area .text-slate-950,
+.resume-template-print-wrapper .text-slate-900,
+.resume-template-print-wrapper .text-slate-950 {
+  color: var(--template-heading-color) !important;
+}
+
+/* 2. Body Copy (All paragraphs, list items, description text blocks) */
+#resume-print-area .text-slate-800,
+#resume-print-area .text-slate-700,
+#resume-print-area .text-slate-600,
+#resume-print-area p,
+#resume-print-area li,
+.resume-template-print-wrapper .text-slate-800,
+.resume-template-print-wrapper .text-slate-700,
+.resume-template-print-wrapper .text-slate-600,
+.resume-template-print-wrapper p,
+.resume-template-print-wrapper li {
+  color: var(--template-body-color) !important;
+}
+
+/* 3. Muted details (Dates, locations, degree/company subtitles, page numbers) */
+#resume-print-area .text-slate-500,
+#resume-print-area .text-slate-400,
+#resume-print-area .text-slate-500\/80,
+#resume-print-area .text-slate-600\/90,
+.resume-template-print-wrapper .text-slate-500,
+.resume-template-print-wrapper .text-slate-400,
+.resume-template-print-wrapper .text-slate-500\/80,
+.resume-template-print-wrapper .text-slate-600\/90 {
+  color: color-mix(in srgb, var(--template-body-color) 65%, transparent) !important;
+}
+
+/* 4. Theme Accents (Icons, Links, and Bullet Decorators) */
 #resume-print-area svg,
 .resume-template-print-wrapper svg {
   color: var(--template-theme-color) !important;
 }
+
 #resume-print-area a,
 .resume-template-print-wrapper a {
   color: var(--template-theme-color) !important;
 }
+
 #resume-print-area ul li > span:first-child,
 .resume-template-print-wrapper ul li > span:first-child {
   color: var(--template-theme-color) !important;
