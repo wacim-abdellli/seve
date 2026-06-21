@@ -250,7 +250,60 @@
 }
 #resume-print-area hr, #resume-print-area .resume-divider,
 .resume-template-print-wrapper hr, .resume-template-print-wrapper .resume-divider {
-  border-top: var(--template-divider-width) var(--template-divider-style) currentColor !important;
+  border-top: var(--template-divider-width) var(--template-divider-style) var(--template-divider-color) !important;
+}
+
+#resume-print-area h2.border-b,
+#resume-print-area h2.border-b-2,
+.resume-template-print-wrapper h2.border-b,
+.resume-template-print-wrapper h2.border-b-2,
+#resume-print-area .border-b,
+#resume-print-area .border-b-2,
+.resume-template-print-wrapper .border-b,
+.resume-template-print-wrapper .border-b-2 {
+  border-bottom-style: var(--template-divider-style) !important;
+  border-bottom-width: var(--template-divider-width) !important;
+  border-bottom-color: var(--template-divider-color) !important;
+}
+
+/* Custom Section Separation Cut Styles */
+
+/* 1. Left Accent Line */
+.cut-style-left-accent .resume-section,
+.cut-style-left-accent .resume-section-breakable {
+  border-left: calc(var(--template-divider-width) * 2 + 2px) var(--template-divider-style) var(--template-divider-color) !important;
+  padding-left: 12px !important;
+  margin-left: 2px !important;
+}
+
+/* 2. Card Outline */
+.cut-style-card .resume-section,
+.cut-style-card .resume-section-breakable {
+  border: var(--template-divider-width) var(--template-divider-style) var(--template-section-border-color) !important;
+  background-color: var(--template-section-bg-color) !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  margin-bottom: var(--template-section-spacing) !important;
+}
+
+/* 3. Stripe / Alternating Shading */
+.cut-style-stripe .preview-section:nth-of-type(even) .resume-section,
+.cut-style-stripe .preview-section:nth-of-type(even) .resume-section-breakable,
+.cut-style-stripe .resume-template-print-wrapper .resume-page > div:nth-of-type(even) .resume-section,
+.cut-style-stripe .resume-template-print-wrapper .resume-page > div:nth-of-type(even) .resume-section-breakable {
+  background-color: var(--template-section-bg-color) !important;
+  padding: 10px !important;
+  border-radius: 4px !important;
+  border-left: 3px solid var(--template-divider-color) !important;
+}
+
+/* 4. Underline Headers (Forces a bottom border under all section headers) */
+.cut-style-bottom-line .resume-section h2,
+.cut-style-bottom-line .resume-section-breakable h2 {
+  border-bottom: var(--template-divider-width) var(--template-divider-style) var(--template-divider-color) !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 8px !important;
 }
 body {
   font-family: var(--font-sans);

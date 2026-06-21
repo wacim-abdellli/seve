@@ -141,6 +141,10 @@ export interface ResumeStylePreferences {
   dividerWidth: number
   highContrastPrint: boolean
   atsOptimizedFont: boolean
+  dividerColor: string
+  sectionCutStyle: 'none' | 'bottom-line' | 'left-accent' | 'card' | 'stripe'
+  sectionBgColor: string
+  sectionBorderColor: string
 }
 
 export const DEFAULT_STYLE_PREFS: ResumeStylePreferences = {
@@ -159,6 +163,10 @@ export const DEFAULT_STYLE_PREFS: ResumeStylePreferences = {
   dividerWidth: 1,
   highContrastPrint: false,
   atsOptimizedFont: false,
+  dividerColor: '#cbd5e1',
+  sectionCutStyle: 'none',
+  sectionBgColor: '#f8fafc',
+  sectionBorderColor: '#e2e8f0',
 }
 
 export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative' | 'compact' | 'professional' | 'technical' | 'academic' | 'clean'

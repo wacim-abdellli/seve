@@ -198,6 +198,7 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs }: Props
       <AccordionSection title="Colors & Dividers" icon={<Palette size={14} />} defaultOpen={false}>
         <ColorControl label="Body Text" value={stylePrefs.bodyTextColor} onChange={(v) => update('bodyTextColor', v)} />
         <ColorControl label="Headings" value={stylePrefs.headingColor} onChange={(v) => update('headingColor', v)} />
+        <ColorControl label="Divider Color" value={stylePrefs.dividerColor || '#cbd5e1'} onChange={(v) => update('dividerColor', v)} />
         <SelectControl
           label="Divider Style"
           value={stylePrefs.dividerStyle}
@@ -211,6 +212,24 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs }: Props
         />
         {stylePrefs.dividerStyle !== 'none' && (
           <StepperControl label="Divider Width" value={stylePrefs.dividerWidth} onChange={(v) => update('dividerWidth', v)} min={0.5} max={4} step={0.5} unit="px" />
+        )}
+        <SelectControl
+          label="Section Styling"
+          value={stylePrefs.sectionCutStyle || 'none'}
+          options={[
+            { value: 'none', label: 'None' },
+            { value: 'bottom-line', label: 'Underline Headers' },
+            { value: 'left-accent', label: 'Left Accent Line' },
+            { value: 'card', label: 'Card Outline' },
+            { value: 'stripe', label: 'Alternating Shading' },
+          ]}
+          onChange={(v) => update('sectionCutStyle', v as ResumeStylePreferences['sectionCutStyle'])}
+        />
+        {(stylePrefs.sectionCutStyle === 'card' || stylePrefs.sectionCutStyle === 'stripe') && (
+          <ColorControl label="Section Background" value={stylePrefs.sectionBgColor || '#f8fafc'} onChange={(v) => update('sectionBgColor', v)} />
+        )}
+        {stylePrefs.sectionCutStyle === 'card' && (
+          <ColorControl label="Section Border" value={stylePrefs.sectionBorderColor || '#e2e8f0'} onChange={(v) => update('sectionBorderColor', v)} />
         )}
       </AccordionSection>
 
