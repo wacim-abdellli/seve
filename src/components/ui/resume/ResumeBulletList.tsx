@@ -5,7 +5,7 @@ interface ResumeBulletListProps {
 }
 
 export default function ResumeBulletList({ bullets, className = '', itemClassName = '' }: ResumeBulletListProps) {
-  const filtered = bullets.filter(b => b.trim() !== '')
+  const filtered = (bullets || []).filter(b => b && typeof b === 'string' && b.trim() !== '')
   if (filtered.length === 0) return null
 
   // Strip native list bullet styles and manual indents to prevent layout collisions

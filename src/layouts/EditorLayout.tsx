@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import type { ResumeData, Template } from '../types/resume'
+import type { ResumeData, ResumeStylePreferences, Template } from '../types/resume'
+import { DEFAULT_STYLE_PREFS } from '../types/resume'
+import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
 import { useResume } from '../hooks/useResume'
 import { usePrintResume } from '../hooks/usePrintResume'
 import SectionSidebar, { type SectionType } from '../components/SectionSidebar'
@@ -13,6 +15,7 @@ import TemplateRenderer from '../components/TemplateRenderer'
 import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { exportResumeToPdf } from '../utils/pdfExport'
+import { normalizeResumeData } from '../utils/resumeNormalizer'
 
 
 type SectionKey = string
@@ -29,6 +32,8 @@ export interface EditorContextType {
   onChangeFontSize: (size: number) => void
   templateFontWeight: number
   onChangeFontWeight: (weight: number) => void
+  stylePrefs: ResumeStylePreferences
+  updateStylePrefs: (updater: (prev: ResumeStylePreferences) => ResumeStylePreferences) => void
   sectionOrder: SectionKey[]
   onSectionOrderChange: (order: SectionKey[]) => void
   mobileView: 'edit' | 'preview'
@@ -188,7 +193,8 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
       const reader = new FileReader()
       reader.onload = (ev) => {
         try {
-          const data = JSON.parse(ev.target?.result as string)
+          const rawData = JSON.parse(ev.target?.result as string)
+          const data = normalizeResumeData(rawData)
           onImportResume(data)
           onClose()
         } catch {
@@ -206,10 +212,11 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
         setPasteError('Please paste some JSON code first.')
         return
       }
-      const data = JSON.parse(pasteValue)
-      if (!data || typeof data !== 'object') {
+      const rawData = JSON.parse(pasteValue)
+      if (!rawData || typeof rawData !== 'object') {
         throw new Error('Invalid JSON format. Expected an object.')
       }
+      const data = normalizeResumeData(rawData)
       onImportResume(data)
       onClose()
     } catch (err: unknown) {
@@ -294,7 +301,7 @@ export default function EditorLayout() {
   const {
     resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, cloudError, retrySync,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
-    updateActiveResume, importResumeData, sectionOrder, updateSectionOrder,
+    updateActiveResume, updateStylePrefs, importResumeData, sectionOrder, updateSectionOrder,
     undo, redo, canUndo, canRedo,
   } = useResume()
   const { user, signOut } = useAuth()
@@ -319,6 +326,8 @@ export default function EditorLayout() {
     updateActiveResume(prev => ({ ...prev, templateFontWeight: weight }))
   }
 
+  const stylePrefs = activeResume?.stylePrefs || { ...DEFAULT_STYLE_PREFS }
+
   const { activeWarnings, showPrintModal, handlePrint: handlePrintModal, dismissWarnings, exportAnyway, dismissPrintModal, confirmPrint } = usePrintResume()
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -326,11 +335,19 @@ export default function EditorLayout() {
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
 
   const handleDirectPdfExport = async () => {
-    const previewEl = document.querySelector('[data-resume-preview]') as HTMLElement | null
-    if (!previewEl) return
-    const contactName = resumeData.contact?.fullName?.trim() || 'resume'
-    const safeName = contactName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
-    await exportResumeToPdf(previewEl, `${safeName}_resume.pdf`)
+    try {
+      const previewEl = document.querySelector('[data-resume-preview]') as HTMLElement | null
+      if (!previewEl) {
+        alert('Resume preview element not found.')
+        return
+      }
+      const contactName = resumeData.contact?.fullName?.trim() || 'resume'
+      const safeName = contactName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
+      await exportResumeToPdf(previewEl, `${safeName}_resume.pdf`)
+    } catch (error) {
+      console.error('PDF export failed:', error)
+      alert('Failed to generate PDF. Please try again or try printing using the print option.')
+    }
   }
 
   // Keyboard shortcuts: Ctrl+P → PDF export, Ctrl+S → suppress browser save
@@ -365,6 +382,7 @@ export default function EditorLayout() {
     pageCount, setPageCount,
     templateFontSize, onChangeFontSize: setTemplateFontSize,
     templateFontWeight, onChangeFontWeight: setTemplateFontWeight,
+    stylePrefs, updateStylePrefs,
     sectionOrder, onSectionOrderChange: updateSectionOrder,
     mobileView, setMobileView, themeColor, setThemeColor,
     handlePrint,
@@ -562,7 +580,11 @@ export default function EditorLayout() {
       {createPortal(
         <div className="resume-print-wrapper hidden print:block">
           <div className={`resume-template-print-wrapper template-${selectedTemplate}`}
-               style={{ '--template-font-size': `${templateFontSize}px`, '--template-font-weight': templateFontWeight } as React.CSSProperties}>
+               style={{
+                 '--template-font-size': `${templateFontSize}px`,
+                 '--template-font-weight': templateFontWeight,
+                 ...stylePrefsToCssVars(stylePrefs),
+               } as React.CSSProperties}>
           <TemplateRenderer type={selectedTemplate} data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />
           </div>
         </div>,

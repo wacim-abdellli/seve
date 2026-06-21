@@ -1,237 +1,194 @@
-# 📐 Template Audit & Page Break Fix
+# Implementation Plan: Advanced Resume Design & Accessibility Customization Tools
 
-## The Problem (What You See)
+This document provides a complete technical blueprint and implementation checklist for another developer/agent to introduce granular layout, typography, color, spacing, and accessibility controls to **Seve**. 
 
-When your resume content exceeds 1 page:
-- **Page 1**: Content runs off the bottom edge
-- **Page 2**: Shows just a few leftover sections (Awards, Certifications, Publications, References) with **massive empty white space** below
-
-This happens in **ALL 10 templates** because they all share the same broken layout logic.
+It details how to allow users to customize almost all visual properties of their CV, map these settings to CSS Custom Properties, serialize them to the database, and support key accessibility overrides.
 
 ---
 
-## Root Cause Analysis
+## 1. Architecture Overview & Customization Flow
 
-### 1. `getPageBreakSections()` is a no-op
-[layoutHelper.ts:63](file:///c:/Users/pc/Desktop/seve/src/utils/layoutHelper.ts#L63) literally says:
-```typescript
-return { page1Sections: activeSections, page2Sections: [] }
+The customization flow follows a clean "Data $\rightarrow$ State $\rightarrow$ CSS variables $\rightarrow$ DOM paint" pipeline:
+
+```mermaid
+graph TD
+  A[User interacts with Left Panel Settings] --> B[React State Updates via ResumeContext]
+  B --> C[Styles Sync to Supabase Database resume_data]
+  B --> D[ResumePreview binds state to CSS Custom Variables style attribute]
+  D --> E[TemplateRenderer / Sections read variables for layout rendering]
 ```
-It **always** puts everything on page 1 and **never** splits to page 2. The comment says "Let the browser decide" but the browser can't decide intelligently — it just cuts wherever the page boundary falls.
-
-### 2. `resume-page` CSS has `min-height: 1123px` (A4) but `height: auto`
-[index.css:780-785](file:///c:/Users/pc/Desktop/seve/src/index.css#L780-L785): The screen CSS makes the resume page **at least** 1123px (one A4 page) tall, but allows it to grow endlessly. So when you have 1.3 pages of content, it's a single 1400px-tall div. The browser then splits it at 1123px, leaving ~300px on page 2 — and the `min-height: 1123px` on page 2 creates all that blank space.
-
-### 3. Page-break CSS exists but is incomplete
-[index.css:802-816](file:///c:/Users/pc/Desktop/seve/src/index.css#L802-L816): There ARE `break-inside: avoid` rules for `.exp-entry`, `.edu-entry`, `.proj-entry`, `.preview-section-wrapper`, and headings. BUT:
-- **Section wrapper divs** (the `mb-5` divs in templates like `<div className="mb-5">`) don't have any CSS class for page-break hints
-- The small sections (awards, certifications, languages, references) use generic divs without `break-inside: avoid`
 
 ---
 
-## The Fix — 3 Changes
+## 2. Technical Specification
 
-### Change 1: Make `getPageBreakSections()` actually split content
-
-**FILE**: [layoutHelper.ts](file:///c:/Users/pc/Desktop/seve/src/utils/layoutHelper.ts)
-
-**REPLACE the entire `getPageBreakSections` function** (lines 45-64) with:
+### A. Style Schema & Data Structures
+We need to expand the styling fields of the active resume profile. Add these keys to the styling properties interface inside `src/types/resume.ts`:
 
 ```typescript
-export function getPageBreakSections(
-  resumeData: ResumeData,
-  sectionOrder: string[],
-  fontSize: number = 10
-): {
-  page1Sections: string[];
-  page2Sections: string[];
-} {
-  const hasContent = (key: string): boolean => {
-    if (key === 'summary') return !!(resumeData.summary && resumeData.summary.trim() !== '')
-    if (key === 'skills') return !!(resumeData.skills && resumeData.skills.length > 0)
-    const val = (resumeData as unknown as Record<string, unknown>)[key]
-    return Array.isArray(val) && val.length > 0
-  }
+export interface ResumeStylePreferences {
+  // Typography
+  headingFont: string;       // 'Garamond', 'Outfit', 'Inter', 'Playfair Display', 'Fira Code'
+  bodyFont: string;          // 'Inter', 'Lora', 'Roboto', 'OpenDyslexic'
+  lineHeight: number;        // e.g. 1.15, 1.25, 1.4 (multipliers)
+  letterSpacing: string;     // 'normal', 'wide', 'tight'
+  headingCase: 'uppercase' | 'capitalize' | 'normal';
 
-  const activeSections = sectionOrder.filter(hasContent)
-  const heights = getSectionHeights(resumeData, fontSize)
+  // Spacing (Sliders)
+  pagePadding: number;       // custom page margins (in mm: 10 to 24)
+  sectionSpacing: number;    // margin-bottom between major sections (in px: 8 to 24)
+  itemSpacing: number;       // spacing between job/education items (in px: 4 to 16)
+  bulletIndent: number;      // bullet point left indent offset (in px: 12 to 24)
 
-  // A4 usable height in px (1123px total - ~96px padding top/bottom)
-  const PAGE_1_BUDGET = USABLE_PER_PAGE
-  const page1Sections: string[] = []
-  const page2Sections: string[] = []
-  let usedHeight = 0
+  // Colors & Borders
+  bodyTextColor: string;     // Hex body color
+  headingColor: string;      // Hex heading color
+  dividerStyle: 'none' | 'solid' | 'dashed' | 'dotted';
+  dividerWidth: number;      // border width (in px: 1 to 4)
 
-  // Contact header always takes ~80px, accounted for in budget
-  const contactHeight = heights.contact || 80
-  usedHeight += contactHeight
+  // Accessibility & Printing
+  highContrastPrint: boolean;// force pure black/white text contrast for printers
+  atsOptimizedFont: boolean; // override styling to standard Arial/Times fonts for ATS scanners
+}
+```
 
-  for (const sec of activeSections) {
-    const sectionHeight = heights[sec] || 60
+### B. Map to CSS Custom Variables
+Inside `src/components/ResumePreview.tsx`, bind the new settings dynamically to the print wrapper container's style attribute:
 
-    if (usedHeight + sectionHeight <= PAGE_1_BUDGET) {
-      // Fits on page 1
-      page1Sections.push(sec)
-      usedHeight += sectionHeight
-    } else {
-      // Doesn't fit — push to page 2
-      page2Sections.push(sec)
+```typescript
+const computedStyles = {
+  '--template-font-size': `${templateFontSize}px`,
+  '--template-font-weight': templateFontWeight,
+  '--template-heading-font': stylePrefs.headingFont,
+  '--template-body-font': stylePrefs.bodyFont,
+  '--template-line-height': stylePrefs.lineHeight,
+  '--template-letter-spacing': stylePrefs.letterSpacing === 'wide' ? '0.05em' : stylePrefs.letterSpacing === 'tight' ? '-0.02em' : 'normal',
+  '--template-heading-case': stylePrefs.headingCase,
+  '--template-page-padding': `${stylePrefs.pagePadding}mm`,
+  '--template-section-spacing': `${stylePrefs.sectionSpacing}px`,
+  '--template-item-spacing': `${stylePrefs.itemSpacing}px`,
+  '--template-bullet-indent': `${stylePrefs.bulletIndent}px`,
+  '--template-body-color': stylePrefs.bodyTextColor,
+  '--template-heading-color': stylePrefs.headingColor,
+  '--template-divider-style': stylePrefs.dividerStyle,
+  '--template-divider-width': `${stylePrefs.dividerWidth}px`,
+  '--template-theme-color': themeColor,
+} as React.CSSProperties;
+```
+
+---
+
+## 3. UI Design Mockup (Left Sidebar Inspector)
+
+The **Design & Style** left sidebar panel will be refactored into expandable, themed accordion categories using a clean dashboard hierarchy:
+
+```text
++---------------------------------------+
+|  DESIGN & STYLE              [ Done ] |
++---------------------------------------+
+|  > LAYOUT TEMPLATE                    |
+|    [ Classic ]   [ Modern ]           |
+|    [ Executive ] [ Compact ]          |
++---------------------------------------+
+|  V TYPOGRAPHY                         |
+|    Heading Font                       |
+|    [ Outfit  v ]                      |
+|    Body Font                          |
+|    [ Inter   v ]                      |
+|    Line Height      (1.25)  o------   |
+|    Letter Spacing   [Tight][Norm][Wide]
+|    Heading Case     [AA]   [Aa]   [aa] |
++---------------------------------------+
+|  > SPACING                            |
+|    Margins (mm)     (15)    --o----   |
+|    Section Gap (px) (12)    -o-----   |
+|    Item Gap (px)    (8)     ---o---   |
++---------------------------------------+
+|  > COLORS & DIVIDERS                  |
+|    Heading Text     [#111111] (Color) |
+|    Body Text        [#333333] (Color) |
+|    Divider Line     [Solid v]         |
+|    Divider Size     (1.5px)  o------  |
++---------------------------------------+
+|  > ACCESSIBILITY                      |
+|    [ ] Optimize for ATS Scanners      |
+|    [ ] Pure High-Contrast Printing    |
++---------------------------------------+
+```
+
+---
+
+## 4. Implementation Step-by-Step Checklist
+
+Another developer or agent should execute the implementation in this sequence:
+
+### Phase 1: Database & Typings Schema
+- [ ] **Database Migration**:
+  - Run SQL script in Supabase to update the table schema. Ensure styling properties are included in the default JSON payload structure of `resume_data`.
+- [ ] **Typings Update**:
+  - Modify `src/types/resume.ts` to add the new style properties to the active profile interface type definitions.
+
+### Phase 2: State Context Binding
+- [ ] **Context Updates**:
+  - Update `src/context/ResumeContext.tsx` to handle initial default values for these style keys when creating a blank resume template.
+  - Update `src/layouts/EditorLayout.tsx` context states to bind all setter functions (e.g. `setHeadingFont`, `setPagePadding`) to update the active resume profile.
+- [ ] **Mobile & Desk Sync**:
+  - Ensure all layout preferences bind correctly to context props so changes are reflected in both desktop and mobile views.
+
+### Phase 3: CSS Override Rules
+- [ ] **CSS Updates**:
+  - Modify `src/index.css` to define the base styles inside the print container reading from the new custom variables:
+    ```css
+    .resume-page {
+      padding: var(--template-page-padding, 16mm) !important;
+      font-family: var(--template-body-font, 'Inter'), sans-serif !important;
+      line-height: var(--template-line-height, 1.2) !important;
+      letter-spacing: var(--template-letter-spacing, normal) !important;
+      color: var(--template-body-color, #334155) !important;
     }
-  }
+    .resume-section {
+      margin-bottom: var(--template-section-spacing, 12px) !important;
+    }
+    .resume-section-heading {
+      font-family: var(--template-heading-font, 'Outfit'), serif !important;
+      text-transform: var(--template-heading-case, uppercase) !important;
+      color: var(--template-heading-color, var(--template-theme-color)) !important;
+    }
+    .resume-item {
+      margin-bottom: var(--template-item-spacing, 8px) !important;
+    }
+    .resume-bullet-container {
+      padding-left: var(--template-bullet-indent, 16px) !important;
+    }
+    .resume-divider {
+      border-bottom-style: var(--template-divider-style, solid) !important;
+      border-bottom-width: var(--template-divider-width, 1px) !important;
+    }
+    ```
+- [ ] **Template Refactoring**:
+  - Refactor all template rendering components in `src/components/ui/resume/` to ensure they use classes mapped to these variables (`resume-page`, `resume-section`, `resume-item`, etc.) rather than hardcoded Tailwind properties.
 
-  // OPTIMIZATION: If page 2 has very little content (< 20% of a page),
-  // try to pull the last section from page 1 to page 2 to balance better
-  // (prevents a mostly-empty page 2)
-  // Actually: if page2 total is tiny, keep everything on page1 and let CSS handle it.
-  const page2TotalHeight = page2Sections.reduce((sum, sec) => sum + (heights[sec] || 60), 0)
-  if (page2Sections.length > 0 && page2TotalHeight < USABLE_PER_PAGE * 0.15) {
-    // Page 2 would be < 15% full — just put everything on page 1
-    // Let the browser's natural overflow handle the tiny spillover
-    return { page1Sections: [...page1Sections, ...page2Sections], page2Sections: [] }
-  }
+### Phase 4: UI Control Accordion Panel
+- [ ] **Sidebar Forms inside `src/pages/EditorPage.tsx`**:
+  - Refactored `renderDesignControls()` to build out themed accordion widgets using `framer-motion` for smooth height expansion.
+  - Implement ranges and steps for inputs:
+    - Margins: Range `10` to `24`, Step `1` (mm).
+    - Section Gap: Range `6` to `28`, Step `2` (px).
+    - Item Gap: Range `2` to `16`, Step `1` (px).
+    - Line Height: Range `1.0` to `1.6`, Step `0.05` (multiplier).
+    - Divider Size: Range `0.5` to `4.0`, Step `0.5` (px).
+  - Implement font selections:
+    - Headings: `Outfit` (Sans), `EB Garamond` (Classic Serif), `Playfair Display` (Elegant Serif), `JetBrains Mono` (Technical).
+    - Body: `Inter` (Standard), `Roboto` (Clean Sans), `Lora` (Book Serif), `OpenDyslexic` (Dyslexia-friendly sans).
 
-  return { page1Sections, page2Sections }
-}
-```
-
-Also update the function signature for `getPageBreakSections` usage in [useTemplateData.ts:73](file:///c:/Users/pc/Desktop/seve/src/components/templates/useTemplateData.ts#L73):
-```typescript
-// OLD:
-const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
-// NEW:
-const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder, 10)
-```
-
----
-
-### Change 2: Fix page 2 CSS — don't force min-height on continuation pages
-
-**FILE**: [index.css](file:///c:/Users/pc/Desktop/seve/src/index.css)
-
-**ADD** inside the `@media screen` block (after line 796, before the closing `}`):
-
-```css
-  /* Page 2+ should shrink to fit content, not force full A4 height */
-  .resume-page-continuation {
-    min-height: auto !important;
-  }
-```
-
-This ensures page 2 doesn't show massive white space when it only has a few sections.
+### Phase 5: PDF Capture Clone Updates
+- [ ] **Off-screen capture cloning inside `src/utils/pdfExport.ts`**:
+  - Ensure the offscreen cloning logic clones style variables. Check that inline style custom variables are copied to the printed node clone so the PDF downloads look identical to the customized on-screen canvas preview.
 
 ---
 
-### Change 3: Add `resume-section` class to ALL section wrappers in ALL templates
+## 5. Verification Plan
 
-Every section wrapper `<div className="mb-5">` (or `mb-4`, `mb-3`) in every template needs a CSS class so we can target it for page-break avoidance.
-
-**FILE**: [index.css](file:///c:/Users/pc/Desktop/seve/src/index.css)
-
-**ADD** to the page break rules at the bottom (after line 810):
-
-```css
-/* Keep small sections (awards, certifications, languages, etc.) together */
-.resume-section {
-  page-break-inside: avoid !important;
-  break-inside: avoid !important;
-}
-
-/* But allow large sections (experience, projects) to break between entries */
-.resume-section-breakable {
-  /* Allow breaks between entries, but not mid-entry */
-}
-.resume-section-breakable .exp-entry,
-.resume-section-breakable .edu-entry,
-.resume-section-breakable .proj-entry {
-  page-break-inside: avoid !important;
-  break-inside: avoid !important;
-}
-```
-
-Then in **every template**, update section wrappers:
-
-**For SMALL sections** (languages, skills, awards, certifications, interests, publications, references, volunteer) — change `<div className="mb-5">` to `<div className="mb-5 resume-section">`.
-
-**For LARGE sections** (experience, projects, education) — change `<div className="mb-5">` to `<div className="mb-5 resume-section-breakable">`.
-
-Here's the exact mapping for ALL 10 templates:
-
-| Template | Sections using `resume-section` (keep together) | Sections using `resume-section-breakable` (can break between entries) |
-|---|---|---|
-| ClassicTemplate | summary, skills, languages, awards, certifications, interests, publications, references, volunteer | experience, education, projects |
-| ModernTemplate | same pattern | same pattern |
-| ExecutiveTemplate | same pattern | same pattern |
-| MinimalistTemplate | same pattern | same pattern |
-| CreativeTemplate | same pattern | same pattern |
-| CompactTemplate | same pattern | same pattern |
-| ProfessionalTemplate | same pattern | same pattern |
-| TechnicalTemplate | same pattern | same pattern |
-| AcademicTemplate | same pattern | same pattern |
-| CleanTemplate | same pattern | same pattern |
-
-**Example for ClassicTemplate** (apply same logic to ALL 10):
-
-```diff
- // summary
--    <div className="mb-5">
-+    <div className="mb-5 resume-section">
-
- // experience
--    <div className="mb-5">
-+    <div className="mb-5 resume-section-breakable">
-
- // education
--    <div className="mb-5">
-+    <div className="mb-5 resume-section-breakable">
-
- // skills
--    <div className="mb-5">
-+    <div className="mb-5 resume-section">
-
- // projects
--    <div className="mb-5">
-+    <div className="mb-5 resume-section-breakable">
-
- // languages, awards, certifications, interests, publications, references, volunteer
--    <div className="mb-5">
-+    <div className="mb-5 resume-section">
-```
-
----
-
-## Additional Template Issues Found
-
-### Issue: Height estimation is imprecise
-The `getSectionHeights()` function estimates heights using character count. This is inherently inaccurate because:
-- Different fonts render different widths
-- Padding/margins vary between templates
-- Multi-column templates (Executive, Creative) have different line widths
-
-**Mitigation**: The 15% threshold in Change 1 handles edge cases — if page 2 would be nearly empty, we keep everything on page 1 and let natural overflow handle it.
-
-### Issue: Two-column templates (Executive, Creative) need special handling
-These templates have a left sidebar + right main column. The page split should respect the column layout. Currently `page2Left` and `page2Right` variables exist in those templates but since `page2Sections` is always empty, they never work.
-
-After Change 1, they WILL work because `page2Sections` will actually contain sections. Verify that `page2Left` and `page2Right` render correctly.
-
----
-
-## Verification Plan
-
-1. **Build**: `npm run build` — zero errors
-2. **Test Case 1 — Just over 1 page**: Fill a resume with enough content to barely overflow page 1. Page 2 should show the remaining sections without massive blank space.
-3. **Test Case 2 — Way over 1 page**: Fill a resume with lots of experience entries. Sections should split cleanly — experience entries should NOT be cut in the middle.
-4. **Test Case 3 — Exactly 1 page**: Fill a resume that fits exactly on 1 page. No page 2 should appear.
-5. **Test all 10 templates** with the same resume data. Each should handle the page break gracefully.
-6. **Print/PDF test**: Use Ctrl+P → Save as PDF. The PDF should have proper page breaks with no cut sections.
-
----
-
-## Files Modified Summary
-
-| File | What Changes |
-|---|---|
-| [layoutHelper.ts](file:///c:/Users/pc/Desktop/seve/src/utils/layoutHelper.ts) | Replace `getPageBreakSections()` to actually split sections |
-| [useTemplateData.ts](file:///c:/Users/pc/Desktop/seve/src/components/templates/useTemplateData.ts) | Pass fontSize param |
-| [index.css](file:///c:/Users/pc/Desktop/seve/src/index.css) | Add `.resume-page-continuation` min-height fix + `.resume-section` page-break rules |
-| All 10 template files | Add `resume-section` / `resume-section-breakable` classes to section wrapper divs |
+- **Layout Grid Verification**: Verify templates re-adjust their padding/margin structures in response to slider updates without shifting text blocks out of place.
+- **Font Pairings Rendering**: Verify that switching font presets successfully updates the fonts of the headers and the body text respectively.
+- **Export Consistency**: Confirm that custom line heights, text colors, and page margins are rendered identically in the exported A4 PDF.

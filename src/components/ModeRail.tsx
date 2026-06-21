@@ -1,14 +1,15 @@
-import { PenLine, Eye, ShieldCheck, Settings } from 'lucide-react'
+import { PenLine, Eye, ShieldCheck, Settings, Sliders } from 'lucide-react'
 
 export interface ModeRailProps {
-  activeMode: 'studio' | 'preview' | 'analyze'
-  onChangeMode: (mode: 'studio' | 'preview' | 'analyze') => void
+  activeMode: 'studio' | 'design' | 'preview' | 'analyze'
+  onChangeMode: (mode: 'studio' | 'design' | 'preview' | 'analyze') => void
   onSettingsClick: () => void
 }
 
 export default function ModeRail({ activeMode, onChangeMode, onSettingsClick }: ModeRailProps) {
   const items = [
     { id: 'studio' as const, label: 'Edit', icon: PenLine },
+    { id: 'design' as const, label: 'Design', icon: Sliders },
     { id: 'preview' as const, label: 'Preview', icon: Eye },
     { id: 'analyze' as const, label: 'ATS', icon: ShieldCheck },
   ]

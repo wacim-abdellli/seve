@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react'
-import type { ResumeData, ResumeProfile, AppState } from '../types/resume'
+import type { ResumeData, ResumeProfile, ResumeStylePreferences, AppState } from '../types/resume'
+import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { useToast } from '../hooks/useToast'
 import { ResumeContext } from './resumeContextDef'
 import { useAuth } from './AuthContext'
@@ -43,6 +44,7 @@ function createDefaultResume(): ResumeProfile {
     themeColor: '#e11d48',
     templateFontSize: 10,
     templateFontWeight: 400,
+    stylePrefs: { ...DEFAULT_STYLE_PREFS },
   }
 }
 
@@ -87,6 +89,7 @@ function loadInitialState(): AppState {
               selectedTemplate: parsed.selectedTemplate || 'classic',
               jobDescription: parsed.jobDescription || '',
               sectionOrder: sectionOrder || [...DEFAULT_SECTION_ORDER],
+              stylePrefs: { ...DEFAULT_STYLE_PREFS },
             },
           },
           selectedResumeId: defaultResumeId,
@@ -471,6 +474,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           themeColor: '#e11d48',
           templateFontSize: 10,
           templateFontWeight: 400,
+          stylePrefs: { ...DEFAULT_STYLE_PREFS },
         },
       },
       selectedResumeId: newId,
@@ -541,6 +545,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     updateActiveResume(prev => ({ ...prev, resumeData: data }))
   }, [pushHistory, updateActiveResume])
 
+  const updateStylePrefs = useCallback((updater: (prev: ResumeStylePreferences) => ResumeStylePreferences) => {
+    updateActiveResume(prev => ({
+      ...prev,
+      stylePrefs: updater(prev.stylePrefs || { ...DEFAULT_STYLE_PREFS }),
+    }))
+  }, [updateActiveResume])
+
   const retrySync = useCallback(async () => {
     if (!user) return
     setCloudStatus('syncing')
@@ -580,6 +591,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     renameResume,
     deleteResume,
     updateActiveResume,
+    updateStylePrefs,
     updateResumeData,
     updateSectionOrder,
     importResumeData,
@@ -592,7 +604,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     state.resumes, state.selectedResumeId, activeResume, resumeData,
     selectedTemplate, jobDescription, sectionOrder, isSaving, cloudStatus, cloudError,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
-    updateActiveResume, updateResumeData, updateSectionOrder, importResumeData, retrySync,
+    updateActiveResume, updateStylePrefs, updateResumeData, updateSectionOrder, importResumeData, retrySync,
     handleUndo, handleRedo, canUndo, canRedo,
   ])
 

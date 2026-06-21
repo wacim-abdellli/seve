@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { ResumeData, Template } from '../types/resume'
-import { motion, AnimatePresence } from 'framer-motion'
+import type { ResumeData, ResumeStylePreferences, Template } from '../types/resume'
+import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
+
 import TemplateRenderer from './TemplateRenderer'
 import { SectionReorderProvider } from './PreviewSectionWrapper'
 import { useToast } from '../hooks/useToast'
@@ -16,10 +17,7 @@ import {
   Grid3x3,
   Download,
   Minimize2,
-  ChevronDown,
-  UploadCloud,
-  Type,
-  Sliders
+  UploadCloud
 } from 'lucide-react'
 
 interface ResumePreviewProps {
@@ -38,10 +36,11 @@ interface ResumePreviewProps {
   onChangeFontWeight: (weight: number) => void
   themeColor: string
   onChangeColor?: (color: string) => void
+  stylePrefs?: ResumeStylePreferences
   onTriggerImport?: () => void
 }
 
-const templatesList: { id: Template; label: string; colorDot: string }[] = [
+export const templatesList: { id: Template; label: string; colorDot: string }[] = [
   { id: 'classic', label: 'Classic', colorDot: 'bg-zinc-400' },
   { id: 'modern', label: 'Modern', colorDot: 'bg-blue-500' },
   { id: 'executive', label: 'Executive', colorDot: 'bg-amber-500' },
@@ -56,7 +55,7 @@ const templatesList: { id: Template; label: string; colorDot: string }[] = [
 
 type SectionKey = string
 
-const themeColors = [
+export const themeColors = [
   { value: '#e11d48', label: 'Crimson', bgClass: 'bg-rose-500' },
   { value: '#7c3aed', label: 'Violet', bgClass: 'bg-violet-500' },
   { value: '#2563eb', label: 'Royal Blue', bgClass: 'bg-blue-600' },
@@ -68,7 +67,6 @@ const themeColors = [
 export default function ResumePreview({ 
   resumeData, 
   selectedTemplate,
-  onChangeTemplate,
   activeSection,
   onEditSection,
   onExportPdf,
@@ -78,9 +76,8 @@ export default function ResumePreview({
   templateFontSize,
   onChangeFontSize,
   templateFontWeight,
-  onChangeFontWeight,
   themeColor,
-  onChangeColor,
+  stylePrefs,
   onTriggerImport
 }: ResumePreviewProps) {
   const { showToast } = useToast()
@@ -97,20 +94,7 @@ export default function ResumePreview({
   const [contentHeight, setContentHeight] = useState(1123)
   const [showGuides, setShowGuides] = useState(false)
   const [pageCount, setPageCount] = useState(1)
-  const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false)
-  const styleMenuRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!isStyleMenuOpen) return
-    const handler = (e: MouseEvent) => {
-      if (styleMenuRef.current && !styleMenuRef.current.contains(e.target as Node)) {
-        setIsStyleMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [isStyleMenuOpen])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -310,7 +294,7 @@ export default function ResumePreview({
   }
 
   return (
-    <div className="w-full flex flex-col gap-4 select-text">
+    <div className="w-full flex flex-col gap-4 select-text relative">
       
       {/* Top Inspector Bar */}
       {!isEmpty && (
@@ -424,185 +408,6 @@ export default function ResumePreview({
               </button>
             )}
 
-            {/* Combined Style Menu Popover */}
-            <div className="relative" ref={styleMenuRef}>
-              <button
-                type="button"
-                onClick={() => setIsStyleMenuOpen(!isStyleMenuOpen)}
-                className={`flex items-center justify-center gap-1.5 h-8 w-8 sm:w-auto sm:px-3 text-[11px] font-extrabold uppercase tracking-wider rounded-xl transition-all cursor-pointer border ${
-                  isStyleMenuOpen 
-                    ? 'bg-rose-500/10 border-rose-500/35 text-rose-400 shadow-sm' 
-                    : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:text-white hover:bg-zinc-800/80'
-                }`}
-                title="Design Styles & Formatting"
-              >
-                <Sliders className="w-3.5 h-3.5 text-rose-450" />
-                <span className="hidden sm:inline">Style</span>
-                <ChevronDown className="w-3 h-3 text-zinc-550 shrink-0 hidden sm:inline" />
-              </button>
-
-              <AnimatePresence>
-                {isStyleMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 4 }}
-                    transition={{ duration: 0.12 }}
-                    className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-850 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.95)] w-56 z-50 flex flex-col gap-4"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between pb-1.5 border-b border-zinc-900">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 select-none">Design & Style</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setIsStyleMenuOpen(false)} 
-                        className="text-[9px] font-bold text-zinc-500 hover:text-white transition-colors"
-                      >
-                        Done
-                      </button>
-                    </div>
-
-                    {/* Section 1: Template Selection */}
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Layout Template</label>
-                      <div className="relative">
-                        <select
-                          value={selectedTemplate}
-                          onChange={(e) => onChangeTemplate?.(e.target.value as Template)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-[11px] text-zinc-200 focus:outline-none focus:border-rose-500/50 font-bold appearance-none cursor-pointer"
-                        >
-                          {templatesList.map(t => (
-                            <option key={t.id} value={t.id} className="bg-zinc-950 text-zinc-200 font-bold">{t.label}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-zinc-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    {/* Section 2: Accent Color */}
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Theme Accent</label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {themeColors.map((color) => {
-                          const isSelected = themeColor === color.value
-                          return (
-                            <button
-                              key={color.value}
-                              type="button"
-                              onClick={() => onChangeColor?.(color.value)}
-                              style={{ backgroundColor: color.value }}
-                              className={`w-5 h-5 rounded-full transition-all duration-150 relative cursor-pointer flex items-center justify-center hover:scale-110 active:scale-95 ${
-                                isSelected ? 'ring-2 ring-rose-500 ring-offset-2 ring-offset-zinc-950' : 'border border-white/5'
-                              }`}
-                              title={color.label}
-                            />
-                          )
-                        })}
-                        {/* Custom color picker */}
-                        <label
-                          className="w-5 h-5 rounded-full bg-zinc-900 border border-zinc-800 cursor-pointer flex items-center justify-center hover:scale-110 hover:border-zinc-700 transition-all duration-150 relative overflow-hidden"
-                          title="Custom color"
-                          style={!themeColors.find(c => c.value === themeColor) ? { 
-                            backgroundColor: themeColor,
-                            border: 'none',
-                            boxShadow: '0 0 0 2px #f43f5e'
-                          } : undefined}
-                        >
-                          <span className="text-[10px] font-extrabold text-zinc-300 leading-none pointer-events-none select-none">+</span>
-                            <input
-                              type="color"
-                              value={themeColor}
-                              onChange={(e) => onChangeColor?.(e.target.value)}
-                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                              aria-label="Theme accent color"
-                            />
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Section 3: Font Size */}
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Base Font Size</label>
-                      <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl p-0.5 h-8 w-full justify-between">
-                        <button 
-                          onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
-                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
-                          type="button"
-                          title="Decrease font size"
-                          aria-label={`Decrease font size. Current: ${templateFontSize}pt`}
-                        >
-                          <span className="text-[10px] font-extrabold select-none" aria-hidden="true">A-</span>
-                        </button>
-                        
-                        <div className="flex items-center gap-1 px-1 text-zinc-300 font-mono select-none" aria-live="polite" aria-atomic="true">
-                          <Type className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
-                          <span className="text-[10px] font-extrabold">{templateFontSize}pt</span>
-                        </div>
-                        
-                        <button 
-                          onClick={() => onChangeFontSize(Math.min(16, Number((templateFontSize + 0.5).toFixed(1))))}
-                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
-                          type="button"
-                          title="Increase font size"
-                          aria-label={`Increase font size. Current: ${templateFontSize}pt`}
-                        >
-                          <span className="text-[10px] font-extrabold select-none">A+</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Section 4: Font Weight */}
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-550 block select-none">Font Weight</label>
-                      <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl p-0.5 h-8 w-full justify-between">
-                        <button 
-                          onClick={() => onChangeFontWeight(Math.max(300, templateFontWeight - 100))}
-                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
-                          type="button"
-                          title="Lighter font weight"
-                          aria-label={`Decrease font weight. Current: ${templateFontWeight}`}
-                        >
-                          <span className="text-[9px] font-extrabold select-none opacity-60" aria-hidden="true">B-</span>
-                        </button>
-                        
-                        <div className="flex items-center gap-1 px-1 text-zinc-300 font-mono select-none" aria-live="polite" aria-atomic="true">
-                          <span className="text-[10px] font-extrabold">{templateFontWeight}</span>
-                        </div>
-                        
-                        <button 
-                          onClick={() => onChangeFontWeight(Math.min(900, templateFontWeight + 100))}
-                          className="px-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center"
-                          type="button"
-                          title="Bolder font weight"
-                          aria-label={`Increase font weight. Current: ${templateFontWeight}`}
-                        >
-                          <span className="text-[9px] font-extrabold select-none opacity-100" aria-hidden="true">B+</span>
-                        </button>
-                      </div>
-                      <div className="flex gap-1" role="radiogroup" aria-label="Font weight presets">
-                        {[300, 400, 500, 600, 700].map((w) => (
-                          <button
-                            key={w}
-                            onClick={() => onChangeFontWeight(w)}
-                            className={`flex-1 h-6 text-[9px] font-extrabold rounded-lg transition-colors cursor-pointer border ${
-                              templateFontWeight === w
-                                ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
-                            }`}
-                            type="button"
-                            role="radio"
-                            aria-checked={templateFontWeight === w}
-                            aria-label={`Font weight ${w}`}
-                          >
-                            {w}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* Export PDF Button (opens browser print dialog) */}
             {onExportPdf && (
@@ -652,7 +457,8 @@ export default function ResumePreview({
               left: 0,
               top: 0,
               '--template-font-size': `${templateFontSize}px`, 
-              '--template-font-weight': templateFontWeight 
+              '--template-font-weight': templateFontWeight,
+              ...(stylePrefs ? stylePrefsToCssVars(stylePrefs) : {}),
             } as React.CSSProperties}
             className="relative resume-preview bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0"
           >

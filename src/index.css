@@ -88,6 +88,23 @@
   /* Template font scaling — set dynamically via inline style on containers */
   --template-font-size: 10px;
   --template-font-weight: 400;
+
+  /* Template style preferences — overridden via inline style on preview/print wrappers */
+  --template-heading-font: 'Outfit', sans-serif;
+  --template-body-font: 'Inter', sans-serif;
+  --template-line-height: 1.25;
+  --template-letter-spacing: normal;
+  --template-heading-case: uppercase;
+  --template-page-padding: 16mm;
+  --template-section-spacing: 12px;
+  --template-item-spacing: 8px;
+  --template-bullet-indent: 16px;
+  --template-body-color: #334155;
+  --template-heading-color: #0f172a;
+  --template-divider-style: solid;
+  --template-divider-width: 1px;
+  --template-high-contrast: 0;
+  --template-ats-font: 0;
 }
 
 /* Template font-size + weight via CSS custom properties (avoids dangerouslySetInnerHTML) */
@@ -145,6 +162,37 @@
   font-size: calc(1.2 * var(--template-font-size)) !important;
 }
 
+/* Template style preference overrides */
+#resume-print-area .resume-page,
+.resume-template-print-wrapper .resume-page {
+  font-family: var(--template-body-font) !important;
+  line-height: var(--template-line-height) !important;
+  letter-spacing: var(--template-letter-spacing) !important;
+  color: var(--template-body-color) !important;
+  padding: var(--template-page-padding) !important;
+}
+#resume-print-area h1, #resume-print-area h2, #resume-print-area h3, #resume-print-area h4, #resume-print-area h5, #resume-print-area h6,
+.resume-template-print-wrapper h1, .resume-template-print-wrapper h2, .resume-template-print-wrapper h3, .resume-template-print-wrapper h4, .resume-template-print-wrapper h5, .resume-template-print-wrapper h6 {
+  font-family: var(--template-heading-font) !important;
+  color: var(--template-heading-color) !important;
+  text-transform: var(--template-heading-case) !important;
+}
+#resume-print-area .resume-section + .resume-section,
+.resume-template-print-wrapper .resume-section + .resume-section {
+  margin-top: var(--template-section-spacing) !important;
+}
+#resume-print-area li,
+.resume-template-print-wrapper li {
+  margin-top: var(--template-item-spacing) !important;
+}
+#resume-print-area ul, #resume-print-area ol,
+.resume-template-print-wrapper ul, .resume-template-print-wrapper ol {
+  padding-left: var(--template-bullet-indent) !important;
+}
+#resume-print-area hr, #resume-print-area .resume-divider,
+.resume-template-print-wrapper hr, .resume-template-print-wrapper .resume-divider {
+  border-top: var(--template-divider-width) var(--template-divider-style) currentColor !important;
+}
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-void);

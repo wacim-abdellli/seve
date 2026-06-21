@@ -125,6 +125,42 @@ export interface AtsScore {
   failing: { issue: string; fix: string; section?: string }[]
 }
 
+export interface ResumeStylePreferences {
+  headingFont: string
+  bodyFont: string
+  lineHeight: number
+  letterSpacing: string
+  headingCase: 'uppercase' | 'capitalize' | 'normal'
+  pagePadding: number
+  sectionSpacing: number
+  itemSpacing: number
+  bulletIndent: number
+  bodyTextColor: string
+  headingColor: string
+  dividerStyle: 'none' | 'solid' | 'dashed' | 'dotted'
+  dividerWidth: number
+  highContrastPrint: boolean
+  atsOptimizedFont: boolean
+}
+
+export const DEFAULT_STYLE_PREFS: ResumeStylePreferences = {
+  headingFont: 'Outfit',
+  bodyFont: 'Inter',
+  lineHeight: 1.25,
+  letterSpacing: 'normal',
+  headingCase: 'uppercase',
+  pagePadding: 16,
+  sectionSpacing: 12,
+  itemSpacing: 8,
+  bulletIndent: 16,
+  bodyTextColor: '#334155',
+  headingColor: '#0f172a',
+  dividerStyle: 'solid',
+  dividerWidth: 1,
+  highContrastPrint: false,
+  atsOptimizedFont: false,
+}
+
 export type Template = 'classic' | 'modern' | 'executive' | 'minimalist' | 'creative' | 'compact' | 'professional' | 'technical' | 'academic' | 'clean'
 
 export interface ResumeProfile {
@@ -139,6 +175,7 @@ export interface ResumeProfile {
   themeColor?: string
   templateFontSize?: number
   templateFontWeight?: number
+  stylePrefs?: ResumeStylePreferences
 }
 
 export interface AppState {

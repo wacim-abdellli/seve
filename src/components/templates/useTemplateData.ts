@@ -44,22 +44,23 @@ export function useTemplateData(
   ats: Record<string, { rating: string; feedback: string | undefined }>
   sectionData: TemplateSectionData
 } {
-  const { contact, summary } = data
-  const experience = (data.experience || []).filter(
-    (exp) => exp.jobTitle?.trim() && exp.company?.trim()
+  const contact = data?.contact || { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' }
+  const summary = data?.summary || ''
+  const experience = (data?.experience || []).filter(
+    (exp) => exp?.jobTitle?.trim() && exp?.company?.trim()
   )
-  const education = (data.education || []).filter(
-    (edu) => edu.school?.trim() && edu.degree?.trim()
+  const education = (data?.education || []).filter(
+    (edu) => edu?.school?.trim() && edu?.degree?.trim()
   )
-  const skills = (data.skills || []).filter((s) => s?.trim())
-  const projects = (data.projects || []).filter((p) => p.name?.trim())
-  const languages = (data.languages || []).filter((l) => l.name?.trim())
-  const awards = (data.awards || []).filter((a) => a.title?.trim())
-  const certifications = (data.certifications || []).filter((c) => c.title?.trim())
-  const interests = (data.interests || []).filter((i) => i.name?.trim())
-  const publications = (data.publications || []).filter((p) => p.title?.trim())
-  const references = (data.references || []).filter((r) => r.name?.trim())
-  const volunteer = (data.volunteer || []).filter((v) => v.organization?.trim())
+  const skills = (data?.skills || []).filter((s) => s?.trim())
+  const projects = (data?.projects || []).filter((p) => p?.name?.trim())
+  const languages = (data?.languages || []).filter((l) => l?.name?.trim())
+  const awards = (data?.awards || []).filter((a) => a?.title?.trim())
+  const certifications = (data?.certifications || []).filter((c) => c?.title?.trim())
+  const interests = (data?.interests || []).filter((i) => i?.name?.trim())
+  const publications = (data?.publications || []).filter((p) => p?.title?.trim())
+  const references = (data?.references || []).filter((r) => r?.name?.trim())
+  const volunteer = (data?.volunteer || []).filter((v) => v?.organization?.trim())
 
   const atsEntries = ['contact', 'summary', 'experience', 'projects', 'education', 'skills',
     'languages', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer'] as const

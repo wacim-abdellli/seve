@@ -43,11 +43,55 @@ export async function exportResumeToPdf(
     pageEl.style.setProperty('box-shadow', 'none', 'important')
   })
 
-  // 4. Append to DOM
+  // 4. Append to DOM (must happen before resolveVars so getComputedStyle sees stylesheet rules)
   container.appendChild(clone)
   document.body.appendChild(container)
 
-  // 5. Configure html2pdf options
+  // 5. Resolve CSS custom property references into direct inline styles
+  //    (html2canvas may not resolve var() references, so we bake computed values)
+  const resolveVars = (root: HTMLElement) => {
+    const pages = root.querySelectorAll('.resume-page')
+    pages.forEach(el => {
+      const pageEl = el as HTMLElement
+      const style = getComputedStyle(pageEl)
+      pageEl.style.setProperty('font-family', style.fontFamily, 'important')
+      pageEl.style.setProperty('line-height', style.lineHeight, 'important')
+      pageEl.style.setProperty('letter-spacing', style.letterSpacing, 'important')
+      pageEl.style.setProperty('color', style.color, 'important')
+      pageEl.style.setProperty('padding', style.padding, 'important')
+    })
+    const headings = root.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    headings.forEach(el => {
+      const hEl = el as HTMLElement
+      const style = getComputedStyle(hEl)
+      hEl.style.setProperty('font-family', style.fontFamily, 'important')
+      hEl.style.setProperty('color', style.color, 'important')
+      hEl.style.setProperty('text-transform', style.textTransform, 'important')
+    })
+    root.querySelectorAll('.resume-section + .resume-section').forEach(el => {
+      const secEl = el as HTMLElement
+      const style = getComputedStyle(secEl)
+      secEl.style.setProperty('margin-top', style.marginTop, 'important')
+    })
+    root.querySelectorAll('ul, ol').forEach(el => {
+      const listEl = el as HTMLElement
+      const style = getComputedStyle(listEl)
+      listEl.style.setProperty('padding-left', style.paddingLeft, 'important')
+    })
+    root.querySelectorAll('li').forEach(el => {
+      const liEl = el as HTMLElement
+      const style = getComputedStyle(liEl)
+      liEl.style.setProperty('margin-top', style.marginTop, 'important')
+    })
+    root.querySelectorAll('hr, .resume-divider').forEach(el => {
+      const dividerEl = el as HTMLElement
+      const style = getComputedStyle(dividerEl)
+      dividerEl.style.setProperty('border-top', style.borderTop, 'important')
+    })
+  }
+  resolveVars(clone)
+
+  // 6. Configure html2pdf options
   const opt = {
     margin: 0,
     filename,
@@ -70,10 +114,10 @@ export async function exportResumeToPdf(
   }
 
   try {
-    // 6. Generate PDF from the offscreen clone
+    // 8. Generate PDF from the offscreen clone
     await html2pdf().set(opt).from(clone).save()
   } finally {
-    // 7. Clean up the offscreen container from the DOM
+    // 9. Clean up the offscreen container from the DOM
     document.body.removeChild(container)
   }
 }

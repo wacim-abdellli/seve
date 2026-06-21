@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, ChevronRight, ArrowLeft, Type } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
 import ResumePreview, { templatesList, themeColors } from '../components/ResumePreview'
+import DesignStylePanel from '../components/DesignStylePanel'
 import { getSectionStatus } from '../utils/completionHelper'
 const AtsChecker = lazy(() => import('../components/AtsChecker'))
 import type { EditorContextType } from '../layouts/EditorLayout'
@@ -61,7 +62,7 @@ export default function EditorPage() {
   const { resumeData, selectedTemplate, jobDescription, updateActiveResume } = useResume()
   const ctx = useOutletContext<EditorContextType>()
 
-  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint } = ctx
+  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint } = ctx
 
   const renderDesignControls = () => {
     return (
@@ -200,6 +201,9 @@ export default function EditorPage() {
             ))}
           </div>
         </div>
+
+        {/* Design Style Panel */}
+        <DesignStylePanel stylePrefs={stylePrefs} updateStylePrefs={updateStylePrefs} />
       </div>
     )
   }
@@ -348,6 +352,7 @@ export default function EditorPage() {
                   templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
                   templateFontWeight={templateFontWeight} onChangeFontWeight={onChangeFontWeight}
                   themeColor={themeColor} onChangeColor={setThemeColor}
+                  stylePrefs={stylePrefs}
                 />
               </div>
             </div>
@@ -396,6 +401,7 @@ export default function EditorPage() {
                   templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
                   templateFontWeight={templateFontWeight} onChangeFontWeight={onChangeFontWeight}
                   themeColor={themeColor} onChangeColor={setThemeColor}
+                  stylePrefs={stylePrefs}
                 />
               </div>
             </div>
