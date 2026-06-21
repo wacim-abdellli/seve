@@ -163,7 +163,7 @@ export const DEFAULT_STYLE_PREFS: ResumeStylePreferences = {
   dividerWidth: 1,
   highContrastPrint: false,
   atsOptimizedFont: false,
-  dividerColor: '#cbd5e1',
+  dividerColor: 'theme',
   sectionCutStyle: 'none',
   sectionBgColor: '#f8fafc',
   sectionBorderColor: '#e2e8f0',

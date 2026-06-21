@@ -466,6 +466,7 @@ export default function ResumePreview({
               '--template-font-weight-bold': Math.min(900, templateFontWeight + 300),
               '--template-font-weight-extrabold': Math.min(900, templateFontWeight + 400),
               '--template-font-weight-black': Math.min(900, templateFontWeight + 500),
+              '--template-theme-color': themeColor,
               ...(stylePrefs ? stylePrefsToCssVars(stylePrefs) : {}),
             } as React.CSSProperties}
             className={`relative resume-preview bg-transparent text-slate-900 transition-all duration-300 print:shadow-none print:border-none print:p-0 print:w-full print:min-h-0 p-0 cut-style-${stylePrefs?.sectionCutStyle || 'none'}`}

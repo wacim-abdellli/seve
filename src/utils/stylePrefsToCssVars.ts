@@ -17,7 +17,7 @@ export function stylePrefsToCssVars(prefs: ResumeStylePreferences): React.CSSPro
     '--template-divider-width': `${prefs.dividerWidth}px`,
     '--template-high-contrast': prefs.highContrastPrint ? '1' : '0',
     '--template-ats-font': prefs.atsOptimizedFont ? '1' : '0',
-    '--template-divider-color': prefs.dividerColor || '#cbd5e1',
+    '--template-divider-color': prefs.dividerColor === 'theme' ? 'var(--template-theme-color)' : (prefs.dividerColor || 'var(--template-theme-color)'),
     '--template-section-cut-style': prefs.sectionCutStyle || 'none',
     '--template-section-bg-color': prefs.sectionBgColor || '#f8fafc',
     '--template-section-border-color': prefs.sectionBorderColor || '#e2e8f0',

@@ -240,7 +240,20 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs, themeCo
 
         <ColorControl label="Body Text" value={stylePrefs.bodyTextColor} onChange={(v) => update('bodyTextColor', v)} />
         <ColorControl label="Headings" value={stylePrefs.headingColor} onChange={(v) => update('headingColor', v)} />
-        <ColorControl label="Divider Color" value={stylePrefs.dividerColor || '#cbd5e1'} onChange={(v) => update('dividerColor', v)} />
+        <div className="space-y-1">
+          <ColorControl label="Divider Color" value={stylePrefs.dividerColor === 'theme' ? themeColor : (stylePrefs.dividerColor || themeColor)} onChange={(v) => update('dividerColor', v)} />
+          {stylePrefs.dividerColor !== 'theme' && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => update('dividerColor', 'theme')}
+                className="text-[9px] font-bold text-rose-450 hover:text-rose-350 underline cursor-pointer"
+              >
+                Match Theme Accent
+              </button>
+            </div>
+          )}
+        </div>
         <SelectControl
           label="Divider Style"
           value={stylePrefs.dividerStyle}

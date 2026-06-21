@@ -717,6 +717,7 @@ export default function EditorLayout() {
                  '--template-font-weight-bold': Math.min(900, templateFontWeight + 300),
                  '--template-font-weight-extrabold': Math.min(900, templateFontWeight + 400),
                  '--template-font-weight-black': Math.min(900, templateFontWeight + 500),
+                 '--template-theme-color': themeColor,
                  ...stylePrefsToCssVars(stylePrefs),
                } as React.CSSProperties}>
           <TemplateRenderer type={selectedTemplate} data={resumeData} sectionOrder={sectionOrder} themeColor={themeColor} />
