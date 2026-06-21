@@ -8,7 +8,8 @@ import {
   ChevronLeft,
   CheckCircle,
   Circle,
-  Sparkles
+  Sparkles,
+  Sliders
 } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
 import { calculateCompletion, getSectionStatus } from '../utils/completionHelper'
@@ -16,8 +17,8 @@ import { calculateCompletion, getSectionStatus } from '../utils/completionHelper
 export type SectionType = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
 interface SectionSidebarProps {
-  activeMode: 'studio' | 'preview' | 'analyze'
-  onModeChange: (mode: 'studio' | 'preview' | 'analyze') => void
+  activeMode: 'studio' | 'design' | 'preview' | 'analyze'
+  onModeChange: (mode: 'studio' | 'design' | 'preview' | 'analyze') => void
   onOpenSection: (section: SectionType) => void
 }
 
@@ -55,6 +56,7 @@ export default function SectionSidebar({
 
   const modes = [
     { id: 'studio' as const, label: 'Edit Resume', icon: PenLine },
+    { id: 'design' as const, label: 'Design & Style', icon: Sliders },
     { id: 'preview' as const, label: 'Preview', icon: Eye },
     { id: 'analyze' as const, label: 'ATS Check', icon: ShieldCheck },
   ]
@@ -270,12 +272,21 @@ export default function SectionSidebar({
               </div>
             ) : (
               <div className="px-3 flex-1 flex items-center justify-center">
+                {activeMode === 'design' && (
+                  <div className="bg-zinc-900 rounded-xl p-4 w-full flex flex-col gap-3">
+                    <Sliders size={32} className="text-red-400" />
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-white">Design & Style</h4>
+                      <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed font-sans">Adjust your layout, color scheme, font size, and weights to make your resume stand out.</p>
+                    </div>
+                  </div>
+                )}
                 {activeMode === 'preview' && (
                   <div className="bg-zinc-900 rounded-xl p-4 w-full flex flex-col gap-3">
                     <Eye size={32} className="text-red-400" />
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-white">Document Preview</h4>
-                      <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">Choose the best template and preview your resume. Save as print-ready PDF.</p>
+                      <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed font-sans">Choose the best template and preview your resume. Save as print-ready PDF.</p>
                     </div>
                   </div>
                 )}
@@ -284,7 +295,7 @@ export default function SectionSidebar({
                     <ShieldCheck size={32} className="text-emerald-400" />
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-white">ATS Check</h4>
-                      <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">Your resume is scored live. Aim for 80+ to pass most ATS filters.</p>
+                      <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed font-sans">Your resume is scored live. Aim for 80+ to pass most ATS filters.</p>
                     </div>
                   </div>
                 )}

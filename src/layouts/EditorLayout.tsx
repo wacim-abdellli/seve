@@ -10,7 +10,7 @@ import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogIn, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2 } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { exportResumeToPdf } from '../utils/pdfExport'
 
@@ -18,8 +18,8 @@ import { exportResumeToPdf } from '../utils/pdfExport'
 type SectionKey = string
 
 export interface EditorContextType {
-  activeMode: 'studio' | 'preview' | 'analyze'
-  setActiveMode: (mode: 'studio' | 'preview' | 'analyze') => void
+  activeMode: 'studio' | 'design' | 'preview' | 'analyze'
+  setActiveMode: (mode: 'studio' | 'design' | 'preview' | 'analyze') => void
   openDrawer: (section: SectionType) => void
   activeStudioSection: SectionType | null
   setActiveStudioSection: (section: SectionType | null) => void
@@ -297,9 +297,9 @@ export default function EditorLayout() {
     updateActiveResume, importResumeData, sectionOrder, updateSectionOrder,
     undo, redo, canUndo, canRedo,
   } = useResume()
-  const { user, signInWithGoogle, signOut } = useAuth()
+  const { user, signOut } = useAuth()
 
-  const [activeMode, setActiveMode] = useState<'studio' | 'preview' | 'analyze'>('studio')
+  const [activeMode, setActiveMode] = useState<'studio' | 'design' | 'preview' | 'analyze'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
   const [pageCount, setPageCount] = useState(1)
   
@@ -484,7 +484,10 @@ export default function EditorLayout() {
             )}
           </div>
 
-          {user ? (
+          <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-all cursor-pointer items-center justify-center h-8 w-8 inline-flex" title="Settings">
+            <Settings size={15} />
+          </button>
+          {user && (
             <div className="relative">
               <button onClick={() => setShowUserMenu(!showUserMenu)} onBlur={() => setTimeout(() => setShowUserMenu(false), 150)} className="flex items-center gap-2 border border-zinc-800 text-xs font-semibold p-1.5 sm:px-2 sm:py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer">
                 <img src={user.user_metadata?.avatar_url} alt="" className="w-5 h-5 rounded-full" referrerPolicy="no-referrer" />
@@ -494,25 +497,12 @@ export default function EditorLayout() {
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl z-50 min-w-[180px] animate-fade-in">
                   <div className="px-3 py-2 text-[11px] text-zinc-400 border-b border-zinc-800 truncate">{user.email}</div>
-                  <button onClick={() => { setIsSettingsOpen(true); setShowUserMenu(false) }} className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer">
-                    <Settings size={13} /> Settings
-                  </button>
                   <button onClick={() => { signOut(); setShowUserMenu(false) }} className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer">
                     <LogOut size={13} /> Sign Out
                   </button>
                 </div>
               )}
             </div>
-          ) : (
-            <>
-              <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer items-center justify-center h-8 w-8 hidden md:inline-flex" title="Settings">
-                <Settings size={15} />
-              </button>
-              <button onClick={signInWithGoogle} className="inline-flex items-center gap-1.5 border border-zinc-800 text-xs font-semibold p-2 sm:px-3 sm:py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all cursor-pointer justify-center">
-                <LogIn size={13} />
-                <span className="hidden sm:inline">Sign In</span>
-              </button>
-            </>
           )}
           <button onClick={handleDirectPdfExport} className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs p-2 sm:px-4 sm:py-1.5 rounded-full transition-all cursor-pointer shadow-lg shadow-rose-600/10 justify-center">
             <Download size={13} />
@@ -526,10 +516,10 @@ export default function EditorLayout() {
 
       <div className="flex flex-1 overflow-hidden relative z-10 bg-transparent">
         <div className="hidden lg:block flex-shrink-0 h-full">
-          <SectionSidebar activeMode={activeMode} onModeChange={(m) => { setActiveMode(m); if (m === 'studio') setMobileView('edit') }} onOpenSection={openDrawer} />
+          <SectionSidebar activeMode={activeMode} onModeChange={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onOpenSection={openDrawer} />
         </div>
 
-        <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} />
+        <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} />
 
         <div className="flex flex-1 flex-row overflow-hidden relative bg-transparent pb-16 lg:pb-0">
           <Outlet context={editorContext} />
