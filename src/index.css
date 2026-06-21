@@ -318,6 +318,33 @@
   border-bottom-color: var(--template-divider-color) !important;
 }
 
+#resume-print-area .border-t,
+#resume-print-area .border-t-2,
+.resume-template-print-wrapper .border-t,
+.resume-template-print-wrapper .border-t-2 {
+  border-top-style: var(--template-divider-style) !important;
+  border-top-width: var(--template-divider-width) !important;
+  border-top-color: var(--template-divider-color) !important;
+}
+
+#resume-print-area .border-r,
+#resume-print-area .border-r-2,
+.resume-template-print-wrapper .border-r,
+.resume-template-print-wrapper .border-r-2 {
+  border-right-style: var(--template-divider-style) !important;
+  border-right-width: var(--template-divider-width) !important;
+  border-right-color: var(--template-divider-color) !important;
+}
+
+#resume-print-area .border-l,
+#resume-print-area .border-l-2,
+.resume-template-print-wrapper .border-l,
+.resume-template-print-wrapper .border-l-2 {
+  border-left-style: var(--template-divider-style) !important;
+  border-left-width: var(--template-divider-width) !important;
+  border-left-color: var(--template-divider-color) !important;
+}
+
 /* Custom Section Separation Cut Styles */
 
 /* 1. Left Accent Line */
