@@ -109,6 +109,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
     const [removed] = updated.splice(draggedIdx, 1)
     updated.splice(index, 0, removed)
     onChange(updated)
+    setDraggedIdx(null)
   }
 
   const handleDragEnd = () => {
