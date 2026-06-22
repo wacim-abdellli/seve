@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -11,12 +11,12 @@ import type { SectionType } from '../components/SectionSidebar'
 import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
-const KeyboardShortcutsModal = lazy(() => import('../components/KeyboardShortcutsModal'))
-const ResumeManager = lazy(() => import('../components/ResumeManager'))
+import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
+import ResumeManager from '../components/ResumeManager'
 import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
-const AiOnboardingModal = lazy(() => import('../components/AiOnboardingModal'))
+import AiOnboardingModal from '../components/AiOnboardingModal'
 
 
 
@@ -697,14 +697,12 @@ export default function EditorLayout() {
 
       <AnimatePresence>
         {isResumeManagerOpen && (
-          <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-6 h-6 border-2 border-zinc-600 border-t-red-400 rounded-full splash-spinner" /></div>}>
-            <ResumeManager
-              resumes={resumes} selectedResumeId={selectedResumeId} cloudStatus={cloudStatus}
-              onSelect={selectResume} onCreate={createResume} onDuplicate={duplicateResume}
-              onRename={renameResume} onDelete={deleteResume}
-              onClose={() => setIsResumeManagerOpen(false)}
-            />
-          </Suspense>
+          <ResumeManager
+            resumes={resumes} selectedResumeId={selectedResumeId} cloudStatus={cloudStatus}
+            onSelect={selectResume} onCreate={createResume} onDuplicate={duplicateResume}
+            onRename={renameResume} onDelete={deleteResume}
+            onClose={() => setIsResumeManagerOpen(false)}
+          />
         )}
       </AnimatePresence>
 
@@ -735,20 +733,16 @@ export default function EditorLayout() {
       {showPrintModal && <PrintSettingsModal onClose={dismissPrintModal} onContinue={confirmPrint} />}
       <AnimatePresence>
         {showAiGuide && (
-          <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-6 h-6 border-2 border-zinc-600 border-t-red-400 rounded-full splash-spinner" /></div>}>
-            <AiOnboardingModal
-              onClose={() => setShowAiGuide(false)}
-              onImport={(data) => importResumeData(data)}
-            />
-          </Suspense>
+          <AiOnboardingModal
+            onClose={() => setShowAiGuide(false)}
+            onImport={(data) => importResumeData(data)}
+          />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showShortcuts && (
-          <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-6 h-6 border-2 border-zinc-600 border-t-red-400 rounded-full splash-spinner" /></div>}>
-            <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
-          </Suspense>
+          <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
         )}
       </AnimatePresence>
     </div>

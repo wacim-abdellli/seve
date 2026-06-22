@@ -228,6 +228,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setCloudStatus('synced')
       setCloudError(null)
       hasMergedCloudRef.current = true
+      isMergingRef.current = false
     } catch (err: unknown) {
       if (signal?.aborted || (err as { name?: string })?.name === 'AbortError') {
         return
@@ -315,7 +316,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     const isLoginEvent = user?.id !== prevUserIdRef.current
     prevUserIdRef.current = user?.id ?? null
     const isMergeUpdate = isMergingRef.current
-    isMergingRef.current = false
 
     if (!user) {
       setCloudStatus('local')

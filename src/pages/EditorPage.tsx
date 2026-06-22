@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ArrowLeft, Type, ZoomOut, ZoomIn } from 'lucide-react'
@@ -6,7 +5,7 @@ import { useResume } from '../hooks/useResume'
 import ResumePreview, { templatesList } from '../components/ResumePreview'
 import DesignStylePanel from '../components/DesignStylePanel'
 import { getSectionStatus } from '../utils/completionHelper'
-const AtsChecker = lazy(() => import('../components/AtsChecker'))
+import AtsChecker from '../components/AtsChecker'
 import type { EditorContextType } from '../layouts/EditorLayout'
 import type { ResumeData } from '../types/resume'
 import type { SectionType } from '../components/SectionSidebar'
@@ -452,19 +451,13 @@ export default function EditorPage() {
         )}
 
         {activeMode === 'analyze' && (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <div className="w-5 h-5 rounded-full border-2 border-red-500/30 border-t-red-400 animate-spin" />
-            </div>
-          }>
-            <AtsChecker
-              resumeData={resumeData}
-              jobDescription={jobDescription}
-              templateFontSize={templateFontSize}
-              onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
-              onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}
-            />
-          </Suspense>
+          <AtsChecker
+            resumeData={resumeData}
+            jobDescription={jobDescription}
+            templateFontSize={templateFontSize}
+            onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
+            onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}
+          />
         )}
       </motion.div>
     </AnimatePresence>

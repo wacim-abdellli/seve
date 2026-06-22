@@ -1,6 +1,17 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { useMemo } from 'react'
 import type { ResumeData } from '../types/resume'
 import ErrorBoundary from './ErrorBoundary'
+
+import ClassicTemplate from './templates/ClassicTemplate'
+import ModernTemplate from './templates/ModernTemplate'
+import ExecutiveTemplate from './templates/ExecutiveTemplate'
+import MinimalistTemplate from './templates/MinimalistTemplate'
+import CreativeTemplate from './templates/CreativeTemplate'
+import CompactTemplate from './templates/CompactTemplate'
+import ProfessionalTemplate from './templates/ProfessionalTemplate'
+import TechnicalTemplate from './templates/TechnicalTemplate'
+import AcademicTemplate from './templates/AcademicTemplate'
+import CleanTemplate from './templates/CleanTemplate'
 
 interface TemplateProps {
   data: ResumeData
@@ -18,17 +29,17 @@ interface TemplateRendererProps extends TemplateProps {
   type: string
 }
 
-const TEMPLATES: Record<string, ReturnType<typeof lazy>> = {
-  classic: lazy(() => import('./templates/ClassicTemplate')),
-  modern: lazy(() => import('./templates/ModernTemplate')),
-  executive: lazy(() => import('./templates/ExecutiveTemplate')),
-  minimalist: lazy(() => import('./templates/MinimalistTemplate')),
-  creative: lazy(() => import('./templates/CreativeTemplate')),
-  compact: lazy(() => import('./templates/CompactTemplate')),
-  professional: lazy(() => import('./templates/ProfessionalTemplate')),
-  technical: lazy(() => import('./templates/TechnicalTemplate')),
-  academic: lazy(() => import('./templates/AcademicTemplate')),
-  clean: lazy(() => import('./templates/CleanTemplate')),
+const TEMPLATES: Record<string, React.ComponentType<any>> = {
+  classic: ClassicTemplate,
+  modern: ModernTemplate,
+  executive: ExecutiveTemplate,
+  minimalist: MinimalistTemplate,
+  creative: CreativeTemplate,
+  compact: CompactTemplate,
+  professional: ProfessionalTemplate,
+  technical: TechnicalTemplate,
+  academic: AcademicTemplate,
+  clean: CleanTemplate,
 }
 
 export default function TemplateRenderer({ type, ...props }: TemplateRendererProps) {
@@ -37,9 +48,7 @@ export default function TemplateRenderer({ type, ...props }: TemplateRendererPro
 
   return (
     <ErrorBoundary fallback={<div className="p-8 text-center text-zinc-400 text-sm">This template encountered an error and could not be displayed.</div>}>
-      <Suspense fallback={<div className="p-8 text-center text-zinc-400 text-sm">Loading template...</div>}>
-        <Template {...props} />
-      </Suspense>
+      <Template {...props} />
     </ErrorBoundary>
   )
 }
