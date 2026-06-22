@@ -172,21 +172,32 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
+  // FNV-1a hash for fast resume comparison (avoids JSON.stringify on every render)
+  const hashResume = useCallback((data: ResumeData): string => {
+    const str = JSON.stringify(data)
+    let hash = 2166136261
+    for (let i = 0; i < str.length; i++) {
+      hash ^= str.charCodeAt(i)
+      hash = (hash * 16777619) >>> 0
+    }
+    return hash.toString(36)
+  }, [])
+
   // Local storage keys
   const LAST_AUDITED_RESUME_KEY = 'seve-last-audited-resume'
   const LAST_AUDITED_JD_KEY = 'seve-last-audited-jd'
 
-  // Initialize dataRef with persistent last audited state (if it exists)
-  const dataRef = useRef<{ r: unknown; j: string } | null>(null)
+  // Initialize dataRef with persistent last audited hash (not full resume)
+  const dataRef = useRef<{ rHash: string; j: string } | null>(null)
   const hasInitializedRef = useRef(false)
 
   useEffect(() => {
     hasInitializedRef.current = true
     try {
-      const r = localStorage.getItem(LAST_AUDITED_RESUME_KEY)
+      const rHash = localStorage.getItem(LAST_AUDITED_RESUME_KEY)
       const j = localStorage.getItem(LAST_AUDITED_JD_KEY)
-      if (r !== null && j !== null) {
-        dataRef.current = { r: JSON.parse(r), j }
+      if (rHash !== null && j !== null) {
+        dataRef.current = { rHash, j }
       }
     } catch { /* ignore */ }
   }, [])
@@ -198,9 +209,10 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
 
   useEffect(() => {
-    // Only skip scan if we have a saved audited state and the content matches it
+    // Only skip scan if we have a saved audited state and the content matches via hash
     if (dataRef.current !== null) {
-      const isSameResume = JSON.stringify(dataRef.current.r) === JSON.stringify(resumeData)
+      const currentHash = hashResume(resumeData)
+      const isSameResume = dataRef.current.rHash === currentHash
       const isSameJd = dataRef.current.j === jobDescription
       if (isSameResume && isSameJd) {
         return
@@ -213,7 +225,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
     // Debounce: wait 500ms of no edits before scanning
     if (scanTimer.current) clearTimeout(scanTimer.current)
     scanTimer.current = setTimeout(() => {
-      dataRef.current = { r: resumeData, j: jobDescription }
+      dataRef.current = { rHash: hashResume(resumeData), j: jobDescription }
 
       setScanStage(0)
       setResumeScanVersion(v => v + 1)
@@ -230,9 +242,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
             setTimeout(() => {
               setIsScanning(false)
               setLastAudited(new Date())
-              // Persist last audited data
+              // Persist last audited data (store hash, not full resume)
               try {
-                localStorage.setItem(LAST_AUDITED_RESUME_KEY, JSON.stringify(resumeData))
+                localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData))
                 localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
               } catch { /* ignore */ }
             }, 200)
