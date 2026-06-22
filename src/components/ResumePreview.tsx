@@ -182,15 +182,27 @@ export default function ResumePreview({
     if (onPageCountChangeRef.current) onPageCountChangeRef.current(pages)
   }, [])
 
-  useEffect(() => {
-    measurePageCount()
+  // Debounce measurePageCount with rAF to prevent layout thrashing on rapid state changes
+  const measureRafRef = useRef<number>(0)
+  const debouncedMeasure = useCallback(() => {
+    cancelAnimationFrame(measureRafRef.current)
+    measureRafRef.current = requestAnimationFrame(() => {
+      measurePageCount()
+    })
+  }, [measurePageCount])
 
-    const observer = new ResizeObserver(measurePageCount)
+  useEffect(() => {
+    debouncedMeasure()
+
+    const observer = new ResizeObserver(debouncedMeasure)
     if (resumeContentRef.current) {
       observer.observe(resumeContentRef.current)
     }
-    return () => observer.disconnect()
-  }, [resumeData, selectedTemplate, templateFontSize, measurePageCount])
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(measureRafRef.current)
+    }
+  }, [resumeData, selectedTemplate, templateFontSize, debouncedMeasure])
 
   const fitToOnePage = () => {
     if (!resumeContentRef.current) return
@@ -214,12 +226,15 @@ export default function ResumePreview({
     const newFontSize = Math.max(MIN_FONT_SIZE, targetFontSize)
     onChangeFontSize(newFontSize)
 
-    // Double rAF to wait for font-size CSS to paint before re-measuring
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    // Wait for browser to finish font re-layout before re-measuring
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
         measurePageCount()
       })
-    })
+    } else {
+      // Fallback for older browsers
+      requestAnimationFrame(() => measurePageCount())
+    }
 
     if (targetFontSize < MIN_FONT_SIZE) {
       showToast(`Font minimized to ${MIN_FONT_SIZE}pt, but content is still too long for 1 page.`, 'warning')
