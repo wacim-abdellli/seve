@@ -1,4 +1,5 @@
 export const SECTION_LABELS = {
+  contact:    'CONTACT',
   summary:    'PROFESSIONAL SUMMARY',
   experience: 'WORK EXPERIENCE',
   education:  'EDUCATION',
