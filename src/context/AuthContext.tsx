@@ -25,18 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // onAuthStateChange fires with the current session on subscription — no need for getSession
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
 
-      if (window.location.hash) {
-        window.history.replaceState(null, '', window.location.pathname)
-      }
-    })
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
       if (window.location.hash) {
         window.history.replaceState(null, '', window.location.pathname)
       }
