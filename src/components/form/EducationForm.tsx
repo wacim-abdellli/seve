@@ -92,9 +92,9 @@ export default function EducationForm({ education, onChange }: EducationFormProp
           <button
             type="button"
             onClick={handleAdd}
-            className="flex items-center gap-1.5 text-[12px] text-rose-455 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/15 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[13px] text-rose-455 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/15 px-4 py-2.5 rounded-xl transition-colors cursor-pointer active:scale-95 min-h-[44px]"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             <span>Add School</span>
           </button>
         </div>

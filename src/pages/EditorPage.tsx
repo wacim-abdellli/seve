@@ -240,7 +240,7 @@ export default function EditorPage() {
                       <h2 className="text-[18px] font-semibold text-white">Resume Builder</h2>
                       <p className="text-[13px] text-zinc-500 mt-0.5">Click any section to edit</p>
                     </div>
-                    <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-8 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer">View Resume</button>
+                    <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-10 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">View Resume</button>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel">
                     {overviewSections.map((section) => {
@@ -248,9 +248,9 @@ export default function EditorPage() {
                       const previewText = getSectionPreview(section.id, resumeData)
                       const Icon = section.icon
                       return (
-                        <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className="w-full text-left group flex items-center gap-4 px-5 py-4 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/40 last:border-0 cursor-pointer">
-                          <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
-                            <Icon className="w-4 h-4 transition-colors" />
+                        <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className="w-full text-left group flex items-center gap-4 px-5 py-4 min-h-[56px] hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/40 last:border-0 cursor-pointer active:bg-zinc-800/70">
+                          <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
+                            <Icon className="w-5 h-5 transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[15px] font-medium text-white">{section.title}</p>
@@ -277,8 +277,8 @@ export default function EditorPage() {
                       <p className="text-[13px] text-zinc-500 mt-0.5">Customize layout, accent colors and fonts</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-8 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer">View Resume</button>
-                      <button onClick={() => setActiveMode('studio')} className="font-bold text-xs h-8 px-3 rounded-lg bg-[#b91c1c]/15 border border-[#b91c1c]/35 hover:bg-[#b91c1c]/25 text-[#b91c1c] transition-all cursor-pointer">Done</button>
+                      <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-10 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">View Resume</button>
+                      <button onClick={() => setActiveMode('studio')} className="font-bold text-xs h-10 px-4 rounded-xl bg-[#b91c1c]/15 border border-[#b91c1c]/35 hover:bg-[#b91c1c]/25 text-[#b91c1c] transition-all cursor-pointer active:scale-95">Done</button>
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-5 form-panel">
@@ -295,9 +295,9 @@ export default function EditorPage() {
                   <div className="lg:hidden mb-3 no-print">
                     <button 
                       onClick={() => setMobileView('edit')}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-450 hover:text-white bg-zinc-900/60 border border-zinc-800 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-800/80 transition-all"
+                      className="inline-flex items-center gap-2 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-900/80 border border-zinc-700 hover:bg-zinc-800 px-4 h-10 rounded-xl cursor-pointer transition-all active:scale-95"
                     >
-                      <ArrowLeft size={13} />
+                      <ArrowLeft size={15} />
                       <span>{activeMode === 'design' ? 'Back to Design' : 'Back to Sections'}</span>
                     </button>
                   </div>

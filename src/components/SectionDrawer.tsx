@@ -99,23 +99,23 @@ export default function SectionDrawer({
       transition={{ type: 'spring', damping: 28, stiffness: 300 }}
       className="fixed right-0 top-0 h-screen w-full sm:w-[480px] bg-zinc-950 border-l border-zinc-800 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] z-40 flex flex-col no-print select-text"
     >
-      {/* Drawer Header — Title + X only (Fix 1) */}
-      <div className="flex items-center justify-between px-5 h-12 border-b border-zinc-800/60 flex-shrink-0">
+      {/* Drawer Header — Title + Close */}
+      <div className="flex items-center justify-between px-4 h-14 border-b border-zinc-800/60 flex-shrink-0">
         <span className="text-[15px] font-semibold text-white">
           {meta.title}
         </span>
         <button
           onClick={onClose}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
           type="button"
-          title="Close Editor"
+          aria-label="Close editor"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Drawer Body — scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 scrollbar-none">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-5 scrollbar-none">
         
         {/* Compact tips card */}
         {sectionTips[section] && (

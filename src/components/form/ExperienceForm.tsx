@@ -161,10 +161,10 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
         </span>
         <button 
           onClick={handleAdd}
-          className="flex items-center gap-1.5 text-[12px] text-rose-455 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/15 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-[13px] text-rose-455 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/15 px-4 py-2.5 rounded-xl transition-colors cursor-pointer active:scale-95 min-h-[44px]"
           type="button"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-4 h-4" />
           <span>Add Position</span>
         </button>
       </div>
@@ -219,11 +219,11 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button 
                       onClick={(e) => handleRemove(exp.id, e)}
-                      className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
                       type="button"
-                      title="Delete Entry"
+                      aria-label="Delete Entry"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                     <ChevronDown className={`w-4 h-4 text-zinc-650 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>

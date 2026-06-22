@@ -1006,10 +1006,16 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   padding-right: 1rem !important;
   padding-top: 0.75rem !important; /* py-3 */
   padding-bottom: 0.75rem !important;
-  font-size: 14px !important; /* text-[14px] */
+  font-size: 13px !important;
   color: #ffffff !important; /* text-white */
   border: 1px solid #27272a !important; /* border-zinc-800 */
   transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+@media (max-width: 640px) {
+  .drawer-input {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+    min-height: 44px !important;
+  }
 }
 .drawer-input:focus {
   border-color: rgba(185, 28, 28, 0.5) !important; /* border-rose-500/50 */

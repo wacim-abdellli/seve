@@ -1,52 +1,289 @@
-  Hard Findings
+# 🎨 Editor Page — Complete UX/UI Redesign Guide
+> For the implementer agent. Read every section. Follow in order. No shortcuts.
+important read the guide section by section and implement in the order listed — header → sidebar → preview → mode rail → polish. Do NOT let it try to do everything at once.
+---
 
-  1. High: signed-out users no longer have a clear sign-in path.
-     After PDF export was made local/free, the old Google sign-in modal became dead code. showAuthModal is never set to
-     true, but the app still claims Google sign-in enables cloud sync. See /C:/Users/pc/Desktop/seve/src/layouts/
-     EditorLayout.tsx:407, /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:502, and /C:/Users/pc/Desktop/seve/
-     src/layouts/EditorLayout.tsx:878.
-     Agent task: add an explicit Sign in / Cloud Sync button for signed-out users in the editor header, or remove cloud
-     sync claims. Best fix: show Sign in where the user pill appears when signed out.
+## 🔍 What's Wrong Right Now (Diagnosis)
 
-  2. Medium: Supabase RPC still needs real browser verification.
-     Code and SQL are correct-looking, but I could not prove the live Supabase RPC from this sandbox because direct TLS
-     calls failed locally. See /C:/Users/pc/Desktop/seve/src/hooks/usePageViews.ts:34, /C:/Users/pc/Desktop/seve/
-     supabase-schema.sql:88.
-     Agent task: in a normal browser, refresh / twice and confirm no /rpc/log_page_view 404, 409, or RLS error appears.
+Looking at the current screenshot and code, here are the **exact problems**:
 
-  3. Low: dead auth modal copy is now stale.
-     DownloadAuthModal still says “sign in with Google to download or print”, but export is now local and no sign-in is
-     required. See /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:428.
-     Agent task: either repurpose this modal for cloud sync, or delete it.
+### 1. Top Header Bar — Cluttered & Overloaded
+- Too many items crammed in one row with no visual breathing room
+- The "Landing" back button + logo + resume picker + undo/redo + cloud status + export button are all fighting for attention with zero hierarchy
+- The `Export PDF` button looks the same weight as other buttons — it should be the **clear primary CTA**
+- The `AI Fill Guide` and `ATS Audit` buttons look like unrelated orphan pills
+- Dividers (`w-px h-5 bg-border`) are used inconsistently and create visual noise
+- Resume name truncates weirdly on medium screens
 
-  4. Low: privacy claim “no personal data, IPs” is slightly too absolute.
-     The app may not store IPs in page_views, but Supabase infrastructure still receives requests. Safer wording: “The
-     page-view table stores a random visitor ID, path, and date; it does not store resume data.” See /C:/Users/pc/
-     Desktop/seve/src/pages/PrivacyPage.tsx:119.
+### 2. Left Sidebar — Generic List, Zero Visual Interest
+- The section cards (Contact Info, Work Experience, etc.) look like a plain Android settings list from 2015
+- The icon backgrounds (`w-9 h-9 rounded-xl`) are too small and the colors are too muted to create delight
+- The "DONE" / "Edit" pills are tiny (`text-[9px]`) and hard to read
+- There's no **completion progress indicator** — users have no sense of "how far am I?"
+- The section subtitle (preview text) truncates immediately — feels thrown away
+- Zero micro-animation on hover — the `hover:bg-zinc-800/50` is barely perceptible
+- The sidebar header ("Resume Builder / Click any section to edit") is boring — generic SaaS filler text
+- No visual grouping — all 13 sections are dumped in one flat list with just thin border dividers
 
-  Verification
-  Passed after my dropdown fix:
+### 3. Preview Area — Wasted Space & Bad Framing
+- The A4 resume preview just floats on `bg-zinc-950` with no visual framing or depth
+- There's no "paper" illusion — the resume looks like it's embedded in a dark void
+- The zoom level display (`94%`) in the top bar is useful but easy to miss
+- The LIVE / HEATMAP toggle at the top of the preview looks disconnected from the preview itself
+- Scrolling in the preview area is jarring — no smooth scroll or padding management
+- The preview area has no top-right floating actions (like a "fullscreen preview" button)
 
-  - npx.cmd tsc -b --pretty false --noEmit
-  - npm.cmd run lint
-  - npm.cmd test: 13 tests passed
-  - npm.cmd audit --omit=dev --audit-level=moderate: 0 vulnerabilities
-  - npm.cmd run build
+### 4. Mode Switching (Studio / Design / Preview / Analyze)
+- The mode rail (the icon-only left column) has no labels — users can't tell what each icon does
+- Active state contrast is too subtle
+- No animated transition between mode switches feels cheap
 
-  Build remains good: main bundle is 444.45 kB, with editor/ATS/template chunks split.
+### 5. Typography & Color Issues
+- Overuse of `text-zinc-500` for subtitles → everything blends into gray soup
+- Section titles use `text-[15px]` — inconsistent with the rest of the app's font scale
+- The accent color (`#b91c1c` red) appears everywhere but has no semantic meaning — it's on primary CTA, active states, and decoration all at once
 
-  Updated Ratings
+---
 
-  - Build health: 10/10
-  - TypeScript/lint hygiene: 9/10
-  - Runtime correctness: 8/10
-  - Security/RLS design: 8.5/10
-  - Privacy/product truth: 8/10
-  - Desktop UX: 8.5/10
-  - Mobile UX: 7.5/10
-  - Accessibility: 8/10
-  - Performance: 8/10
-  - Maintainability: 8/10
-  - Overall readiness: 8.3/10
+## ✅ What To Build — Concrete Implementation Guide
 
-  The app is close. The next important fix is the missing signed-out sign-in path for cloud sync.
+### PART 1: Top Header Redesign
+
+**Goal:** Create a clear 3-zone header with left navigation, center status, right actions.
+
+#### Zone 1 — Left: Navigation & Identity (keep compact)
+```
+[← Back]  [S• eve]  [product Manager ▾  3]
+```
+- Keep the back arrow + logo + resume switcher together
+- Resume switcher button: show name + version count badge. Make it look like a pill selector, NOT a folder button.
+- Remove the `FolderOpen` icon from the resume switcher — replace with a subtle `ChevronDown` to signal it's a dropdown
+- Undo/Redo: move these OUT of the header entirely. Put them inside the sidebar header (near "Resume Builder" title). They belong with editing tools, not global nav.
+
+#### Zone 2 — Center: Cloud Status (elevated, clean pill)
+```
+[☁ Cloud saved]
+```
+- This should be a single, animated status pill in the EXACT center of the header
+- Color-coded: emerald for saved, amber for syncing (spinning icon), rose for unsaved, red for error
+- When status is "unsaved", show a **Save** micro-button inside the pill (not separate Save/Discard buttons)
+- Width: fixed `w-[140px]` so the header doesn't shift layout when text changes
+
+#### Zone 3 — Right: Primary & Secondary Actions
+```
+[ATS Audit]  [AI Fill ✨]  [⚙]  [user avatar]  [Export PDF ↓]
+```
+- `Export PDF` = **primary red button**, always visible, always rightmost
+- `AI Fill Guide` = secondary ghost button with sparkle icon
+- `ATS Audit` = ghost button, slightly lower visual weight
+- Settings icon = small icon button (no label)
+- User avatar = compact avatar with dropdown
+
+**Header height**: increase from ~`py-3` to `h-14` (56px) for better breathing room.
+
+---
+
+### PART 2: Left Sidebar Complete Overhaul
+
+**Goal:** Transform the flat list into a **progress-driven section navigator**.
+
+#### 2A — Sidebar Header
+Replace the generic title with a **completion progress block**:
+
+```
+Resume Builder
+━━━━━━━━━━━━━━━━━━━━━  8/13 complete
+[████████████░░░░░░░░]  62%
+```
+
+- Show a thin progress bar (`h-1 rounded-full`) under the title
+- Show "X of 13 sections complete" in small muted text
+- This gives users a sense of progress — **huge UX improvement**
+
+#### 2B — Section Cards (the main list)
+
+Each section row should feel like a **card**, not a list item:
+
+```
+┌─────────────────────────────────────────┐
+│  [🟣 icon]  Work Experience        DONE │
+│             Senior Software Eng at...    │
+│                                    >    │
+└─────────────────────────────────────────┘
+```
+
+Specific changes:
+1. **Icon container**: increase from `w-9 h-9` to `w-10 h-10`, use `rounded-2xl` (more modern pill shape)
+2. **Icon size**: increase from `w-4 h-4` to `w-5 h-5`
+3. **Section title**: use `text-sm font-semibold` (not `text-[15px]` raw)
+4. **Preview subtitle**: allow 2 lines max (`line-clamp-2`), not `truncate` — this shows more context
+5. **Status badge**: 
+   - DONE → small filled dot (●) in emerald, NOT an uppercase pill text. More modern, less noisy.
+   - Edit → small ring (○) in zinc-600. Minimal.
+6. **Row hover**: use `hover:bg-zinc-800/40` + `hover:translate-x-0.5` on the entire row for a subtle "lift" effect
+7. **Active section**: when a section drawer is open, highlight the corresponding row with a left border accent (`border-l-2 border-[accentColor]`)
+8. **Chevron**: only show on hover (`opacity-0 group-hover:opacity-100 transition-opacity`) to reduce clutter
+
+#### 2C — Section Grouping
+Visually group the 13 sections into 3 logical clusters:
+
+```
+ESSENTIALS
+  Contact Info
+  Profile Summary
+  Work Experience
+  Education
+
+SKILLS & MORE
+  Skills & Stack
+  Languages
+  Projects
+
+OPTIONAL
+  Awards & Honors
+  Certifications
+  Interests
+  Publications
+  References
+  Volunteer
+```
+
+- Use tiny uppercase group labels (`text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-5 pt-4 pb-1`) above each group
+- Add a single thin divider line between groups
+
+---
+
+### PART 3: Preview Area Enhancement
+
+**Goal:** Make the A4 preview feel like a real document in a professional viewer.
+
+1. **Background**: Change from flat `bg-zinc-950` to a subtle **grid or dot pattern** background:
+   ```css
+   background-color: #0a0a0f;
+   background-image: radial-gradient(circle, #ffffff08 1px, transparent 1px);
+   background-size: 24px 24px;
+   ```
+
+2. **Paper shadow**: Give the resume card itself a stronger shadow:
+   ```css
+   box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+   ```
+
+3. **Floating toolbar** (above the preview, inside the preview pane):
+   Add a floating pill toolbar positioned top-center of the preview area:
+   ```
+   [  LIVE  |  HEATMAP  ]    [-  94%  +]    [⛶ Fullscreen]
+   ```
+   - Style: `bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-full px-4 py-1.5`
+   - Position: `sticky top-4` inside the preview scroll container
+
+4. **Scroll behavior**: Add `scroll-smooth` and `pb-16` bottom padding to the preview container so the resume doesn't end right at the container edge
+
+---
+
+### PART 4: Mode Rail (Left Icon Strip)
+
+The `ModeRail` component (the tiny left icon strip) needs labels:
+
+1. On **desktop** (≥1280px): show icon + label underneath
+   ```
+   ✏️
+   Edit
+   ```
+   Each rail button: `flex flex-col items-center gap-1 py-3 px-2 w-16`
+
+2. On **tablet/mobile**: icon only (keep current behavior)
+
+3. **Active state**: instead of just color change, add a `w-1 h-6 rounded-full bg-[accentColor]` indicator on the LEFT edge of the active item (like VS Code sidebar)
+
+---
+
+### PART 5: Micro-Animations (Add These Everywhere)
+
+These small details make the UI feel premium:
+
+1. **Section drawer open**: slide in from right with spring easing
+   ```
+   initial: { x: '100%', opacity: 0 }
+   animate: { x: 0, opacity: 1 }
+   transition: { type: 'spring', stiffness: 300, damping: 30 }
+   ```
+
+2. **Status pill transition**: when cloud status changes, animate the text with a `crossfade` (opacity 0→1 on new text)
+
+3. **Section card hover**: add `transition-transform duration-150` and `hover:translate-x-1` to the chevron (already partially there but make it more noticeable)
+
+4. **Progress bar**: animate the fill width with `transition-all duration-700 ease-out` when sections complete
+
+5. **Mode switch**: already has framer-motion `AnimatePresence` — good. Just ensure the blur transition feels smooth.
+
+---
+
+### PART 6: Typography Fix
+
+Replace all raw px font sizes with a consistent scale:
+
+| Current | Replace With | Tailwind Class |
+|---------|-------------|----------------|
+| `text-[9px]` | 10px | `text-[10px]` (group labels only) |
+| `text-[11px]` | 11px | keep for meta/helper text |
+| `text-[13px]` | 13px | `text-sm` |
+| `text-[15px]` | 15px | `text-base` |
+| `text-[18px]` | 18px | `text-lg` |
+
+Use `font-medium` (500) for section titles, `font-normal` (400) for preview text, `font-semibold` (600) for header titles.
+
+---
+
+### PART 7: Color Semantic Clarity
+
+The red accent `#b91c1c` is overused. Assign semantic roles:
+
+| Role | Color | Usage |
+|------|-------|-------|
+| **Primary CTA** | `#b91c1c` (red-700) | Export PDF button ONLY |
+| **Interactive accent** | Use `themeColor` variable | Active states, focus rings |
+| **Done / Success** | `#10b981` (emerald-500) | Completion indicators |
+| **Warning / Unsaved** | `#f59e0b` (amber-500) | Cloud status |
+| **Muted text** | `#71717a` (zinc-500) | Subtitles, helpers |
+| **Body text** | `#e4e4e7` (zinc-200) | Section titles |
+
+---
+
+## 🚫 Things To NOT Break
+
+1. **Do NOT touch** `ResumePreview` component internals — only its container wrapper
+2. **Do NOT change** the `openDrawer` / `closeDrawer` logic — only visual styling
+3. **Do NOT remove** the `AnimatePresence` motion wrapper in `EditorPage.tsx`
+4. **Do NOT change** the cloud sync logic — only the visual indicator UI
+5. **Keep the print/no-print CSS classes intact** — these control PDF export
+6. **Keep all `cursor-pointer` classes** — they are important for touch UX
+7. **Do NOT change** the mobile `mobileView` toggle logic — only its styling
+
+---
+
+## 📁 Files To Edit
+
+| File | What To Change |
+|------|---------------|
+| `src/layouts/EditorLayout.tsx` | Header zones, cloud status pill, user menu |
+| `src/pages/EditorPage.tsx` | Sidebar grouping, progress bar, section cards, preview wrapper |
+| `src/components/ModeRail.tsx` (if exists) | Add labels, better active indicator |
+| `src/index.css` | Add `.preview-dot-bg` utility, tweak scrollbar |
+
+---
+
+## ✅ Final Checklist Before Done
+
+- [ ] Header has 3 clear zones: left nav, center status, right actions
+- [ ] Sidebar shows completion progress bar (X/13 sections)
+- [ ] Sections are grouped into ESSENTIALS / SKILLS / OPTIONAL
+- [ ] Section cards have larger icons, cleaner status dots, 2-line previews
+- [ ] Active section in drawer is highlighted with left border
+- [ ] Preview area has dot-grid background and stronger paper shadow
+- [ ] Preview has a floating toolbar (zoom + view mode)
+- [ ] Mode rail has labels on desktop
+- [ ] All font sizes follow the defined scale
+- [ ] Red accent only used on primary Export PDF button
+- [ ] All animations use 150–300ms timing
+- [ ] No horizontal overflow at any breakpoint
