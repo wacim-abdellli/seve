@@ -96,13 +96,14 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
   
   const containerRef = useRef<HTMLDivElement>(null)
   const industryDropdownRef = useRef<HTMLDivElement>(null)
+  const filterTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // Auto-detect industry when job title changes
   useEffect(() => {
     setTimeout(() => { setSelectedCategory(detectCategory(jobTitle)) })
   }, [jobTitle])
 
-  // Filter autocomplete suggestions based on user typing
+  // Filter autocomplete suggestions based on user typing (debounced 150ms)
   useEffect(() => {
     if (!inputValue.trim()) {
       queueMicrotask(() => {
@@ -112,18 +113,23 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
       return
     }
 
-    const cleanInput = inputValue.toLowerCase()
-    const matches = allAvailableSkills.filter(
-      (skill) => 
-        skill.toLowerCase().includes(cleanInput) && 
-        !skills.some(s => s.toLowerCase() === skill.toLowerCase())
-    )
+    clearTimeout(filterTimerRef.current)
+    filterTimerRef.current = setTimeout(() => {
+      const cleanInput = inputValue.toLowerCase()
+      const matches = allAvailableSkills.filter(
+        (skill) => 
+          skill.toLowerCase().includes(cleanInput) && 
+          !skills.some(s => s.toLowerCase() === skill.toLowerCase())
+      )
 
-    queueMicrotask(() => {
-      setFilteredSuggestions(matches.slice(0, 5))
-      setShowDropdown(matches.length > 0)
-      setSelectedIndex(-1)
-    })
+      queueMicrotask(() => {
+        setFilteredSuggestions(matches.slice(0, 5))
+        setShowDropdown(matches.length > 0)
+        setSelectedIndex(-1)
+      })
+    }, 150)
+
+    return () => clearTimeout(filterTimerRef.current)
   }, [inputValue, skills])
 
   // Close dropdowns when clicking outside
