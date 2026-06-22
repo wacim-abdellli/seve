@@ -34,7 +34,7 @@ function SectionHeading({ label, color }: { label: string; color: string }) {
 const ModernTemplate = memo(function ModernTemplate({
   data, activeSection, atsMode, onEditSection,
   sectionOrder = ['summary', 'experience', 'projects', 'education', 'skills'],
-  onDragStart, onDragOver, onDrop, themeColor = '#e11d48'
+  onDragStart, onDragOver, onDrop, themeColor = '#b91c1c'
 }: ModernTemplateProps) {
   const {
     contact, summary, experience, education, skills, projects, languages,

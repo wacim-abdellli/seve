@@ -120,16 +120,16 @@ Instructions for the AI:
         animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
         exit={{ opacity: 0, scale: 0.95, y: 15, filter: 'blur(8px)' }}
         transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
-        className="relative w-full max-w-[580px] bg-[#0c0d12] border border-[#e0314f]/25 rounded-2xl shadow-[0_0_50px_rgba(224,49,79,0.08)] p-6 md:p-8 overflow-hidden z-10 flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-[580px] bg-[#0c0d12] border border-[#b91c1c]/25 rounded-2xl shadow-[0_0_50px_rgba(185,28,28,0.08)] p-6 md:p-8 overflow-hidden z-10 flex flex-col max-h-[90vh]"
       >
         {/* Glow ambient */}
-        <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#e0314f]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#b91c1c]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Header */}
         <div className="flex items-start justify-between mb-5 flex-shrink-0 relative">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#e0314f]/15 border border-[#e0314f]/35 flex items-center justify-center text-[#e0314f] shrink-0 shadow-lg shadow-[#e0314f]/10">
+            <div className="w-10 h-10 rounded-full bg-[#b91c1c]/15 border border-[#b91c1c]/35 flex items-center justify-center text-[#b91c1c] shrink-0 shadow-lg shadow-[#b91c1c]/10">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
@@ -151,9 +151,9 @@ Instructions for the AI:
         {/* Scrollable Step list */}
         <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar mb-6">
           {/* Step 1 */}
-          <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-xl space-y-3 relative group hover:border-[#e0314f]/20 transition-colors">
+          <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-xl space-y-3 relative group hover:border-[#b91c1c]/20 transition-colors">
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold text-[#e0314f] shrink-0 font-mono">
+              <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold text-[#b91c1c] shrink-0 font-mono">
                 1
               </div>
               <div className="flex-1">
@@ -209,9 +209,9 @@ Instructions for the AI:
           </div>
 
           {/* Step 3 */}
-          <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-xl space-y-3 relative group hover:border-[#e0314f]/20 transition-colors">
+          <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-xl space-y-3 relative group hover:border-[#b91c1c]/20 transition-colors">
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold text-[#e0314f] shrink-0 font-mono">
+              <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold text-[#b91c1c] shrink-0 font-mono">
                 3
               </div>
               <div className="flex-1">
@@ -227,7 +227,7 @@ Instructions for the AI:
                 value={pasteValue}
                 onChange={(e) => handlePasteChange(e.target.value)}
                 placeholder="Paste AI-generated JSON code here..."
-                className="w-full h-32 bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#e0314f]/50 resize-none font-mono custom-scrollbar"
+                className="w-full h-32 bg-zinc-950/50 border border-zinc-850 rounded-lg p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#b91c1c]/50 resize-none font-mono custom-scrollbar"
               />
 
               {validationError && (
@@ -260,7 +260,7 @@ Instructions for the AI:
             disabled={!parsedData}
             className={`flex-1 h-10 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer ${
               parsedData
-                ? 'bg-[#e0314f] hover:bg-[#e54b64] text-white shadow-rose-950/20 active:scale-98'
+                ? 'bg-[#b91c1c] hover:bg-[#c62828] text-white shadow-rose-950/20 active:scale-98'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed'
             }`}
           >

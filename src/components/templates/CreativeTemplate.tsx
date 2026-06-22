@@ -33,7 +33,7 @@ function LinkedinIcon({ className, style }: { className?: string; style?: React.
 const CreativeTemplate = memo(function CreativeTemplate({
   data, activeSection, atsMode, onEditSection,
   sectionOrder = ['summary', 'experience', 'projects', 'education', 'skills', 'languages', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer'],
-  onDragStart, onDragOver, onDrop, themeColor = '#e11d48'
+  onDragStart, onDragOver, onDrop, themeColor = '#b91c1c'
 }: CreativeTemplateProps) {
   const {
     contact, summary, experience, education, skills, projects, languages,

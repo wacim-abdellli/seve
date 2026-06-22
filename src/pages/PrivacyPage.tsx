@@ -43,7 +43,7 @@ export default function PrivacyPage() {
               <div className="flex items-center">
                 <span style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', lineHeight: 1, position: 'relative' }}>
                   S
-                  <span style={{ position: 'absolute', top: 0, right: '-6px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#e11d48' }} />
+                  <span style={{ position: 'absolute', top: 0, right: '-6px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#b91c1c' }} />
                 </span>
                 <span style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', lineHeight: 1, paddingLeft: '6px' }}>
                   eve
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
               <div className="flex items-center gap-3">
                 <div 
                   className="flex items-center justify-center"
-                  style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
+                  style={{ padding: '0.5rem', borderRadius: '8px', background: 'rgba(185, 28, 28, 0.1)', border: '1px solid rgba(185, 28, 28, 0.2)', color: '#b91c1c' }}
                 >
                   <Database size={20} />
                 </div>

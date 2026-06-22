@@ -56,7 +56,7 @@ export const templatesList: { id: Template; label: string; colorDot: string }[] 
 type SectionKey = string
 
 export const themeColors = [
-  { value: '#e11d48', label: 'Crimson', bgClass: 'bg-rose-500' },
+  { value: '#b91c1c', label: 'Crimson', bgClass: 'bg-rose-500' },
   { value: '#7c3aed', label: 'Violet', bgClass: 'bg-violet-500' },
   { value: '#2563eb', label: 'Royal Blue', bgClass: 'bg-blue-600' },
   { value: '#0f766e', label: 'Teal/Emerald', bgClass: 'bg-teal-700' },
@@ -501,7 +501,7 @@ export default function ResumePreview({
 
           {isEmpty && !dismissed ? (
             <div className="h-full flex flex-col items-center justify-center p-8 select-none no-print min-h-[1123px] relative overflow-hidden">
-              <div className="absolute -right-20 -top-20 w-60 h-60 bg-[#e0314f]/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -right-20 -top-20 w-60 h-60 bg-[#b91c1c]/5 rounded-full blur-3xl pointer-events-none" />
               <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
               <motion.div
@@ -511,8 +511,8 @@ export default function ResumePreview({
                 className="w-full max-w-[520px] space-y-6"
               >
                 <div className="text-center space-y-2">
-                  <div className="w-14 h-14 rounded-2xl bg-[#e0314f]/10 border border-[#e0314f]/25 flex items-center justify-center mx-auto shadow-lg shadow-[#e0314f]/5">
-                    <Sparkles className="w-7 h-7 text-[#e0314f]" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#b91c1c]/10 border border-[#b91c1c]/25 flex items-center justify-center mx-auto shadow-lg shadow-[#b91c1c]/5">
+                    <Sparkles className="w-7 h-7 text-[#b91c1c]" />
                   </div>
                   <h2 className="text-2xl font-extrabold text-white tracking-tight font-display">Welcome to Seve</h2>
                   <p className="text-sm text-zinc-400 font-light leading-relaxed max-w-xs mx-auto">
@@ -524,16 +524,16 @@ export default function ResumePreview({
                   <button
                     type="button"
                     onClick={onTriggerImport}
-                    className="w-full group flex items-center gap-4 p-4 bg-zinc-950/70 border border-zinc-800 hover:border-[#e0314f]/30 hover:bg-zinc-900/80 rounded-xl text-left transition-all cursor-pointer"
+                    className="w-full group flex items-center gap-4 p-4 bg-zinc-950/70 border border-zinc-800 hover:border-[#b91c1c]/30 hover:bg-zinc-900/80 rounded-xl text-left transition-all cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-[#e0314f]/10 border border-[#e0314f]/20 flex items-center justify-center text-[#e0314f] shrink-0 group-hover:bg-[#e0314f]/15 group-hover:border-[#e0314f]/30 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-[#b91c1c]/10 border border-[#b91c1c]/20 flex items-center justify-center text-[#b91c1c] shrink-0 group-hover:bg-[#b91c1c]/15 group-hover:border-[#b91c1c]/30 transition-all">
                       <UploadCloud className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white">Import Existing Resume</p>
                       <p className="text-[11px] text-zinc-500 mt-0.5">Upload .txt/.json or paste your old CV text — we'll extract the details</p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-[#e0314f] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-[#b91c1c] group-hover:translate-x-0.5 transition-all shrink-0" />
                   </button>
 
                   <button

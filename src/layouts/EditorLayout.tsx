@@ -61,16 +61,16 @@ interface PrintSettingsModalProps {
 function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print select-none">
-      <div className="bg-[#0c0d12] border border-[#e0314f]/25 rounded-2xl p-6 md:p-8 w-[640px] max-w-full shadow-2xl shadow-[#e0314f]/5 animate-scale-in overflow-hidden relative">
+      <div className="bg-[#0c0d12] border border-[#b91c1c]/25 rounded-2xl p-6 md:p-8 w-[640px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in overflow-hidden relative">
         {/* Glow ambient */}
-        <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#e0314f]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#b91c1c]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row gap-6 relative">
           {/* Left Side: Instructions */}
           <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-3 text-[#e0314f] mb-2">
-              <div className="w-10 h-10 rounded-full bg-[#e0314f]/10 border border-[#e0314f]/30 flex items-center justify-center text-[#e0314f] shrink-0">
+            <div className="flex items-center gap-3 text-[#b91c1c] mb-2">
+              <div className="w-10 h-10 rounded-full bg-[#b91c1c]/10 border border-[#b91c1c]/30 flex items-center justify-center text-[#b91c1c] shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 5.13-.251m-5.13.251a41.146 41.146 0 0 0-3.613.691m11.744-1.089a41.146 41.146 0 0 1 3.614.691m-11.744-1.09A41.975 41.975 0 0 1 12 12.75c2.025 0 4.248.168 6.23.42M15 8.25V6.75A2.25 2.25 0 0 0 12.75 4.5h-1.5A2.25 2.25 0 0 0 9 6.75v1.5m6 0H9" />
                 </svg>
@@ -83,7 +83,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
 
             <div className="space-y-2.5">
               <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-850 text-[11px] leading-relaxed">
-                <span className="text-[#e0314f] shrink-0 font-bold font-mono text-xs">1.</span>
+                <span className="text-[#b91c1c] shrink-0 font-bold font-mono text-xs">1.</span>
                 <div>
                   <p className="text-white font-bold text-xs">Set Destination to "Save as PDF"</p>
                   <p className="text-zinc-450 mt-0.5">This tells your browser to generate a high-quality PDF file instead of sending it to a physical printer.</p>
@@ -107,7 +107,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
 
             <div className="flex gap-3 pt-2 font-display">
               <button onClick={onClose} className="flex-1 h-10 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white font-bold text-xs transition-colors cursor-pointer">Cancel</button>
-              <button onClick={onContinue} className="flex-1 h-10 rounded-xl bg-[#e0314f] hover:bg-[#e54b64] text-white font-extrabold text-xs shadow-lg shadow-rose-950/20 transition-all cursor-pointer">Open Print Dialog</button>
+              <button onClick={onContinue} className="flex-1 h-10 rounded-xl bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-xs shadow-lg shadow-rose-950/20 transition-all cursor-pointer">Open Print Dialog</button>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
               {/* Margins selector */}
               <div className="space-y-1">
                 <label className="text-zinc-500 font-bold block">Margins</label>
-                <div className="bg-zinc-900 border border-[#e0314f]/35 rounded px-2 py-1.5 flex items-center justify-between text-rose-300 font-bold shadow-[0_0_8px_rgba(224,49,79,0.05)] animate-pulse">
+                <div className="bg-zinc-900 border border-[#b91c1c]/35 rounded px-2 py-1.5 flex items-center justify-between text-rose-300 font-bold shadow-[0_0_8px_rgba(185,28,28,0.05)] animate-pulse">
                   <span>None</span>
                   <span className="text-rose-450 font-bold text-[8px]">▼</span>
                 </div>
@@ -195,7 +195,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
 function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarningModalProps) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
-      <div className="bg-[#12131a] border border-[#e0314f]/20 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl shadow-[#e0314f]/5 animate-scale-in">
+      <div className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center gap-3 text-amber-500 mb-4">
           <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
@@ -334,11 +334,11 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
 
   return createPortal(
     <div onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
-      <div onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#e0314f]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#e0314f]/5 animate-scale-in">
+      <div onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#e0314f]/10 border border-[#e0314f]/30 flex items-center justify-center shrink-0">
-              <Settings className="w-5 h-5 text-[#e0314f]" />
+            <div className="w-10 h-10 rounded-full bg-[#b91c1c]/10 border border-[#b91c1c]/30 flex items-center justify-center shrink-0">
+              <Settings className="w-5 h-5 text-[#b91c1c]" />
             </div>
             <div>
               <h3 className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Settings</h3>
@@ -352,7 +352,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
         <div className="space-y-5">
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-zinc-450 uppercase tracking-wider font-display">Default Template</label>
-            <select value={selectedTemplate} onChange={(e) => onUpdateTemplate(e.target.value as Template)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#e0314f]/50 font-bold appearance-none cursor-pointer">
+            <select value={selectedTemplate} onChange={(e) => onUpdateTemplate(e.target.value as Template)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#b91c1c]/50 font-bold appearance-none cursor-pointer">
               <option value="classic">Classic (Serif)</option>
               <option value="modern">Modern (Tech/Sans)</option>
               <option value="executive">Executive (Leadership)</option>
@@ -374,7 +374,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
               <button onClick={handleImport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Upload className="w-3.5 h-3.5 text-zinc-400" /> Import File
               </button>
-              <button onClick={() => { setShowPasteBox(!showPasteBox); setPasteError(null) }} className={`h-10 rounded-xl border font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${showPasteBox ? 'bg-[#e0314f]/10 border-[#e0314f]/35 text-[#e0314f]' : 'bg-zinc-950/40 border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white'}`}>
+              <button onClick={() => { setShowPasteBox(!showPasteBox); setPasteError(null) }} className={`h-10 rounded-xl border font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${showPasteBox ? 'bg-[#b91c1c]/10 border-[#b91c1c]/35 text-[#b91c1c]' : 'bg-zinc-950/40 border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white'}`}>
                 <FileCode className="w-3.5 h-3.5" /> Paste Code
               </button>
               <button onClick={handleCopyTemplate} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
@@ -383,11 +383,11 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
             </div>
             {showPasteBox && (
               <div className="space-y-2.5 pt-2.5 border-t border-zinc-900/60 animate-fade-in">
-                <textarea value={pasteValue} onChange={(e) => { setPasteValue(e.target.value); setPasteError(null) }} placeholder="Paste your resume JSON code here..." className="w-full h-32 bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#e0314f]/50 resize-none font-mono custom-scrollbar" />
+                <textarea value={pasteValue} onChange={(e) => { setPasteValue(e.target.value); setPasteError(null) }} placeholder="Paste your resume JSON code here..." className="w-full h-32 bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#b91c1c]/50 resize-none font-mono custom-scrollbar" />
                 {pasteError && <p className="text-[10px] text-red-400 font-bold">{pasteError}</p>}
                 <div className="flex gap-2 justify-end">
                   <button onClick={() => { setShowPasteBox(false); setPasteValue(''); setPasteError(null) }} className="px-3 py-1.5 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white text-[11px] font-bold transition-all cursor-pointer">Cancel</button>
-                  <button onClick={handlePasteImport} className="px-3.5 py-1.5 rounded-lg bg-[#e0314f] hover:bg-[#e54b64] text-white text-[11px] font-bold transition-all cursor-pointer shadow-lg shadow-rose-950/25">Import Code</button>
+                  <button onClick={handlePasteImport} className="px-3.5 py-1.5 rounded-lg bg-[#b91c1c] hover:bg-[#c62828] text-white text-[11px] font-bold transition-all cursor-pointer shadow-lg shadow-rose-950/25">Import Code</button>
                 </div>
               </div>
             )}
@@ -433,7 +433,7 @@ export default function EditorLayout() {
   }, [])
 
   
-  const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#e11d48'
+  const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#b91c1c'
   const setThemeColor = (color: string) => {
     localStorage.setItem('seve_theme_color', color)
     updateActiveResume(prev => ({ ...prev, themeColor: color }))
@@ -522,7 +522,7 @@ export default function EditorLayout() {
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center select-none">
               <span className="relative font-serif text-sm font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
-                S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#e11d48]" />
+                S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#b91c1c]" />
               </span>
               <span className="font-serif text-sm font-bold text-white leading-none pl-1.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>eve</span>
             </div>
@@ -606,7 +606,7 @@ export default function EditorLayout() {
             <div className="flex items-center gap-2 animate-fade-in">
               <button
                 onClick={saveChangesToCloud}
-                className="h-6 px-2.5 rounded-full bg-[#e0314f] hover:bg-[#e54b64] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all shadow-md shadow-rose-950/20 cursor-pointer flex items-center gap-1 active:scale-95"
+                className="h-6 px-2.5 rounded-full bg-[#b91c1c] hover:bg-[#c62828] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all shadow-md shadow-rose-950/20 cursor-pointer flex items-center gap-1 active:scale-95"
               >
                 Save
               </button>
@@ -626,7 +626,7 @@ export default function EditorLayout() {
             <div className="xl:hidden flex items-center gap-1.5">
               <button
                 onClick={saveChangesToCloud}
-                className="h-7 px-2 rounded-full bg-[#e0314f] hover:bg-[#e54b64] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
+                className="h-7 px-2 rounded-full bg-[#b91c1c] hover:bg-[#c62828] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
               >
                 Save
               </button>
@@ -707,7 +707,7 @@ export default function EditorLayout() {
           )}
           <button 
             onClick={handlePrint} 
-            className="flex items-center justify-center h-8 gap-1 bg-[#e0314f] hover:bg-[#e54b64] text-white font-extrabold text-[11px] px-3.5 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0"
+            className="flex items-center justify-center h-8 gap-1 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-3.5 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0"
           >
             <Download size={13} className="shrink-0" />
             <span className="hidden sm:inline">Export PDF</span>

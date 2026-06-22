@@ -20,7 +20,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
           {
             // Variants
-            "bg-red-950/20 border border-red-900/40 text-red-400 hover:bg-red-900/30 hover:text-red-300 shadow-[0_0_10px_rgba(224,49,79,0.05)] transition-all":
+            "bg-red-950/20 border border-red-900/40 text-red-400 hover:bg-red-900/30 hover:text-red-300 shadow-[0_0_10px_rgba(185,28,28,0.05)] transition-all":
               variant === "default",
             "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90":
               variant === "destructive",

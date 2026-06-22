@@ -9,46 +9,46 @@
   --motion-slow: 400ms;
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  /* Shadcn UI HSL Custom Properties (Dark Zinc/Red theme) */
-  --background: 240 20% 4.7%;
-  --foreground: 0 0% 98%;
-  --card: 240 16% 8.6%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 16% 8.6%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 354 70% 54%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 346.8 77.2% 49.8%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 14% 15%;
-  --input: 240 14% 15%;
-  --ring: 354 70% 54%;
+  /* Shadcn UI HSL Custom Properties (Dark Crimson/Black theme) */
+  --background: 0 0% 3%;
+  --foreground: 0 0% 96%;
+  --card: 0 0% 6%;
+  --card-foreground: 0 0% 96%;
+  --popover: 0 0% 6%;
+  --popover-foreground: 0 0% 96%;
+  --primary: 0 55% 38%;
+  --primary-foreground: 0 0% 96%;
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 96%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 0 0% 12%;
+  --accent-foreground: 0 0% 96%;
+  --destructive: 0 60% 40%;
+  --destructive-foreground: 0 0% 96%;
+  --border: 0 0% 14%;
+  --input: 0 0% 14%;
+  --ring: 0 55% 38%;
   --radius: 0.5rem;
 
   /* Custom UI/UX Color Tokens */
-  --surface-0: #09090b;    /* deepest background */
-  --surface-1: #111113;    /* sidebar */
-  --surface-2: #18181b;    /* cards, panels */
-  --surface-3: #27272a;    /* inputs, hover states */
-  --surface-4: #3f3f46;    /* borders, dividers */
+  --surface-0: #050505;    /* deepest background - true black */
+  --surface-1: #080808;    /* sidebar */
+  --surface-2: #0c0c0c;    /* cards, panels */
+  --surface-3: #1a1a1a;    /* inputs, hover states */
+  --surface-4: #2a2a2a;    /* borders, dividers */
 
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #52525b;
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --text-muted: #555555;
 
-  --accent: #e11d48;        /* rose-600 */
-  --accent-soft: #be123c1a; /* rose with 10% opacity */
-  --accent-hover: #be123c;
+  --accent: #b91c1c;        /* crimson-700 */
+  --accent-soft: #991b1b1a; /* crimson with 10% opacity */
+  --accent-hover: #a11d1d;
 
   --success: #10b981;
   --warning: #f59e0b;
-  --error: #ef4444;
+  --error: #dc2626;
   --info: #3b82f6;
 
   --radius-sm: 6px;
@@ -62,18 +62,18 @@
   --font-mono: 'JetBrains Mono', monospace;
   --font-serif: 'EB Garamond', serif;
 
-  /* Color Palette — Deep Carbon */
-  --bg-void: #090a0f;
-  --bg-surface: #12131a;
-  --bg-elevated: #181a24;
-  --bg-border: rgba(224, 49, 79, 0.12);
+  /* Color Palette — True Black + Crimson */
+  --bg-void: #050505;
+  --bg-surface: #08080a;
+  --bg-elevated: #0d0d12;
+  --bg-border: rgba(185, 28, 28, 0.12);
   
-  /* Red / Amber Brand Accent */
-  --brand-primary: #e0314f;
-  --brand-hover: #e54b64;
-  --brand-glow: rgba(224, 49, 79, 0.25);
-  --brand-light: rgba(224, 49, 79, 0.08);
-  --brand-gradient: linear-gradient(135deg, #e0314f 0%, #901427 100%);
+  /* Crimson Brand Accent */
+  --brand-primary: #b91c1c;
+  --brand-hover: #c62828;
+  --brand-glow: rgba(185, 28, 28, 0.2);
+  --brand-light: rgba(185, 28, 28, 0.08);
+  --brand-gradient: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
   
   /* Semantic Colors */
   --score-great: #10b981;
@@ -446,7 +446,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #e0314f;
+  background: #b91c1c;
 }
 
 /* Form Panel Scrollbar Styling (Rule 9) */
@@ -474,7 +474,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   border-radius: 999px;
 }
 .form-panel:hover::-webkit-scrollbar-thumb:hover {
-  background: #e0314f;
+  background: #b91c1c;
 }
 
 /* Utility Classes */
@@ -911,7 +911,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .ambient-glow-1 {
-  background: radial-gradient(circle at center, rgba(239, 68, 68, 0.03) 0%, rgba(224, 49, 79, 0.005) 50%, transparent 100%);
+  background: radial-gradient(circle at center, rgba(185, 28, 28, 0.03) 0%, rgba(185, 28, 28, 0.005) 50%, transparent 100%);
   filter: blur(60px);
   animation: drift-slow 35s infinite alternate ease-in-out;
 }
@@ -966,10 +966,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 .form-input-clean:focus {
   outline: none;
-  box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.3) !important; /* focus:ring-rose-500/30 */
+  box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.3) !important; /* focus:ring-rose-500/30 */
 }
 .form-input-clean:focus-visible {
-  outline: 2px solid rgba(244, 63, 94, 0.5);
+  outline: 2px solid rgba(185, 28, 28, 0.5);
   outline-offset: 1px;
 }
 .form-input-clean::placeholder {
@@ -1012,12 +1012,12 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 .drawer-input:focus {
-  border-color: rgba(244, 63, 94, 0.5) !important; /* border-rose-500/50 */
+  border-color: rgba(185, 28, 28, 0.5) !important; /* border-rose-500/50 */
   outline: none;
-  box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.1) !important; /* ring-rose-500/10 */
+  box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.1) !important; /* ring-rose-500/10 */
 }
 .drawer-input:focus-visible {
-  outline: 2px solid rgba(244, 63, 94, 0.5);
+  outline: 2px solid rgba(185, 28, 28, 0.5);
   outline-offset: 1px;
 }
 .drawer-input::placeholder {

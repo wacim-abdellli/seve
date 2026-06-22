@@ -121,7 +121,7 @@ export default function ResumeManager({
                 key={profile.id}
                 className={`p-4 rounded-xl border transition-all flex items-center justify-between gap-4 ${
                   isSelected
-                    ? 'bg-rose-500/5 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.05)]'
+                    ? 'bg-rose-500/5 border-rose-500/30 shadow-[0_0_15px_rgba(185,28,28,0.05)]'
                     : 'bg-zinc-900/40 border-zinc-800 hover:bg-zinc-900/80 hover:border-zinc-700/60'
                 }`}
               >

@@ -25,7 +25,7 @@ interface ExecutiveTemplateProps {
 const ExecutiveTemplate = memo(function ExecutiveTemplate({
   data, activeSection, atsMode, onEditSection,
   sectionOrder = ['summary', 'experience', 'projects', 'education', 'skills', 'languages', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer'],
-  onDragStart, onDragOver, onDrop, themeColor = '#e11d48'
+  onDragStart, onDragOver, onDrop, themeColor = '#b91c1c'
 }: ExecutiveTemplateProps) {
   const {
     contact, summary, experience, education, skills, projects, languages,

@@ -80,7 +80,7 @@ export default function EditorPage() {
                   onClick={() => updateActiveResume(prev => ({ ...prev, selectedTemplate: t.id }))}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                     isSelected 
-                      ? 'bg-[#e0314f]/10 border-[#e0314f]/35 text-[#e0314f] shadow-lg shadow-rose-950/5' 
+                      ? 'bg-[#b91c1c]/10 border-[#b91c1c]/35 text-[#b91c1c] shadow-lg shadow-rose-950/5' 
                       : 'bg-zinc-950/40 border-zinc-850 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
                   }`}
                 >
@@ -131,7 +131,7 @@ export default function EditorPage() {
             >
               <span className="opacity-60 font-bold">B-</span>
             </button>
-            <div className="flex items-center gap-1 px-2 text-[#e0314f] font-mono select-none">
+            <div className="flex items-center gap-1 px-2 text-[#b91c1c] font-mono select-none">
               <span className="text-xs font-black">{templateFontWeight}</span>
             </div>
             <button 
@@ -150,7 +150,7 @@ export default function EditorPage() {
                 onClick={() => onChangeFontWeight(w)}
                 className={`flex-1 h-7 text-[10px] font-black rounded-lg transition-colors cursor-pointer border ${
                   templateFontWeight === w
-                    ? 'bg-[#e0314f]/15 border-[#e0314f]/30 text-[#e0314f]'
+                    ? 'bg-[#b91c1c]/15 border-[#b91c1c]/30 text-[#b91c1c]'
                     : 'bg-zinc-950/60 border-zinc-850 text-zinc-550 hover:text-zinc-300 hover:bg-zinc-900'
                 }`}
                 type="button"
@@ -222,7 +222,7 @@ export default function EditorPage() {
                       <h2 className="text-[18px] font-semibold text-white">Design & Style</h2>
                       <p className="text-[13px] text-zinc-500 mt-0.5">Customize layout, accent colors and fonts</p>
                     </div>
-                    <button onClick={() => setActiveMode('studio')} className="text-xs font-bold text-[#e0314f] hover:text-[#e54b64] transition-colors cursor-pointer">Done</button>
+                    <button onClick={() => setActiveMode('studio')} className="text-xs font-bold text-[#b91c1c] hover:text-[#c62828] transition-colors cursor-pointer">Done</button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-5 form-panel">
                     {renderDesignControls()}
@@ -278,7 +278,7 @@ export default function EditorPage() {
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-8 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer">View Resume</button>
-                      <button onClick={() => setActiveMode('studio')} className="font-bold text-xs h-8 px-3 rounded-lg bg-[#e0314f]/15 border border-[#e0314f]/35 hover:bg-[#e0314f]/25 text-[#e0314f] transition-all cursor-pointer">Done</button>
+                      <button onClick={() => setActiveMode('studio')} className="font-bold text-xs h-8 px-3 rounded-lg bg-[#b91c1c]/15 border border-[#b91c1c]/35 hover:bg-[#b91c1c]/25 text-[#b91c1c] transition-all cursor-pointer">Done</button>
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-5 form-panel">
@@ -345,7 +345,7 @@ export default function EditorPage() {
                     <option value="clean">Clean</option>
                   </select>
                 </div>
-                <button onClick={handlePrint} className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 cursor-pointer">
+                <button onClick={handlePrint} className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(185,28,28,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 cursor-pointer">
                   <Eye size={13} /> Export PDF
                 </button>
               </div>
