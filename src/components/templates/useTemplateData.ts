@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { ResumeData } from '../../types/resume'
 import { evaluateSectionAts } from '../../utils/atsEvaluator'
 import { getPageBreakSections } from '../../utils/layoutHelper'
@@ -65,11 +66,14 @@ export function useTemplateData(
   const atsEntries = ['contact', 'summary', 'experience', 'projects', 'education', 'skills',
     'languages', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer'] as const
 
-  const ats: Record<string, { rating: string; feedback: string | undefined }> = {}
-  for (const section of atsEntries) {
-    const result = evaluateSectionAts(section, data)
-    ats[section] = { rating: result.rating, feedback: result.feedback }
-  }
+  const ats = useMemo(() => {
+    const result: Record<string, { rating: string; feedback: string | undefined }> = {}
+    for (const section of atsEntries) {
+      const r = evaluateSectionAts(section, data)
+      result[section] = { rating: r.rating, feedback: r.feedback }
+    }
+    return result
+  }, [data])
 
   const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
 
