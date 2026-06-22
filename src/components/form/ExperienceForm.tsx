@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import type { Experience } from '../../types/resume'
 import { 
   GripVertical, 
@@ -19,6 +19,19 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [starOpenId, setStarOpenId] = useState<string | null>(null)
   const [starFields, setStarFields] = useState<Record<string, { s: string; t: string; a: string; r: string }>>({}) 
+  const rafRefs = useRef<Map<HTMLTextAreaElement, number>>(new Map())
+
+  // Batch textarea height measurement into rAF to prevent layout reflow per keystroke
+  const autoResize = useCallback((el: HTMLTextAreaElement) => {
+    const prev = rafRefs.current.get(el)
+    if (prev) cancelAnimationFrame(prev)
+    const id = requestAnimationFrame(() => {
+      rafRefs.current.delete(el)
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    })
+    rafRefs.current.set(el, id)
+  }, [])
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id)
@@ -335,14 +348,8 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                                 <textarea
                                   value={b}
                                   onChange={(e) => handleBulletChange(exp.id, bIdx, e.target.value)}
-                                  onInput={(e) => {
-                                    e.currentTarget.style.height = 'auto'
-                                    e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`
-                                  }}
-                                  onFocus={(e) => {
-                                    e.currentTarget.style.height = 'auto'
-                                    e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`
-                                  }}
+                                  onInput={(e) => autoResize(e.currentTarget)}
+                                  onFocus={(e) => autoResize(e.currentTarget)}
                                   rows={2}
                                   className="flex-1 min-w-0 bg-transparent text-[13px] text-zinc-300 resize-none outline-none leading-relaxed placeholder:text-zinc-600 overflow-hidden"
                                   placeholder="e.g. Led a team of 4 engineers to design and deploy a real-time messaging pipeline, increasing performance by 25%."
