@@ -222,7 +222,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       // Sync the merged state back to the cloud to ensure local-only/new resumes are uploaded
       await syncToCloud(Object.values(currentResumes), userId)
 
-      setLastSyncedState({ resumes: currentResumes, selectedResumeId: currentState.selectedResumeId })
+      // Use latest state (not stale currentResumes) for lastSyncedState
+      const latestState = stateRef.current
+      setLastSyncedState({ resumes: latestState.resumes, selectedResumeId: latestState.selectedResumeId })
       setCloudStatus('synced')
       setCloudError(null)
       hasMergedCloudRef.current = true
@@ -272,25 +274,52 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [user, fetchAndMergeCloud])
 
   // ---------------------------------------------------------------------------
-  // Persist to localStorage on every state change (automatic).
-  // Initial sign-in sync is automatic (fetchAndMergeCloud); after that, cloud saves are manual via saveChangesToCloud().
+  // Persist to localStorage with debounce (avoids blocking main thread on every keystroke).
   // ---------------------------------------------------------------------------
   const isInitialMountRef = useRef(true)
   const prevUserIdRef = useRef<string | null>(null)
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => {
+    isInitialMountRef.current = false
+    prevUserIdRef.current = user?.id ?? null
+  }, [user?.id])
+
+  // Debounced localStorage write — max 500ms delay
+  useEffect(() => {
+    clearTimeout(persistTimerRef.current)
+    persistTimerRef.current = setTimeout(() => {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
+    }, 500)
+    return () => clearTimeout(persistTimerRef.current)
+  }, [state])
+
+  // ---------------------------------------------------------------------------
+  // Cloud status: lightweight hash comparison (avoids triple JSON.stringify per keystroke)
+  // ---------------------------------------------------------------------------
+  const computeResumeHash = useCallback((resumes: AppState['resumes']): string => {
+    let hash = 0
+    for (const id of Object.keys(resumes)) {
+      const r = resumes[id]
+      hash = ((hash << 5) - hash + id.length) | 0
+      hash = ((hash << 5) - hash + (r.updatedAt?.length || 0)) | 0
+      hash = ((hash << 5) - hash + r.resumeData.experience.length) | 0
+      hash = ((hash << 5) - hash + r.resumeData.education.length) | 0
+      hash = ((hash << 5) - hash + r.resumeData.skills.length) | 0
+      hash = ((hash << 5) - hash + (r.resumeData.languages?.length || 0)) | 0
+    }
+    return hash.toString(36)
+  }, [])
 
   useEffect(() => {
     const isLoginEvent = user?.id !== prevUserIdRef.current
-    const isMergeUpdate = isMergingRef.current
-
-    isInitialMountRef.current = false
     prevUserIdRef.current = user?.id ?? null
+    const isMergeUpdate = isMergingRef.current
     isMergingRef.current = false
 
-    // Persist to localStorage right away
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
-
     if (!user) {
-      setTimeout(() => { setCloudStatus('local'); setCloudError(null) })
+      setCloudStatus('local')
+      setCloudError(null)
       return
     }
 
@@ -298,13 +327,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setLastSyncedState(state)
     }
 
-    // Determine cloud status based on unsaved changes
+    // Determine cloud status using lightweight hash (not JSON.stringify)
     if (hasMergedCloudRef.current && !isMergeUpdate) {
-      const hasChanges = JSON.stringify(state.resumes) !== JSON.stringify(lastSyncedState.resumes)
-      if (hasChanges) {
-        setTimeout(() => { setCloudStatus('unsaved') })
+      const currentHash = computeResumeHash(state.resumes)
+      const syncedHash = computeResumeHash(lastSyncedState.resumes)
+      if (currentHash !== syncedHash) {
+        setCloudStatus('unsaved')
       } else {
-        setTimeout(() => { setCloudStatus('synced') })
+        setCloudStatus('synced')
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -312,12 +342,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const saveChangesToCloud = useCallback(async () => {
     if (!user) return
+    const currentState = stateRef.current
     setIsSaving(true)
     setCloudStatus('syncing')
     setCloudError(null)
     try {
-      await syncToCloud(Object.values(state.resumes), user.id)
-      setLastSyncedState(state)
+      await syncToCloud(Object.values(currentState.resumes), user.id)
+      setLastSyncedState(currentState)
       setCloudStatus('synced')
       setCloudError(null)
       showToast('Changes saved to cloud', 'success')
@@ -331,7 +362,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsSaving(false)
     }
-  }, [state, user, syncToCloud, showToast])
+  }, [user, syncToCloud, showToast])
 
   const discardChanges = useCallback(() => {
     if (window.confirm('Are you sure you want to discard all unsaved changes for this session? This will revert your resume to the last saved cloud version.')) {
@@ -343,8 +374,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const hasUnsavedChanges = useMemo(() => {
     if (!user) return false
-    return JSON.stringify(state.resumes) !== JSON.stringify(lastSyncedState.resumes)
-  }, [state.resumes, lastSyncedState.resumes, user])
+    return computeResumeHash(state.resumes) !== computeResumeHash(lastSyncedState.resumes)
+  }, [state.resumes, lastSyncedState.resumes, user, computeResumeHash])
 
 
   const activeResumeId = state.selectedResumeId
@@ -413,11 +444,16 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Reset history on resume switch
+  // Reset history on resume switch (NOT on resumeData changes — that would wipe undo on every keystroke)
+  const prevResumeIdRef = useRef(activeResume?.id)
   useEffect(() => {
-    historyRef.current = [resumeData]
-    historyIndexRef.current = 0
-    setTimeout(() => { setCanUndo(false); setCanRedo(false) })
+    if (prevResumeIdRef.current !== activeResume?.id) {
+      prevResumeIdRef.current = activeResume?.id
+      historyRef.current = [resumeData]
+      historyIndexRef.current = 0
+      setCanUndo(false)
+      setCanRedo(false)
+    }
   }, [activeResume?.id, resumeData])
 
   // Keyboard shortcuts: Ctrl+Z/Y for undo/redo
@@ -516,9 +552,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const deleteResume = useCallback((id: string) => {
+  const deleteResume = useCallback(async (id: string) => {
     if (user && isSupabaseConfigured && supabase) {
-      ;(async () => { await supabase.from('resumes').delete().eq('id', id).eq('user_id', user.id) })().catch(() => {})
+      try {
+        await supabase.from('resumes').delete().eq('id', id).eq('user_id', user.id)
+      } catch (err) {
+        console.error('[Seve] Cloud delete failed:', err)
+        showToast('Failed to delete from cloud — it may reappear on re-login', 'error')
+      }
     }
     setState(prev => {
       const next = { ...prev.resumes }
@@ -528,7 +569,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         : prev.selectedResumeId
       return { ...prev, resumes: next, selectedResumeId: nextSelectedId }
     })
-  }, [user])
+  }, [user, showToast])
 
   const updateResumeData = useCallback((data: ResumeData) => {
     pushHistory(data)
