@@ -20,7 +20,7 @@ function isMac() {
 
 export default function KeyboardShortcutsModal({ onClose }: KeyboardShortcutsModalProps) {
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10, filter: 'blur(6px)' }}

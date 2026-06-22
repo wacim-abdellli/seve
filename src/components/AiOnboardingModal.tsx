@@ -103,7 +103,7 @@ Instructions for the AI:
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}

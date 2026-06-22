@@ -60,7 +60,7 @@ interface PrintSettingsModalProps {
 
 function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print select-none">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print select-none">
       <div className="bg-[#0c0d12] border border-[#b91c1c]/25 rounded-2xl p-6 md:p-8 w-[640px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in overflow-hidden relative">
         {/* Glow ambient */}
         <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#b91c1c]/5 rounded-full blur-3xl pointer-events-none" />
@@ -194,7 +194,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
 
 function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarningModalProps) {
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       <div className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center gap-3 text-amber-500 mb-4">
           <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
@@ -333,7 +333,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
   }
 
   return createPortal(
-    <div onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+    <div role="dialog" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       <div onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

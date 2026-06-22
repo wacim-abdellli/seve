@@ -9,7 +9,7 @@ interface DownloadGuideModalProps {
 
 export default function DownloadGuideModal({ onClose, onContinue }: DownloadGuideModalProps) {
   const modalContent = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
