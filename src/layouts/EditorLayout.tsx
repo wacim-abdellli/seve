@@ -433,20 +433,20 @@ export default function EditorLayout() {
 
   
   const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#b91c1c'
-  const setThemeColor = (color: string) => {
+  const setThemeColor = useCallback((color: string) => {
     localStorage.setItem('seve_theme_color', color)
     updateActiveResume(prev => ({ ...prev, themeColor: color }))
-  }
+  }, [updateActiveResume])
 
   const templateFontSize = activeResume?.templateFontSize || 10
-  const setTemplateFontSize = (size: number) => {
+  const setTemplateFontSize = useCallback((size: number) => {
     updateActiveResume(prev => ({ ...prev, templateFontSize: size }))
-  }
+  }, [updateActiveResume])
 
   const templateFontWeight = activeResume?.templateFontWeight || 400
-  const setTemplateFontWeight = (weight: number) => {
+  const setTemplateFontWeight = useCallback((weight: number) => {
     updateActiveResume(prev => ({ ...prev, templateFontWeight: weight }))
-  }
+  }, [updateActiveResume])
 
   const stylePrefs = activeResume?.stylePrefs || { ...DEFAULT_STYLE_PREFS }
 
