@@ -913,13 +913,21 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .ambient-glow-1 {
   background: radial-gradient(circle at center, rgba(185, 28, 28, 0.03) 0%, rgba(185, 28, 28, 0.005) 50%, transparent 100%);
   filter: blur(60px);
+  will-change: transform;
   animation: drift-slow 35s infinite alternate ease-in-out;
 }
 
 .ambient-glow-2 {
   background: radial-gradient(circle at center, rgba(239, 68, 68, 0.02) 0%, rgba(16, 185, 129, 0.003) 60%, transparent 100%);
   filter: blur(80px);
+  will-change: transform;
   animation: drift-reverse 45s infinite alternate ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-glow-1, .ambient-glow-2 {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes drift-slow {
