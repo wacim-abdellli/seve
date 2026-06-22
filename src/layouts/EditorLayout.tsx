@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import type { ResumeData, ResumeStylePreferences, Template } from '../types/resume'
+import type { ResumeData, ResumeProfile, ResumeStylePreferences, Template, AppState } from '../types/resume'
 import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
 import { useResume } from '../hooks/useResume'
@@ -244,13 +244,15 @@ const EMPTY_RESUME_TEMPLATE: ResumeData = {
 interface SimpleSettingsModalProps {
   selectedTemplate: Template
   onUpdateTemplate: (template: Template) => void
-  resumeData: ResumeData
   onImportResume: (data: ResumeData) => void
   onClose: () => void
   onResetSpace: () => void
+  resumes: Record<string, ResumeProfile>
+  selectedResumeId: string
+  onRestoreBackup: (backup: AppState) => void
 }
 
-function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, onImportResume, onClose, onResetSpace }: SimpleSettingsModalProps) {
+function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResume, onClose, onResetSpace, resumes, selectedResumeId, onRestoreBackup }: SimpleSettingsModalProps) {
   const [showPasteBox, setShowPasteBox] = useState(false)
   const [pasteValue, setPasteValue] = useState('')
   const [pasteError, setPasteError] = useState<string | null>(null)
@@ -263,12 +265,16 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
   }
 
   const handleExport = () => {
-    const data = JSON.stringify(resumeData, null, 2)
-    const blob = new Blob([data], { type: 'application/json' })
+    const backup = {
+      version: 1,
+      type: 'seve-full-backup',
+      data: { resumes, selectedResumeId },
+    }
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'seve-resume-backup.json'
+    a.download = 'seve-backup.json'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -284,8 +290,14 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
       reader.onload = (ev) => {
         try {
           const rawData = JSON.parse(ev.target?.result as string)
-          const data = normalizeResumeData(rawData)
-          onImportResume(data)
+          if (rawData?.version === 1 && rawData?.type === 'seve-full-backup' && rawData?.data) {
+            onRestoreBackup(rawData.data)
+          } else if (rawData?.resumes && rawData?.selectedResumeId) {
+            onRestoreBackup(rawData)
+          } else {
+            const data = normalizeResumeData(rawData)
+            onImportResume(data)
+          }
           onClose()
         } catch {
           alert('Invalid JSON file.')
@@ -306,8 +318,14 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
       if (!rawData || typeof rawData !== 'object') {
         throw new Error('Invalid JSON format. Expected an object.')
       }
-      const data = normalizeResumeData(rawData)
-      onImportResume(data)
+      if (rawData?.version === 1 && rawData?.type === 'seve-full-backup' && rawData?.data) {
+        onRestoreBackup(rawData.data)
+      } else if (rawData?.resumes && rawData?.selectedResumeId) {
+        onRestoreBackup(rawData)
+      } else {
+        const data = normalizeResumeData(rawData)
+        onImportResume(data)
+      }
       onClose()
     } catch (err: unknown) {
       setPasteError(err instanceof Error ? err.message : 'Invalid JSON syntax.')
@@ -351,7 +369,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, resumeData, o
             <label className="text-[11px] font-bold text-zinc-450 uppercase tracking-wider font-display">Data Management</label>
             <div className="grid grid-cols-4 gap-2">
               <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
-                <Download className="w-3.5 h-3.5 text-zinc-400" /> Export
+                <Download className="w-3.5 h-3.5 text-zinc-400" /> Backup
               </button>
               <button onClick={handleImport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Upload className="w-3.5 h-3.5 text-zinc-400" /> Import File
@@ -474,7 +492,7 @@ export default function EditorLayout() {
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, updateStylePrefs, importResumeData, sectionOrder, updateSectionOrder,
     undo, redo, canUndo, canRedo,
-    saveChangesToCloud, discardChanges,
+    saveChangesToCloud, discardChanges, restoreFromBackup,
   } = useResume()
   const { user, signInWithGoogle, signOut } = useAuth()
 
@@ -815,10 +833,12 @@ export default function EditorLayout() {
           <SimpleSettingsModal
             selectedTemplate={selectedTemplate}
             onUpdateTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
-            resumeData={resumeData}
             onImportResume={importResumeData}
             onClose={() => setIsSettingsOpen(false)}
             onResetSpace={resetResume}
+            resumes={resumes}
+            selectedResumeId={selectedResumeId}
+            onRestoreBackup={restoreFromBackup}
           />
         )}
       </AnimatePresence>

@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { ResumeData, ResumeProfile, ResumeStylePreferences, Template } from '../types/resume'
+import type { AppState, ResumeData, ResumeProfile, ResumeStylePreferences, Template } from '../types/resume'
 import type { CloudStatus } from './ResumeContext'
 
 export interface ResumeContextType {
@@ -31,6 +31,7 @@ export interface ResumeContextType {
   hasUnsavedChanges: boolean
   saveChangesToCloud: () => Promise<void>
   discardChanges: () => void
+  restoreFromBackup: (backup: AppState) => void
 }
 
 export const ResumeContext = createContext<ResumeContextType | undefined>(undefined)

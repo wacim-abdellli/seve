@@ -135,7 +135,30 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   // Shared cloud-sync helper (used by both auto-save effect and retrySync)
   const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
     if (!isSupabaseConfigured || !supabase) return
-    for (const p of profiles) {
+
+    // Proactively replace the fixed default UUID with a real one before
+    // first cloud save to avoid cross-user primary-key collisions.
+    const migratedProfiles = profiles.map(p => {
+      if (p.id === defaultResumeId) {
+        const newId = crypto.randomUUID()
+        setState(prev => {
+          const resume = prev.resumes[p.id]
+          if (!resume) return prev
+          const next = { ...prev.resumes }
+          delete next[p.id]
+          next[newId] = { ...resume, id: newId }
+          return {
+            ...prev,
+            resumes: next,
+            selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
+          }
+        })
+        return { ...p, id: newId }
+      }
+      return p
+    })
+
+    for (const p of migratedProfiles) {
       const { data: existing, error: selectError } = await supabase
         .from('resumes')
         .select('id')
@@ -573,7 +596,16 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchAndMergeCloud, saveChangesToCloud])
 
-
+  const restoreFromBackup = useCallback((backup: AppState) => {
+    setState(backup)
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(backup))
+    const active = backup.resumes[backup.selectedResumeId]
+    if (active) {
+      historyRef.current = [active.resumeData]
+      historyIndexRef.current = 0
+      setTimeout(() => { setCanUndo(false); setCanRedo(false) })
+    }
+  }, [])
 
   const value = useMemo(() => ({
     resumes: state.resumes,
@@ -604,6 +636,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     hasUnsavedChanges,
     saveChangesToCloud,
     discardChanges,
+    restoreFromBackup,
   }), [
     state.resumes, state.selectedResumeId, activeResume, resumeData,
     selectedTemplate, jobDescription, sectionOrder, isSaving, cloudStatus, cloudError,
@@ -611,6 +644,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     updateActiveResume, updateStylePrefs, updateResumeData, updateSectionOrder, importResumeData, retrySync,
     handleUndo, handleRedo, canUndo, canRedo,
     hasUnsavedChanges, saveChangesToCloud, discardChanges,
+    restoreFromBackup,
   ])
 
   return (
