@@ -433,20 +433,20 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* Custom Scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(224, 49, 79, 0.4) #12131a;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #12131a;
+  background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(224, 49, 79, 0.4);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #b91c1c;
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* Form Panel Scrollbar Styling (Rule 9) */
@@ -460,21 +460,21 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 .form-panel:hover {
   scrollbar-width: thin;
-  scrollbar-color: rgba(224, 49, 79, 0.4) #12131a;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 .form-panel:hover::-webkit-scrollbar {
   display: block;
   width: 4px;
 }
 .form-panel:hover::-webkit-scrollbar-track {
-  background: #12131a;
+  background: transparent;
 }
 .form-panel:hover::-webkit-scrollbar-thumb {
-  background: rgba(224, 49, 79, 0.4);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
 }
 .form-panel:hover::-webkit-scrollbar-thumb:hover {
-  background: #b91c1c;
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* Utility Classes */
@@ -1132,9 +1132,12 @@ h1, h2, h3, h4, h5, h6,
 
 /* Preview area: dot grid background */
 .preview-dot-bg {
-  background-color: #0a0a0f;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-color: #080810;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px),
+    radial-gradient(ellipse at 20% 50%, rgba(185,28,28,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.03) 0%, transparent 50%);
+  background-size: 20px 20px, 100% 100%, 100% 100%;
 }
 
 /* Preview floating toolbar */

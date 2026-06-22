@@ -4,10 +4,9 @@ export interface ModeRailProps {
   activeMode: 'studio' | 'design' | 'preview' | 'analyze'
   onChangeMode: (mode: 'studio' | 'design' | 'preview' | 'analyze') => void
   onSettingsClick: () => void
-  themeColor?: string
 }
 
-export default function ModeRail({ activeMode, onChangeMode, onSettingsClick, themeColor }: ModeRailProps) {
+export default function ModeRail({ activeMode, onChangeMode, onSettingsClick }: ModeRailProps) {
   const items = [
     { id: 'studio' as const, label: 'Edit', icon: PenLine },
     { id: 'design' as const, label: 'Design', icon: Sliders },
@@ -31,7 +30,7 @@ export default function ModeRail({ activeMode, onChangeMode, onSettingsClick, th
               className={`flex flex-col items-center gap-0.5 transition-colors ${
                 isActive ? 'font-medium' : 'text-zinc-500 hover:text-zinc-300'
               }`}
-              style={{ color: isActive ? (themeColor || '#b91c1c') : undefined }}
+              style={{ color: isActive ? 'var(--accent)' : undefined }}
             >
               <Icon size={20} className={isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'} />
               <span className="text-[10px] uppercase tracking-wider font-bold">
@@ -62,18 +61,18 @@ export default function ModeRail({ activeMode, onChangeMode, onSettingsClick, th
               key={item.id}
               type="button"
               onClick={() => onChangeMode(item.id)}
-              className={`relative flex flex-col items-center gap-1 py-3 px-2 w-14 rounded-lg transition-colors ${
-                isActive ? '' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'
+              className={`relative flex flex-col items-center gap-1 py-3 px-2 w-14 rounded-lg transition-all duration-150 ${
+                isActive
+                  ? 'text-[var(--accent)] bg-[var(--accent-soft)]'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'
               }`}
-              style={{ color: isActive ? (themeColor || '#b91c1c') : undefined }}
             >
               {isActive && (
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full"
-                  style={{ backgroundColor: themeColor || '#b91c1c' }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-[var(--accent)]"
                 />
               )}
-              <Icon size={18} className={isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'} />
+              <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
               <span className="text-[9px] uppercase tracking-wider font-bold leading-tight text-center">
                 {item.label}
               </span>

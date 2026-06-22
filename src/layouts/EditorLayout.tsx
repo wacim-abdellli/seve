@@ -7,7 +7,7 @@ import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
 import { useResume } from '../hooks/useResume'
 import { usePrintResume } from '../hooks/usePrintResume'
-import SectionSidebar, { type SectionType } from '../components/SectionSidebar'
+import type { SectionType } from '../components/SectionSidebar'
 import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
@@ -664,11 +664,7 @@ export default function EditorLayout() {
       </header>
 
       <div className="flex flex-1 overflow-hidden relative z-10 bg-transparent">
-        <div className="hidden lg:block flex-shrink-0 h-full">
-          <SectionSidebar activeMode={activeMode} onModeChange={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onOpenSection={openDrawer} />
-        </div>
-
-        <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} themeColor={themeColor} />
+        <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} />
 
         <div className="flex flex-1 flex-row overflow-hidden relative bg-transparent pb-16 lg:pb-0">
           <Outlet context={editorContext} />

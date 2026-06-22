@@ -434,7 +434,8 @@ export default function ResumePreview({
       {/* Aspect-ratio restricted A4 paper container */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto bg-[#0d0d0f] bg-[radial-gradient(ellipse_at_top,_#1a1a2e_0%,_transparent_60%)] flex items-start justify-center p-2 sm:p-4 md:p-8 print-container relative rounded-b-xl border border-zinc-800/80 shadow-inner"
+        className="flex-1 overflow-auto flex items-start justify-center p-2 sm:p-6 md:p-10 print-container relative rounded-b-xl"
+          style={{ background: 'linear-gradient(145deg, #08080f 0%, #0d0d18 50%, #080810 100%)' }}
       >
         {/* Shadow wrapper for depth */}
         <div 
@@ -442,10 +443,9 @@ export default function ResumePreview({
           style={{
             width: zoom < 1 ? `${794 * zoom}px` : '794px',
             height: zoom < 1 ? `${contentHeight * zoom}px` : 'auto',
+            filter: 'drop-shadow(0 25px 60px rgba(0,0,0,0.8)) drop-shadow(0 8px 20px rgba(0,0,0,0.6))',
           }}
         >
-          {/* Glow effect behind paper */}
-          <div className="absolute inset-0 -m-4 bg-rose-500/5 rounded-3xl blur-2xl pointer-events-none" />
 
           {/* The actual resume paper */}
           <div 
