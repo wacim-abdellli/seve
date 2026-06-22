@@ -1,6 +1,6 @@
 # 🎨 Editor Page — Complete UX/UI Redesign Guide
 > For the implementer agent. Read every section. Follow in order. No shortcuts.
-important read the guide section by section and implement in the order listed — header → sidebar → preview → mode rail → polish. Do NOT let it try to do everything at once.
+important : read the guide section by section and implement in the order listed — header → sidebar → preview → mode rail → polish. Do NOT try to do everything at once.
 ---
 
 ## 🔍 What's Wrong Right Now (Diagnosis)

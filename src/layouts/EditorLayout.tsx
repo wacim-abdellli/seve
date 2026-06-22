@@ -13,7 +13,7 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 const KeyboardShortcutsModal = lazy(() => import('../components/KeyboardShortcutsModal'))
 const ResumeManager = lazy(() => import('../components/ResumeManager'))
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2, Sparkles, Keyboard } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 const AiOnboardingModal = lazy(() => import('../components/AiOnboardingModal'))
@@ -410,8 +410,7 @@ export default function EditorLayout() {
     resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, cloudError, retrySync,
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, updateStylePrefs, importResumeData, sectionOrder, updateSectionOrder,
-    undo, redo, canUndo, canRedo,
-    saveChangesToCloud, discardChanges, restoreFromBackup,
+    saveChangesToCloud, restoreFromBackup,
   } = useResume()
   const { user, signInWithGoogle, signOut } = useAuth()
 
@@ -509,159 +508,110 @@ export default function EditorLayout() {
         <div className="absolute inset-0 noise-overlay" />
       </div>
 
-      <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-6 py-3 bg-zinc-950/80 backdrop-blur-md border-b border-border sticky top-0 no-print flex-shrink-0 overflow-visible">
-        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0 justify-start">
+      <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-6 h-14 bg-zinc-950/80 backdrop-blur-md border-b border-border sticky top-0 no-print flex-shrink-0 overflow-visible">
+        {/* Zone 1 — Left: Navigation & Identity */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 min-w-0">
           <button 
             onClick={() => navigate('/')} 
-            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-3 rounded-full transition-all cursor-pointer shrink-0"
+            className="flex items-center h-8 gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2.5 rounded-full transition-all cursor-pointer shrink-0"
           >
             <ArrowLeft size={13} className="shrink-0" />
-            <span className="hidden sm:inline">Landing</span>
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="w-px h-5 bg-border shrink-0" />
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 min-w-0">
             <div className="flex items-center select-none">
               <span className="relative font-serif text-sm font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#b91c1c]" />
               </span>
               <span className="font-serif text-sm font-bold text-white leading-none pl-1.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>eve</span>
             </div>
-            <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 uppercase tracking-wider rounded hidden sm:inline-block">FREE</span>
           </div>
-          <div className="w-px h-5 bg-border hidden sm:block shrink-0" />
           <button 
             onClick={() => setIsResumeManagerOpen(true)} 
-            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-3 rounded-full transition-all cursor-pointer shadow-sm hover:border-zinc-700 justify-center min-w-0 shrink-0"
+            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2.5 rounded-full transition-all cursor-pointer hover:border-zinc-700 min-w-0 shrink-0 max-w-[160px]"
           >
-            <FolderOpen size={13} className="text-rose-500 shrink-0" />
-            <span className="truncate hidden sm:inline max-w-[80px] md:max-w-[120px]">{activeResume?.title || 'My Resume'}</span>
-            <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono ml-0.5 shrink-0 flex items-center justify-center min-w-4 h-4">
+            <span className="truncate">{activeResume?.title || 'My Resume'}</span>
+            <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono shrink-0 min-w-4 h-4 flex items-center justify-center">
               {Object.keys(resumes || {}).length}
             </span>
+            <ChevronDown size={11} className="shrink-0 text-zinc-500" />
           </button>
-          <div className="w-px h-5 bg-border hidden md:block shrink-0" />
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-transparent disabled:hover:bg-transparent transition-colors hidden md:inline-flex shrink-0 cursor-pointer"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo2 size={14} className="shrink-0" />
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-transparent disabled:hover:bg-transparent transition-colors hidden md:inline-flex shrink-0 cursor-pointer"
-            title="Redo (Ctrl+Y)"
-          >
-            <Redo2 size={14} className="shrink-0" />
-          </button>
-          {pageCount > 1 && (
-            <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-zinc-900/80 border border-zinc-700 text-[9px] font-semibold text-zinc-400 tracking-wide shrink-0">
-              <span className="w-1 h-1 rounded-full bg-zinc-500" />
-              <span>{pageCount}p</span>
-            </div>
-          )}
         </div>
-        <div className="flex-1 min-w-0" />
 
-
-        <div className="hidden xl:flex items-center justify-center gap-2 no-print px-2 flex-shrink-0">
+        {/* Zone 2 — Center: Cloud Status Pill */}
+        <div className="hidden sm:flex flex-1 items-center justify-center min-w-0">
           <div
-            className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 ${
+            className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 w-[140px] justify-center ${
               cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
               : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
               : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
-              : cloudStatus === 'unsaved' ? 'bg-rose-500/10 border-rose-500/35 text-rose-455'
+              : cloudStatus === 'unsaved' ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
               : 'bg-zinc-900 border-zinc-800 text-zinc-500'
             }`}
           >
             {cloudStatus === 'error' ? (
-              <AlertCircle size={11} className="text-red-400 shrink-0" />
+              <AlertCircle size={11} className="shrink-0" />
             ) : isSaving || cloudStatus === 'syncing' ? (
-              <RefreshCw size={11} className="text-amber-400 shrink-0 animate-spin" />
+              <RefreshCw size={11} className="shrink-0 animate-spin" />
             ) : cloudStatus === 'synced' ? (
-              <Cloud size={11} className="text-emerald-400 shrink-0" />
+              <Cloud size={11} className="shrink-0" />
             ) : cloudStatus === 'unsaved' ? (
-              <AlertCircle size={11} className="text-rose-400 shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
             ) : (
-              <HardDrive size={11} className="text-zinc-550 shrink-0" />
+              <HardDrive size={11} className="shrink-0" />
             )}
-            <span className="leading-none max-w-[240px] truncate" title={cloudError ?? undefined}>
+            <span className="leading-none truncate" title={cloudError ?? undefined}>
               {cloudStatus === 'error'
-                ? (cloudError ? `Error: ${cloudError}` : 'Sync failed')
+                ? (cloudError ? 'Error' : 'Sync failed')
                 : isSaving || cloudStatus === 'syncing' ? 'Saving…'
                 : cloudStatus === 'synced' ? 'Cloud saved'
-                : cloudStatus === 'unsaved' ? 'Unsaved changes'
-                : 'Saved locally'}
+                : cloudStatus === 'unsaved' ? 'Unsaved'
+                : 'Local'}
             </span>
             {cloudStatus === 'error' && (
-              <button onClick={retrySync} className="ml-0.5 shrink-0 text-red-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer">
+              <button onClick={retrySync} className="shrink-0 underline underline-offset-2 hover:text-white transition-colors cursor-pointer">
                 Retry
               </button>
             )}
-          </div>
-
-          {cloudStatus === 'unsaved' && !isSaving && (
-            <div className="flex items-center gap-2 animate-fade-in">
-              <button
-                onClick={saveChangesToCloud}
-                className="h-6 px-2.5 rounded-full bg-[#b91c1c] hover:bg-[#c62828] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all shadow-md shadow-rose-950/20 cursor-pointer flex items-center gap-1 active:scale-95"
-              >
+            {cloudStatus === 'unsaved' && !isSaving && (
+              <button onClick={saveChangesToCloud} className="shrink-0 text-white hover:text-zinc-200 transition-colors cursor-pointer font-bold ml-0.5" title="Save now">
                 Save
               </button>
-              <button
-                onClick={discardChanges}
-                className="h-6 px-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-              >
-                Discard
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
-          {/* Mobile Save Status Indicator */}
-          {cloudStatus === 'unsaved' && !isSaving && (
-            <div className="xl:hidden flex items-center gap-1.5">
-              <button
-                onClick={saveChangesToCloud}
-                className="h-7 px-2 rounded-full bg-[#b91c1c] hover:bg-[#c62828] text-white text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-              >
-                Save
-              </button>
-            </div>
-          )}
-          <div 
-            className="xl:hidden flex items-center justify-center"
-            title={
-              cloudStatus === 'error' ? (cloudError ?? 'Sync failed')
-              : isSaving || cloudStatus === 'syncing' ? 'Saving...'
-              : cloudStatus === 'synced' ? 'Cloud saved'
-              : cloudStatus === 'unsaved' ? 'Unsaved changes'
-              : 'Saved locally'
-            }
-          >
-            {cloudStatus === 'error' ? (
-              <AlertCircle size={14} className="text-red-400 shrink-0 animate-pulse" />
-            ) : isSaving || cloudStatus === 'syncing' ? (
-              <RefreshCw size={14} className="text-amber-400 shrink-0 animate-spin" />
-            ) : cloudStatus === 'synced' ? (
-              <Cloud size={14} className="text-emerald-400 shrink-0" />
-            ) : cloudStatus === 'unsaved' ? (
-              <AlertCircle size={14} className="text-rose-455 shrink-0 animate-pulse" />
-            ) : (
-              <HardDrive size={14} className="text-zinc-550 shrink-0" />
             )}
           </div>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => setShowShortcuts((v) => !v)}
-            className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0 hidden md:flex"
-            title="Keyboard shortcuts (?)"
+        {/* Zone 3 — Right: Primary & Secondary Actions */}
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+          {/* Mobile cloud indicator */}
+          <div className="sm:hidden flex items-center gap-1">
+            {cloudStatus === 'unsaved' && !isSaving && (
+              <button onClick={saveChangesToCloud} className="h-7 px-2 rounded-full bg-[#b91c1c] hover:bg-[#c62828] text-white text-[9px] font-extrabold transition-all cursor-pointer active:scale-95">
+                Save
+              </button>
+            )}
+            <div title={cloudError || cloudStatus}>
+              {cloudStatus === 'error' ? <AlertCircle size={14} className="text-red-400 animate-pulse shrink-0" />
+              : isSaving || cloudStatus === 'syncing' ? <RefreshCw size={14} className="text-amber-400 animate-spin shrink-0" />
+              : cloudStatus === 'synced' ? <Cloud size={14} className="text-emerald-400 shrink-0" />
+              : cloudStatus === 'unsaved' ? <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+              : <HardDrive size={14} className="text-zinc-500 shrink-0" />}
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setShowAiGuide(true)} 
+            className="hidden sm:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0"
           >
-            <Keyboard size={13} className="shrink-0" />
+            <Sparkles size={12} className="shrink-0" />
+            <span className="hidden lg:inline">AI Fill</span>
+          </button>
+          <button 
+            onClick={() => setActiveMode('analyze')} 
+            className={`hidden md:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-800 border-zinc-600 text-white' : ''}`}
+          >
+            <CheckCircle2 size={12} className="shrink-0" />
+            <span className="hidden lg:inline">ATS</span>
           </button>
           <button 
             onClick={() => setIsSettingsOpen(true)} 
@@ -679,11 +629,10 @@ export default function EditorLayout() {
                 aria-haspopup="menu"
                 aria-expanded={showUserMenu}
                 aria-label="Open account menu"
-                className="flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-2.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer whitespace-nowrap shrink-0"
+                className="flex items-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-1.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
               >
-                <img src={user.user_metadata?.avatar_url} alt="" className="w-4 h-4 rounded-full shrink-0" referrerPolicy="no-referrer" />
-                <span className="max-w-[70px] truncate hidden sm:inline">{user.user_metadata?.full_name || user.email}</span>
-                <ChevronDown size={11} className={`transition-transform shrink-0 ${showUserMenu ? 'rotate-180' : ''} hidden sm:inline`} />
+                <img src={user.user_metadata?.avatar_url} alt="" className="w-5 h-5 rounded-full shrink-0" referrerPolicy="no-referrer" />
+                <ChevronDown size={10} className={`transition-transform shrink-0 hidden sm:inline ${showUserMenu ? 'rotate-180' : ''}`} />
               </button>
               {showUserMenu && (
                 <div role="menu" className="absolute right-0 top-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl p-2 shadow-2xl z-50 min-w-[180px] animate-fade-in">
@@ -698,33 +647,18 @@ export default function EditorLayout() {
             <button
               type="button"
               onClick={signInWithGoogle}
-              className="flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-3 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
+              className="flex items-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-2.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
               aria-label="Sign in with Google"
             >
-              <Cloud size={13} className="shrink-0" />
-              <span className="hidden sm:inline">Cloud Sync</span>
+              <Cloud size={12} className="shrink-0" />
             </button>
           )}
           <button 
             onClick={handlePrint} 
-            className="flex items-center justify-center h-8 gap-1 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-3.5 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0"
+            className="flex items-center justify-center h-9 gap-1.5 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-4 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0 active:scale-95"
           >
             <Download size={13} className="shrink-0" />
             <span className="hidden sm:inline">Export PDF</span>
-          </button>
-          <button 
-            onClick={() => setShowAiGuide(true)} 
-            className="hidden sm:flex items-center justify-center h-8 gap-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/25 hover:border-purple-500/40 text-purple-300 hover:text-purple-200 font-extrabold text-[11px] px-3.5 rounded-full transition-all cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.06)] whitespace-nowrap shrink-0"
-          >
-            <Sparkles size={12} className="animate-pulse text-purple-400 shrink-0" />
-            <span className="hidden md:inline">AI Fill Guide</span>
-          </button>
-          <button 
-            onClick={() => setActiveMode('analyze')} 
-            className={`flex items-center justify-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-300 hover:text-white font-bold text-[11px] px-3.5 rounded-full transition-all cursor-pointer hidden md:flex whitespace-nowrap shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-850 border-zinc-700 text-white' : ''}`}
-          >
-            <CheckCircle2 size={13} className="shrink-0" />
-            <span>ATS Audit</span>
           </button>
         </div>
       </header>
