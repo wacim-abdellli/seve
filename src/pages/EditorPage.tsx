@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ArrowLeft, Type, ZoomOut, ZoomIn } from 'lucide-react'
@@ -109,7 +110,8 @@ export default function EditorPage() {
 
   const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint, setShowAiGuide } = ctx
 
-  const completedCount = Object.values(getSectionStatus(resumeData)).filter(Boolean).length
+  const sectionStatus = useMemo(() => getSectionStatus(resumeData), [resumeData])
+  const completedCount = Object.values(sectionStatus).filter(Boolean).length
 
   const renderDesignControls = () => {
     return (
@@ -260,7 +262,7 @@ export default function EditorPage() {
                           <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
                         </div>
                         {group.sections.map((section) => {
-                          const isComplete = getSectionStatus(resumeData)[section.id]
+                          const isComplete = sectionStatus[section.id]
                           const previewText = getSectionPreview(section.id, resumeData)
                           const Icon = section.icon
                           const isActive = activeStudioSection === section.id
@@ -343,7 +345,7 @@ export default function EditorPage() {
                           <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
                         </div>
                         {group.sections.map((section) => {
-                          const isComplete = getSectionStatus(resumeData)[section.id]
+                          const isComplete = sectionStatus[section.id]
                           const previewText = getSectionPreview(section.id, resumeData)
                           const Icon = section.icon
                           const isActive = activeStudioSection === section.id
