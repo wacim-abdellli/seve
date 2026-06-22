@@ -104,7 +104,6 @@ export default function PreviewSectionWrapper({
       onDragEnd={onDragEnd}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      role="option"
       aria-label={`${sectionIdLabel} section. ${isDraggable ? 'Alt+Arrow keys to reorder.' : ''}`}
       aria-roledescription="resume section"
       className={`preview-section ${ripple ? 'animate-ripple' : ''}`}
