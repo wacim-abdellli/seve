@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ResumeData } from '../types/resume'
 
 export function normalizeResumeData(importedData: any): ResumeData {

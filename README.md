@@ -1,16 +1,17 @@
 # Seve — Free, Honest ATS Resume Builder & Career Coach
 
-**Seve** is a premium, client-side web application designed to help job seekers build professional, ATS-optimized resumes. Built with a commitment to transparency and user privacy.
-
-No registrations, no premium paywalls, no fake statistics, and no tracking.
+**Seve** is a resume builder designed to help job seekers build professional, ATS-optimized resumes. Built with a commitment to transparency.
 
 ---
 
-## 🔒 Privacy & Local-First Architecture
+## 🔒 Privacy & Data Architecture
 
-Seve is engineered to respect your privacy and give you full ownership of your data:
-- **100% Client-Side Storage:** All your resume revisions, target job descriptions, settings, and chat history are saved locally in your browser's `localStorage` (`seve_state`).
-- **Zero Third-Party Servers:** We host no backend databases or tracking servers. Your data never leaves your browser unless you export it as a backup file.
+Seve uses a **local-first** storage model with optional cloud features:
+
+- **Local-First Editing:** All resume data, settings, and preferences are saved locally in your browser's `localStorage` (`seve_state`). You can use the full editor without signing in.
+- **Anonymous Analytics:** Aggregate page-view counts are recorded through Supabase to measure usage. No personal data is associated with these counts.
+- **Optional Cloud Sync:** You may optionally sign in with Google to sync your resume data to Supabase for cross-device access. This is not required for editing or PDF export.
+- **PDF Export:** Uses your browser's built-in print dialog — no data is sent to external servers for rendering.
  
 ---
 

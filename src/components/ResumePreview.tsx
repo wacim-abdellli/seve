@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import type { ResumeData, ResumeStylePreferences, Template } from '../types/resume'
@@ -567,7 +568,7 @@ export default function ResumePreview({
                 </div>
 
                 <p className="text-[10px] text-zinc-600 text-center">
-                  Your data is processed entirely in-browser. Nothing is uploaded to any server.
+                  Resume editing runs locally. Anonymous usage data is recorded through Supabase. No personal data is shared.
                 </p>
               </motion.div>
             </div>

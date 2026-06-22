@@ -7,9 +7,11 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
   const [flash, setFlash] = useState(false)
   const raf = useRef<number>(0)
   const prevValue = useRef(value)
+  const displayRef = useRef(display)
+  useEffect(() => { displayRef.current = display })
 
   useEffect(() => {
-    if (value === prevValue.current && display === value) return
+    if (value === prevValue.current && displayRef.current === value) return
     prevValue.current = value
 
     setFlash(true)
@@ -17,7 +19,7 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 
     const start = performance.now()
     const duration = 1200
-    const from = display
+    const from = displayRef.current
     const to = value
 
     function tick(now: number) {

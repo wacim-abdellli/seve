@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
+import type { LucideIcon } from 'lucide-react'
 import { 
   X, 
   User, 
@@ -54,7 +55,7 @@ const sectionTips: Record<string, string[]> = {
   volunteer: ['Organization + role + time period', 'Highlight measurable impact if possible'],
 }
 
-const sectionMeta: Record<string, { title: string; icon: any; example: string }> = {
+const sectionMeta: Record<string, { title: string; icon: LucideIcon; example: string }> = {
   contact: { title: 'Contact Info', icon: User, example: 'Jane Doe · New York, NY · jane.doe@email.com · linkedin.com/in/janedoe' },
   summary: { title: 'Profile Summary', icon: FileText, example: 'Senior Engineer with 8+ years leading cross-functional teams. Expert in React, Node.js, AWS. Boosted platform performance by 40%, reduced costs by 15%.' },
   experience: { title: 'Work Experience', icon: Briefcase, example: 'Led 4 engineers building a real-time messaging pipeline handling 10M+ daily requests. Reduced deploy times by 40% with automated CI/CD.' },

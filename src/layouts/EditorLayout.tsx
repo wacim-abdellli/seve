@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -12,7 +12,8 @@ import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
 import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2, Sparkles } from 'lucide-react'
+import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
+import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2, Sparkles, Keyboard } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
@@ -482,12 +483,23 @@ export default function EditorLayout() {
   const [pageCount, setPageCount] = useState(1)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAiGuide, setShowAiGuide] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
 
   useEffect(() => {
     const onboarded = localStorage.getItem('seve_ai_onboarded')
     if (onboarded === null) {
-      setShowAiGuide(true)
+      setTimeout(() => { setShowAiGuide(true) })
     }
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setShowShortcuts((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
 
   
@@ -515,15 +527,15 @@ export default function EditorLayout() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     if (!user) {
       setShowAuthModal(true)
       return
     }
     handlePrintModal(resumeData, pageCount)
-  }
+  }, [user, resumeData, pageCount, handlePrintModal])
 
-  // Keyboard shortcuts: Ctrl+P -> Print / Save as PDF guide, Ctrl+S -> suppress browser save
+  // Keyboard shortcuts: Ctrl+P -> Print / Save as PDF, Ctrl+S -> save to cloud
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
@@ -532,11 +544,12 @@ export default function EditorLayout() {
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
+        if (user) saveChangesToCloud()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [user, resumeData, pageCount])
+  }, [user, resumeData, pageCount, saveChangesToCloud, handlePrint])
 
   const openDrawer = (sec: SectionType) => setActiveStudioSection(sec)
   const closeDrawer = () => setActiveStudioSection(null)
@@ -716,6 +729,14 @@ export default function EditorLayout() {
             )}
           </div>
 
+          <button
+            type="button"
+            onClick={() => setShowShortcuts((v) => !v)}
+            className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0 hidden md:flex"
+            title="Keyboard shortcuts (?)"
+          >
+            <Keyboard size={13} className="shrink-0" />
+          </button>
           <button 
             onClick={() => setIsSettingsOpen(true)} 
             className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
@@ -845,6 +866,12 @@ export default function EditorLayout() {
             onClose={() => setShowAiGuide(false)}
             onImport={(data) => importResumeData(data)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showShortcuts && (
+          <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
         )}
       </AnimatePresence>
     </div>

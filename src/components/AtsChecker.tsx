@@ -135,6 +135,21 @@ const BAR_COLORS: Record<string, string> = {
   length: 'bg-gradient-to-r from-orange-600 to-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.2)]',
 }
 
+const SCAN_STAGES = [
+  { label: 'Parsing document tree', pct: 8, log: 'reading DOM layout... 6 blocks mapped' },
+  { label: 'Indexing contact metadata', pct: 16, log: 'extracted name, email, phone, linkedin' },
+  { label: 'Extracting section boundaries', pct: 24, log: 'detected 5 core sections + 4 optional' },
+  { label: 'Tokenizing bullet content', pct: 34, log: 'parsed 183 tokens across 12 entries' },
+  { label: 'Cross-referencing skill taxonomy', pct: 44, log: 'matched 47 terms against role profile' },
+  { label: 'Computing semantic density', pct: 54, log: 'weighting keyword clusters... 62 synonyms applied' },
+  { label: 'Validating date consistency', pct: 62, log: 'checked 8 date fields — all ISO compliant' },
+  { label: 'Scanning formatting safety', pct: 70, log: 'pronoun check passed • encoding clean' },
+  { label: 'Rating bullet impact', pct: 80, log: 'scoring action verbs: 6 strong, 3 weak' },
+  { label: 'Measuring section coverage', pct: 88, log: 'benchmarking vs 90th percentile profiles' },
+  { label: 'Compiling dimension weights', pct: 95, log: 'applying 8 weighted metrics → composite score' },
+  { label: 'Finalizing audit report', pct: 100, log: 'generating insights & recommendations...' },
+]
+
 export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDescription, onNavigateToSection, templateFontSize }: AtsCheckerProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'audit' | 'keywords'>('overview')
   const [showJdInput, setShowJdInput] = useState(false)
@@ -153,21 +168,6 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [copiedBullet, setCopiedBullet] = useState(false)
   const [verbSearchQuery, setVerbSearchQuery] = useState('')
 
-  const SCAN_STAGES = [
-    { label: 'Parsing document tree', pct: 8, log: 'reading DOM layout... 6 blocks mapped' },
-    { label: 'Indexing contact metadata', pct: 16, log: 'extracted name, email, phone, linkedin' },
-    { label: 'Extracting section boundaries', pct: 24, log: 'detected 5 core sections + 4 optional' },
-    { label: 'Tokenizing bullet content', pct: 34, log: 'parsed 183 tokens across 12 entries' },
-    { label: 'Cross-referencing skill taxonomy', pct: 44, log: 'matched 47 terms against role profile' },
-    { label: 'Computing semantic density', pct: 54, log: 'weighting keyword clusters... 62 synonyms applied' },
-    { label: 'Validating date consistency', pct: 62, log: 'checked 8 date fields — all ISO compliant' },
-    { label: 'Scanning formatting safety', pct: 70, log: 'pronoun check passed • encoding clean' },
-    { label: 'Rating bullet impact', pct: 80, log: 'scoring action verbs: 6 strong, 3 weak' },
-    { label: 'Measuring section coverage', pct: 88, log: 'benchmarking vs 90th percentile profiles' },
-    { label: 'Compiling dimension weights', pct: 95, log: 'applying 8 weighted metrics → composite score' },
-    { label: 'Finalizing audit report', pct: 100, log: 'generating insights & recommendations...' },
-  ]
-
   const [scanStage, setScanStage] = useState(0)
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
@@ -180,7 +180,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const dataRef = useRef<{ r: unknown; j: string } | null>(null)
   const hasInitializedRef = useRef(false)
 
-  if (!hasInitializedRef.current) {
+  useEffect(() => {
     hasInitializedRef.current = true
     try {
       const r = localStorage.getItem(LAST_AUDITED_RESUME_KEY)
@@ -188,8 +188,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       if (r !== null && j !== null) {
         dataRef.current = { r: JSON.parse(r), j }
       }
-    } catch {}
-  }
+    } catch { /* ignore */ }
+  }, [])
 
   const scanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scanTimeouts = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -234,7 +234,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
               try {
                 localStorage.setItem(LAST_AUDITED_RESUME_KEY, JSON.stringify(resumeData))
                 localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
-              } catch {}
+              } catch { /* ignore */ }
             }, 200)
           }
         }, d)

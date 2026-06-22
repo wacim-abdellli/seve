@@ -102,7 +102,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline text-xs text-muted-foreground font-medium flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Client-Side & Private
+              Local-First & Private
             </span>
             <Button onClick={() => navigate('/editor')} size="sm" className="font-extrabold text-white bg-zinc-950 border border-zinc-800 hover:border-[#e0314f]/50 hover:bg-zinc-900 transition-all font-display rounded-lg">
               Build Your Resume
@@ -128,7 +128,7 @@ export default function LandingPage() {
               </h2>
               
               <p className="text-sm md:text-base text-muted-foreground font-light max-w-lg mt-6 leading-relaxed">
-                Beautiful templates, smart ATS checker, and optional AI tools — all in your browser. No paywalls, no tracking, free to try.
+                Beautiful templates, smart ATS checker, and optional AI tools — all in your browser. No paywalls, free to try.
               </p>
               
               <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -504,7 +504,7 @@ export default function LandingPage() {
       {/* 5. Footer */}
       <footer className="py-12 border-t border-border bg-background z-10 relative no-print">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-muted-foreground">
-          <div>© {new Date().getFullYear()} Seve. Free and private.</div>
+          <div>© {new Date().getFullYear()} Seve. Free and local-first.</div>
           <div className="flex items-center gap-6">
             <button 
               onClick={() => navigate('/privacy')} 

@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -19,12 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      setTimeout(() => { setLoading(false) })
+      return
+    }
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
 
-      // After Supabase processes the OAuth hash tokens (#access_token=...),
-      // clean the URL by removing the leftover hash fragment.
       if (window.location.hash) {
         window.history.replaceState(null, '', window.location.pathname)
       }
@@ -33,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
-      // Also clean hash on initial load (e.g. user lands back on /editor#)
       if (window.location.hash) {
         window.history.replaceState(null, '', window.location.pathname)
       }
@@ -44,6 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      setError('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sign-in.')
+      return
+    }
     try {
       setError(null)
       await supabase.auth.signInWithOAuth({
@@ -61,6 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const signOut = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      setUser(null)
+      return
+    }
     try {
       setError(null)
       await supabase.auth.signOut()

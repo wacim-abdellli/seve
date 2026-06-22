@@ -72,9 +72,6 @@ DROP POLICY IF EXISTS "Anyone can select page views" ON public.page_views;
 CREATE POLICY "Anyone can insert page views"
   ON public.page_views FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Anyone can select page views"
-  ON public.page_views FOR SELECT USING (true);
-
 CREATE OR REPLACE FUNCTION count_distinct_visitors(since TIMESTAMPTZ DEFAULT NULL)
 RETURNS BIGINT LANGUAGE SQL STABLE AS $$
   SELECT COUNT(DISTINCT visitor_id) FROM public.page_views

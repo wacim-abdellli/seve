@@ -82,7 +82,7 @@ export default function PrivacyPage() {
               Privacy Notice
             </h2>
             <p className="text-zinc-400 font-light max-w-lg mx-auto" style={{ fontWeight: 300 }}>
-              Seve was built under a strict pledge: <strong className="text-white">no tracking, no subscriptions, and absolute data ownership</strong>. Here is exactly how your data is handled.
+              Seve was built under a strict pledge: <strong className="text-white">no subscriptions, no gimmicks, and clear data ownership</strong>. Here is exactly how your data is handled.
             </p>
           </div>
 
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
                 <h3 className="text-base font-bold text-white m-0">100% Local-First</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
-                Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code className="text-rose-400 bg-rose-500/5 px-1 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>localStorage</code>. We never run databases or storage servers to collect your records.
+                Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code className="text-rose-400 bg-rose-500/5 px-1 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>localStorage</code>. If you sign in with Google, you can optionally sync data to Supabase for cross-device access — this is never done without your consent.
               </p>
             </div>
 
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
                 <h3 className="text-base font-bold text-white m-0">Zero Analytics & Ads</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
-                Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. We have no way of knowing how many resumes you construct or who you are.
+                Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. An anonymous page-view count is recorded through Supabase to measure aggregate usage — no personal data, IPs, or browsing history are associated with this count.
               </p>
             </div>
 
@@ -132,7 +132,7 @@ export default function PrivacyPage() {
                 <h3 className="text-base font-bold text-white m-0">Total Transparency</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
-                The entire application runs locally in your browser. Anyone can verify that no data leaves your device — all network requests are auditable through your browser's developer tools.
+                The resume editor runs locally in your browser. The only network requests are: anonymous page-view counts sent to Supabase, and — if you sign in — cloud sync of your resume data. All network activity is auditable through your browser's developer tools.
               </p>
             </div>
           </div>
@@ -157,6 +157,15 @@ export default function PrivacyPage() {
                   <li><strong className="text-white">seve_score_history:</strong> Stores the history of your resume ATS scores for progress tracking.</li>
                   <li><strong className="text-white">seve_section_order:</strong> Stores the order of your resume sections if custom-sorted.</li>
                 </ul>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-2">
+                <h4 className="font-bold text-white uppercase tracking-wider text-[10px]">
+                  Supabase & Cloud Sync
+                </h4>
+                <p className="m-0">
+                  Seve uses Supabase for two purposes: (1) anonymous page-view counting — a random visitor ID is stored in localStorage and an upsert is sent on each page load, with aggregate counts fetched via an RPC function; (2) optional cloud sync — if you sign in with Google, your resume data can be saved to and retrieved from a Supabase database table. Cloud sync is manual and never automatic.
+                </p>
               </div>
 
               <div className="flex flex-col gap-2 pt-2">
@@ -193,7 +202,7 @@ export default function PrivacyPage() {
         }}
       >
         <div className="text-xs text-zinc-400">
-          © {new Date().getFullYear()} Seve. Free and private.
+          © {new Date().getFullYear()} Seve. Free and local-first.
         </div>
       </footer>
     </div>

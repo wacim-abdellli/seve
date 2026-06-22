@@ -4,7 +4,7 @@ import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { useToast } from '../hooks/useToast'
 import { ResumeContext } from './resumeContextDef'
 import { useAuth } from './AuthContext'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const LOCAL_STORAGE_KEY = 'seve_state'
 // Fixed UUID for the default resume — must be a valid UUID because
@@ -121,10 +121,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const hasMergedCloudRef = useRef(false)
   const isMergingRef = useRef(false)
 
-  // Keep references to prevent fetchAndMergeCloud from changing identity
+  // Keep reference to prevent fetchAndMergeCloud from changing identity
   const stateRef = useRef(state)
-  stateRef.current = state
-  const syncToCloudRef = useRef<any>(null)
+  useEffect(() => { stateRef.current = state })
 
   // Reset cloud flags when user ID changes (handles A/B login switch)
   useEffect(() => {
@@ -133,14 +132,63 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     isMergingRef.current = false
   }, [user?.id])
 
+  // Shared cloud-sync helper (used by both auto-save effect and retrySync)
+  const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
+    if (!isSupabaseConfigured || !supabase) return
+    for (const p of profiles) {
+      const { data: existing, error: selectError } = await supabase
+        .from('resumes')
+        .select('id')
+        .eq('id', p.id)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (selectError) throw selectError
+
+      if (existing) {
+        const { error: updateError } = await supabase
+          .from('resumes')
+          .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+          .eq('id', p.id)
+          .eq('user_id', userId)
+        if (updateError) throw updateError
+      } else {
+        const { error: insertError } = await supabase
+          .from('resumes')
+          .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+
+        if (insertError) {
+          if (insertError.code === '23505') {
+            const newId = crypto.randomUUID()
+            setState(prev => {
+              const resume = prev.resumes[p.id]
+              if (!resume) return prev
+              const next = { ...prev.resumes }
+              delete next[p.id]
+              next[newId] = { ...resume, id: newId }
+              return {
+                ...prev,
+                resumes: next,
+                selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
+              }
+            })
+            continue
+          }
+          throw insertError
+        }
+      }
+    }
+  }, [])
+
   // Shared cloud fetch & merge helper
   const fetchAndMergeCloud = useCallback(async (userId: string, signal?: AbortSignal) => {
+    if (!isSupabaseConfigured || !supabase) return
     setCloudStatus('syncing')
     setCloudError(null)
     try {
       const { data, error } = await supabase
         .from('resumes')
-        .select('*', { signal } as any)
+        .select('*', { signal } as Record<string, unknown>)
 
       if (error) throw error
 
@@ -176,20 +224,20 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       }
 
       // Sync the merged state back to the cloud to ensure local-only/new resumes are uploaded
-      await syncToCloudRef.current(Object.values(currentResumes), userId)
+      await syncToCloud(Object.values(currentResumes), userId)
 
       setLastSyncedState({ resumes: currentResumes, selectedResumeId: currentState.selectedResumeId })
       setCloudStatus('synced')
       setCloudError(null)
       hasMergedCloudRef.current = true
-    } catch (err: any) {
-      if (signal?.aborted || err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (signal?.aborted || (err as { name?: string })?.name === 'AbortError') {
         return
       }
       console.error('Cloud sync fetch failed:', err)
       throw err
     }
-  }, [])
+  }, [syncToCloud])
 
   // Login Merge: when user is authenticated, merge cloud resumes into local state.
   // Runs on initial mount (if user already auth'd from session cookie) AND on login.
@@ -205,7 +253,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     async function attemptFetch() {
       try {
         await fetchAndMergeCloud(userId, ac.signal)
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (ac.signal.aborted) return
         if (retryAttempt < MAX_RETRIES) {
           retryAttempt++
@@ -225,70 +273,11 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
     attemptFetch()
     return () => ac.abort()
-  }, [user?.id, fetchAndMergeCloud])
-
-  // ---------------------------------------------------------------------------  // ---------------------------------------------------------------------------
-  // Shared cloud-sync helper (used by both auto-save effect and retrySync)
-  // ---------------------------------------------------------------------------
-  const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
-    for (const p of profiles) {
-      // Check whether this user's row already exists
-      const { data: existing, error: selectError } = await supabase
-        .from('resumes')
-        .select('id')
-        .eq('id', p.id)
-        .eq('user_id', userId)
-        .maybeSingle()
-
-      if (selectError) throw selectError
-
-      if (existing) {
-        // Row exists → UPDATE only the mutable columns
-        const { error: updateError } = await supabase
-          .from('resumes')
-          .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
-          .eq('id', p.id)
-          .eq('user_id', userId)
-        if (updateError) throw updateError
-      } else {
-        // Row missing → INSERT
-        const { error: insertError } = await supabase
-          .from('resumes')
-          .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
-
-        if (insertError) {
-          if (insertError.code === '23505') {
-            // 23505 = duplicate key: a row with this ID exists but belongs to
-            // a different user (RLS hides it from SELECT, so we can't UPDATE it).
-            // Self-heal: generate a fresh UUID so this user's data can sync.
-            const newId = crypto.randomUUID()
-            setState(prev => {
-              const resume = prev.resumes[p.id]
-              if (!resume) return prev
-              const next = { ...prev.resumes }
-              delete next[p.id]
-              next[newId] = { ...resume, id: newId }
-              return {
-                ...prev,
-                resumes: next,
-                selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
-              }
-            })
-            // State change will trigger another auto-save with the new ID
-            continue
-          }
-          throw insertError
-        }
-      }
-    }
-  }, [])
-
-  syncToCloudRef.current = syncToCloud
+  }, [user, fetchAndMergeCloud])
 
   // ---------------------------------------------------------------------------
-  // Auto-save: persist to localStorage immediately, debounce cloud sync 800ms.
-  // "Saving…" indicator is shown only for actual user edits — not on the
-  // initial page load and not when only the auth state changes.
+  // Persist to localStorage on every state change (automatic).
+  // Cloud sync is manual — triggered only by explicit saveChangesToCloud().
   // ---------------------------------------------------------------------------
   const isInitialMountRef = useRef(true)
   const prevUserIdRef = useRef<string | null>(null)
@@ -305,8 +294,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state))
 
     if (!user) {
-      setCloudStatus('local')
-      setCloudError(null)
+      setTimeout(() => { setCloudStatus('local'); setCloudError(null) })
       return
     }
 
@@ -318,11 +306,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     if (hasMergedCloudRef.current && !isMergeUpdate) {
       const hasChanges = JSON.stringify(state.resumes) !== JSON.stringify(lastSyncedState.resumes)
       if (hasChanges) {
-        setCloudStatus('unsaved')
+        setTimeout(() => { setCloudStatus('unsaved') })
       } else {
-        setCloudStatus('synced')
+        setTimeout(() => { setCloudStatus('synced') })
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, user?.id, lastSyncedState])
 
   const saveChangesToCloud = useCallback(async () => {
@@ -432,9 +421,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     historyRef.current = [resumeData]
     historyIndexRef.current = 0
-    setCanUndo(false)
-    setCanRedo(false)
-  }, [activeResume?.id])
+    setTimeout(() => { setCanUndo(false); setCanRedo(false) })
+  }, [activeResume?.id, resumeData])
 
   // Keyboard shortcuts: Ctrl+Z/Y for undo/redo
   useEffect(() => {
@@ -533,7 +521,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const deleteResume = useCallback((id: string) => {
-    if (user) {
+    if (user && isSupabaseConfigured && supabase) {
       ;(async () => { await supabase.from('resumes').delete().eq('id', id).eq('user_id', user.id) })().catch(() => {})
     }
     setState(prev => {

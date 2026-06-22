@@ -45,7 +45,6 @@ export function estimatePageCount(resumeData: ResumeData, sectionOrder: string[]
 export function getPageBreakSections(
   resumeData: ResumeData,
   sectionOrder: string[],
-  _fontSize: number = 10
 ): {
   page1Sections: string[];
   page2Sections: string[];

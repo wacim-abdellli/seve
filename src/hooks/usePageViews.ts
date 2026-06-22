@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const VISITOR_KEY = 'sv_visitor_id'
 const POLL_INTERVAL = 30_000
@@ -13,46 +13,40 @@ function getVisitorId(): string {
   return id
 }
 
-async function fetchCounts() {
-  const startOfMonth = new Date()
-  startOfMonth.setDate(1)
-  startOfMonth.setHours(0, 0, 0, 0)
-
-  const [monthly, total] = await Promise.all([
-    supabase.rpc('count_distinct_visitors', { since: startOfMonth.toISOString() }),
-    supabase.rpc('count_distinct_visitors', {}),
-  ])
-
-  return {
-    monthlyViews: monthly.data as number | null,
-    totalViews: total.data as number | null,
-  }
-}
-
 export function usePageViews() {
   const [totalViews, setTotalViews] = useState<number | null>(null)
   const [monthlyViews, setMonthlyViews] = useState<number | null>(null)
   const logged = useRef(false)
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    const db = supabase
+
     const visitorId = getVisitorId()
     const path = window.location.pathname
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
 
     const logAndFetch = async () => {
       try {
         if (!logged.current) {
-          await supabase.from('page_views').upsert(
-            { visitor_id: visitorId, path, date: new Date().toISOString().slice(0, 10) },
-            { onConflict: 'visitor_id,path,date' }
+          const { error: insertError } = await db.from('page_views').insert(
+            { visitor_id: visitorId, path, date: new Date().toISOString().slice(0, 10) }
           )
+          // Ignore duplicate key (already logged today)
+          if (insertError && insertError.code !== '23505') throw insertError
           logged.current = true
         }
 
-        const counts = await fetchCounts()
-        if (counts.monthlyViews !== null) setMonthlyViews(counts.monthlyViews)
-        if (counts.totalViews !== null) setTotalViews(counts.totalViews)
+        const [monthly, total] = await Promise.all([
+          db.rpc('count_distinct_visitors', { since: startOfMonth.toISOString() }),
+          db.rpc('count_distinct_visitors', {}),
+        ])
+        if (monthly.data !== null) setMonthlyViews(monthly.data as number)
+        if (total.data !== null) setTotalViews(total.data as number)
       } catch {
-        // Silently fail
+        // Supabase not available
       }
     }
 

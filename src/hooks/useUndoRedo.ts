@@ -7,6 +7,13 @@ export function useUndoRedo<T>(initialState: T) {
   const historyRef = useRef<T[]>([initialState])
   const indexRef = useRef(0)
   const isUndoRedoRef = useRef(false)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
+  const updateHistoryFlags = useCallback(() => {
+    setCanUndo(indexRef.current > 0)
+    setCanRedo(indexRef.current < historyRef.current.length - 1)
+  }, [])
 
   const setState = useCallback((newState: T | ((prev: T) => T)) => {
     setStateInternal(prev => {
@@ -34,8 +41,9 @@ export function useUndoRedo<T>(initialState: T) {
       isUndoRedoRef.current = true
       setStateInternal(historyRef.current[indexRef.current])
       isUndoRedoRef.current = false
+      updateHistoryFlags()
     }
-  }, [])
+  }, [updateHistoryFlags])
 
   const redo = useCallback(() => {
     if (indexRef.current < historyRef.current.length - 1) {
@@ -43,11 +51,9 @@ export function useUndoRedo<T>(initialState: T) {
       isUndoRedoRef.current = true
       setStateInternal(historyRef.current[indexRef.current])
       isUndoRedoRef.current = false
+      updateHistoryFlags()
     }
-  }, [])
-
-  const canUndo = indexRef.current > 0
-  const canRedo = indexRef.current < historyRef.current.length - 1
+  }, [updateHistoryFlags])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -64,6 +70,12 @@ export function useUndoRedo<T>(initialState: T) {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [undo, redo])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setCanUndo(indexRef.current > 0)
+    setCanRedo(indexRef.current < historyRef.current.length - 1)
+  })
 
   const reset = useCallback((newInitialState: T) => {
     historyRef.current = [newInitialState]

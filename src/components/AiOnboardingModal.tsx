@@ -67,7 +67,6 @@ Instructions for the AI:
     }
 
     try {
-      // Clean up markdown block if the AI wrapped it in ```json ... ```
       let cleaned = val.trim()
       if (cleaned.startsWith('```')) {
         const lines = cleaned.split('\n')
@@ -137,7 +136,7 @@ Instructions for the AI:
               <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-display flex items-center gap-1.5">
                 AI Resume Fast Fill
               </h3>
-              <p className="text-[11px] text-zinc-400 mt-0.5">Let AI build your resume in seconds using our JSON template</p>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Use AI to build your resume in seconds</p>
             </div>
           </div>
           <button
@@ -172,13 +171,9 @@ Instructions for the AI:
               }`}
             >
               {copiedTemplate ? (
-                <>
-                  <Check className="w-3.5 h-3.5" /> Copied Template!
-                </>
+                <><Check className="w-3.5 h-3.5" /> Copied Template!</>
               ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" /> Copy JSON Schema Template
-                </>
+                <><Copy className="w-3.5 h-3.5" /> Copy JSON Schema Template</>
               )}
             </button>
           </div>
@@ -205,13 +200,9 @@ Instructions for the AI:
               }`}
             >
               {copiedPrompt ? (
-                <>
-                  <Check className="w-3.5 h-3.5" /> Copied Prompt & Instructions!
-                </>
+                <><Check className="w-3.5 h-3.5" /> Copied Prompt & Instructions!</>
               ) : (
-                <>
-                  <Brain className="w-3.5 h-3.5" /> Copy AI Instruction Prompt
-                </>
+                <><Brain className="w-3.5 h-3.5" /> Copy AI Instruction Prompt</>
               )}
             </button>
           </div>
@@ -246,7 +237,7 @@ Instructions for the AI:
               )}
 
               {parsedData && (
-                <div className="flex items-center gap-1.5 text-[10px] text-emerald-450 font-bold bg-emerald-500/5 border border-emerald-950/30 p-2 rounded-lg animate-fade-in">
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-950/30 p-2 rounded-lg">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>Valid CV schema parsed successfully! Ready to import.</span>
                 </div>
@@ -268,7 +259,7 @@ Instructions for the AI:
             disabled={!parsedData}
             className={`flex-1 h-10 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer ${
               parsedData
-                ? 'bg-[#e0314f] hover:bg-[#e54b64] text-white shadow-rose-950/20 active:scale-98 animate-pulse'
+                ? 'bg-[#e0314f] hover:bg-[#e54b64] text-white shadow-rose-950/20 active:scale-98'
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed'
             }`}
           >
