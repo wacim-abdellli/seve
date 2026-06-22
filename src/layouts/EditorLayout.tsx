@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -486,7 +486,7 @@ export default function EditorLayout() {
     }
   }
 
-  const editorContext: EditorContextType = {
+  const editorContext = useMemo<EditorContextType>(() => ({
     activeMode, setActiveMode, openDrawer,
     activeStudioSection, setActiveStudioSection,
     pageCount, setPageCount,
@@ -497,7 +497,13 @@ export default function EditorLayout() {
     mobileView, setMobileView, themeColor, setThemeColor,
     handlePrint,
     showAiGuide, setShowAiGuide,
-  }
+  }), [
+    activeMode, openDrawer, activeStudioSection, pageCount, templateFontSize,
+    templateFontWeight, stylePrefs, sectionOrder, mobileView, themeColor,
+    handlePrint, showAiGuide, setActiveMode, setActiveStudioSection, setPageCount,
+    setTemplateFontSize, setTemplateFontWeight, updateStylePrefs, updateSectionOrder,
+    setMobileView, setThemeColor, setShowAiGuide,
+  ])
 
   return (
     <div className="select-none h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
