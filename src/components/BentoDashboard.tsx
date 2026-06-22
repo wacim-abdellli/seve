@@ -15,7 +15,8 @@ import {
   Heart,
   BookOpen,
   Phone,
-  HandHeart
+  HandHeart,
+  Globe
 } from 'lucide-react'
 
 interface BentoDashboardProps {
@@ -168,6 +169,7 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
     { id: 'experience', icon: Briefcase },
     { id: 'education', icon: GraduationCap },
     { id: 'skills', icon: Wrench },
+    { id: 'languages', icon: Globe },
     { id: 'projects', icon: FolderGit },
     { id: 'awards', icon: Trophy },
     { id: 'certifications', icon: Award },
