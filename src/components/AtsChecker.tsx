@@ -154,6 +154,10 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
+  useEffect(() => {
+    setJdDraft(jobDescription)
+  }, [jobDescription])
+
   // FNV-1a hash for fast resume comparison (avoids JSON.stringify on every render)
   const hashResume = useCallback((data: ResumeData): string => {
     const str = JSON.stringify(data)
