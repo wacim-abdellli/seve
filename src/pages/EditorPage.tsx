@@ -16,20 +16,35 @@ import {
   Trophy, Award, Heart, BookOpen, Phone, HandHeart,
 } from 'lucide-react'
 
-const overviewSections = [
-  { id: 'contact' as const, title: 'Contact Info', icon: UserIcon, colorClass: 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/15 group-hover:text-blue-300' },
-  { id: 'summary' as const, title: 'Profile Summary', icon: FileTextIcon, colorClass: 'bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/15 group-hover:text-purple-300' },
-  { id: 'experience' as const, title: 'Work Experience', icon: BriefcaseIcon, colorClass: 'bg-rose-500/10 text-rose-400 group-hover:bg-rose-500/15 group-hover:text-rose-300' },
-  { id: 'education' as const, title: 'Education History', icon: GraduationCapIcon, colorClass: 'bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/15 group-hover:text-amber-300' },
-  { id: 'skills' as const, title: 'Skills & Stack', icon: Code2, colorClass: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/15 group-hover:text-emerald-300' },
-  { id: 'languages' as const, title: 'Languages', icon: Globe, colorClass: 'bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/15 group-hover:text-indigo-300' },
-  { id: 'projects' as const, title: 'Projects', icon: FolderOpen, colorClass: 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/15 group-hover:text-cyan-300' },
-  { id: 'awards' as const, title: 'Awards & Honors', icon: Trophy, colorClass: 'bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/15 group-hover:text-yellow-300' },
-  { id: 'certifications' as const, title: 'Certifications', icon: Award, colorClass: 'bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/15 group-hover:text-sky-300' },
-  { id: 'interests' as const, title: 'Interests', icon: Heart, colorClass: 'bg-pink-500/10 text-pink-400 group-hover:bg-pink-500/15 group-hover:text-pink-300' },
-  { id: 'publications' as const, title: 'Publications', icon: BookOpen, colorClass: 'bg-orange-500/10 text-orange-400 group-hover:bg-orange-500/15 group-hover:text-orange-300' },
-  { id: 'references' as const, title: 'References', icon: Phone, colorClass: 'bg-teal-500/10 text-teal-400 group-hover:bg-teal-500/15 group-hover:text-teal-300' },
-  { id: 'volunteer' as const, title: 'Volunteer', icon: HandHeart, colorClass: 'bg-violet-500/10 text-violet-400 group-hover:bg-violet-500/15 group-hover:text-violet-300' },
+const sectionGroups = [
+  {
+    label: 'ESSENTIALS',
+    sections: [
+      { id: 'contact' as const, title: 'Contact Info', icon: UserIcon, colorClass: 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/15 group-hover:text-blue-300' },
+      { id: 'summary' as const, title: 'Profile Summary', icon: FileTextIcon, colorClass: 'bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/15 group-hover:text-purple-300' },
+      { id: 'experience' as const, title: 'Work Experience', icon: BriefcaseIcon, colorClass: 'bg-rose-500/10 text-rose-400 group-hover:bg-rose-500/15 group-hover:text-rose-300' },
+      { id: 'education' as const, title: 'Education', icon: GraduationCapIcon, colorClass: 'bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/15 group-hover:text-amber-300' },
+    ],
+  },
+  {
+    label: 'SKILLS & MORE',
+    sections: [
+      { id: 'skills' as const, title: 'Skills & Stack', icon: Code2, colorClass: 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/15 group-hover:text-emerald-300' },
+      { id: 'languages' as const, title: 'Languages', icon: Globe, colorClass: 'bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/15 group-hover:text-indigo-300' },
+      { id: 'projects' as const, title: 'Projects', icon: FolderOpen, colorClass: 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/15 group-hover:text-cyan-300' },
+    ],
+  },
+  {
+    label: 'OPTIONAL',
+    sections: [
+      { id: 'awards' as const, title: 'Awards & Honors', icon: Trophy, colorClass: 'bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/15 group-hover:text-yellow-300' },
+      { id: 'certifications' as const, title: 'Certifications', icon: Award, colorClass: 'bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/15 group-hover:text-sky-300' },
+      { id: 'interests' as const, title: 'Interests', icon: Heart, colorClass: 'bg-pink-500/10 text-pink-400 group-hover:bg-pink-500/15 group-hover:text-pink-300' },
+      { id: 'publications' as const, title: 'Publications', icon: BookOpen, colorClass: 'bg-orange-500/10 text-orange-400 group-hover:bg-orange-500/15 group-hover:text-orange-300' },
+      { id: 'references' as const, title: 'References', icon: Phone, colorClass: 'bg-teal-500/10 text-teal-400 group-hover:bg-teal-500/15 group-hover:text-teal-300' },
+      { id: 'volunteer' as const, title: 'Volunteer', icon: HandHeart, colorClass: 'bg-violet-500/10 text-violet-400 group-hover:bg-violet-500/15 group-hover:text-violet-300' },
+    ],
+  },
 ]
 
 const truncateText = (str: string, max: number) => {
@@ -184,35 +199,55 @@ export default function EditorPage() {
             <div className="hidden lg:flex border-r border-zinc-800 bg-card/65 backdrop-blur-md flex-col flex-shrink-0 h-full overflow-hidden no-print w-[380px]">
               {activeMode === 'studio' ? (
                 <>
-                  <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0">
-                    <h2 className="text-[18px] font-semibold text-white">Resume Builder</h2>
-                    <p className="text-[13px] text-zinc-500 mt-0.5">Click any section to edit</p>
+                  <div className="px-5 pt-5 pb-4 border-b border-zinc-800/40 flex-shrink-0 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-semibold text-white">Resume Builder</h2>
+                      </div>
+                      <span className="text-[11px] text-zinc-500 font-mono whitespace-nowrap">
+                        {Object.values(getSectionStatus(resumeData)).filter(Boolean).length}/13
+                      </span>
+                    </div>
+                    <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#b91c1c] rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${(Object.values(getSectionStatus(resumeData)).filter(Boolean).length / 13) * 100}%` }}
+                      />
+                    </div>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel">
-                    {overviewSections.map((section) => {
-                      const isComplete = getSectionStatus(resumeData)[section.id]
-                      const previewText = getSectionPreview(section.id, resumeData)
-                      const Icon = section.icon
-                      return (
-                        <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className="w-full text-left group flex items-center gap-4 px-5 py-4 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/40 last:border-0 cursor-pointer">
-                          <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
-                            <Icon className="w-4 h-4 transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[15px] font-medium text-white">{section.title}</p>
-                            <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
-                          </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            {isComplete ? (
-                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 select-none font-display">Done</span>
-                            ) : (
-                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-zinc-950/20 border border-zinc-800 border-dashed text-zinc-500 select-none font-display">Edit</span>
-                            )}
-                            <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
-                          </div>
-                        </button>
-                      )
-                    })}
+                    {sectionGroups.map((group) => (
+                      <div key={group.label}>
+                        <div className="px-5 pt-4 pb-1">
+                          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.label}</span>
+                        </div>
+                        {group.sections.map((section) => {
+                          const isComplete = getSectionStatus(resumeData)[section.id]
+                          const previewText = getSectionPreview(section.id, resumeData)
+                          const Icon = section.icon
+                          const isActive = activeStudioSection === section.id
+                          return (
+                            <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-800/40 hover:translate-x-0.5 transition-all cursor-pointer border-l-2 ${isActive ? 'border-[#b91c1c] bg-zinc-800/20' : 'border-transparent'}`}>
+                              <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
+                                <Icon className="w-5 h-5 transition-colors" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-white">{section.title}</p>
+                                <p className="text-[12px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">{previewText}</p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {isComplete ? (
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Complete" />
+                                ) : (
+                                  <span className="w-2 h-2 rounded-full border border-zinc-600 bg-transparent shrink-0" title="Incomplete" />
+                                )}
+                                <ChevronRight className="w-4 h-4 text-zinc-700 opacity-0 group-hover:opacity-100 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ))}
                   </div>
                 </>
               ) : (
@@ -235,38 +270,54 @@ export default function EditorPage() {
             <div className={`w-full bg-card/65 backdrop-blur-md flex flex-col h-full overflow-hidden no-print lg:hidden ${mobileView === 'preview' ? 'hidden' : 'flex'}`}>
               {activeMode === 'studio' ? (
                 <>
-                  <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-[18px] font-semibold text-white">Resume Builder</h2>
-                      <p className="text-[13px] text-zinc-500 mt-0.5">Click any section to edit</p>
+                  <div className="px-5 pt-5 pb-4 border-b border-zinc-800/40 flex-shrink-0 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-semibold text-white">Resume Builder</h2>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-zinc-500 font-mono">{Object.values(getSectionStatus(resumeData)).filter(Boolean).length}/13</span>
+                        <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-9 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">Preview</button>
+                      </div>
                     </div>
-                    <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-10 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">View Resume</button>
+                    <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#b91c1c] rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${(Object.values(getSectionStatus(resumeData)).filter(Boolean).length / 13) * 100}%` }}
+                      />
+                    </div>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel">
-                    {overviewSections.map((section) => {
-                      const isComplete = getSectionStatus(resumeData)[section.id]
-                      const previewText = getSectionPreview(section.id, resumeData)
-                      const Icon = section.icon
-                      return (
-                        <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className="w-full text-left group flex items-center gap-4 px-5 py-4 min-h-[56px] hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/40 last:border-0 cursor-pointer active:bg-zinc-800/70">
-                          <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
-                            <Icon className="w-5 h-5 transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[15px] font-medium text-white">{section.title}</p>
-                            <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{previewText}</p>
-                          </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            {isComplete ? (
-                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 select-none font-display">Done</span>
-                            ) : (
-                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-zinc-950/20 border border-zinc-800 border-dashed text-zinc-500 select-none font-display">Edit</span>
-                            )}
-                            <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
-                          </div>
-                        </button>
-                      )
-                    })}
+                    {sectionGroups.map((group) => (
+                      <div key={group.label}>
+                        <div className="px-5 pt-4 pb-1">
+                          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.label}</span>
+                        </div>
+                        {group.sections.map((section) => {
+                          const isComplete = getSectionStatus(resumeData)[section.id]
+                          const previewText = getSectionPreview(section.id, resumeData)
+                          const Icon = section.icon
+                          const isActive = activeStudioSection === section.id
+                          return (
+                            <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-4 px-5 py-3.5 min-h-[56px] hover:bg-zinc-800/40 active:bg-zinc-800/70 transition-all cursor-pointer border-l-2 ${isActive ? 'border-[#b91c1c] bg-zinc-800/20' : 'border-transparent'}`}>
+                              <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
+                                <Icon className="w-5 h-5 transition-colors" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-white">{section.title}</p>
+                                <p className="text-[12px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">{previewText}</p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {isComplete ? (
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Complete" />
+                                ) : (
+                                  <span className="w-2 h-2 rounded-full border border-zinc-600 bg-transparent shrink-0" title="Incomplete" />
+                                )}
+                                <ChevronRight className="w-4 h-4 text-zinc-700 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ))}
                   </div>
                 </>
               ) : (
