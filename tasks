@@ -1,289 +1,242 @@
-# 🎨 Editor Page — Complete UX/UI Redesign Guide
-> For the implementer agent. Read every section. Follow in order. No shortcuts.
-important : read the guide section by section and implement in the order listed — header → sidebar → preview → mode rail → polish. Do NOT try to do everything at once.
----
-
-## 🔍 What's Wrong Right Now (Diagnosis)
-
-Looking at the current screenshot and code, here are the **exact problems**:
-
-### 1. Top Header Bar — Cluttered & Overloaded
-- Too many items crammed in one row with no visual breathing room
-- The "Landing" back button + logo + resume picker + undo/redo + cloud status + export button are all fighting for attention with zero hierarchy
-- The `Export PDF` button looks the same weight as other buttons — it should be the **clear primary CTA**
-- The `AI Fill Guide` and `ATS Audit` buttons look like unrelated orphan pills
-- Dividers (`w-px h-5 bg-border`) are used inconsistently and create visual noise
-- Resume name truncates weirdly on medium screens
-
-### 2. Left Sidebar — Generic List, Zero Visual Interest
-- The section cards (Contact Info, Work Experience, etc.) look like a plain Android settings list from 2015
-- The icon backgrounds (`w-9 h-9 rounded-xl`) are too small and the colors are too muted to create delight
-- The "DONE" / "Edit" pills are tiny (`text-[9px]`) and hard to read
-- There's no **completion progress indicator** — users have no sense of "how far am I?"
-- The section subtitle (preview text) truncates immediately — feels thrown away
-- Zero micro-animation on hover — the `hover:bg-zinc-800/50` is barely perceptible
-- The sidebar header ("Resume Builder / Click any section to edit") is boring — generic SaaS filler text
-- No visual grouping — all 13 sections are dumped in one flat list with just thin border dividers
-
-### 3. Preview Area — Wasted Space & Bad Framing
-- The A4 resume preview just floats on `bg-zinc-950` with no visual framing or depth
-- There's no "paper" illusion — the resume looks like it's embedded in a dark void
-- The zoom level display (`94%`) in the top bar is useful but easy to miss
-- The LIVE / HEATMAP toggle at the top of the preview looks disconnected from the preview itself
-- Scrolling in the preview area is jarring — no smooth scroll or padding management
-- The preview area has no top-right floating actions (like a "fullscreen preview" button)
-
-### 4. Mode Switching (Studio / Design / Preview / Analyze)
-- The mode rail (the icon-only left column) has no labels — users can't tell what each icon does
-- Active state contrast is too subtle
-- No animated transition between mode switches feels cheap
-
-### 5. Typography & Color Issues
-- Overuse of `text-zinc-500` for subtitles → everything blends into gray soup
-- Section titles use `text-[15px]` — inconsistent with the rest of the app's font scale
-- The accent color (`#b91c1c` red) appears everywhere but has no semantic meaning — it's on primary CTA, active states, and decoration all at once
+# 🔍 Editor Page — UX/UI Audit Report
+> Comparing the original guide requirements vs. what was actually implemented.
 
 ---
 
-## ✅ What To Build — Concrete Implementation Guide
+## ✅ PASSED — What Was Done Correctly
 
-### PART 1: Top Header Redesign
-
-**Goal:** Create a clear 3-zone header with left navigation, center status, right actions.
-
-#### Zone 1 — Left: Navigation & Identity (keep compact)
-```
-[← Back]  [S• eve]  [product Manager ▾  3]
-```
-- Keep the back arrow + logo + resume switcher together
-- Resume switcher button: show name + version count badge. Make it look like a pill selector, NOT a folder button.
-- Remove the `FolderOpen` icon from the resume switcher — replace with a subtle `ChevronDown` to signal it's a dropdown
-- Undo/Redo: move these OUT of the header entirely. Put them inside the sidebar header (near "Resume Builder" title). They belong with editing tools, not global nav.
-
-#### Zone 2 — Center: Cloud Status (elevated, clean pill)
-```
-[☁ Cloud saved]
-```
-- This should be a single, animated status pill in the EXACT center of the header
-- Color-coded: emerald for saved, amber for syncing (spinning icon), rose for unsaved, red for error
-- When status is "unsaved", show a **Save** micro-button inside the pill (not separate Save/Discard buttons)
-- Width: fixed `w-[140px]` so the header doesn't shift layout when text changes
-
-#### Zone 3 — Right: Primary & Secondary Actions
-```
-[ATS Audit]  [AI Fill ✨]  [⚙]  [user avatar]  [Export PDF ↓]
-```
-- `Export PDF` = **primary red button**, always visible, always rightmost
-- `AI Fill Guide` = secondary ghost button with sparkle icon
-- `ATS Audit` = ghost button, slightly lower visual weight
-- Settings icon = small icon button (no label)
-- User avatar = compact avatar with dropdown
-
-**Header height**: increase from ~`py-3` to `h-14` (56px) for better breathing room.
+| # | What Was Requested | Status |
+|---|-------------------|--------|
+| 1 | 3-zone header (left nav / center cloud / right actions) | ✅ Done |
+| 2 | Header height increased to `h-14` | ✅ Done |
+| 3 | Resume switcher uses `ChevronDown`, not `FolderOpen` | ✅ Done |
+| 4 | Center cloud pill with fixed `w-[140px]` | ✅ Done |
+| 5 | Save button embedded inside cloud pill (unsaved state) | ✅ Done |
+| 6 | `Export PDF` = primary red button, rightmost | ✅ Done |
+| 7 | Undo/Redo removed from header | ✅ Done |
+| 8 | Sidebar shows completion progress bar `X/13` | ✅ Done |
+| 9 | Progress bar animates with `transition-all duration-700` | ✅ Done |
+| 10 | Sections grouped: ESSENTIALS / SKILLS & MORE / OPTIONAL | ✅ Done |
+| 11 | Group labels styled correctly (10px, uppercase, zinc-600) | ✅ Done |
+| 12 | Icon containers upgraded from `w-9 h-9` → `w-10 h-10 rounded-2xl` | ✅ Done |
+| 13 | Icon size upgraded from `w-4 h-4` → `w-5 h-5` | ✅ Done |
+| 14 | Status indicator changed from text pills → dot (● / ○) | ✅ Done |
+| 15 | Chevron hidden by default, shows on hover | ✅ Done |
+| 16 | Active section gets left border accent `border-l-2 border-[#b91c1c]` | ✅ Done |
+| 17 | Preview area uses dot-grid background (`.preview-dot-bg`) | ✅ Done |
+| 18 | Floating toolbar above preview (LIVE + font size + page count) | ✅ Done |
+| 19 | `preview-toolbar` CSS added with blur + border | ✅ Done |
+| 20 | `preview-paper-shadow` CSS added | ✅ Done |
+| 21 | Preview container has `scroll-smooth` + `pb-16` | ✅ Done |
+| 22 | ModeRail now shows labels (Edit / Design / Preview / ATS) on desktop | ✅ Done |
+| 23 | ModeRail active state has left-edge indicator `w-1 h-6 rounded-full bg-[#b91c1c]` | ✅ Done |
+| 24 | Mobile: ModeRail becomes bottom nav bar with labels | ✅ Done |
+| 25 | Section preview text uses `line-clamp-2` instead of `truncate` | ✅ Done |
+| 26 | Font sizes cleaned up (`text-base`, `text-sm`, `text-lg`) | ✅ Mostly done |
 
 ---
 
-### PART 2: Left Sidebar Complete Overhaul
+## ❌ FAILED / INCOMPLETE — What Still Needs Fixing
 
-**Goal:** Transform the flat list into a **progress-driven section navigator**.
+### 🔴 Issue 1: Preview floating toolbar is WRONG implementation
+**What was asked:** A toolbar inside the preview area showing LIVE status, zoom control (+/-), and a fullscreen button.
 
-#### 2A — Sidebar Header
-Replace the generic title with a **completion progress block**:
+**What was built:** A tiny read-only info strip showing LIVE + font size + page count. No zoom controls, no interaction. It's just a label, not a toolbar.
 
+**Fix instruction for implementer:**
+```tsx
+// Replace the current preview-toolbar div with this:
+<div className="sticky top-4 z-20 flex items-center justify-center mb-4 no-print">
+  <div className="preview-toolbar inline-flex items-center gap-2 px-3 py-1.5 rounded-full">
+    {/* Live indicator */}
+    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+    <span className="text-[10px] font-bold text-zinc-400">LIVE</span>
+    <span className="w-px h-4 bg-zinc-700" />
+    {/* Page count */}
+    <span className="text-[10px] text-zinc-500 font-mono">{pageCount}p</span>
+    <span className="w-px h-4 bg-zinc-700" />
+    {/* Font size controls - these are actual interactive buttons */}
+    <button
+      onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
+      className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer text-[10px] font-bold"
+      title="Decrease font size"
+    >−</button>
+    <span className="text-[10px] font-mono text-zinc-300 w-8 text-center">{templateFontSize}pt</span>
+    <button
+      onClick={() => onChangeFontSize(Math.min(16, Number((templateFontSize + 0.5).toFixed(1))))}
+      className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer text-[10px] font-bold"
+      title="Increase font size"
+    >+</button>
+  </div>
+</div>
 ```
-Resume Builder
-━━━━━━━━━━━━━━━━━━━━━  8/13 complete
-[████████████░░░░░░░░]  62%
-```
-
-- Show a thin progress bar (`h-1 rounded-full`) under the title
-- Show "X of 13 sections complete" in small muted text
-- This gives users a sense of progress — **huge UX improvement**
-
-#### 2B — Section Cards (the main list)
-
-Each section row should feel like a **card**, not a list item:
-
-```
-┌─────────────────────────────────────────┐
-│  [🟣 icon]  Work Experience        DONE │
-│             Senior Software Eng at...    │
-│                                    >    │
-└─────────────────────────────────────────┘
-```
-
-Specific changes:
-1. **Icon container**: increase from `w-9 h-9` to `w-10 h-10`, use `rounded-2xl` (more modern pill shape)
-2. **Icon size**: increase from `w-4 h-4` to `w-5 h-5`
-3. **Section title**: use `text-sm font-semibold` (not `text-[15px]` raw)
-4. **Preview subtitle**: allow 2 lines max (`line-clamp-2`), not `truncate` — this shows more context
-5. **Status badge**: 
-   - DONE → small filled dot (●) in emerald, NOT an uppercase pill text. More modern, less noisy.
-   - Edit → small ring (○) in zinc-600. Minimal.
-6. **Row hover**: use `hover:bg-zinc-800/40` + `hover:translate-x-0.5` on the entire row for a subtle "lift" effect
-7. **Active section**: when a section drawer is open, highlight the corresponding row with a left border accent (`border-l-2 border-[accentColor]`)
-8. **Chevron**: only show on hover (`opacity-0 group-hover:opacity-100 transition-opacity`) to reduce clutter
-
-#### 2C — Section Grouping
-Visually group the 13 sections into 3 logical clusters:
-
-```
-ESSENTIALS
-  Contact Info
-  Profile Summary
-  Work Experience
-  Education
-
-SKILLS & MORE
-  Skills & Stack
-  Languages
-  Projects
-
-OPTIONAL
-  Awards & Honors
-  Certifications
-  Interests
-  Publications
-  References
-  Volunteer
-```
-
-- Use tiny uppercase group labels (`text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-5 pt-4 pb-1`) above each group
-- Add a single thin divider line between groups
 
 ---
 
-### PART 3: Preview Area Enhancement
+### 🔴 Issue 2: `preview-paper-shadow` CSS class is defined but NEVER applied
+**Where:** `index.css` defines `.preview-paper-shadow` but no element in `EditorPage.tsx` actually uses it.
 
-**Goal:** Make the A4 preview feel like a real document in a professional viewer.
-
-1. **Background**: Change from flat `bg-zinc-950` to a subtle **grid or dot pattern** background:
-   ```css
-   background-color: #0a0a0f;
-   background-image: radial-gradient(circle, #ffffff08 1px, transparent 1px);
-   background-size: 24px 24px;
-   ```
-
-2. **Paper shadow**: Give the resume card itself a stronger shadow:
-   ```css
-   box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
-   ```
-
-3. **Floating toolbar** (above the preview, inside the preview pane):
-   Add a floating pill toolbar positioned top-center of the preview area:
-   ```
-   [  LIVE  |  HEATMAP  ]    [-  94%  +]    [⛶ Fullscreen]
-   ```
-   - Style: `bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-full px-4 py-1.5`
-   - Position: `sticky top-4` inside the preview scroll container
-
-4. **Scroll behavior**: Add `scroll-smooth` and `pb-16` bottom padding to the preview container so the resume doesn't end right at the container edge
+**Fix instruction:** In `EditorPage.tsx`, find the `<ResumePreview ... />` wrapper and add the class to its parent container. The resume card itself (the white A4 paper) needs this shadow. Look inside `ResumePreview.tsx` for the outermost white div and add `preview-paper-shadow` to it, OR wrap `<ResumePreview>` in a div with this class:
+```tsx
+<div className="preview-paper-shadow rounded-sm overflow-hidden">
+  <ResumePreview ... />
+</div>
+```
 
 ---
 
-### PART 4: Mode Rail (Left Icon Strip)
+### 🔴 Issue 3: Progress bar color is hardcoded red instead of using `themeColor`
+**Where:** `EditorPage.tsx` lines 213 and 283
 
-The `ModeRail` component (the tiny left icon strip) needs labels:
+**Current code:**
+```tsx
+className="h-full bg-[#b91c1c] rounded-full transition-all duration-700 ease-out"
+```
 
-1. On **desktop** (≥1280px): show icon + label underneath
-   ```
-   ✏️
-   Edit
-   ```
-   Each rail button: `flex flex-col items-center gap-1 py-3 px-2 w-16`
+**Problem:** The theme color is dynamic (users can change it in the Design panel). But the progress bar always stays hardcoded red. This is inconsistent.
 
-2. On **tablet/mobile**: icon only (keep current behavior)
-
-3. **Active state**: instead of just color change, add a `w-1 h-6 rounded-full bg-[accentColor]` indicator on the LEFT edge of the active item (like VS Code sidebar)
-
----
-
-### PART 5: Micro-Animations (Add These Everywhere)
-
-These small details make the UI feel premium:
-
-1. **Section drawer open**: slide in from right with spring easing
-   ```
-   initial: { x: '100%', opacity: 0 }
-   animate: { x: 0, opacity: 1 }
-   transition: { type: 'spring', stiffness: 300, damping: 30 }
-   ```
-
-2. **Status pill transition**: when cloud status changes, animate the text with a `crossfade` (opacity 0→1 on new text)
-
-3. **Section card hover**: add `transition-transform duration-150` and `hover:translate-x-1` to the chevron (already partially there but make it more noticeable)
-
-4. **Progress bar**: animate the fill width with `transition-all duration-700 ease-out` when sections complete
-
-5. **Mode switch**: already has framer-motion `AnimatePresence` — good. Just ensure the blur transition feels smooth.
+**Fix instruction:**
+```tsx
+// Change both instances (desktop + mobile sidebar) to:
+style={{ 
+  width: `${(Object.values(getSectionStatus(resumeData)).filter(Boolean).length / 13) * 100}%`,
+  backgroundColor: themeColor
+}}
+className="h-full rounded-full transition-all duration-700 ease-out"
+```
+> Note: `themeColor` is already available in the `ctx` object, just make sure it is destructured in `EditorPage.tsx`.
 
 ---
 
-### PART 6: Typography Fix
+### 🔴 Issue 4: ModeRail active state uses hardcoded red instead of `themeColor`
+**Where:** `ModeRail.tsx` lines 64 and 67
 
-Replace all raw px font sizes with a consistent scale:
+**Current code:**
+```tsx
+isActive ? 'text-red-400' : '...'
+<span className="absolute left-0 ... bg-[#b91c1c]" />
+```
 
-| Current | Replace With | Tailwind Class |
-|---------|-------------|----------------|
-| `text-[9px]` | 10px | `text-[10px]` (group labels only) |
-| `text-[11px]` | 11px | keep for meta/helper text |
-| `text-[13px]` | 13px | `text-sm` |
-| `text-[15px]` | 15px | `text-base` |
-| `text-[18px]` | 18px | `text-lg` |
+**Problem:** Active mode indicator never follows the user's chosen theme color.
 
-Use `font-medium` (500) for section titles, `font-normal` (400) for preview text, `font-semibold` (600) for header titles.
+**Fix instruction:** Pass `themeColor` as a prop to `ModeRail`:
+```tsx
+// 1. In ModeRail.tsx — add to interface:
+export interface ModeRailProps {
+  activeMode: 'studio' | 'design' | 'preview' | 'analyze'
+  onChangeMode: (mode: 'studio' | 'design' | 'preview' | 'analyze') => void
+  onSettingsClick: () => void
+  themeColor?: string  // ADD THIS
+}
+
+// 2. Use inline style for the left-edge indicator:
+{isActive && (
+  <span
+    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full"
+    style={{ backgroundColor: themeColor || '#b91c1c' }}
+  />
+)}
+
+// 3. For active text color, use inline style:
+<button style={{ color: isActive ? (themeColor || '#f87171') : undefined }} ...>
+
+// 4. In EditorLayout.tsx, update the ModeRail call:
+<ModeRail
+  activeMode={activeMode}
+  onChangeMode={...}
+  onSettingsClick={...}
+  themeColor={themeColor}   // ADD THIS
+/>
+```
 
 ---
 
-### PART 7: Color Semantic Clarity
+### 🟡 Issue 5: Sidebar header has no dynamic subtitle
+**What was asked:** A subtitle that tells users how many sections remain.
 
-The red accent `#b91c1c` is overused. Assign semantic roles:
+**What was built:** Just the count "11/13" in mono font — no human-readable context text.
 
-| Role | Color | Usage |
+**Fix instruction:** Below the `h2` title, add:
+```tsx
+const completedCount = Object.values(getSectionStatus(resumeData)).filter(Boolean).length
+// Then in JSX:
+<p className="text-[11px] text-zinc-500 mt-0.5">
+  {completedCount === 13
+    ? 'All sections complete ✓'
+    : `${13 - completedCount} section${13 - completedCount !== 1 ? 's' : ''} remaining`}
+</p>
+```
+> Add this to BOTH the desktop and mobile sidebar headers.
+
+---
+
+### 🟡 Issue 6: Duplicate toolbar conflict — old inner toolbar + new floating toolbar
+**What's happening:** The `ResumePreview` component likely still renders its own internal `LIVE | HEATMAP | 87%` toolbar bar. Combined with the new floating toolbar, there are two toolbars stacked.
+
+**Fix instruction:** Open `ResumePreview.tsx` and find the internal top bar that renders the LIVE/HEATMAP/zoom controls. Add `hidden` or `no-print` and conditionally suppress it, since the floating toolbar now handles that role. Or pass a prop `hideInternalToolbar={true}` to `ResumePreview` and respect it inside.
+
+---
+
+### 🟡 Issue 7: `hover:translate-x-0.5` on section buttons causes layout shift on Windows
+**Where:** `EditorPage.tsx` line 230
+
+**Problem:** On Windows Chromium with an `overflow-hidden` parent, applying `translateX` to a full-width `w-full` button causes a 1-pixel horizontal overflow flash on hover.
+
+**Fix instruction:** Remove `hover:translate-x-0.5`. Replace with a border color transition instead:
+```tsx
+// Replace:
+className="... hover:bg-zinc-800/40 hover:translate-x-0.5 transition-all ... border-l-2 ..."
+// With:
+className={`... transition-all duration-150 border-l-2
+  ${isActive
+    ? 'border-[themeColor] bg-zinc-800/20 hover:bg-zinc-800/30'
+    : 'border-transparent hover:border-zinc-700 hover:bg-zinc-800/40'
+  }`}
+```
+
+---
+
+### 🟡 Issue 8: Mobile scrollable section list gets hidden behind bottom nav
+**Where:** `EditorPage.tsx` — mobile sidebar `overflow-y-auto` div
+
+**Problem:** The bottom nav is 64px tall (`h-16`). The outer container has `pb-16`, but the inner `overflow-y-auto form-panel` div does NOT, so the last section card scrolls behind the bottom bar.
+
+**Fix instruction:** Add `pb-16 lg:pb-0` to the inner scrollable div:
+```tsx
+<div className="flex-1 overflow-y-auto form-panel pb-16 lg:pb-0">
+  {sectionGroups.map(...)}
+</div>
+```
+> Apply this to the mobile sidebar only (the `lg:hidden` block).
+
+---
+
+## 📊 Score Summary
+
+| Area | Score | Notes |
 |------|-------|-------|
-| **Primary CTA** | `#b91c1c` (red-700) | Export PDF button ONLY |
-| **Interactive accent** | Use `themeColor` variable | Active states, focus rings |
-| **Done / Success** | `#10b981` (emerald-500) | Completion indicators |
-| **Warning / Unsaved** | `#f59e0b` (amber-500) | Cloud status |
-| **Muted text** | `#71717a` (zinc-500) | Subtitles, helpers |
-| **Body text** | `#e4e4e7` (zinc-200) | Section titles |
+| Header layout | 9/10 | ✅ Excellent. 3-zone clean. |
+| Sidebar grouping | 10/10 | ✅ Perfect |
+| Section cards | 8/10 | ⚠ hover translate issue on Windows |
+| Progress bar | 6/10 | ❌ Hardcoded red, ignores themeColor |
+| Preview background | 10/10 | ✅ Dot grid done |
+| Preview toolbar | 4/10 | ❌ Read-only, no interactive zoom |
+| Paper shadow | 2/10 | ❌ CSS exists, never applied |
+| ModeRail labels | 10/10 | ✅ Done on desktop + mobile |
+| ModeRail active color | 5/10 | ❌ Hardcoded red |
+| Theme color consistency | 3/10 | ❌ Multiple hardcoded `#b91c1c` remain |
+
+**Overall: 67/100 — Good foundation. 5 critical issues remain.**
 
 ---
 
-## 🚫 Things To NOT Break
+## 🎯 Fix Priority Order for Implementer
 
-1. **Do NOT touch** `ResumePreview` component internals — only its container wrapper
-2. **Do NOT change** the `openDrawer` / `closeDrawer` logic — only visual styling
-3. **Do NOT remove** the `AnimatePresence` motion wrapper in `EditorPage.tsx`
-4. **Do NOT change** the cloud sync logic — only the visual indicator UI
-5. **Keep the print/no-print CSS classes intact** — these control PDF export
-6. **Keep all `cursor-pointer` classes** — they are important for touch UX
-7. **Do NOT change** the mobile `mobileView` toggle logic — only its styling
-
----
-
-## 📁 Files To Edit
-
-| File | What To Change |
-|------|---------------|
-| `src/layouts/EditorLayout.tsx` | Header zones, cloud status pill, user menu |
-| `src/pages/EditorPage.tsx` | Sidebar grouping, progress bar, section cards, preview wrapper |
-| `src/components/ModeRail.tsx` (if exists) | Add labels, better active indicator |
-| `src/index.css` | Add `.preview-dot-bg` utility, tweak scrollbar |
-
----
-
-## ✅ Final Checklist Before Done
-
-- [ ] Header has 3 clear zones: left nav, center status, right actions
-- [ ] Sidebar shows completion progress bar (X/13 sections)
-- [ ] Sections are grouped into ESSENTIALS / SKILLS / OPTIONAL
-- [ ] Section cards have larger icons, cleaner status dots, 2-line previews
-- [ ] Active section in drawer is highlighted with left border
-- [ ] Preview area has dot-grid background and stronger paper shadow
-- [ ] Preview has a floating toolbar (zoom + view mode)
-- [ ] Mode rail has labels on desktop
-- [ ] All font sizes follow the defined scale
-- [ ] Red accent only used on primary Export PDF button
-- [ ] All animations use 150–300ms timing
-- [ ] No horizontal overflow at any breakpoint
+1. 🔴 Apply `preview-paper-shadow` to resume card wrapper
+2. 🔴 Make preview toolbar interactive (zoom −/+ buttons)
+3. 🔴 Pass `themeColor` to `ModeRail` + use for active indicator
+4. 🔴 Use `themeColor` for progress bar fill (both desktop + mobile)
+5. 🟡 Add dynamic subtitle to sidebar header
+6. 🟡 Investigate + hide duplicate old toolbar in `ResumePreview`
+7. 🟡 Remove `hover:translate-x-0.5` from section buttons
+8. 🟡 Add `pb-16 lg:pb-0` to mobile scrollable section list

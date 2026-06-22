@@ -38,6 +38,7 @@ interface ResumePreviewProps {
   onChangeColor?: (color: string) => void
   stylePrefs?: ResumeStylePreferences
   onTriggerImport?: () => void
+  hideToolbar?: boolean
 }
 
 export const templatesList: { id: Template; label: string; colorDot: string }[] = [
@@ -78,7 +79,8 @@ export default function ResumePreview({
   templateFontWeight,
   themeColor,
   stylePrefs,
-  onTriggerImport
+  onTriggerImport,
+  hideToolbar
 }: ResumePreviewProps) {
   const { showToast } = useToast()
   const [atsMode, setAtsMode] = useState(false)
@@ -298,7 +300,7 @@ export default function ResumePreview({
     <div className="w-full flex flex-col gap-4 select-text relative">
       
       {/* Top Inspector Bar */}
-      {!isEmpty && (
+      {!isEmpty && !hideToolbar && (
         <div className="flex items-center justify-between px-4 h-12 bg-zinc-950 border border-zinc-800 rounded-t-xl no-print select-none relative z-40 w-full animate-fade-in">
           
           {/* LEFT GROUP: Document View Settings */}

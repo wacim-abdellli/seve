@@ -668,7 +668,7 @@ export default function EditorLayout() {
           <SectionSidebar activeMode={activeMode} onModeChange={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onOpenSection={openDrawer} />
         </div>
 
-        <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} />
+        <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} themeColor={themeColor} />
 
         <div className="flex flex-1 flex-row overflow-hidden relative bg-transparent pb-16 lg:pb-0">
           <Outlet context={editorContext} />

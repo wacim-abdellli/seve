@@ -79,6 +79,8 @@ export default function EditorPage() {
 
   const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, pageCount, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint, setShowAiGuide } = ctx
 
+  const completedCount = Object.values(getSectionStatus(resumeData)).filter(Boolean).length
+
   const renderDesignControls = () => {
     return (
       <div className="space-y-6">
@@ -203,15 +205,18 @@ export default function EditorPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-base font-semibold text-white">Resume Builder</h2>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                          {completedCount === 13 ? 'All sections complete ✓' : `${13 - completedCount} section${13 - completedCount !== 1 ? 's' : ''} remaining`}
+                        </p>
                       </div>
                       <span className="text-[11px] text-zinc-500 font-mono whitespace-nowrap">
-                        {Object.values(getSectionStatus(resumeData)).filter(Boolean).length}/13
+                        {completedCount}/13
                       </span>
                     </div>
                     <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#b91c1c] rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${(Object.values(getSectionStatus(resumeData)).filter(Boolean).length / 13) * 100}%` }}
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${(completedCount / 13) * 100}%`, backgroundColor: themeColor }}
                       />
                     </div>
                   </div>
@@ -227,7 +232,7 @@ export default function EditorPage() {
                           const Icon = section.icon
                           const isActive = activeStudioSection === section.id
                           return (
-                            <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-800/40 hover:translate-x-0.5 transition-all cursor-pointer border-l-2 ${isActive ? 'border-[#b91c1c] bg-zinc-800/20' : 'border-transparent'}`}>
+                            <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-4 px-5 py-3.5 transition-all duration-150 cursor-pointer border-l-2 ${isActive ? 'border-[#b91c1c] bg-zinc-800/20 hover:bg-zinc-800/30' : 'border-transparent hover:border-zinc-700 hover:bg-zinc-800/40'}`}>
                               <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
                                 <Icon className="w-5 h-5 transition-colors" />
                               </div>
@@ -272,20 +277,25 @@ export default function EditorPage() {
                 <>
                   <div className="px-5 pt-5 pb-4 border-b border-zinc-800/40 flex-shrink-0 space-y-3">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-base font-semibold text-white">Resume Builder</h2>
+                      <div>
+                        <h2 className="text-base font-semibold text-white">Resume Builder</h2>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                          {completedCount === 13 ? 'All sections complete ✓' : `${13 - completedCount} section${13 - completedCount !== 1 ? 's' : ''} remaining`}
+                        </p>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-zinc-500 font-mono">{Object.values(getSectionStatus(resumeData)).filter(Boolean).length}/13</span>
+                        <span className="text-[11px] text-zinc-500 font-mono">{completedCount}/13</span>
                         <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-9 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">Preview</button>
                       </div>
                     </div>
                     <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#b91c1c] rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${(Object.values(getSectionStatus(resumeData)).filter(Boolean).length / 13) * 100}%` }}
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${(completedCount / 13) * 100}%`, backgroundColor: themeColor }}
                       />
                     </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto form-panel">
+                  <div className="flex-1 overflow-y-auto form-panel pb-16 lg:pb-0">
                     {sectionGroups.map((group) => (
                       <div key={group.label}>
                         <div className="px-5 pt-4 pb-1">
@@ -354,15 +364,26 @@ export default function EditorPage() {
                   </div>
                 )}
                 <div className="sticky top-4 z-20 flex items-center justify-center mb-4 no-print">
-                  <div className="preview-toolbar inline-flex items-center gap-3 px-4 py-1.5 rounded-full">
+                  <div className="preview-toolbar inline-flex items-center gap-2 px-3 py-1.5 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span className="text-[10px] font-bold text-zinc-400">LIVE</span>
-                    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="w-px h-4 bg-zinc-700" />
-                    <span className="text-[10px] font-mono text-zinc-500">{templateFontSize}pt</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">{pageCount}p</span>
                     <span className="w-px h-4 bg-zinc-700" />
-                    <span className="text-[10px] text-zinc-600">{pageCount}p</span>
+                    <button
+                      onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
+                      className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer text-[10px] font-bold"
+                      title="Decrease font size"
+                    >−</button>
+                    <span className="text-[10px] font-mono text-zinc-300 w-8 text-center">{templateFontSize}pt</span>
+                    <button
+                      onClick={() => onChangeFontSize(Math.min(16, Number((templateFontSize + 0.5).toFixed(1))))}
+                      className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer text-[10px] font-bold"
+                      title="Increase font size"
+                    >+</button>
                   </div>
                 </div>
+                <div className="preview-paper-shadow rounded-sm overflow-hidden">
                 <ResumePreview
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
                   onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
@@ -375,14 +396,16 @@ export default function EditorPage() {
                   themeColor={themeColor} onChangeColor={setThemeColor}
                   stylePrefs={stylePrefs}
                   onTriggerImport={() => setShowAiGuide(true)}
+                  hideToolbar
                 />
+              </div>
               </div>
             </div>
           </div>
         )}
 
         {activeMode === 'preview' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden bg-card/65 backdrop-blur-md p-3 sm:p-5 no-print">
+          <div className="flex-1 flex flex-col h-full overflow-hidden preview-dot-bg p-3 sm:p-5 no-print">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-3 mb-4 flex-shrink-0 gap-3">
               <div>
                 <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
@@ -392,19 +415,24 @@ export default function EditorPage() {
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                 <div className="flex items-center gap-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground hidden sm:inline">Style Template:</label>
-                  <select value={selectedTemplate} onChange={(e) => updateActiveResume(prev => ({ ...prev, selectedTemplate: e.target.value as Template }))} className="h-8 rounded-md border border-input bg-zinc-950 px-2 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-ring">
-                    <option value="classic">Classic</option>
-                    <option value="modern">Modern</option>
-                    <option value="executive">Executive</option>
-                    <option value="minimalist">Minimalist</option>
-                    <option value="creative">Creative</option>
-                    <option value="compact">Compact</option>
-                    <option value="professional">Professional</option>
-                    <option value="technical">Technical</option>
-                    <option value="academic">Academic</option>
-                    <option value="clean">Clean</option>
-                  </select>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 hidden sm:inline">Template</label>
+                  <div className="relative">
+                    <select value={selectedTemplate} onChange={(e) => updateActiveResume(prev => ({ ...prev, selectedTemplate: e.target.value as Template }))} className="appearance-none h-9 rounded-lg border border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900 hover:border-zinc-700 focus:bg-zinc-900 focus:border-[#b91c1c]/50 px-3 pr-8 text-xs font-bold text-white transition-all cursor-pointer outline-none">
+                      <option value="classic">Classic</option>
+                      <option value="modern">Modern</option>
+                      <option value="executive">Executive</option>
+                      <option value="minimalist">Minimalist</option>
+                      <option value="creative">Creative</option>
+                      <option value="compact">Compact</option>
+                      <option value="professional">Professional</option>
+                      <option value="technical">Technical</option>
+                      <option value="academic">Academic</option>
+                      <option value="clean">Clean</option>
+                    </select>
+                    <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </div>
                 </div>
                 <button onClick={handlePrint} className="font-bold text-xs text-rose-400 bg-rose-950/10 border border-rose-900/40 hover:bg-rose-900/20 hover:text-rose-300 shadow-[0_0_12px_rgba(185,28,28,0.05)] transition-all h-8 px-3 rounded-lg inline-flex items-center gap-1.5 cursor-pointer">
                   <Eye size={13} /> Export PDF
