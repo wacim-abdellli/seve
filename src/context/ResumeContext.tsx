@@ -124,6 +124,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   // Keep reference to prevent fetchAndMergeCloud from changing identity
   const stateRef = useRef(state)
   useEffect(() => { stateRef.current = state })
+  const lastSyncedStateRef = useRef(lastSyncedState)
+  useEffect(() => { lastSyncedStateRef.current = lastSyncedState })
 
   // Reset cloud flags when user ID changes (handles A/B login switch)
   useEffect(() => {
@@ -366,11 +368,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   const discardChanges = useCallback(() => {
     if (window.confirm('Are you sure you want to discard all unsaved changes for this session? This will revert your resume to the last saved cloud version.')) {
-      setState(lastSyncedState)
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(lastSyncedState))
+      const latest = lastSyncedStateRef.current
+      setState(latest)
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(latest))
       showToast('Changes discarded', 'info')
     }
-  }, [lastSyncedState, showToast])
+  }, [showToast])
 
   const hasUnsavedChanges = useMemo(() => {
     if (!user) return false
