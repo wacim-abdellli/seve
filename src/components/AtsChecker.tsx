@@ -191,6 +191,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const scanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scanTimeouts = useRef<ReturnType<typeof setTimeout>[]>([])
   const scanInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const scanVersionRef = useRef(0)
 
   const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
 
@@ -208,6 +209,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
     // Debounce: wait 500ms of no edits before scanning
     if (scanTimer.current) clearTimeout(scanTimer.current)
     scanTimer.current = setTimeout(() => {
+      const currentVersion = ++scanVersionRef.current
       setIsScanning(true)
       dataRef.current = { rHash: hashResume(resumeData), j: jobDescription }
 
@@ -221,23 +223,32 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       delays.forEach((ms, i) => {
         d += ms
         const t = setTimeout(() => {
+          // If a newer scan started, this one is stale — bail out
+          if (scanVersionRef.current !== currentVersion) return
           setScanStage(i + 1)
           if (i === delays.length - 1) {
-            setTimeout(() => {
+            // Track the finalization timer so it's cleaned up properly
+            const finalTimer = setTimeout(() => {
+              if (scanVersionRef.current !== currentVersion) return
               setIsScanning(false)
               setLastAudited(new Date())
-              // Persist last audited data (store hash, not full resume)
               try {
                 localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData))
                 localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
               } catch { /* ignore */ }
             }, 200)
+            scanTimeouts.current.push(finalTimer)
           }
         }, d)
         scanTimeouts.current.push(t)
       })
 
+      if (scanInterval.current) clearInterval(scanInterval.current)
       scanInterval.current = setInterval(() => {
+        if (scanVersionRef.current !== currentVersion) {
+          clearInterval(scanInterval.current!)
+          return
+        }
         setScanLogs(prev => {
           const idx = prev.length
           if (idx >= SCAN_STAGES.length) return prev
