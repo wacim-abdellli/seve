@@ -17,6 +17,50 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { PageViewsWidget } from '@/components/PageViewsWidget'
 
+const templatesInfo = [
+  { id: 'classic', name: 'Classic', font: 'Georgia / Serif', desc: 'Standard single-column layout, highly recommended for traditional finance and legal roles.' },
+  { id: 'modern', name: 'Modern', font: 'Arial / Sans-Serif', desc: 'Sleek, colored headers with a modern structure for tech and startup applications.' },
+  { id: 'executive', name: 'Executive', font: 'EB Garamond / Garamond', desc: 'Elegant, distinguished header bars tailored for senior and management roles.' },
+  { id: 'minimalist', name: 'Minimalist', font: 'Inter / Sans-Serif', desc: 'Airy margins and clean whitespace optimized for maximal readability.' },
+  { id: 'creative', name: 'Creative', font: 'Outfit / Sans-Serif', desc: 'Distinct layout tags with left-border accents for design and marketing.' },
+  { id: 'compact', name: 'Compact', font: 'System UI / Sans', desc: 'Dense single-page design for maximum content in minimal space.' },
+  { id: 'professional', name: 'Professional', font: 'Inter / Sans-Serif', desc: 'Clean business-oriented layout with subtle color accents.' },
+  { id: 'technical', name: 'Technical', font: 'SF Mono / Monospace', desc: 'Monospace tech-optimized template with skill badges.' },
+  { id: 'academic', name: 'Academic', font: 'Georgia / Serif', desc: 'Research-focused layout prioritizing education and publications.' },
+  { id: 'clean', name: 'Clean', font: 'Inter / Sans-Serif', desc: 'Ultra-minimalist design with maximum whitespace and readability.' },
+]
+
+const faqItems = [
+  {
+    q: 'Is Seve really free?',
+    a: 'Yes. The core editor, professional templates, local keyword matching, and ATS compatibility checker are 100% free to try, requiring no credit card or subscription.'
+  },
+  {
+    q: 'How does the ATS compatibility checker work?',
+    a: 'It uses a smart, rule-based local algorithm that scans your resume content. It evaluates section presence, standard date consistency, quantified bullet achievements, use of action verbs, and keyword frequency. No data is sent to external servers for this scoring.'
+  },
+  {
+    q: 'Is my personal data secure?',
+    a: 'Your resume data is saved locally in your browser before sign-in. If you sign in with Google, Seve syncs your resume profiles to Supabase for backup and cross-device access.'
+  },
+  {
+    q: 'Can I use Seve on my phone or tablet?',
+    a: 'Yes. Seve is fully responsive and works in any modern mobile browser. You can build and edit your resume on the go, though a desktop experience is recommended for the best editing workflow.'
+  },
+  {
+    q: 'How do I download my resume as a PDF?',
+    a: 'Once your resume is ready, click the export/download button in the editor. Seve uses your browser\'s built-in print dialog, where you can select "Save as PDF" as the destination. No PDF is uploaded for rendering — the export happens entirely in your browser.'
+  },
+  {
+    q: 'Which template works best for my industry?',
+    a: 'Classic and Executive templates perform best in traditional industries like finance, law, and government. Modern, Technical, and Creative templates are optimized for tech, startups, and design roles. All templates are formatted to be readable by standard ATS parsers.'
+  },
+  {
+    q: 'Can I create multiple resumes?',
+    a: 'Yes. You can create, duplicate, rename, and manage multiple resume profiles from the dashboard. Each one is saved independently in your browser, letting you maintain tailored versions for different job applications.'
+  }
+]
+
 export default function LandingPage() {
   const navigate = useNavigate()
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
@@ -25,50 +69,6 @@ export default function LandingPage() {
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
   }
-
-  const templatesInfo = [
-    { id: 'classic', name: 'Classic', font: 'Georgia / Serif', desc: 'Standard single-column layout, highly recommended for traditional finance and legal roles.' },
-    { id: 'modern', name: 'Modern', font: 'Arial / Sans-Serif', desc: 'Sleek, colored headers with a modern structure for tech and startup applications.' },
-    { id: 'executive', name: 'Executive', font: 'EB Garamond / Garamond', desc: 'Elegant, distinguished header bars tailored for senior and management roles.' },
-    { id: 'minimalist', name: 'Minimalist', font: 'Inter / Sans-Serif', desc: 'Airy margins and clean whitespace optimized for maximal readability.' },
-    { id: 'creative', name: 'Creative', font: 'Outfit / Sans-Serif', desc: 'Distinct layout tags with left-border accents for design and marketing.' },
-    { id: 'compact', name: 'Compact', font: 'System UI / Sans', desc: 'Dense single-page design for maximum content in minimal space.' },
-    { id: 'professional', name: 'Professional', font: 'Inter / Sans-Serif', desc: 'Clean business-oriented layout with subtle color accents.' },
-    { id: 'technical', name: 'Technical', font: 'SF Mono / Monospace', desc: 'Monospace tech-optimized template with skill badges.' },
-    { id: 'academic', name: 'Academic', font: 'Georgia / Serif', desc: 'Research-focused layout prioritizing education and publications.' },
-    { id: 'clean', name: 'Clean', font: 'Inter / Sans-Serif', desc: 'Ultra-minimalist design with maximum whitespace and readability.' },
-  ]
-
-  const faqItems = [
-    {
-      q: 'Is Seve really free?',
-      a: 'Yes. The core editor, professional templates, local keyword matching, and ATS compatibility checker are 100% free to try, requiring no credit card or subscription.'
-    },
-    {
-      q: 'How does the ATS compatibility checker work?',
-      a: 'It uses a smart, rule-based local algorithm that scans your resume content. It evaluates section presence, standard date consistency, quantified bullet achievements, use of action verbs, and keyword frequency. No data is sent to external servers for this scoring.'
-    },
-    {
-      q: 'Is my personal data secure?',
-      a: 'Your resume data is saved locally in your browser before sign-in. If you sign in with Google, Seve syncs your resume profiles to Supabase for backup and cross-device access.'
-    },
-    {
-      q: 'Can I use Seve on my phone or tablet?',
-      a: 'Yes. Seve is fully responsive and works in any modern mobile browser. You can build and edit your resume on the go, though a desktop experience is recommended for the best editing workflow.'
-    },
-    {
-      q: 'How do I download my resume as a PDF?',
-      a: 'Once your resume is ready, click the export/download button in the editor. Seve uses your browser\'s built-in print dialog, where you can select "Save as PDF" as the destination. No PDF is uploaded for rendering — the export happens entirely in your browser.'
-    },
-    {
-      q: 'Which template works best for my industry?',
-      a: 'Classic and Executive templates perform best in traditional industries like finance, law, and government. Modern, Technical, and Creative templates are optimized for tech, startups, and design roles. All templates are formatted to be readable by standard ATS parsers.'
-    },
-    {
-      q: 'Can I create multiple resumes?',
-      a: 'Yes. You can create, duplicate, rename, and manage multiple resume profiles from the dashboard. Each one is saved independently in your browser, letting you maintain tailored versions for different job applications.'
-    }
-  ]
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden relative">
