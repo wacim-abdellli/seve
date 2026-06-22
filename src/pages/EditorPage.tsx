@@ -219,7 +219,7 @@ export default function EditorPage() {
                     {sectionGroups.map((group) => (
                       <div key={group.label}>
                         <div className="px-5 pt-4 pb-1">
-                          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.label}</span>
+                          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{group.label}</span>
                         </div>
                         {group.sections.map((section) => {
                           const isComplete = getSectionStatus(resumeData)[section.id]
@@ -254,8 +254,8 @@ export default function EditorPage() {
                 <>
                   <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0 flex items-center justify-between">
                     <div>
-                      <h2 className="text-[18px] font-semibold text-white">Design & Style</h2>
-                      <p className="text-[13px] text-zinc-500 mt-0.5">Customize layout, accent colors and fonts</p>
+                      <h2 className="text-lg font-semibold text-white">Design & Style</h2>
+                      <p className="text-sm text-zinc-500 mt-0.5">Customize layout, accent colors and fonts</p>
                     </div>
                     <button onClick={() => setActiveMode('studio')} className="text-xs font-bold text-[#b91c1c] hover:text-[#c62828] transition-colors cursor-pointer">Done</button>
                   </div>
@@ -289,7 +289,7 @@ export default function EditorPage() {
                     {sectionGroups.map((group) => (
                       <div key={group.label}>
                         <div className="px-5 pt-4 pb-1">
-                          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{group.label}</span>
+                          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{group.label}</span>
                         </div>
                         {group.sections.map((section) => {
                           const isComplete = getSectionStatus(resumeData)[section.id]
@@ -324,8 +324,8 @@ export default function EditorPage() {
                 <>
                   <div className="px-5 pt-5 pb-3 border-b border-zinc-800/40 flex-shrink-0 flex items-center justify-between">
                     <div>
-                      <h2 className="text-[18px] font-semibold text-white">Design & Style</h2>
-                      <p className="text-[13px] text-zinc-500 mt-0.5">Customize layout, accent colors and fonts</p>
+                      <h2 className="text-lg font-semibold text-white">Design & Style</h2>
+                      <p className="text-sm text-zinc-500 mt-0.5">Customize layout, accent colors and fonts</p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-10 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">View Resume</button>
