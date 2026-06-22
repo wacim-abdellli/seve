@@ -1,94 +1,52 @@
-• Hard Re-Audit Result
-  No critical code/build blockers remain. The app is much stronger than the previous audit: static gates pass, bundle
-  splitting improved, copy is mostly corrected, PDF export is no longer login-gated, focus-visible/reduced-motion work
-  was added, and resumeNormalizer is now typed with unknown.
+  Hard Findings
 
-  The remaining issues are mostly product-wording polish, final Supabase deployment verification, and UX/accessibility
-  refinements.
+  1. High: signed-out users no longer have a clear sign-in path.
+     After PDF export was made local/free, the old Google sign-in modal became dead code. showAuthModal is never set to
+     true, but the app still claims Google sign-in enables cloud sync. See /C:/Users/pc/Desktop/seve/src/layouts/
+     EditorLayout.tsx:407, /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:502, and /C:/Users/pc/Desktop/seve/
+     src/layouts/EditorLayout.tsx:878.
+     Agent task: add an explicit Sign in / Cloud Sync button for signed-out users in the editor header, or remove cloud
+     sync claims. Best fix: show Sign in where the user pill appears when signed out.
 
-  Findings
+  2. Medium: Supabase RPC still needs real browser verification.
+     Code and SQL are correct-looking, but I could not prove the live Supabase RPC from this sandbox because direct TLS
+     calls failed locally. See /C:/Users/pc/Desktop/seve/src/hooks/usePageViews.ts:34, /C:/Users/pc/Desktop/seve/
+     supabase-schema.sql:88.
+     Agent task: in a normal browser, refresh / twice and confirm no /rpc/log_page_view 404, 409, or RLS error appears.
 
-  1. Medium: Supabase live RPC still needs external proof.
-     Code and SQL are correct-looking: /C:/Users/pc/Desktop/seve/src/hooks/usePageViews.ts:34, /C:/Users/pc/Desktop/
-     seve/supabase-schema.sql:88, /C:/Users/pc/Desktop/seve/supabase/migrations.sql:114.
-     But I could not complete live browser console verification in this sandbox. Direct RPC smoke test also failed at
-     Windows TLS transport before HTTP status. Your agent still must verify in Supabase SQL editor and browser console.
+  3. Low: dead auth modal copy is now stale.
+     DownloadAuthModal still says “sign in with Google to download or print”, but export is now local and no sign-in is
+     required. See /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:428.
+     Agent task: either repurpose this modal for cloud sync, or delete it.
 
-  2. Medium: Privacy headings still overstate.
-     “100% Local-First” and “Zero Analytics & Ads” are not technically precise because signed-in users sync to Supabase
-     and anonymous page-view analytics exists. Body text explains it correctly, but headings should not contradict.
-     See /C:/Users/pc/Desktop/seve/src/pages/PrivacyPage.tsx:100 and /C:/Users/pc/Desktop/seve/src/pages/
-     PrivacyPage.tsx:116.
-     Recommended wording: Local-First Editing and No Marketing Trackers.
-
-  3. Low: Suspense fallbacks are null.
-     Lazy-loading is good, but clicking settings/resume manager/AI guide on a slow network may appear dead until the
-     chunk arrives. See /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:838, /C:/Users/pc/Desktop/seve/src/
-     layouts/EditorLayout.tsx:877, and /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:888.
-     Use a tiny inline spinner or skeleton for modals.
-
-  4. Low: Some marketing wording is still a bit strong.
-     “Pixel-perfect PDF” and “READY FOR ATS” are less risky than before, but still marketing-heavy. See /C:/Users/pc/
-     Desktop/seve/src/pages/LandingPage.tsx:206 and /C:/Users/pc/Desktop/seve/src/pages/LandingPage.tsx:241.
-     Better: Print-ready PDF and ATS-friendly.
-
-  5. Low: Cloud-sync code comments still have slight drift.
-     The product now says sign-in syncs to cloud, but a comment says cloud sync is manual only. See /C:/Users/pc/
-     Desktop/seve/src/context/ResumeContext.tsx:276.
-     Clarify: initial sign-in sync is automatic; later edits are manual cloud saves.
+  4. Low: privacy claim “no personal data, IPs” is slightly too absolute.
+     The app may not store IPs in page_views, but Supabase infrastructure still receives requests. Safer wording: “The
+     page-view table stores a random visitor ID, path, and date; it does not store resume data.” See /C:/Users/pc/
+     Desktop/seve/src/pages/PrivacyPage.tsx:119.
 
   Verification
-  Passed:
+  Passed after my dropdown fix:
 
+  - npx.cmd tsc -b --pretty false --noEmit
+  - npm.cmd run lint
   - npm.cmd test: 13 tests passed
-  - npx.cmd tsc -b --pretty false --noEmit: passed
-  - npm.cmd run lint: passed
   - npm.cmd audit --omit=dev --audit-level=moderate: 0 vulnerabilities
-  - npm.cmd run build: passed
-  - Shell HTTP check: Vite served / with STATUS=200
+  - npm.cmd run build
 
-  Improved:
+  Build remains good: main bundle is 444.45 kB, with editor/ATS/template chunks split.
 
-  - Main JS chunk dropped from about 993 kB to 444.45 kB.
-  - ATS/editor/template chunks are now split.
-  - resumeNormalizer no longer relies on any.
-  - Focus-visible and reduced-motion CSS now exist.
-  - Working tree is clean.
-
-  Not fully verified:
-
-  - Browser console check for Supabase RPC after live migration. Playwright could not reach the temporary dev server
-    from this sandbox, and direct Supabase RPC smoke test hit local TLS transport failure.
-
-  Re-Rating
+  Updated Ratings
 
   - Build health: 10/10
   - TypeScript/lint hygiene: 9/10
-  - Runtime correctness: 8/10, pending live Supabase RPC verification
+  - Runtime correctness: 8/10
   - Security/RLS design: 8.5/10
   - Privacy/product truth: 8/10
-  - Desktop UX: 8/10
+  - Desktop UX: 8.5/10
   - Mobile UX: 7.5/10
-  - Accessibility: 7.5/10
+  - Accessibility: 8/10
   - Performance: 8/10
   - Maintainability: 8/10
-  - Overall readiness: 8.2/10
+  - Overall readiness: 8.3/10
 
-  Agent Instructions
-
-  1. In Supabase SQL editor, run the schema/migration, then run:
-
-  select proname from pg_proc where proname in ('log_page_view', 'count_distinct_visitors');
-  select public.log_page_view('audit-test-visitor', '/audit', current_date);
-  select public.count_distinct_visitors(null);
-  notify pgrst, 'reload schema';
-
-  2. Open the app in a normal browser, refresh / twice, and confirm no /rpc/log_page_view 404, 409, or permission error
-     appears.
-
-  3. Rename privacy headings: 100% Local-First to Local-First Editing, and Zero Analytics & Ads to No Marketing
-     Trackers.
-
-  4. Replace fallback={null} on lazy modals with a minimal loading indicator.
-  5. Change pixel-perfect PDF to print-ready PDF, and READY FOR ATS to ATS-friendly.
-  6. Update the cloud-sync comment in ResumeContext so future agents do not reintroduce the old mismatch.
+  The app is close. The next important fix is the missing signed-out sign-in path for cloud sync.

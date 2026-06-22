@@ -116,7 +116,7 @@ export default function PrivacyPage() {
                 <h3 className="text-base font-bold text-white m-0">No Marketing Trackers</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
-                Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. An anonymous page-view count is recorded through Supabase to measure aggregate usage — no personal data, IPs, or browsing history are associated with this count.
+                Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. An anonymous page-view count is recorded through Supabase to measure aggregate usage — the page-view table stores a random visitor ID, path, and date; it does not store resume data.
               </p>
             </div>
 
