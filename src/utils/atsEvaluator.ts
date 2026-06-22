@@ -49,6 +49,16 @@ function detectDateFormat(dateStr: string, lang: 'en' | 'fr'): 'MM/YYYY' | 'Mont
     return 'MM/YYYY'
   }
 
+  // YYYY-MM: matches 2021-05 or 2026-12 (onboarding / HTML inputs)
+  if (/^\d{4}-(0[1-9]|1[0-2])$/.test(clean)) {
+    return 'MM/YYYY'
+  }
+
+  // YYYY format: matches 2020 or 2026 (graduation/projects/etc.)
+  if (/^\d{4}$/.test(clean)) {
+    return 'MM/YYYY'
+  }
+
   if (lang === 'fr') {
     const frMonthRegex = /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv|févr|mar|avr|mai|juin|juil|août|sept|oct|nov|déc)\s+\d{4}$/i
     if (frMonthRegex.test(clean)) {
@@ -1348,7 +1358,13 @@ function scoreDateConsistency(resume: ResumeData, lang: string): AtsCategoryScor
     if (exp.endDate) allDates.push(exp.endDate)
   })
   education.forEach(edu => {
-    if (edu.graduationDate) allDates.push(edu.graduationDate)
+    if (edu.graduationDate) {
+      const parts = edu.graduationDate.split(/[–-]/)
+      parts.forEach(p => {
+        const trimmed = p.trim()
+        if (trimmed) allDates.push(trimmed)
+      })
+    }
   })
   volunteer.forEach(v => {
     if (v.period) {
@@ -1360,14 +1376,32 @@ function scoreDateConsistency(resume: ResumeData, lang: string): AtsCategoryScor
     }
   })
   certifications.forEach(c => {
-    if (c.date) allDates.push(c.date)
+    if (c.date) {
+      const parts = c.date.split(/[–-]/)
+      parts.forEach(p => {
+        const trimmed = p.trim()
+        if (trimmed) allDates.push(trimmed)
+      })
+    }
   })
   awards.forEach(a => {
-    if (a.date) allDates.push(a.date)
+    if (a.date) {
+      const parts = a.date.split(/[–-]/)
+      parts.forEach(p => {
+        const trimmed = p.trim()
+        if (trimmed) allDates.push(trimmed)
+      })
+    }
   })
   const projects = resume.projects || []
   projects.forEach(p => {
-    if (p.date) allDates.push(p.date)
+    if (p.date) {
+      const parts = p.date.split(/[–-]/)
+      parts.forEach(part => {
+        const trimmed = part.trim()
+        if (trimmed) allDates.push(trimmed)
+      })
+    }
   })
 
   if (allDates.length === 0) {
