@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import { 
@@ -76,14 +76,16 @@ export default function SectionDrawer({
   onClose,
 }: SectionDrawerProps) {
   const { resumeData, updateResumeData: onChange } = useResume()
-  // Escape key support (non-negotiable UX)
+  // Escape key support — use ref to avoid re-attaching on parent re-renders
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [onClose])
+  }, [])
 
   const meta = sectionMeta[section] || { 
     title: 'Section Editor', 
