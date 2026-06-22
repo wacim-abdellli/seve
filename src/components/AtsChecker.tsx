@@ -201,12 +201,10 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       }
     }
 
-    // Set isScanning to true immediately to show the loading screen without delay
-    setIsScanning(true)
-
     // Debounce: wait 500ms of no edits before scanning
     if (scanTimer.current) clearTimeout(scanTimer.current)
     scanTimer.current = setTimeout(() => {
+      setIsScanning(true)
       dataRef.current = { rHash: hashResume(resumeData), j: jobDescription }
 
       setScanStage(0)
