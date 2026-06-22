@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     if (!isSupabaseConfigured || !supabase) {
       setError('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sign-in.')
       return
@@ -57,10 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in with Google')
     }
-  }
+  }, [])
 
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     if (!isSupabaseConfigured || !supabase) {
       setUser(null)
       return
@@ -72,12 +72,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign out')
     }
-  }
+  }, [])
 
-  const clearError = () => setError(null)
+  const clearError = useCallback(() => setError(null), [])
+
+  const value = useMemo(() => ({
+    user, loading, error, signInWithGoogle, signOut, clearError
+  }), [user, loading, error, signInWithGoogle, signOut, clearError])
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, signInWithGoogle, signOut, clearError }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
