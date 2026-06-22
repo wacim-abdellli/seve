@@ -31,11 +31,12 @@ export function usePageViews() {
     const logAndFetch = async () => {
       try {
         if (!logged.current) {
-          const { error: insertError } = await db.from('page_views').insert(
-            { visitor_id: visitorId, path, date: new Date().toISOString().slice(0, 10) }
-          )
-          // Ignore duplicate key (already logged today)
-          if (insertError && insertError.code !== '23505') throw insertError
+          const { error: logError } = await db.rpc('log_page_view', {
+            visitor_id: visitorId,
+            path,
+            view_date: new Date().toISOString().slice(0, 10),
+          })
+          if (logError) throw logError
           logged.current = true
         }
 

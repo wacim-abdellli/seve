@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -10,13 +10,13 @@ import { usePrintResume } from '../hooks/usePrintResume'
 import SectionSidebar, { type SectionType } from '../components/SectionSidebar'
 import ModeRail from '../components/ModeRail'
 import SectionDrawer from '../components/SectionDrawer'
-import ResumeManager from '../components/ResumeManager'
 import TemplateRenderer from '../components/TemplateRenderer'
-import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
+const KeyboardShortcutsModal = lazy(() => import('../components/KeyboardShortcutsModal'))
+const ResumeManager = lazy(() => import('../components/ResumeManager'))
 import { Download, ArrowLeft, CheckCircle2, Settings, FolderOpen, Upload, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Undo2, Redo2, Sparkles, Keyboard } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
-import AiOnboardingModal from '../components/AiOnboardingModal'
+const AiOnboardingModal = lazy(() => import('../components/AiOnboardingModal'))
 
 
 
@@ -503,12 +503,6 @@ export default function EditorLayout() {
   const [showAiGuide, setShowAiGuide] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
 
-  useEffect(() => {
-    const onboarded = localStorage.getItem('seve_ai_onboarded')
-    if (onboarded === null) {
-      setTimeout(() => { setShowAiGuide(true) })
-    }
-  }, [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -546,12 +540,8 @@ export default function EditorLayout() {
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
 
   const handlePrint = useCallback(() => {
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
     handlePrintModal(resumeData, pageCount)
-  }, [user, resumeData, pageCount, handlePrintModal])
+  }, [resumeData, pageCount, handlePrintModal])
 
   // Keyboard shortcuts: Ctrl+P -> Print / Save as PDF, Ctrl+S -> save to cloud
   useEffect(() => {
@@ -845,12 +835,14 @@ export default function EditorLayout() {
 
       <AnimatePresence>
         {isResumeManagerOpen && (
-          <ResumeManager
-            resumes={resumes} selectedResumeId={selectedResumeId} cloudStatus={cloudStatus}
-            onSelect={selectResume} onCreate={createResume} onDuplicate={duplicateResume}
-            onRename={renameResume} onDelete={deleteResume}
-            onClose={() => setIsResumeManagerOpen(false)}
-          />
+          <Suspense fallback={null}>
+            <ResumeManager
+              resumes={resumes} selectedResumeId={selectedResumeId} cloudStatus={cloudStatus}
+              onSelect={selectResume} onCreate={createResume} onDuplicate={duplicateResume}
+              onRename={renameResume} onDelete={deleteResume}
+              onClose={() => setIsResumeManagerOpen(false)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
@@ -882,16 +874,20 @@ export default function EditorLayout() {
       {showAuthModal && <DownloadAuthModal onClose={() => setShowAuthModal(false)} onSignIn={signInWithGoogle} />}
       <AnimatePresence>
         {showAiGuide && (
-          <AiOnboardingModal
-            onClose={() => setShowAiGuide(false)}
-            onImport={(data) => importResumeData(data)}
-          />
+          <Suspense fallback={null}>
+            <AiOnboardingModal
+              onClose={() => setShowAiGuide(false)}
+              onImport={(data) => importResumeData(data)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showShortcuts && (
-          <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
+          <Suspense fallback={null}>
+            <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
+          </Suspense>
         )}
       </AnimatePresence>
     </div>

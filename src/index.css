@@ -421,9 +421,13 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Global Input Focus Override (Carbon & Crimson Theme) */
 input:focus, textarea:focus, select:focus {
-  outline: none !important;
+  outline: none;
   border-color: rgba(224, 49, 79, 0.4) !important;
   box-shadow: 0 0 8px rgba(224, 49, 79, 0.15) !important;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid rgba(224, 49, 79, 0.5);
+  outline-offset: 1px;
 }
 
 /* Custom Scrollbar */
@@ -725,9 +729,13 @@ input:focus, textarea:focus, select:focus {
 .tm-input:focus {
   border-bottom-color: var(--brand-primary) !important;
   background: rgba(224, 49, 79, 0.05) !important;
-  outline: none !important;
+  outline: none;
   box-shadow: 0 4px 12px -4px rgba(224, 49, 79, 0.1) !important;
   transform: scale(1.005);
+}
+.tm-input:focus-visible {
+  outline: 2px solid rgba(224, 49, 79, 0.5);
+  outline-offset: 1px;
 }
 
 /* Tamagui-Style Button Component */
@@ -957,8 +965,12 @@ input:focus, textarea:focus, select:focus {
   transition: all 150ms ease-in-out !important;
 }
 .form-input-clean:focus {
-  outline: none !important;
+  outline: none;
   box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.3) !important; /* focus:ring-rose-500/30 */
+}
+.form-input-clean:focus-visible {
+  outline: 2px solid rgba(244, 63, 94, 0.5);
+  outline-offset: 1px;
 }
 .form-input-clean::placeholder {
   color: #52525b !important;
@@ -1001,8 +1013,12 @@ input:focus, textarea:focus, select:focus {
 }
 .drawer-input:focus {
   border-color: rgba(244, 63, 94, 0.5) !important; /* border-rose-500/50 */
-  outline: none !important;
+  outline: none;
   box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.1) !important; /* ring-rose-500/10 */
+}
+.drawer-input:focus-visible {
+  outline: 2px solid rgba(244, 63, 94, 0.5);
+  outline-offset: 1px;
 }
 .drawer-input::placeholder {
   color: #52525b !important; /* placeholder:text-zinc-600 */
@@ -1073,5 +1089,39 @@ h1, h2, h3, h4, h5, h6,
   page-break-inside: avoid !important;
   break-inside: avoid !important;
 }
+
+/* Accessibility: respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Splash screen animations (replaces framer-motion) */
+.splash-exit { opacity: 1; transition: opacity 0.4s ease; }
+.splash-exit-active { opacity: 0; pointer-events: none; }
+.splash-scale { transition: transform 0.3s ease; }
+.splash-scale-done { transform: scale(1.05); }
+.splash-icon { animation: splash-icon-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes splash-icon-in { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.splash-ring { animation: splash-ring-pulse 2s ease-in-out infinite; }
+.splash-ring-done { animation: none; opacity: 0; }
+@keyframes splash-ring-pulse { 0%, 100% { opacity: 0; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.3); } }
+.splash-text { animation: splash-text-in 0.5s 0.2s both; }
+@keyframes splash-text-in { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.splash-status { animation: splash-status-in 0.5s 0.4s both; }
+@keyframes splash-status-in { from { opacity: 0; } to { opacity: 1; } }
+.splash-spinner { animation: splash-spin 1.5s linear infinite; }
+@keyframes splash-spin { to { transform: rotate(360deg); } }
+.splash-bounce-dot { animation: splash-bounce 0.6s ease-in-out infinite; }
+@keyframes splash-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.splash-fade-in { animation: splash-fade 0.3s ease both; }
+@keyframes splash-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Toast enter animation (replaces framer-motion) */
+.toast-enter { animation: toast-in 0.2s ease both; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 

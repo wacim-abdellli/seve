@@ -1,11 +1,11 @@
-import { useState, useEffect, Component, type ErrorInfo, type ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, lazy, Suspense, Component, type ErrorInfo, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
-import PrivacyPage from './pages/PrivacyPage'
-import EditorPage from './pages/EditorPage'
-import EditorLayout from './layouts/EditorLayout'
-import NotFoundPage from './pages/NotFoundPage'
+
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const EditorPage = lazy(() => import('./pages/EditorPage'))
+const EditorLayout = lazy(() => import('./layouts/EditorLayout'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -49,32 +49,32 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
   }, [onDone])
 
   return (
-    <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950">
-      <motion.div animate={{ scale: phase === 'done' ? 1.05 : 1 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-6">
+    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950 splash-exit ${phase === 'done' ? 'splash-exit-active' : ''}`}>
+      <div className={`flex flex-col items-center gap-6 splash-scale ${phase === 'done' ? 'splash-scale-done' : ''}`}>
         <div className="relative">
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center shadow-2xl shadow-rose-500/20">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center shadow-2xl shadow-rose-500/20 splash-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
             </svg>
-          </motion.div>
-          <motion.div animate={{ opacity: phase === 'done' ? 0 : [0, 0.3, 0], scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: phase === 'done' ? 0 : Infinity, ease: 'easeInOut' }} className="absolute inset-0 rounded-2xl border-2 border-rose-500/40" />
+          </div>
+          <div className={`absolute inset-0 rounded-2xl border-2 border-rose-500/40 splash-ring ${phase === 'done' ? 'splash-ring-done' : ''}`} />
         </div>
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, duration: 0.5 }} className="text-center">
+        <div className="splash-text text-center">
           <h1 className="text-2xl font-black tracking-tight text-white">Seve</h1>
           <p className="text-xs text-zinc-500 mt-1 font-medium">Resume Builder</p>
-        </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-center gap-2">
+        </div>
+        <div className="splash-status flex items-center gap-2">
           {phase === 'brand' && (
-            <><motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} className="w-3.5 h-3.5 rounded-full border-2 border-rose-500/30 border-t-rose-400" /><span className="text-[11px] text-zinc-500">Initializing workspace...</span></>
+            <><div className="splash-spinner w-3.5 h-3.5 rounded-full border-2 border-rose-500/30 border-t-rose-400" /><span className="text-[11px] text-zinc-500">Initializing workspace...</span></>
           )}
           {phase === 'analyzing' && (
-            <><motion.div className="flex gap-0.5">{[0, 1, 2].map((i) => (<motion.div key={i} animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} className="w-1 h-1 rounded-full bg-rose-400" />))}</motion.div><span className="text-[11px] text-zinc-500">Analyzing your setup...</span></>
+            <><div className="flex gap-0.5 splash-bounce-group">{[0, 1, 2].map((i) => (<div key={i} className="w-1 h-1 rounded-full bg-rose-400 splash-bounce-dot" style={{ animationDelay: `${i * 0.15}s` }} />))}</div><span className="text-[11px] text-zinc-500">Analyzing your setup...</span></>
           )}
-          {phase === 'done' && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[11px] text-emerald-400 font-medium">Ready ✓</motion.span>}
-        </motion.div>
-      </motion.div>
-    </motion.div>
+          {phase === 'done' && <span className="splash-fade-in text-[11px] text-emerald-400 font-medium">Ready ✓</span>}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -92,14 +92,16 @@ function AppContent() {
     <>
       {showSplash && <SplashScreen onDone={handleSplashDone} />}
       <div style={{ display: showSplash ? 'none' : 'block', height: '100vh' }}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route element={<EditorLayout />}>
-            <Route path="/editor" element={<EditorPage />} />
-          </Route>
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <Suspense fallback={<div className="flex items-center justify-center h-full bg-zinc-950"><div className="w-5 h-5 border-2 border-rose-500/30 border-t-rose-400 rounded-full animate-spin" /></div>}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route element={<EditorLayout />}>
+              <Route path="/editor" element={<EditorPage />} />
+            </Route>
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </div>
     </>
   )

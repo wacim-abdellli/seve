@@ -7,13 +7,16 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS public.resumes (
-  id            TEXT PRIMARY KEY,
+  id            TEXT NOT NULL,
   user_id       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title         TEXT NOT NULL DEFAULT 'My Resume',
   resume_data   JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.resumes DROP CONSTRAINT IF EXISTS resumes_pkey;
+ALTER TABLE public.resumes ADD PRIMARY KEY (user_id, id);
 
 CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON public.resumes(user_id);
 
@@ -73,7 +76,21 @@ CREATE POLICY "Anyone can insert page views"
   ON public.page_views FOR INSERT WITH CHECK (true);
 
 CREATE OR REPLACE FUNCTION count_distinct_visitors(since TIMESTAMPTZ DEFAULT NULL)
-RETURNS BIGINT LANGUAGE SQL STABLE AS $$
+RETURNS BIGINT LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT COUNT(DISTINCT visitor_id) FROM public.page_views
   WHERE ($1 IS NULL OR created_at >= $1);
 $$;
+
+REVOKE ALL ON FUNCTION count_distinct_visitors(TIMESTAMPTZ) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION count_distinct_visitors(TIMESTAMPTZ) TO anon, authenticated;
+
+-- RPC: log a page view (handles duplicates silently)
+CREATE OR REPLACE FUNCTION log_page_view(visitor_id TEXT, path TEXT, view_date DATE DEFAULT CURRENT_DATE)
+RETURNS void LANGUAGE SQL SECURITY DEFINER SET search_path = public AS $$
+  INSERT INTO public.page_views (visitor_id, path, date)
+  VALUES (visitor_id, path, view_date)
+  ON CONFLICT (visitor_id, path, date) DO NOTHING;
+$$;
+
+REVOKE ALL ON FUNCTION log_page_view(TEXT, TEXT, DATE) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION log_page_view(TEXT, TEXT, DATE) TO anon, authenticated;

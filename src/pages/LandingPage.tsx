@@ -50,7 +50,7 @@ export default function LandingPage() {
     },
     {
       q: 'Is my personal data secure?',
-      a: 'Completely. Your resume data is saved locally inside your browser and can be synced securely to the cloud when you sign in, ensuring you never lose your progress.'
+      a: 'Your resume data is saved locally in your browser before sign-in. If you sign in with Google, Seve syncs your resume profiles to Supabase for backup and cross-device access.'
     },
     {
       q: 'Can I use Seve on my phone or tablet?',
@@ -58,11 +58,11 @@ export default function LandingPage() {
     },
     {
       q: 'How do I download my resume as a PDF?',
-      a: 'Once your resume is ready, click the export/download button in the editor. Seve uses your browser\'s built-in print dialog, where you can select "Save as PDF" as the destination. This keeps the tool lightweight with zero server dependency.'
+      a: 'Once your resume is ready, click the export/download button in the editor. Seve uses your browser\'s built-in print dialog, where you can select "Save as PDF" as the destination. No PDF is uploaded for rendering — the export happens entirely in your browser.'
     },
     {
       q: 'Which template works best for my industry?',
-      a: 'Classic and Executive templates perform best in traditional industries like finance, law, and government. Modern, Technical, and Creative templates are optimized for tech, startups, and design roles. The ATS checker scores all templates equally — they all pass.'
+      a: 'Classic and Executive templates perform best in traditional industries like finance, law, and government. Modern, Technical, and Creative templates are optimized for tech, startups, and design roles. All templates are formatted to be readable by standard ATS parsers.'
     },
     {
       q: 'Can I create multiple resumes?',
@@ -226,7 +226,7 @@ export default function LandingPage() {
               {
                 step: '01',
                 title: 'Pick a Template',
-                desc: 'Choose from 10 professional, ATS-verified layouts designed for every industry.',
+                desc: 'Choose from 10 professional, ATS-friendly layouts designed for every industry.',
                 color: 'text-red-400',
               },
               {
@@ -358,7 +358,7 @@ export default function LandingPage() {
                       </p>
                       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                         <CheckCircle2 size={16} className="text-emerald-500" />
-                        100% ATS Reader Compatibility Verified
+                        ATS-Friendly Formatting
                       </div>
                     </div>
                   )

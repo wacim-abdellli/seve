@@ -141,6 +141,7 @@ Instructions for the AI:
           </div>
           <button
             onClick={handleDismiss}
+            aria-label="Close AI guide"
             className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-900 border border-zinc-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />

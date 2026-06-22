@@ -100,7 +100,7 @@ export default function PrivacyPage() {
                 <h3 className="text-base font-bold text-white m-0">100% Local-First</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
-                Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code className="text-rose-400 bg-rose-500/5 px-1 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>localStorage</code>. If you sign in with Google, you can optionally sync data to Supabase for cross-device access — this is never done without your consent.
+                Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code className="text-rose-400 bg-rose-500/5 px-1 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>localStorage</code>. When you sign in with Google, Seve syncs your resume profiles to Supabase for cloud backup and cross-device access. After sign-in, local changes are saved locally first; you can use the cloud Save button or Ctrl+S to push later edits.
               </p>
             </div>
 
@@ -152,10 +152,12 @@ export default function PrivacyPage() {
                   The following specific localStorage keys are used to retain your data between sessions:
                 </p>
                 <ul className="list-disc pl-5 flex flex-col gap-1">
-                  <li><strong className="text-white">seve_state:</strong> Stores your resume data fields, target job description, and chat history.</li>
-                  <li><strong className="text-white">seve_workspace_layout:</strong> Stores your active pane layout preference (split, studio, focus).</li>
-                  <li><strong className="text-white">seve_score_history:</strong> Stores the history of your resume ATS scores for progress tracking.</li>
-                  <li><strong className="text-white">seve_section_order:</strong> Stores the order of your resume sections if custom-sorted.</li>
+                  <li><strong className="text-white">seve_state:</strong> Stores resume profiles, selected resume, templates, style preferences, target job descriptions, and section order.</li>
+                  <li><strong className="text-white">sv_visitor_id:</strong> Stores a random anonymous visitor ID for aggregate page-view counting.</li>
+                  <li><strong className="text-white">seve_ai_onboarded / seve_visited:</strong> Stores whether intro screens have already been shown.</li>
+                  <li><strong className="text-white">seve_theme_color:</strong> Stores the last selected theme color.</li>
+                  <li><strong className="text-white">ats-score-history:</strong> Stores local ATS score history used for progress timeline features.</li>
+                  <li><strong className="text-white">resumeai_state / resumeai_section_order / seve_section_order:</strong> Legacy migration keys read for compatibility with older local data.</li>
                 </ul>
               </div>
 
@@ -164,7 +166,7 @@ export default function PrivacyPage() {
                   Supabase & Cloud Sync
                 </h4>
                 <p className="m-0">
-                  Seve uses Supabase for two purposes: (1) anonymous page-view counting — a random visitor ID is stored in localStorage and an upsert is sent on each page load, with aggregate counts fetched via an RPC function; (2) optional cloud sync — if you sign in with Google, your resume data can be saved to and retrieved from a Supabase database table. Cloud sync is manual and never automatic.
+                  Seve uses Supabase for two purposes: (1) anonymous page-view counting — a random visitor ID is stored in localStorage and a page-view event is sent on each page load, with aggregate counts fetched via an RPC function; (2) cloud sync — when you sign in with Google, your resume data is synced to Supabase for backup and cross-device access. After sign-in, local edits are saved locally first; you push updates to the cloud using the Save button or Ctrl+S.
                 </p>
               </div>
 

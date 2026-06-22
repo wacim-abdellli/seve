@@ -1,6 +1,6 @@
-# Seve — Free, Honest ATS Resume Builder & Career Coach
+# Seve — Free, Honest AI-Powered ATS Resume Builder & Career Coach
 
-**Seve** is a resume builder designed to help job seekers build professional, ATS-optimized resumes. Built with a commitment to transparency.
+**Seve** is an AI-powered resume builder designed to help job seekers build professional, ATS-optimized resumes. Built with a commitment to transparency.
 
 ---
 
@@ -10,7 +10,7 @@ Seve uses a **local-first** storage model with optional cloud features:
 
 - **Local-First Editing:** All resume data, settings, and preferences are saved locally in your browser's `localStorage` (`seve_state`). You can use the full editor without signing in.
 - **Anonymous Analytics:** Aggregate page-view counts are recorded through Supabase to measure usage. No personal data is associated with these counts.
-- **Optional Cloud Sync:** You may optionally sign in with Google to sync your resume data to Supabase for cross-device access. This is not required for editing or PDF export.
+- **Cloud Sync:** When you sign in with Google, your resume data is synced to Supabase for backup and cross-device access. After sign-in, local edits are saved locally first; use the Save button or Ctrl+S to push updates to the cloud. No sign-in is required for editing or PDF export.
 - **PDF Export:** Uses your browser's built-in print dialog — no data is sent to external servers for rendering.
  
 ---
@@ -18,7 +18,7 @@ Seve uses a **local-first** storage model with optional cloud features:
 ## ✨ Features
 
 ### 1. ATS Scoring Engine (Local Offline Heuristics)
-Evaluates your resume in real-time based on actual industry guidelines, scoring out of 100 points:
+Evaluates your resume in real time using local rule-based heuristics inspired by common ATS and recruiter readability checks, scoring out of 100 points:
 - **Section Completeness (20 pts):** Ensures contact info, summary, experience, education, and skills are present.
 - **Keyword Match (25 pts):** Scans your resume text against keywords extracted from your target job description.
 - **Formatting Safety (20 pts):** Highlights potential parsing traps (tables, text boxes, non-standard symbols).
@@ -32,12 +32,17 @@ Evaluates your resume in real-time based on actual industry guidelines, scoring 
 Instantly sanitizes your draft: standardizes date formats, eliminates personal pronouns (I, me, my, we), and strips formatting-unfriendly special characters.
 
 ### 3. Print-Perfect Templates
-Includes five professionally-crafted, ATS-compliant templates:
+Includes ten professionally-crafted, ATS-compliant templates:
 - **Classic:** Traditional serif layout (`Georgia`), recommended for corporate, finance, and legal fields.
 - **Modern:** Contemporary clean sans-serif layout (`Arial`) with subtle color accents, ideal for tech and startups.
 - **Executive:** Distinguished divider bar formatting for senior management and leadership.
 - **Minimalist:** Airy padding and structured whitespace for maximum readability.
 - **Creative:** Distinct layout tags with left-border accents for design and marketing roles.
+- **Professional:** Bold section headers with a structured, achievement-focused layout.
+- **Technical:** Clean monospace-inspired layout with a skills-forward emphasis.
+- **Compact:** Dense two-column layout optimized for fitting extensive experience on a single page.
+- **Clean:** Open, readable layout with generous whitespace and subtle section dividers.
+- **Academic:** Publication and research-oriented layout with citation-friendly formatting.
 - *Exports clean, text-readable PDFs utilizing your browser's print dialog (`Ctrl+P` / `Cmd+P`) combined with custom responsive CSS `@media print` stylesheets.*
 
 ---

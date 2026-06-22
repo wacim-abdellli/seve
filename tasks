@@ -1,199 +1,105 @@
+ Hard Findings
 
-• Here is a strong implementation brief you can give to DeepSeek Flash v4.
+  1. Critical: live analytics is broken until Supabase is actually migrated.
+     The app now calls log_page_view, but browser verification shows 404 from
+     https://yefojfziejfevubpnvzf.supabase.co/rest/v1/rpc/log_page_view. The SQL files contain the function, but the
+     live Supabase project does not expose it yet or PostgREST schema cache was not reloaded. See
+     /C:/Users/pc/Desktop/seve/src/hooks/usePageViews.ts:34, /C:/Users/pc/Desktop/seve/supabase-schema.sql:88, and
+     /C:/Users/pc/Desktop/seve/supabase/migrations.sql:114.
 
-  Implementation Guide For Seve Audit Fixes
+  2. High: PDF export truth is still inconsistent.
+     README says sign-in is not required for PDF export, but the editor blocks print/export unless user exists. See /C:/
+     Users/pc/Desktop/seve/README.md:13, /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:548, and /C:/Users/pc/
+     Desktop/seve/src/layouts/EditorLayout.tsx:550. Decide product behavior: free local PDF export, or login-gated
+     export. Then make code and copy match.
 
-  You are implementing fixes in C:\Users\pc\Desktop\seve. Do not refactor unrelated code. Preserve existing UX unless
-  the fix requires text or behavior changes. The repo may have user edits already, so do not revert files blindly.
+  3. High: privacy copy still lies about sync behavior.
+     Privacy page still says sync is “never done without your consent” and “manual and never automatic”, but login
+     triggers fetchAndMergeCloud, which calls syncToCloud. See /C:/Users/pc/Desktop/seve/src/pages/
+     PrivacyPage.tsx:103, /C:/Users/pc/Desktop/seve/src/pages/PrivacyPage.tsx:169, and /C:/Users/pc/Desktop/seve/src/
+     context/ResumeContext.tsx:223.
 
-  Primary goal: make the app truthful, buildable, safer around Supabase, and clearer around cloud/local storage.
+  4. High: landing page still has overclaims.
+     It still says “Completely” secure, “zero server dependency”, “all templates pass”, and “100% ATS Reader
+     Compatibility Verified”. These are risky product claims. See /C:/Users/pc/Desktop/seve/src/pages/
+     LandingPage.tsx:53, /C:/Users/pc/Desktop/seve/src/pages/LandingPage.tsx:61, /C:/Users/pc/Desktop/seve/src/pages/
+     LandingPage.tsx:65, and /C:/Users/pc/Desktop/seve/src/pages/LandingPage.tsx:361.
 
-  Phase 1: Fix Critical Truth/Privacy Drift
+  5. Medium: schema/code fix is directionally right but comments are stale.
+     Composite PK is now added, good. But ResumeContext still says Supabase table has id UUID and references old upsert/
+     UUID reasoning. See /C:/Users/pc/Desktop/seve/src/context/ResumeContext.tsx:10 and /C:/Users/pc/Desktop/seve/src/
+     context/ResumeContext.tsx:60. Stale comments cause future bad fixes.
 
-  1. Update privacy-facing copy so it matches the current product.
-  2. Files:
-      - README.md
-      - src/pages/PrivacyPage.tsx
-      - likely src/pages/LandingPage.tsx
+  6. Medium: first-run UX is too aggressive.
+     On mobile /editor, the AI modal blocks the workspace immediately. The user sees AI import before the editor. The
+     close button is icon-only with no accessible name. See /C:/Users/pc/Desktop/seve/src/components/
+     AiOnboardingModal.tsx:137, /C:/Users/pc/Desktop/seve/src/components/AiOnboardingModal.tsx:142, and /C:/Users/pc/
+     Desktop/seve/src/components/AiOnboardingModal.tsx:251.
 
-  3. Current false claims:
-      - “no tracking”
-      - “zero third-party servers”
-      - “we never run databases”
-      - “your data never leaves your browser”
+  7. Medium: accessibility is not launch-grade.
+     CSS removes focus outlines repeatedly and there is no prefers-reduced-motion handling. See /C:/Users/pc/Desktop/
+     seve/src/index.css:424, /C:/Users/pc/Desktop/seve/src/index.css:728, and /C:/Users/pc/Desktop/seve/src/
+     index.css:960.
 
-  4. Replace with accurate language:
-      - Resume editing is local-first.
-      - Anonymous page-view counts are recorded through Supabase.
-      - Google sign-in is optional/required for cloud sync and PDF export depending on intended product behavior.
-      - Signed-in users can sync resume data to Supabase.
-      - State exactly which data is stored locally and which data may be sent to Supabase.
+  8. Low: import parser still uses any suppressions.
+     resumeNormalizer passes lint by disabling rules locally, but this is untrusted JSON parsing and should use unknown
+     helpers. See /C:/Users/pc/Desktop/seve/src/utils/resumeNormalizer.ts:3.
 
-  5. Do not overpromise “absolute privacy” if cloud sync exists.
+  Verification
+  Passed:
 
-  Phase 2: Prevent Supabase Env Blank Screen
+  - npm.cmd test: 13 tests passed
+  - npx.cmd tsc -b --pretty false --noEmit: passed
+  - npm.cmd run lint: passed
+  - npm.cmd audit --omit=dev --audit-level=moderate: 0 vulnerabilities
+  - npm.cmd run build: passed
 
-  1. Fix src/lib/supabase.ts.
-  2. Current behavior throws if VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing.
-  3. Required behavior:
-      - App should still load in local-only mode without Supabase env vars.
-      - Supabase-dependent features should show disabled/error/local-only state instead of crashing.
+  Not clean:
 
-  4. Likely approach:
-      - Export supabase as nullable, or export helper flags like isSupabaseConfigured.
-      - Update consumers:
-          - AuthContext.tsx
-          - ResumeContext.tsx
-          - usePageViews.ts
+  - Build warning remains: main JS chunk is 993.34 kB minified.
+  - Browser console shows 404 for /rpc/log_page_view.
+  - Mobile editor starts behind the AI modal.
 
-      - If Supabase is missing:
-          - Auth provider returns user: null, loading: false, and sign-in gives a friendly error.
-          - Resume sync stays local.
-          - Page views silently disabled.
+  Ratings
 
-  Phase 3: Fix Supabase Analytics RLS
+  - Build health: 9/10
+  - TypeScript/lint hygiene: 7/10
+  - Runtime correctness: 6/10 because live Supabase RPC is missing
+  - Security/RLS direction: 7/10 after composite PK and RPC direction, but deployment not verified
+  - Privacy/product truth: 4/10
+  - UX desktop: 7/10
+  - UX mobile: 5.5/10
+  - Accessibility: 4.5/10
+  - Performance: 5.5/10
+  - Overall app readiness: 6/10
 
-  1. Update both schema files if duplicated:
-      - supabase/migrations.sql
-      - supabase-schema.sql
+  Guide For Agent
 
-  2. Current issue:
-      - page_views allows public SELECT of raw visitor rows.
-      - Client uses upsert, but there is no UPDATE policy, so conflict upserts may fail silently.
+  1. Apply the SQL in supabase-schema.sql to the real Supabase project. Then run this in Supabase SQL editor:
 
-  3. Safer target:
-      - Anonymous clients can insert page views.
-      - Anonymous clients cannot select raw page_views.
-      - Aggregate counts are available only through RPC functions.
+  select proname from pg_proc where proname in ('log_page_view', 'count_distinct_visitors');
+  select public.log_page_view('audit-test-visitor', '/audit', current_date);
+  select public.count_distinct_visitors(null);
+  notify pgrst, 'reload schema';
 
-  4. Options:
-      - Remove "Anyone can select page views" policy.
-      - Keep count_distinct_visitors RPC.
-      - Prefer insert-ignore client behavior instead of upsert update.
+  2. Reopen http://localhost:5173/, refresh twice, and confirm no /rpc/log_page_view 404 or 409 appears in browser
+     console.
 
-  5. If keeping upsert, add a narrow update policy only for same visitor_id/path/date, but insert-ignore is cleaner.
+  3. Decide PDF behavior. Recommended: remove the sign-in gate because the export uses browser print and the copy says
+     local/free. Change /C:/Users/pc/Desktop/seve/src/layouts/EditorLayout.tsx:548 so handlePrint does not require user.
 
-  Phase 4: Fix Cloud Save Semantics
+  4. Fix privacy and landing copy. Remove “Completely”, “never automatic”, “zero server dependency”, “all pass”, and
+     “100% verified”. Use factual wording only.
 
-  1. Files:
-      - src/context/ResumeContext.tsx
-      - src/layouts/EditorLayout.tsx
+  5. Stop auto-opening the AI modal on first editor visit. Make the editor open normally, and keep AI import behind the
+     AI Fill Guide button.
 
-  2. Current mismatch:
-      - Comments say cloud auto-save is debounced.
-      - Actual behavior only writes localStorage and marks changes unsaved.
-      - Ctrl+S is intercepted but does not save.
+  6. Add aria-label="Close AI guide" to icon-only close buttons. Add real focus rings using :focus-visible. Add a
+     prefers-reduced-motion CSS block that disables long/infinite decorative animations.
 
-  3. Choose one product behavior and make code/copy match. Recommended:
-      - Local save is automatic.
-      - Cloud save is manual.
-      - Ctrl+S should call saveChangesToCloud() if user is signed in and has unsaved cloud changes.
-      - Status text should say “Saved locally”, “Unsaved cloud changes”, “Cloud saved”, etc.
+  7. Replace any in resumeNormalizer.ts with unknown, isRecord, asString, and asArray helpers.
+  8. Code-split heavy routes/components. Lazy-load AtsChecker, AI modal, template-heavy editor panels, and maybe the
+     landing page preview widgets. Target main chunk below 500 kB.
 
-  4. Remove misleading comments about debounced cloud sync unless you actually implement it.
-
-  Phase 5: Make Build Pass
-
-  1. Run:
-      - npx.cmd tsc -b --pretty false --noEmit
-
-  2. Known current blocker:
-      - src/layouts/EditorLayout.tsx: unused useCallback import.
-
-  3. Fix all TypeScript build errors without weakening tsconfig.
-
-  Phase 6: Fix Lint Scope
-
-  1. File:
-      - eslint.config.js
-
-  2. Current issue:
-      - npm run lint scans reactive-resume-src, which appears to be imported/reference source, not the active app.
-
-  3. Add global ignores for:
-      - dist
-      - node_modules
-      - reactive-resume-src
-
-  4. Then run:
-      - npm.cmd run lint
-
-  5. Fix active src lint issues pragmatically. Do not rewrite the whole app.
-
-  Phase 7: Active Lint Fixes
-  Known categories:
-
-  1. Ref access during render:
-      - src/context/ResumeContext.tsx
-      - src/components/AtsChecker.tsx
-      - src/hooks/useUndoRedo.ts
-
-  2. Empty catch blocks:
-      - replace with short comments or no-op helper if appropriate.
-
-  3. any usage:
-      - replace with narrow types where simple.
-      - Do not create huge type systems just to satisfy lint.
-
-  4. React refresh warnings:
-      - split exported constants/helpers from component files only if needed.
-      - If these are low-value warnings, consider config tuning, but prefer clean structure for active app files.
-
-  Phase 8: Backup/Export Product Fix
-
-  1. File:
-      - src/layouts/EditorLayout.tsx
-
-  2. Current “Export” only exports resumeData, not:
-      - resume title
-      - selected template
-      - style prefs
-      - section order
-      - multiple resume versions
-      - selected resume id
-
-  3. Recommended:
-      - Rename current action to “Export Current Resume JSON”, or
-      - Export full app state.
-
-  4. Best product behavior:
-      - Add full backup export/import for AppState.
-      - Keep single-resume import supported for backward compatibility.
-
-  Phase 9: Database ID Robustness
-
-  1. Current schema uses global id TEXT PRIMARY KEY.
-  2. All users can begin with the same default resume ID, causing cross-user collisions.
-  3. Recommended schema direction:
-      - Use composite uniqueness/primary key on (user_id, id), or
-      - Generate a fresh UUID before first cloud insert for default local resumes.
-
-  4. If changing schema is risky, at least make the client convert the fixed default ID to a real UUID before first
-     cloud save.
-
-  Verification Required
-  After implementation, run:
-
-  npm.cmd test
-  npx.cmd tsc -b --pretty false --noEmit
-  npm.cmd run lint
-  npm.cmd audit --omit=dev --audit-level=moderate
-  npm.cmd run build
-
-  Expected final state:
-
-  - Tests pass.
-  - TypeScript passes.
-  - Lint passes or only has explicitly documented acceptable warnings.
-  - Build passes.
-  - App can start without Supabase env vars in local-only mode.
-  - Privacy copy accurately describes Supabase, Google sign-in, cloud sync, and analytics.
-
-  Do Not Do
-
-  - Do not delete reactive-resume-src unless explicitly asked.
-  - Do not commit .env.
-  - Do not weaken TypeScript strictness to hide errors.
-  - Do not remove RLS from Supabase tables.
-  - Do not claim “no tracking” while page-view logging exists.
-  - Do not silently change product behavior around sign-in/PDF export without updating UI copy.
+  9. Do not commit .playwright-mcp/ or seve-mobile-editor-audit.png; those are browser audit artifacts. My cleanup
+     command was blocked by policy, so they may still be present locally.

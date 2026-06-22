@@ -7,9 +7,9 @@ import { useAuth } from './AuthContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const LOCAL_STORAGE_KEY = 'seve_state'
-// Fixed UUID for the default resume — must be a valid UUID because
-// the Supabase `resumes` table has `id UUID`. Using a fixed deterministic
-// UUID so existing users' localStorage data migrates cleanly.
+// Fixed UUID for the default resume. The schema uses composite PK (user_id, id)
+// with id TEXT, so any string ID is valid. Kept as a fixed deterministic UUID
+// for backwards compatibility with existing localStorage data.
 const defaultResumeId = '00000000-0000-0000-0000-000000000001'
 
 const INITIAL_RESUME_DATA: ResumeData = {
@@ -57,8 +57,8 @@ function loadInitialState(): AppState {
     try {
       const parsed = JSON.parse(saved)
       if (parsed.resumes && parsed.selectedResumeId) {
-        // Migrate any old string-based IDs ('default-resume') to the proper UUID.
-        // This ensures Supabase upsert doesn't fail with invalid UUID type errors.
+        // Migrate legacy 'default-resume' string IDs to the standard UUID format
+        // for consistency with newer localStorage data.
         const migratedResumes: typeof parsed.resumes = {}
         let migratedSelectedId = parsed.selectedResumeId
 
@@ -133,32 +133,11 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [user?.id])
 
   // Shared cloud-sync helper (used by both auto-save effect and retrySync)
+  // Schema uses composite PK (user_id, id) — no cross-user collisions possible.
   const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
     if (!isSupabaseConfigured || !supabase) return
 
-    // Proactively replace the fixed default UUID with a real one before
-    // first cloud save to avoid cross-user primary-key collisions.
-    const migratedProfiles = profiles.map(p => {
-      if (p.id === defaultResumeId) {
-        const newId = crypto.randomUUID()
-        setState(prev => {
-          const resume = prev.resumes[p.id]
-          if (!resume) return prev
-          const next = { ...prev.resumes }
-          delete next[p.id]
-          next[newId] = { ...resume, id: newId }
-          return {
-            ...prev,
-            resumes: next,
-            selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
-          }
-        })
-        return { ...p, id: newId }
-      }
-      return p
-    })
-
-    for (const p of migratedProfiles) {
+    for (const p of profiles) {
       const { data: existing, error: selectError } = await supabase
         .from('resumes')
         .select('id')
@@ -181,20 +160,14 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
 
         if (insertError) {
+          // Race: another client inserted this (user_id, id) between our select and insert
           if (insertError.code === '23505') {
-            const newId = crypto.randomUUID()
-            setState(prev => {
-              const resume = prev.resumes[p.id]
-              if (!resume) return prev
-              const next = { ...prev.resumes }
-              delete next[p.id]
-              next[newId] = { ...resume, id: newId }
-              return {
-                ...prev,
-                resumes: next,
-                selectedResumeId: prev.selectedResumeId === p.id ? newId : prev.selectedResumeId,
-              }
-            })
+            const { error: retryError } = await supabase
+              .from('resumes')
+              .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+              .eq('id', p.id)
+              .eq('user_id', userId)
+            if (retryError) throw retryError
             continue
           }
           throw insertError
