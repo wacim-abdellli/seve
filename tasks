@@ -1,242 +1,249 @@
-# 🔍 Editor Page — UX/UI Audit Report
-> Comparing the original guide requirements vs. what was actually implemented.
+# 🔴 Editor Page — Full Re-Audit & Fix Guide (Round 2)
+> This replaces the previous guide. Read from top to bottom. Fix in order.
 
 ---
 
-## ✅ PASSED — What Was Done Correctly
+## 🎯 Target Design Direction
 
-| # | What Was Requested | Status |
-|---|-------------------|--------|
-| 1 | 3-zone header (left nav / center cloud / right actions) | ✅ Done |
-| 2 | Header height increased to `h-14` | ✅ Done |
-| 3 | Resume switcher uses `ChevronDown`, not `FolderOpen` | ✅ Done |
-| 4 | Center cloud pill with fixed `w-[140px]` | ✅ Done |
-| 5 | Save button embedded inside cloud pill (unsaved state) | ✅ Done |
-| 6 | `Export PDF` = primary red button, rightmost | ✅ Done |
-| 7 | Undo/Redo removed from header | ✅ Done |
-| 8 | Sidebar shows completion progress bar `X/13` | ✅ Done |
-| 9 | Progress bar animates with `transition-all duration-700` | ✅ Done |
-| 10 | Sections grouped: ESSENTIALS / SKILLS & MORE / OPTIONAL | ✅ Done |
-| 11 | Group labels styled correctly (10px, uppercase, zinc-600) | ✅ Done |
-| 12 | Icon containers upgraded from `w-9 h-9` → `w-10 h-10 rounded-2xl` | ✅ Done |
-| 13 | Icon size upgraded from `w-4 h-4` → `w-5 h-5` | ✅ Done |
-| 14 | Status indicator changed from text pills → dot (● / ○) | ✅ Done |
-| 15 | Chevron hidden by default, shows on hover | ✅ Done |
-| 16 | Active section gets left border accent `border-l-2 border-[#b91c1c]` | ✅ Done |
-| 17 | Preview area uses dot-grid background (`.preview-dot-bg`) | ✅ Done |
-| 18 | Floating toolbar above preview (LIVE + font size + page count) | ✅ Done |
-| 19 | `preview-toolbar` CSS added with blur + border | ✅ Done |
-| 20 | `preview-paper-shadow` CSS added | ✅ Done |
-| 21 | Preview container has `scroll-smooth` + `pb-16` | ✅ Done |
-| 22 | ModeRail now shows labels (Edit / Design / Preview / ATS) on desktop | ✅ Done |
-| 23 | ModeRail active state has left-edge indicator `w-1 h-6 rounded-full bg-[#b91c1c]` | ✅ Done |
-| 24 | Mobile: ModeRail becomes bottom nav bar with labels | ✅ Done |
-| 25 | Section preview text uses `line-clamp-2` instead of `truncate` | ✅ Done |
-| 26 | Font sizes cleaned up (`text-base`, `text-sm`, `text-lg`) | ✅ Mostly done |
+![Target UI mockup](C:\Users\pc\.gemini\antigravity\brain\cad36383-34ec-40ed-90c7-abcc1e6b545e\editor_redesign_target_1782107134525.png)
 
 ---
 
-## ❌ FAILED / INCOMPLETE — What Still Needs Fixing
+## 🔴 PROBLEM 1 — SIDEBAR ICONS ARE A RAINBOW DISASTER
 
-### 🔴 Issue 1: Preview floating toolbar is WRONG implementation
-**What was asked:** A toolbar inside the preview area showing LIVE status, zoom control (+/-), and a fullscreen button.
+**What's wrong:** The section icon containers have vivid, high-saturation color backgrounds (blue for Contact, purple for Summary, red for Experience, amber for Education, green for Skills, etc). When you stack 13 of them in a list, it creates a garish technicolor nightmare. This is the #1 reason the page "looks like shit". It looks like a children's app, not a professional resume tool.
 
-**What was built:** A tiny read-only info strip showing LIVE + font size + page count. No zoom controls, no interaction. It's just a label, not a toolbar.
+**Root cause:** The `colorClass` prop on each section has `bg-blue-500/10`, `bg-purple-500/10` etc. These 10% opacity tints are still too strong and too varied.
 
-**Fix instruction for implementer:**
+**Fix — `EditorPage.tsx` (both desktop AND mobile sidebar, both `sectionGroups.map` blocks):**
+
+**Step 1:** Remove all individual `colorClass` definitions from the `sectionGroups` array entirely. Replace every section's `colorClass` with a single unified neutral style:
+
 ```tsx
-// Replace the current preview-toolbar div with this:
+// DELETE the entire colorClass property from every section in sectionGroups.
+// Before:
+{ id: 'contact', title: 'Contact Info', icon: UserIcon, colorClass: 'bg-blue-500/10 text-blue-400 ...' }
+
+// After — no colorClass needed at all:
+{ id: 'contact' as const, title: 'Contact Info', icon: UserIcon }
+{ id: 'summary' as const, title: 'Profile Summary', icon: FileTextIcon }
+{ id: 'experience' as const, title: 'Work Experience', icon: BriefcaseIcon }
+// ... etc, all without colorClass
+```
+
+**Step 2:** Update the icon container `div` to use a single neutral style:
+
+```tsx
+// Before (uses section.colorClass):
+<div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors ${section.colorClass}`}>
+
+// After (single neutral, icon gets accent color only on hover):
+<div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center bg-zinc-800/60 text-zinc-400 group-hover:text-zinc-200 group-hover:bg-zinc-700/60 transition-colors">
+```
+
+**Step 3:** The icon itself — keep it small `w-4 h-4` (not w-5 h-5, that was too big):
+```tsx
+<Icon className="w-4 h-4 transition-colors" />
+```
+
+---
+
+## 🔴 PROBLEM 2 — DUPLICATE / REDUNDANT FLOATING TOOLBAR
+
+**What's wrong:** There are now TWO toolbars:
+1. The **old internal one** from `ResumePreview.tsx` (LIVE | HEATMAP | zoom | PRINT) — this is the original, functional one with proper zoom logic
+2. A **new floating one** added in `EditorPage.tsx` (LIVE • 2p • - 9.5pt +) — this was added by the implementer but it duplicates the internal one AND floats awkwardly in the middle of empty space
+
+**Fix:** **Remove the new floating toolbar entirely** from `EditorPage.tsx`. The internal `ResumePreview` toolbar is better — it has real zoom logic, heatmap mode, fit-to-page, etc. The new one is redundant.
+
+In `EditorPage.tsx`, find and DELETE this entire block:
+```tsx
+// DELETE THIS ENTIRE BLOCK:
 <div className="sticky top-4 z-20 flex items-center justify-center mb-4 no-print">
-  <div className="preview-toolbar inline-flex items-center gap-2 px-3 py-1.5 rounded-full">
-    {/* Live indicator */}
-    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+  <div className="preview-toolbar inline-flex items-center gap-3 px-4 py-1.5 rounded-full">
     <span className="text-[10px] font-bold text-zinc-400">LIVE</span>
+    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
     <span className="w-px h-4 bg-zinc-700" />
-    {/* Page count */}
-    <span className="text-[10px] text-zinc-500 font-mono">{pageCount}p</span>
+    <span className="text-[10px] font-mono text-zinc-500">{templateFontSize}pt</span>
     <span className="w-px h-4 bg-zinc-700" />
-    {/* Font size controls - these are actual interactive buttons */}
-    <button
-      onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
-      className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer text-[10px] font-bold"
-      title="Decrease font size"
-    >−</button>
-    <span className="text-[10px] font-mono text-zinc-300 w-8 text-center">{templateFontSize}pt</span>
-    <button
-      onClick={() => onChangeFontSize(Math.min(16, Number((templateFontSize + 0.5).toFixed(1))))}
-      className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer text-[10px] font-bold"
-      title="Increase font size"
-    >+</button>
+    <span className="text-[10px] text-zinc-600">{pageCount}p</span>
   </div>
 </div>
 ```
 
----
-
-### 🔴 Issue 2: `preview-paper-shadow` CSS class is defined but NEVER applied
-**Where:** `index.css` defines `.preview-paper-shadow` but no element in `EditorPage.tsx` actually uses it.
-
-**Fix instruction:** In `EditorPage.tsx`, find the `<ResumePreview ... />` wrapper and add the class to its parent container. The resume card itself (the white A4 paper) needs this shadow. Look inside `ResumePreview.tsx` for the outermost white div and add `preview-paper-shadow` to it, OR wrap `<ResumePreview>` in a div with this class:
-```tsx
-<div className="preview-paper-shadow rounded-sm overflow-hidden">
-  <ResumePreview ... />
-</div>
-```
+The `<ResumePreview ... />` already renders its own proper toolbar. Keep that one.
 
 ---
 
-### 🔴 Issue 3: Progress bar color is hardcoded red instead of using `themeColor`
-**Where:** `EditorPage.tsx` lines 213 and 283
+## 🔴 PROBLEM 3 — PREVIEW MODE PAGE IS COMPLETELY BROKEN
 
-**Current code:**
+**What's wrong (Screenshot 3):** The `activeMode === 'preview'` panel has its OWN mini-header with "📄 DOCUMENT PREVIEW & EXPORT" + a template selector dropdown + another "Export PDF" button. This creates:
+- 3 layers of redundant UI (top header already has Export PDF)
+- An ugly, inconsistent sub-header that doesn't match the rest of the app's design language
+- Template selector is redundant since it's available in Design mode
+
+**Fix — `EditorPage.tsx`, replace the entire `preview` mode block:**
+
 ```tsx
-className="h-full bg-[#b91c1c] rounded-full transition-all duration-700 ease-out"
+{activeMode === 'preview' && (
+  <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+    {/* Preview area — same as studio mode, no extra header */}
+    <div className="flex-1 preview-dot-bg overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative scroll-smooth">
+      <div className="w-full max-w-[858px] pb-16">
+        <ResumePreview
+          resumeData={resumeData} selectedTemplate={selectedTemplate}
+          onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}
+          activeSection={activeStudioSection}
+          onEditSection={(section) => { setActiveStudioSection(section as SectionType); setActiveMode('studio') }}
+          onExportPdf={handlePrint} onPageCountChange={setPageCount}
+          sectionOrder={sectionOrder} onSectionOrderChange={onSectionOrderChange}
+          templateFontSize={templateFontSize} onChangeFontSize={onChangeFontSize}
+          templateFontWeight={templateFontWeight} onChangeFontWeight={onChangeFontWeight}
+          themeColor={themeColor} onChangeColor={setThemeColor}
+          stylePrefs={stylePrefs}
+          onTriggerImport={() => setShowAiGuide(true)}
+        />
+      </div>
+    </div>
+  </div>
+)}
 ```
 
-**Problem:** The theme color is dynamic (users can change it in the Design panel). But the progress bar always stays hardcoded red. This is inconsistent.
-
-**Fix instruction:**
-```tsx
-// Change both instances (desktop + mobile sidebar) to:
-style={{ 
-  width: `${(Object.values(getSectionStatus(resumeData)).filter(Boolean).length / 13) * 100}%`,
-  backgroundColor: themeColor
-}}
-className="h-full rounded-full transition-all duration-700 ease-out"
-```
-> Note: `themeColor` is already available in the `ctx` object, just make sure it is destructured in `EditorPage.tsx`.
+> The user can already export PDF from the top header. No need for a redundant sub-header.
 
 ---
 
-### 🔴 Issue 4: ModeRail active state uses hardcoded red instead of `themeColor`
-**Where:** `ModeRail.tsx` lines 64 and 67
+## 🔴 PROBLEM 4 — SECTION ROWS ARE TOO TALL / BLOATED
 
-**Current code:**
+**What's wrong:** Each section row is `py-3.5` (14px top + 14px bottom) plus the icon `w-10 h-10`. With 13 sections, users can't see all sections without scrolling. The rows feel heavy and padded.
+
+**Fix:** Reduce padding and icon size:
+
 ```tsx
-isActive ? 'text-red-400' : '...'
-<span className="absolute left-0 ... bg-[#b91c1c]" />
+// Change the section button className:
+// Before:
+className={`w-full text-left group flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-800/40 ...`}
+
+// After:
+className={`w-full text-left group flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/40 ...`}
 ```
 
-**Problem:** Active mode indicator never follows the user's chosen theme color.
+Also reduce the gap between icon and text from `gap-4` to `gap-3`, and reduce horizontal padding from `px-5` to `px-4`.
 
-**Fix instruction:** Pass `themeColor` as a prop to `ModeRail`:
+---
+
+## 🔴 PROBLEM 5 — MODE RAIL: ACTIVE ATS STATE LOOKS ALARMING
+
+**What's wrong (Screenshot 2):** When ATS mode is active, the ModeRail shows the ATS button with a full bright red circle background that looks like an ERROR indicator, not an active navigation state.
+
+**Root cause in `ModeRail.tsx` line 63:**
 ```tsx
-// 1. In ModeRail.tsx — add to interface:
-export interface ModeRailProps {
-  activeMode: 'studio' | 'design' | 'preview' | 'analyze'
-  onChangeMode: (mode: 'studio' | 'design' | 'preview' | 'analyze') => void
-  onSettingsClick: () => void
-  themeColor?: string  // ADD THIS
-}
+className={`relative flex flex-col items-center gap-1 py-3 px-2 w-14 rounded-lg transition-colors ${
+  isActive ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'
+}`}
+```
+The active state has no background — but the left-edge `w-1 h-6` red bar combined with red text creates a visual that looks like an alert/error badge on the ATS icon.
 
-// 2. Use inline style for the left-edge indicator:
+**Fix — `ModeRail.tsx`:**
+
+```tsx
+// Change the button className:
+className={`relative flex flex-col items-center gap-1 py-3 px-2 w-14 rounded-lg transition-all duration-150 ${
+  isActive
+    ? 'text-white bg-zinc-800/50'
+    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40'
+}`}
+
+// Keep the left-edge bar but only use themeColor (not red-400):
 {isActive && (
   <span
-    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full"
+    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
     style={{ backgroundColor: themeColor || '#b91c1c' }}
   />
 )}
 
-// 3. For active text color, use inline style:
-<button style={{ color: isActive ? (themeColor || '#f87171') : undefined }} ...>
+// Icon: use stroke-2 for active, stroke-1.5 for inactive:
+<Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
 
-// 4. In EditorLayout.tsx, update the ModeRail call:
-<ModeRail
-  activeMode={activeMode}
-  onChangeMode={...}
-  onSettingsClick={...}
-  themeColor={themeColor}   // ADD THIS
-/>
+// Label: active = white bold, inactive = muted:
+<span className={`text-[9px] uppercase tracking-wider font-bold leading-tight text-center ${isActive ? 'text-white' : ''}`}>
+  {item.label}
+</span>
 ```
 
 ---
 
-### 🟡 Issue 5: Sidebar header has no dynamic subtitle
-**What was asked:** A subtitle that tells users how many sections remain.
+## 🔴 PROBLEM 6 — DESIGN PANEL IS UGLY (Screenshot 4)
 
-**What was built:** Just the count "11/13" in mono font — no human-readable context text.
+**What's wrong:** The Design & Style panel's "LAYOUT TEMPLATE" grid shows large chunky rectangular buttons in a 2-column grid. They look like big flat boxes with a tiny colored dot and label — very generic, no visual interest. The "BASE FONT SIZE" and "FONT WEIGHT" controls look like basic HTML form inputs.
 
-**Fix instruction:** Below the `h2` title, add:
+**Fix — `EditorPage.tsx`, inside `renderDesignControls()`:**
+
+**Template buttons** — make them more compact and refined:
 ```tsx
-const completedCount = Object.values(getSectionStatus(resumeData)).filter(Boolean).length
-// Then in JSX:
-<p className="text-[11px] text-zinc-500 mt-0.5">
-  {completedCount === 13
-    ? 'All sections complete ✓'
-    : `${13 - completedCount} section${13 - completedCount !== 1 ? 's' : ''} remaining`}
-</p>
+// Change template button className from:
+className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs font-bold ...`}
+
+// To:
+className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
+  isSelected
+    ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
+    : 'bg-zinc-950/40 border-zinc-800/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'
+}`}
 ```
-> Add this to BOTH the desktop and mobile sidebar headers.
 
----
+> Remove the red accent (`bg-[#b91c1c]/10 border-[#b91c1c]/35`) from selected template buttons. The user changed the theme color — the template selector shouldn't be locked to red. Use neutral zinc selected state instead.
 
-### 🟡 Issue 6: Duplicate toolbar conflict — old inner toolbar + new floating toolbar
-**What's happening:** The `ResumePreview` component likely still renders its own internal `LIVE | HEATMAP | 87%` toolbar bar. Combined with the new floating toolbar, there are two toolbars stacked.
-
-**Fix instruction:** Open `ResumePreview.tsx` and find the internal top bar that renders the LIVE/HEATMAP/zoom controls. Add `hidden` or `no-print` and conditionally suppress it, since the floating toolbar now handles that role. Or pass a prop `hideInternalToolbar={true}` to `ResumePreview` and respect it inside.
-
----
-
-### 🟡 Issue 7: `hover:translate-x-0.5` on section buttons causes layout shift on Windows
-**Where:** `EditorPage.tsx` line 230
-
-**Problem:** On Windows Chromium with an `overflow-hidden` parent, applying `translateX` to a full-width `w-full` button causes a 1-pixel horizontal overflow flash on hover.
-
-**Fix instruction:** Remove `hover:translate-x-0.5`. Replace with a border color transition instead:
+**Font size control** — the `A-` / `A+` labels are unclear. Change to proper icons:
 ```tsx
-// Replace:
-className="... hover:bg-zinc-800/40 hover:translate-x-0.5 transition-all ... border-l-2 ..."
-// With:
-className={`... transition-all duration-150 border-l-2
-  ${isActive
-    ? 'border-[themeColor] bg-zinc-800/20 hover:bg-zinc-800/30'
-    : 'border-transparent hover:border-zinc-700 hover:bg-zinc-800/40'
-  }`}
+// A- button: change label span to:
+<ZoomOut className="w-3.5 h-3.5" />
+
+// A+ button: change label span to:
+<ZoomIn className="w-3.5 h-3.5" />
 ```
+(Import `ZoomOut, ZoomIn` from lucide-react — they're already used in ResumePreview)
 
 ---
 
-### 🟡 Issue 8: Mobile scrollable section list gets hidden behind bottom nav
-**Where:** `EditorPage.tsx` — mobile sidebar `overflow-y-auto` div
+## 🟡 PROBLEM 7 — SECTION PREVIEW TEXT OVERFLOW
 
-**Problem:** The bottom nav is 64px tall (`h-16`). The outer container has `pb-16`, but the inner `overflow-y-auto form-panel` div does NOT, so the last section card scrolls behind the bottom bar.
+**What's wrong (Screenshot 1):** "Senior full-stack engineer with 8 years experience building..." + "Senior Software Engineer at Stripe +2 more" are wrapping to 2 lines and making the cards look bloated alongside the already-tall row padding.
 
-**Fix instruction:** Add `pb-16 lg:pb-0` to the inner scrollable div:
+**Fix:** Use `line-clamp-1` not `line-clamp-2` for the preview subtitle, and set a max char count in `getSectionPreview` of 45 instead of 60:
+
 ```tsx
-<div className="flex-1 overflow-y-auto form-panel pb-16 lg:pb-0">
-  {sectionGroups.map(...)}
-</div>
+// In getSectionPreview function:
+case 'summary': return truncateText(data.summary, 45) || 'Write a summary'
+
+// In the subtitle <p> tag:
+<p className="text-[11px] text-zinc-500 mt-0.5 truncate leading-normal">{previewText}</p>
+// Use 'truncate' (single line), NOT 'line-clamp-2'
 ```
-> Apply this to the mobile sidebar only (the `lg:hidden` block).
 
 ---
 
-## 📊 Score Summary
+## 📋 COMPLETE FIX CHECKLIST (Execute In Order)
 
-| Area | Score | Notes |
-|------|-------|-------|
-| Header layout | 9/10 | ✅ Excellent. 3-zone clean. |
-| Sidebar grouping | 10/10 | ✅ Perfect |
-| Section cards | 8/10 | ⚠ hover translate issue on Windows |
-| Progress bar | 6/10 | ❌ Hardcoded red, ignores themeColor |
-| Preview background | 10/10 | ✅ Dot grid done |
-| Preview toolbar | 4/10 | ❌ Read-only, no interactive zoom |
-| Paper shadow | 2/10 | ❌ CSS exists, never applied |
-| ModeRail labels | 10/10 | ✅ Done on desktop + mobile |
-| ModeRail active color | 5/10 | ❌ Hardcoded red |
-| Theme color consistency | 3/10 | ❌ Multiple hardcoded `#b91c1c` remain |
-
-**Overall: 67/100 — Good foundation. 5 critical issues remain.**
+```
+[ ] 1. EditorPage.tsx — Remove ALL colorClass from sectionGroups array
+[ ] 2. EditorPage.tsx — Replace icon container with neutral bg-zinc-800/60 style
+[ ] 3. EditorPage.tsx — Icon size back to w-4 h-4 (not w-5 h-5)
+[ ] 4. EditorPage.tsx — Row padding: py-3.5 → py-2.5, px-5 → px-4, gap-4 → gap-3
+[ ] 5. EditorPage.tsx — Delete the entire new floating toolbar div (sticky top-4 preview-toolbar)
+[ ] 6. EditorPage.tsx — Replace preview mode block with clean version (no sub-header)
+[ ] 7. EditorPage.tsx — Section subtitle: line-clamp-2 → truncate, max 45 chars
+[ ] 8. EditorPage.tsx — Template buttons: remove red accent, use neutral zinc selected state
+[ ] 9. ModeRail.tsx — Active state: white text + bg-zinc-800/50 bg (not red text only)
+[]10. ModeRail.tsx — Left-edge bar: use themeColor prop (already passed), not hardcoded red
+[]11. ModeRail.tsx — Icon strokeWidth: 2 when active, 1.5 when inactive
+```
 
 ---
 
-## 🎯 Fix Priority Order for Implementer
-
-1. 🔴 Apply `preview-paper-shadow` to resume card wrapper
-2. 🔴 Make preview toolbar interactive (zoom −/+ buttons)
-3. 🔴 Pass `themeColor` to `ModeRail` + use for active indicator
-4. 🔴 Use `themeColor` for progress bar fill (both desktop + mobile)
-5. 🟡 Add dynamic subtitle to sidebar header
-6. 🟡 Investigate + hide duplicate old toolbar in `ResumePreview`
-7. 🟡 Remove `hover:translate-x-0.5` from section buttons
-8. 🟡 Add `pb-16 lg:pb-0` to mobile scrollable section list
+## 🚫 DO NOT TOUCH
+- `ResumePreview.tsx` internal toolbar — it is correct and functional, leave it alone
+- All cloud sync logic in `EditorLayout.tsx`
+- The `AnimatePresence` motion wrappers
+- Print/no-print CSS classes
+- The section drawer (`SectionDrawer.tsx`)
