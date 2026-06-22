@@ -77,7 +77,7 @@ export default function EditorPage() {
   const { resumeData, selectedTemplate, jobDescription, updateActiveResume } = useResume()
   const ctx = useOutletContext<EditorContextType>()
 
-  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint, setShowAiGuide } = ctx
+  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, pageCount, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint, setShowAiGuide } = ctx
 
   const renderDesignControls = () => {
     return (
@@ -340,8 +340,8 @@ export default function EditorPage() {
             </div>
 
             {/* A4 Preview Container */}
-            <div className={`flex-1 h-full bg-zinc-950 overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
-              <div className="w-full max-w-[858px]">
+            <div className={`flex-1 h-full preview-dot-bg overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative scroll-smooth ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+              <div className="w-full max-w-[858px] pb-16">
                 {mobileView === 'preview' && (
                   <div className="lg:hidden mb-3 no-print">
                     <button 
@@ -353,6 +353,16 @@ export default function EditorPage() {
                     </button>
                   </div>
                 )}
+                <div className="sticky top-4 z-20 flex items-center justify-center mb-4 no-print">
+                  <div className="preview-toolbar inline-flex items-center gap-3 px-4 py-1.5 rounded-full">
+                    <span className="text-[10px] font-bold text-zinc-400">LIVE</span>
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-px h-4 bg-zinc-700" />
+                    <span className="text-[10px] font-mono text-zinc-500">{templateFontSize}pt</span>
+                    <span className="w-px h-4 bg-zinc-700" />
+                    <span className="text-[10px] text-zinc-600">{pageCount}p</span>
+                  </div>
+                </div>
                 <ResumePreview
                   resumeData={resumeData} selectedTemplate={selectedTemplate}
                   onChangeTemplate={(t) => updateActiveResume(prev => ({ ...prev, selectedTemplate: t }))}

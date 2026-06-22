@@ -1130,4 +1130,23 @@ h1, h2, h3, h4, h5, h6,
 .toast-enter { animation: toast-in 0.2s ease both; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
+/* Preview area: dot grid background */
+.preview-dot-bg {
+  background-color: #0a0a0f;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Preview floating toolbar */
+.preview-toolbar {
+  background: rgba(24, 24, 27, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(63, 63, 70, 0.4);
+}
+
+/* Stronger paper shadow on resume cards */
+.preview-paper-shadow {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+}
+
 
