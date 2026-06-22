@@ -28,33 +28,40 @@ export function usePageViews() {
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)
 
+    const ac = new AbortController()
+
     const logAndFetch = async () => {
+      if (ac.signal.aborted) return
       try {
         if (!logged.current) {
           const { error: logError } = await db.rpc('log_page_view', {
             visitor_id: visitorId,
             path,
             view_date: new Date().toISOString().slice(0, 10),
-          })
+          }, { signal: ac.signal } as Record<string, unknown>)
           if (logError) throw logError
           logged.current = true
         }
 
+        if (ac.signal.aborted) return
         const [monthly, total] = await Promise.all([
-          db.rpc('count_distinct_visitors', { since: startOfMonth.toISOString() }),
-          db.rpc('count_distinct_visitors', {}),
+          db.rpc('count_distinct_visitors', { since: startOfMonth.toISOString() }, { signal: ac.signal } as Record<string, unknown>),
+          db.rpc('count_distinct_visitors', {}, { signal: ac.signal } as Record<string, unknown>),
         ])
         if (monthly.data !== null) setMonthlyViews(monthly.data as number)
         if (total.data !== null) setTotalViews(total.data as number)
       } catch {
-        // Supabase not available
+        // Supabase not available or aborted
       }
     }
 
     logAndFetch()
 
     const interval = setInterval(logAndFetch, POLL_INTERVAL)
-    return () => clearInterval(interval)
+    return () => {
+      ac.abort()
+      clearInterval(interval)
+    }
   }, [])
 
   return { totalViews, monthlyViews }
