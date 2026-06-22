@@ -97,7 +97,7 @@ export default function PrivacyPage() {
                 >
                   <Database size={20} />
                 </div>
-                <h3 className="text-base font-bold text-white m-0">100% Local-First</h3>
+                <h3 className="text-base font-bold text-white m-0">Local-First Editing</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
                 Your resumes, target job descriptions, settings, and layout preferences are saved directly to your browser's <code className="text-rose-400 bg-rose-500/5 px-1 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>localStorage</code>. When you sign in with Google, Seve syncs your resume profiles to Supabase for cloud backup and cross-device access. After sign-in, local changes are saved locally first; you can use the cloud Save button or Ctrl+S to push later edits.
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
                 >
                   <Globe size={20} />
                 </div>
-                <h3 className="text-base font-bold text-white m-0">Zero Analytics & Ads</h3>
+                <h3 className="text-base font-bold text-white m-0">No Marketing Trackers</h3>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed font-light m-0">
                 Seve does not load Google Analytics, telemetry packages, marketing trackers, or cookies. An anonymous page-view count is recorded through Supabase to measure aggregate usage — no personal data, IPs, or browsing history are associated with this count.

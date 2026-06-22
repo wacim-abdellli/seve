@@ -273,7 +273,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   // ---------------------------------------------------------------------------
   // Persist to localStorage on every state change (automatic).
-  // Cloud sync is manual — triggered only by explicit saveChangesToCloud().
+  // Initial sign-in sync is automatic (fetchAndMergeCloud); after that, cloud saves are manual via saveChangesToCloud().
   // ---------------------------------------------------------------------------
   const isInitialMountRef = useRef(true)
   const prevUserIdRef = useRef<string | null>(null)

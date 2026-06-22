@@ -203,7 +203,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <Badge className="text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border-emerald-500/20 py-0.5 px-2 font-display">
-                    READY FOR ATS
+                    ATS-Friendly
                   </Badge>
                 </div>
 
@@ -238,7 +238,7 @@ export default function LandingPage() {
               {
                 step: '03',
                 title: 'Export & Apply',
-                desc: 'Run the ATS checker, fix issues with one click, and download a pixel-perfect PDF.',
+                desc: 'Run the ATS checker, fix issues with one click, and download a print-ready PDF.',
                 color: 'text-emerald-400',
               },
             ].map((item, i) => (

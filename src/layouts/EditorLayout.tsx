@@ -835,7 +835,7 @@ export default function EditorLayout() {
 
       <AnimatePresence>
         {isResumeManagerOpen && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-6 h-6 border-2 border-zinc-600 border-t-red-400 rounded-full splash-spinner" /></div>}>
             <ResumeManager
               resumes={resumes} selectedResumeId={selectedResumeId} cloudStatus={cloudStatus}
               onSelect={selectResume} onCreate={createResume} onDuplicate={duplicateResume}
@@ -874,7 +874,7 @@ export default function EditorLayout() {
       {showAuthModal && <DownloadAuthModal onClose={() => setShowAuthModal(false)} onSignIn={signInWithGoogle} />}
       <AnimatePresence>
         {showAiGuide && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-6 h-6 border-2 border-zinc-600 border-t-red-400 rounded-full splash-spinner" /></div>}>
             <AiOnboardingModal
               onClose={() => setShowAiGuide(false)}
               onImport={(data) => importResumeData(data)}
@@ -885,7 +885,7 @@ export default function EditorLayout() {
 
       <AnimatePresence>
         {showShortcuts && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="w-6 h-6 border-2 border-zinc-600 border-t-red-400 rounded-full splash-spinner" /></div>}>
             <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
           </Suspense>
         )}
