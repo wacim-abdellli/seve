@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { ResumeData } from '../types/resume'
 import type { SectionType } from './SectionSidebar'
 import { 
@@ -26,118 +27,67 @@ interface BentoDashboardProps {
 
 export default function BentoDashboard({ resumeData, onSelectSection }: BentoDashboardProps) {
   
-  // Helper to calculate section completion and strength
-  const getSectionStats = (section: SectionType): { percent: number; status: 'empty' | 'partial' | 'complete'; label: string } => {
-    switch (section) {
-      case 'contact': {
-        const info = resumeData.contact
-        let points = 0
-        if (info.fullName?.trim()) points += 30
-        if (info.email?.trim()) points += 25
-        if (info.phone?.trim()) points += 20
-        if (info.location?.trim()) points += 15
-        if (info.linkedin?.trim()) points += 10
-        return {
-          percent: points,
-          status: points === 0 ? 'empty' : points >= 75 ? 'complete' : 'partial',
-          label: 'Contact Info'
-        }
-      }
-      case 'summary': {
-        const len = resumeData.summary?.trim().length || 0
-        const percent = Math.min(100, Math.round((len / 150) * 100))
-        return {
-          percent,
-          status: len === 0 ? 'empty' : len > 100 ? 'complete' : 'partial',
-          label: 'Profile Summary'
-        }
-      }
-      case 'experience': {
-        const items = resumeData.experience || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Work History' }
-        const first = items[0]
-        let points = 50
-        if (first.jobTitle?.trim()) points += 15
-        if (first.company?.trim()) points += 15
-        if (first.bullets && first.bullets.length > 0) points += 20
-        const total = Math.min(100, points + (items.length - 1) * 15)
-        return {
-          percent: total,
-          status: total >= 80 ? 'complete' : 'partial',
-          label: 'Work Experience'
-        }
-      }
-      case 'education': {
-        const items = resumeData.education || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Academic Path' }
-        const total = Math.min(100, 60 + (items.length - 1) * 40)
-        return {
-          percent: total,
-          status: total >= 100 ? 'complete' : 'partial',
-          label: 'Education'
-        }
-      }
-      case 'skills': {
-        const len = resumeData.skills?.length || 0
-        const percent = Math.min(100, Math.round((len / 8) * 100))
-        return {
-          percent,
-          status: len === 0 ? 'empty' : len >= 5 ? 'complete' : 'partial',
-          label: 'Core Skills'
-        }
-      }
-      case 'projects': {
-        const items = resumeData.projects || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Projects List' }
-        const total = Math.min(100, 60 + (items.length - 1) * 40)
-        return {
-          percent: total,
-          status: total >= 100 ? 'complete' : 'partial',
-          label: 'Projects'
-        }
-      }
-      case 'languages': {
-        const items = resumeData.languages || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Languages' }
-        const percent = Math.min(100, Math.round((items.length / 3) * 100))
-        return {
-          percent,
-          status: items.length >= 3 ? 'complete' : 'partial',
-          label: 'Languages'
-        }
-      }
-      case 'awards': {
-        const items = resumeData.awards || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Awards & Honors' }
-        return { percent: 100, status: 'complete', label: 'Awards & Honors' }
-      }
-      case 'certifications': {
-        const items = resumeData.certifications || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Certifications' }
-        return { percent: 100, status: 'complete', label: 'Certifications' }
-      }
-      case 'interests': {
-        const items = resumeData.interests || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Interests' }
-        return { percent: 100, status: 'complete', label: 'Interests' }
-      }
-      case 'publications': {
-        const items = resumeData.publications || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Publications' }
-        return { percent: 100, status: 'complete', label: 'Publications' }
-      }
-      case 'references': {
-        const items = resumeData.references || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'References' }
-        return { percent: 100, status: 'complete', label: 'References' }
-      }
-      case 'volunteer': {
-        const items = resumeData.volunteer || []
-        if (items.length === 0) return { percent: 0, status: 'empty', label: 'Volunteer' }
-        return { percent: 100, status: 'complete', label: 'Volunteer' }
-      }
+  // Pre-compute all section stats once per resumeData change (instead of per-section function calls)
+  const allSectionStats = useMemo(() => {
+    const stats: Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }> = {} as Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }>
+
+    const contactInfo = resumeData.contact
+    let contactPoints = 0
+    if (contactInfo.fullName?.trim()) contactPoints += 30
+    if (contactInfo.email?.trim()) contactPoints += 25
+    if (contactInfo.phone?.trim()) contactPoints += 20
+    if (contactInfo.location?.trim()) contactPoints += 15
+    if (contactInfo.linkedin?.trim()) contactPoints += 10
+    stats.contact = { percent: contactPoints, status: contactPoints === 0 ? 'empty' : contactPoints >= 75 ? 'complete' : 'partial', label: 'Contact Info' }
+
+    const summaryLen = resumeData.summary?.trim().length || 0
+    const summaryPercent = Math.min(100, Math.round((summaryLen / 150) * 100))
+    stats.summary = { percent: summaryPercent, status: summaryLen === 0 ? 'empty' : summaryLen > 100 ? 'complete' : 'partial', label: 'Profile Summary' }
+
+    const expItems = resumeData.experience || []
+    if (expItems.length === 0) { stats.experience = { percent: 0, status: 'empty', label: 'Work History' } }
+    else {
+      const first = expItems[0]
+      let expPts = 50
+      if (first.jobTitle?.trim()) expPts += 15
+      if (first.company?.trim()) expPts += 15
+      if (first.bullets && first.bullets.length > 0) expPts += 20
+      const expTotal = Math.min(100, expPts + (expItems.length - 1) * 15)
+      stats.experience = { percent: expTotal, status: expTotal >= 80 ? 'complete' : 'partial', label: 'Work Experience' }
     }
-  }
+
+    const eduItems = resumeData.education || []
+    if (eduItems.length === 0) { stats.education = { percent: 0, status: 'empty', label: 'Academic Path' } }
+    else { const eduTotal = Math.min(100, 60 + (eduItems.length - 1) * 40); stats.education = { percent: eduTotal, status: eduTotal >= 100 ? 'complete' : 'partial', label: 'Education' } }
+
+    const skillLen = resumeData.skills?.length || 0
+    const skillPercent = Math.min(100, Math.round((skillLen / 8) * 100))
+    stats.skills = { percent: skillPercent, status: skillLen === 0 ? 'empty' : skillLen >= 5 ? 'complete' : 'partial', label: 'Core Skills' }
+
+    const projItems = resumeData.projects || []
+    if (projItems.length === 0) { stats.projects = { percent: 0, status: 'empty', label: 'Projects List' } }
+    else { const projTotal = Math.min(100, 60 + (projItems.length - 1) * 40); stats.projects = { percent: projTotal, status: projTotal >= 100 ? 'complete' : 'partial', label: 'Projects' } }
+
+    const langItems = resumeData.languages || []
+    if (langItems.length === 0) { stats.languages = { percent: 0, status: 'empty', label: 'Languages' } }
+    else { const langPercent = Math.min(100, Math.round((langItems.length / 3) * 100)); stats.languages = { percent: langPercent, status: langItems.length >= 3 ? 'complete' : 'partial', label: 'Languages' } }
+
+    const simpleSections: { key: SectionType; items: unknown[]; label: string }[] = [
+      { key: 'awards', items: resumeData.awards || [], label: 'Awards & Honors' },
+      { key: 'certifications', items: resumeData.certifications || [], label: 'Certifications' },
+      { key: 'interests', items: resumeData.interests || [], label: 'Interests' },
+      { key: 'publications', items: resumeData.publications || [], label: 'Publications' },
+      { key: 'references', items: resumeData.references || [], label: 'References' },
+      { key: 'volunteer', items: resumeData.volunteer || [], label: 'Volunteer' },
+    ]
+    for (const s of simpleSections) {
+      stats[s.key] = s.items.length === 0 ? { percent: 0, status: 'empty', label: s.label } : { percent: 100, status: 'complete', label: s.label }
+    }
+
+    return stats
+  }, [resumeData])
+
+  const getSectionStats = (section: SectionType) => allSectionStats[section]
 
   const getStatusBadge = (status: 'empty' | 'partial' | 'complete', percent: number) => {
     if (status === 'complete') {
