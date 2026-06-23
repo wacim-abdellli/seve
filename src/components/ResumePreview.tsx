@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import type { ResumeData, ResumeStylePreferences, Template } from '../types/resume'
 import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
@@ -592,7 +592,7 @@ export default function ResumePreview({
           ) : (
             /* Normal Template Rendering with Drag-and-drop handlers */
             <div className="resume-template-wrapper">
-              <SectionReorderProvider value={{ moveSection: handleMoveSection }}>
+              <SectionReorderProvider value={useMemo(() => ({ moveSection: handleMoveSection }), [handleMoveSection])}>
                 <TemplateRenderer
                   type={selectedTemplate}
                   data={resumeData}

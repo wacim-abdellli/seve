@@ -96,7 +96,7 @@ const ModernTemplate = memo(function ModernTemplate({
             <div key={edu.id} className="edu-entry">
               <div className="flex justify-between items-baseline font-sans">
                 <span className="text-[10.5px] font-bold text-slate-950">{edu.school || 'Institution Name'}</span>
-                <span className="text-[9.5px] font-bold text-slate-500">{formatDate(edu.graduationDate)}</span>
+                <span className="text-[9.5px] font-bold text-slate-500">{edu.graduationDate ? formatDate(edu.graduationDate) : ''}</span>
               </div>
               <div className="text-[10px] text-slate-500 mt-0.5">
                 <span>{edu.degree}</span>

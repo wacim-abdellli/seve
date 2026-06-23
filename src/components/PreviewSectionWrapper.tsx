@@ -83,13 +83,16 @@ export default function PreviewSectionWrapper({
   const reorder = useSectionReorder()
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const VALID_KEYS: readonly SectionKey[] = ['contact', 'summary', 'experience', 'education', 'skills', 'languages', 'projects', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer']
+    const key = sectionId as SectionKey
+    if (!(VALID_KEYS as readonly string[]).includes(key)) return
     if (e.altKey && e.key === 'ArrowUp') {
       e.preventDefault()
-      reorder?.moveSection(sectionId as SectionKey, 'up')
+      reorder?.moveSection(key, 'up')
     }
     if (e.altKey && e.key === 'ArrowDown') {
       e.preventDefault()
-      reorder?.moveSection(sectionId as SectionKey, 'down')
+      reorder?.moveSection(key, 'down')
     }
   }
 
@@ -97,15 +100,22 @@ export default function PreviewSectionWrapper({
 
   return (
     <div 
+      role="region"
+      aria-roledescription="resume section"
       draggable={isDraggable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(e) => {
+        handleKeyDown(e)
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleEditClick(e as unknown as React.MouseEvent)
+        }
+      }}
       tabIndex={0}
       aria-label={`${sectionIdLabel} section. ${isDraggable ? 'Alt+Arrow keys to reorder.' : ''}`}
-      aria-roledescription="resume section"
       className={`preview-section ${ripple ? 'animate-ripple' : ''}`}
       style={{
         borderLeft: isActive ? '2px solid rgba(251,146,60,0.6)' : '2px solid transparent',
@@ -147,7 +157,7 @@ export default function PreviewSectionWrapper({
               cursor: 'grab' 
             }}
           >
-            <GripVertical size={14} />
+            <GripVertical size={14} aria-hidden="true" />
           </div>
         )}
 
@@ -158,8 +168,9 @@ export default function PreviewSectionWrapper({
             className="flex items-center justify-center"
             style={{ width: 24, height: 24, padding: 0 }}
             title={`Edit ${sectionId}`}
+            aria-label={`Edit ${sectionIdLabel}`}
           >
-            <FileEdit size={12} />
+            <FileEdit size={12} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -186,7 +197,7 @@ export default function PreviewSectionWrapper({
               className={`font-bold inline-flex gap-1 cursor-help` + (atsRating === 'safe' ? ' text-emerald-400' : atsRating === 'warning' ? ' text-amber-400' : ' text-red-400')}
               title={atsFeedback}
             >
-              <Info size={10} />
+              <Info size={10} aria-hidden="true" />
               {atsRating}
             </span>
           </div>
