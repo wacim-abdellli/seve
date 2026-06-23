@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -461,23 +461,28 @@ export default function EditorLayout() {
     handlePrintModal(resumeData, pageCount)
   }, [resumeData, pageCount, handlePrintModal])
 
+  const handlePrintRef = useRef(handlePrint)
+  handlePrintRef.current = handlePrint
+  const saveChangesRef = useRef(saveChangesToCloud)
+  saveChangesRef.current = saveChangesToCloud
+
   // Keyboard shortcuts: Ctrl+P -> Print / Save as PDF, Ctrl+S -> save to cloud
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault()
-        handlePrint()
+        handlePrintRef.current()
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
-        if (user) saveChangesToCloud()
+        if (user) saveChangesRef.current()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [user, resumeData, pageCount, saveChangesToCloud, handlePrint])
+  }, [user])
 
-  const openDrawer = (sec: SectionType) => setActiveStudioSection(sec)
+  const openDrawer = useCallback((sec: SectionType) => setActiveStudioSection(sec), [])
   const closeDrawer = () => setActiveStudioSection(null)
 
 
