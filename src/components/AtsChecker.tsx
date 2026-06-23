@@ -340,48 +340,64 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       setIsScanning(true)
       dataRef.current = { rHash: hashResume(resumeData), j: jobDescription }
 
-      setScanStage(0)
       setResumeScanVersion(v => v + 1)
       setScanLogs([])
 
       scanTimeouts.current = []
-      let d = 0
-      const delays = [800, 650, 600, 550, 500, 480, 450, 420, 400, 380, 350, 300]
-      delays.forEach((ms, i) => {
-        d += ms
-        const t = setTimeout(() => {
-          // If a newer scan started, this one is stale — bail out
+
+      // Initial scan gets a quick 450ms animation; subsequent edits skip delays
+      const isEditReScan = hasInitializedRef.current
+      if (!isEditReScan) {
+        let d = 0
+        const delays = [180, 150, 120]
+        delays.forEach((ms, i) => {
+          d += ms
+          const t = setTimeout(() => {
+            if (scanVersionRef.current !== currentVersion) return
+            setScanStage(i + 1)
+            if (i === delays.length - 1) {
+              const finalTimer = setTimeout(() => {
+                if (scanVersionRef.current !== currentVersion) return
+                setIsScanning(false)
+                setLastAudited(new Date())
+                try {
+                  localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData))
+                  localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
+                } catch { /* ignore */ }
+              }, 80)
+              scanTimeouts.current.push(finalTimer)
+            }
+          }, d)
+          scanTimeouts.current.push(t)
+        })
+      } else {
+        setScanStage(3)
+        const finalTimer = setTimeout(() => {
           if (scanVersionRef.current !== currentVersion) return
-          setScanStage(i + 1)
-          if (i === delays.length - 1) {
-            // Track the finalization timer so it's cleaned up properly
-            const finalTimer = setTimeout(() => {
-              if (scanVersionRef.current !== currentVersion) return
-              setIsScanning(false)
-              setLastAudited(new Date())
-              try {
-                localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData))
-                localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
-              } catch { /* ignore */ }
-            }, 200)
-            scanTimeouts.current.push(finalTimer)
-          }
-        }, d)
-        scanTimeouts.current.push(t)
-      })
+          setIsScanning(false)
+          setLastAudited(new Date())
+          try {
+            localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData))
+            localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
+          } catch { /* ignore */ }
+        }, 80)
+        scanTimeouts.current.push(finalTimer)
+      }
 
       if (scanInterval.current) clearInterval(scanInterval.current)
-      scanInterval.current = setInterval(() => {
-        if (scanVersionRef.current !== currentVersion) {
-          clearInterval(scanInterval.current!)
-          return
-        }
-        setScanLogs(prev => {
-          const idx = prev.length
-          if (idx >= SCAN_STAGES.length) return prev
-          return [...prev, SCAN_STAGES[idx].log].slice(-5)
-        })
-      }, 520)
+      if (!isEditReScan) {
+        scanInterval.current = setInterval(() => {
+          if (scanVersionRef.current !== currentVersion) {
+            clearInterval(scanInterval.current!)
+            return
+          }
+          setScanLogs(prev => {
+            const idx = prev.length
+            if (idx >= SCAN_STAGES.length) return prev
+            return [...prev, SCAN_STAGES[idx].log].slice(-5)
+          })
+        }, 120)
+      }
     }, 500)
 
     return () => {
