@@ -189,7 +189,7 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs, themeCo
                 className={`flex-1 h-7 text-[10px] font-black rounded-lg transition-colors cursor-pointer border ${
                   stylePrefs.headingCase === c
                     ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-                    : 'bg-zinc-950/60 border-zinc-850 text-zinc-550 hover:text-zinc-300 hover:bg-zinc-900'
+                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'
                 }`}
               >
                 {c === 'uppercase' ? 'AA' : c === 'capitalize' ? 'Aa' : 'aa'}
@@ -228,7 +228,7 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs, themeCo
               )
             })}
             <label
-              className="w-6 h-6 rounded-full bg-zinc-950 border border-zinc-850 cursor-pointer flex items-center justify-center hover:scale-110 hover:border-zinc-700 transition-all duration-150 relative overflow-hidden"
+              className="w-6 h-6 rounded-full bg-zinc-950 border border-zinc-800 cursor-pointer flex items-center justify-center hover:scale-110 hover:border-zinc-700 transition-all duration-150 relative overflow-hidden"
               title="Custom color"
               style={!themeColors.find(c => c.value === themeColor) ? { 
                 backgroundColor: themeColor,
