@@ -73,33 +73,39 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
             </button>
           </div>
 
-          <div className="px-4 pb-4 pt-3 space-y-3 border-t border-zinc-800/60">
-            <label htmlFor={`lang-name-${lang.id}`} className="block text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              Language Name
-            </label>
-            <input
-              id={`lang-name-${lang.id}`}
-              value={lang.name}
-              onChange={(e) => handleChange(lang.id, 'name', e.target.value)}
-              placeholder="e.g. English, French, Arabic"
-              className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
-            />
+          <div className="px-4 pb-4 pt-3 border-t border-zinc-800/60">
+            <div className="grid grid-cols-5 gap-3">
+              <div className="col-span-3 space-y-1.5">
+                <label htmlFor={`lang-name-${lang.id}`} className="block text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                  Language Name
+                </label>
+                <input
+                  id={`lang-name-${lang.id}`}
+                  value={lang.name}
+                  onChange={(e) => handleChange(lang.id, 'name', e.target.value)}
+                  placeholder="e.g. English"
+                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2 text-[12.5px] text-white placeholder:text-zinc-650 focus:outline-none focus:border-rose-500/40 transition-all h-9"
+                />
+              </div>
 
-            <label htmlFor={`lang-prof-${lang.id}`} className="block text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-2">
-              Proficiency Level
-            </label>
-            <select
-              id={`lang-prof-${lang.id}`}
-              value={lang.proficiency}
-              onChange={(e) => handleChange(lang.id, 'proficiency', e.target.value as LanguageProficiency)}
-              className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white focus:outline-none focus:border-rose-500/40 transition-all"
-            >
-              {PROFICIENCY_LEVELS.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
+              <div className="col-span-2 space-y-1.5">
+                <label htmlFor={`lang-prof-${lang.id}`} className="block text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                  Proficiency
+                </label>
+                <select
+                  id={`lang-prof-${lang.id}`}
+                  value={lang.proficiency}
+                  onChange={(e) => handleChange(lang.id, 'proficiency', e.target.value as LanguageProficiency)}
+                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-2.5 py-1.5 text-[12.5px] text-white focus:outline-none focus:border-rose-500/40 transition-all h-9 cursor-pointer"
+                >
+                  {PROFICIENCY_LEVELS.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       ))}
