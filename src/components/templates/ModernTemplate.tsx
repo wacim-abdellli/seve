@@ -1,5 +1,5 @@
 import type { ResumeData } from '../../types/resume'
-import { memo } from 'react'
+import { memo, useMemo, useCallback } from 'react'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
 import { getFullName } from '../../utils/contactUtils'
@@ -22,14 +22,14 @@ interface ModernTemplateProps {
   themeColor?: string
 }
 
-function SectionHeading({ label, color }: { label: string; color: string }) {
+const SectionHeading = memo(function SectionHeading({ label, color }: { label: string; color: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <div className="w-1.5 h-4 rounded-sm" style={{ backgroundColor: color }} />
       <ResumeSectionHeading label={label} className="text-[11px] font-black tracking-wider text-slate-950 section-heading" />
     </div>
   )
-}
+})
 
 const ModernTemplate = memo(function ModernTemplate({
   data, activeSection, atsMode, onEditSection,
@@ -42,7 +42,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ats, sectionData,
   } = useTemplateData(data, activeSection, atsMode, onEditSection, onDragStart, onDragOver, onDrop, sectionOrder)
 
-  const renderPreviewWrapper = (sectionId: string, children: React.ReactNode, dragSection?: string) => (
+  const renderPreviewWrapper = useCallback((sectionId: string, children: React.ReactNode, _dragSection?: string) => (
     <PreviewSectionWrapper
       sectionId={sectionId}
       activeSection={activeSection}
@@ -50,15 +50,15 @@ const ModernTemplate = memo(function ModernTemplate({
       atsRating={ats[sectionId]?.rating || ''}
       atsFeedback={ats[sectionId]?.feedback}
       onEdit={onEditSection}
-      onDragStart={dragSection ? ((e: React.DragEvent) => onDragStart?.(e, dragSection)) : undefined}
+      onDragStart={onDragStart}
       onDragOver={onDragOver}
-      onDrop={dragSection ? (() => onDrop?.(dragSection)) : undefined}
+      onDrop={onDrop}
     >
       {children}
     </PreviewSectionWrapper>
-  )
+  ), [activeSection, atsMode, ats, onEditSection, onDragStart, onDragOver, onDrop])
 
-  const sectionsMap: Record<string, React.ReactNode> = {
+  const sectionsMap = useMemo<Record<string, React.ReactNode>>(() => ({
     summary: summary ? renderPreviewWrapper('summary', (
       <div className="mb-5 resume-section">
         <SectionHeading label={SECTION_LABELS.summary} color={themeColor} />
@@ -246,7 +246,7 @@ const ModernTemplate = memo(function ModernTemplate({
         </div>
       </div>
     ), 'volunteer') : null,
-  }
+  }), [summary, experience, education, skills, projects, languages, awards, certifications, interests, publications, references, volunteer, themeColor, renderPreviewWrapper])
 
   return (
     <div className="resume-template">
