@@ -458,6 +458,7 @@ export default function EditorPage() {
             jobDescription={jobDescription}
             templateFontSize={templateFontSize}
             onUpdateJobDescription={(jd) => updateActiveResume((prev) => ({ ...prev, jobDescription: jd }))}
+            onAutoFix={(fixed) => updateActiveResume((prev) => ({ ...prev, resumeData: fixed }))}
             onNavigateToSection={(section) => { setActiveMode('studio'); setActiveStudioSection(section as SectionType) }}
           />
         )}
