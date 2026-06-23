@@ -19,11 +19,11 @@ export default function ResumeSkillsList({ skills, separator = ' · ', className
   return (
     <div className={`${isGrid ? 'grid grid-cols-2 gap-x-6 gap-y-1.5' : 'flex flex-col gap-1.5'} ${className}`} style={style}>
       {groups.map((group, idx) => (
-        <div key={idx} className="flex flex-wrap items-baseline gap-x-1.5 leading-normal">
+        <div key={idx} className="leading-normal">
           {group.category !== 'Skills' && (
-            <span className="font-semibold text-slate-800 shrink-0">{group.category}:</span>
+            <span className="font-semibold text-slate-900 mr-1.5">{group.category}:</span>
           )}
-          <span className="text-slate-600 font-light">
+          <span className="text-slate-650 font-light">
             {group.items.join(separator)}
           </span>
         </div>
