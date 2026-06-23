@@ -38,10 +38,6 @@
   --surface-3: #1a1a1a;    /* inputs, hover states */
   --surface-4: #2a2a2a;    /* borders, dividers */
 
-  --text-primary: #f5f5f5;
-  --text-secondary: #a0a0a0;
-  --text-muted: #555555;
-
   --accent: #b91c1c;        /* crimson-700 */
   --accent-soft: #991b1b1a; /* crimson with 10% opacity */
   --accent-hover: #a11d1d;
@@ -103,6 +99,7 @@
   --template-heading-color: #0f172a;
   --template-divider-style: solid;
   --template-divider-width: 1px;
+  --template-divider-color: #e2e8f0;
   --template-high-contrast: 0;
   --template-ats-font: 0;
 }
@@ -1110,6 +1107,15 @@ h1, h2, h3, h4, h5, h6,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .spinner,
+  [role="status"],
+  .loading,
+  .animate-spin,
+  .animate-pulse {
+    animation-duration: inherit !important;
+    animation-iteration-count: inherit !important;
+    transition-duration: inherit !important;
   }
 }
 
