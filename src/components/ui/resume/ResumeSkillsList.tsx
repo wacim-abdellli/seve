@@ -21,7 +21,7 @@ export default function ResumeSkillsList({ skills, separator = ' · ', className
       className={`${isGrid ? 'grid gap-y-1' : 'flex flex-col gap-1'} ${className}`} 
       style={{
         ...style,
-        ...(isGrid ? { gridTemplateColumns: 'fit-content(48%) 1fr', columnGap: '1.5rem' } : {})
+        ...(isGrid ? { gridTemplateColumns: 'fit-content(70%) 1fr', columnGap: '1.5rem' } : {})
       }}
     >
       {groups.map((group, idx) => (
