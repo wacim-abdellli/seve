@@ -65,7 +65,7 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
             </span>
             <button
               onClick={() => handleRemove(lang.id)}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Language"
             >
@@ -74,18 +74,24 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
           </div>
 
           <div className="px-4 pb-4 pt-3 space-y-3 border-t border-zinc-800/60">
+            <label htmlFor={`lang-name-${lang.id}`} className="block text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+              Language Name
+            </label>
             <input
+              id={`lang-name-${lang.id}`}
               value={lang.name}
               onChange={(e) => handleChange(lang.id, 'name', e.target.value)}
               placeholder="e.g. English, French, Arabic"
-              aria-label="Language name"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
 
+            <label htmlFor={`lang-prof-${lang.id}`} className="block text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-2">
+              Proficiency Level
+            </label>
             <select
+              id={`lang-prof-${lang.id}`}
               value={lang.proficiency}
               onChange={(e) => handleChange(lang.id, 'proficiency', e.target.value)}
-              aria-label="Language proficiency"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white focus:outline-none focus:border-rose-500/40 transition-all"
             >
               {PROFICIENCY_LEVELS.map((level) => (

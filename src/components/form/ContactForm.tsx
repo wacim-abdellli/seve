@@ -44,10 +44,11 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
     <div className="flex flex-col gap-4">
       {/* Full Name */}
       <div className="space-y-1">
-        <label className="text-[11px] text-zinc-500">
+        <label htmlFor="contact-fullname" className="text-[11px] text-zinc-500">
           Full Name
         </label>
         <input
+          id="contact-fullname"
           type="text"
           value={contact.fullName}
           onChange={(e) => handleFieldChange('fullName', e.target.value)}
@@ -58,10 +59,11 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
 
       {/* Location */}
       <div className="space-y-1">
-        <label className="text-[11px] text-zinc-500">
+        <label htmlFor="contact-location" className="text-[11px] text-zinc-500">
           Location
         </label>
         <input
+          id="contact-location"
           type="text"
           value={contact.location}
           onChange={(e) => handleFieldChange('location', e.target.value)}
@@ -72,10 +74,11 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
 
       {/* Email */}
       <div className="space-y-1">
-        <label className="text-[11px] text-zinc-500">
+        <label htmlFor="contact-email" className="text-[11px] text-zinc-500">
           Email Address
         </label>
         <input
+          id="contact-email"
           type="email"
           value={contact.email}
           onChange={(e) => handleFieldChange('email', e.target.value)}
@@ -87,10 +90,11 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
 
       {/* Phone */}
       <div className="space-y-1">
-        <label className="text-[11px] text-zinc-500">
+        <label htmlFor="contact-phone" className="text-[11px] text-zinc-500">
           Phone Number
         </label>
         <input
+          id="contact-phone"
           type="text"
           value={contact.phone}
           onChange={(e) => handleFieldChange('phone', e.target.value)}
@@ -102,10 +106,11 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
 
       {/* LinkedIn */}
       <div className="space-y-1">
-        <label className="text-[11px] text-zinc-500">
+        <label htmlFor="contact-linkedin" className="text-[11px] text-zinc-500">
           LinkedIn URL
         </label>
         <input
+          id="contact-linkedin"
           type="text"
           value={contact.linkedin}
           onChange={(e) => handleFieldChange('linkedin', e.target.value)}
@@ -117,10 +122,11 @@ export default function ContactForm({ contact, onChange }: ContactFormProps) {
 
       {/* Website */}
       <div className="space-y-1">
-        <label className="text-[11px] text-zinc-500">
+        <label htmlFor="contact-website" className="text-[11px] text-zinc-500">
           Personal Website (optional)
         </label>
         <input
+          id="contact-website"
           type="text"
           value={contact.website || ''}
           onChange={(e) => handleFieldChange('website', e.target.value)}
