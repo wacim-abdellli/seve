@@ -306,7 +306,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
             </button>
 
             {showIndustryDropdown && (
-              <div className="absolute right-0 top-[110%] w-[200px] max-h-[220px] overflow-y-auto bg-zinc-900 border border-zinc-855 rounded-lg shadow-2xl custom-scrollbar py-1 animate-scale-in">
+              <div className="absolute left-0 sm:left-auto sm:right-0 top-[110%] w-[200px] max-h-[220px] overflow-y-auto bg-zinc-900 border border-zinc-855 rounded-lg shadow-2xl custom-scrollbar py-1 animate-scale-in">
                 {Object.entries(INDUSTRY_LABELS).map(([key, label]) => (
                   <button
                     key={key}
