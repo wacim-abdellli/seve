@@ -367,7 +367,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
           </div>
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-zinc-450 uppercase tracking-wider font-display">Data Management</label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Download className="w-3.5 h-3.5 text-zinc-400" /> Backup
               </button>
