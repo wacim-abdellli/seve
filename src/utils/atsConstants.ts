@@ -104,7 +104,11 @@ export const EXPECTED_SECTION_KEYS = ['summary', 'projects', 'certifications']
 
 export const WEAK_VERB_STARTERS = /^(was|were|been|being|had|has|have|am|is|are|used to|responsible for|worked on|helped with|in charge of|tasked with|participated in|involved in|assisted with|supported|handled|performed|did|made|got|took|gave|went|saw)/i
 
+export const FR_WEAK_VERB_STARTERS = /^(était|étaient|été|ayant|a|ont|avais|avait|suis|es|est|sommes|êtes|sont|utilisé pour|responsable de|travaillé sur|aidé avec|en charge de|chargé de|participé à|impliqué dans|assisté avec|soutenu|géré|effectué|fait|obtenu|pris|donné|allé|vu)/i
+
 export const STRONG_VERB_SUGGESTIONS = 'Led • Built • Developed • Engineered • Optimized • Delivered • Created • Designed • Implemented • Launched • Drove • Established • Generated • Produced • Transformed • Spearheaded'
+
+export const FR_STRONG_VERB_SUGGESTIONS = 'Dirigé • Conçu • Créé • Développé • Géré • Optimisé • Automatisé • Implémenté • Amélioré • Lancé • Livré • Réalisé • Piloté • Déployé • Conduit • Structuré'
 
 export const DIMENSION_WEIGHTS: Record<string, number> = {
   completeness: 0.12,

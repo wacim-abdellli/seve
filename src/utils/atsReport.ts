@@ -350,7 +350,7 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   const contactInfo = scoreContactInfo(resume, lang)
   const dateConsistency = scoreDateConsistency(resume, lang)
   const length = scoreLength(resume, lang, 10)
-  const bulletQuality = scoreBulletQuality(resume)
+  const bulletQuality = scoreBulletQuality(resume, lang)
   const readability = scoreReadability(resume, lang)
   const contentDepth = scoreContentDepth(resume, lang)
 
@@ -518,7 +518,7 @@ export function generateAtsReportV2(
   const contactInfo = scoreContactInfo(resume, lang)
   const dateConsistency = scoreDateConsistency(resume, lang)
   const length = scoreLength(resume, lang, fontSize)
-  const bulletQuality = scoreBulletQuality(resume)
+  const bulletQuality = scoreBulletQuality(resume, lang)
   const readability = scoreReadability(resume, lang)
   const contentDepth = scoreContentDepth(resume, lang)
 

@@ -2,13 +2,29 @@ import type { ResumeData, AtsIssue, AtsCategoryScore } from '../types/resume'
 import { toDomId } from './atsUtils'
 import {
   WEAK_VERB_STARTERS,
+  FR_WEAK_VERB_STARTERS,
   STRONG_VERB_SUGGESTIONS,
+  FR_STRONG_VERB_SUGGESTIONS,
   STRONG_VERBS,
   FR_STRONG_VERBS,
+  EN_PRONOUNS_REGEX,
+  FR_PRONOUNS_REGEX,
   DIMENSION_WEIGHTS
 } from './atsConstants'
 
-export function getAlternativeStarters(word: string): string[] {
+export function getAlternativeStarters(word: string, lang: 'en' | 'fr' = 'en'): string[] {
+  if (lang === 'fr') {
+    const map: Record<string, string[]> = {
+      dirigé: ['Piloté', 'Conduit', 'Supervisé', 'Géré', 'Coordonné'],
+      conçu: ['Créé', 'Développé', 'Bâti', 'Réalisé', 'Implémenté'],
+      géré: ['Piloté', 'Supervisé', 'Dirigé', 'Coordonné', 'Organisé'],
+      créé: ['Développé', 'Conçu', 'Bâti', 'Lancé', 'Établi'],
+      développé: ['Conçu', 'Créé', 'Bâti', 'Réalisé', 'Implémenté'],
+      amélioré: ['Optimisé', 'Structuré', 'Simplifié', 'Modernisé', 'Revitalisé'],
+      accru: ['Développé', 'Augmenté', 'Généré', 'Propulsé', 'Accéléré'],
+    }
+    return map[word.toLowerCase()] || ['Piloté', 'Conçu', 'Développé', 'Géré', 'Optimisé']
+  }
   const map: Record<string, string[]> = {
     led: ['Built', 'Created', 'Established', 'Drove', 'Directed'],
     built: ['Developed', 'Engineered', 'Architected', 'Constructed', 'Implemented'],
@@ -29,7 +45,7 @@ interface BulletCheckResult {
 
 interface BulletCheck {
   name: string
-  check: (bullet: string, index: number, bullets: string[]) => BulletCheckResult | null
+  check: (bullet: string, index: number, bullets: string[], lang: 'en' | 'fr') => BulletCheckResult | null
   category: 'style' | 'formatting'
   type: 'warning' | 'suggestion'
 }
@@ -37,20 +53,37 @@ interface BulletCheck {
 const BULLET_CHECKS: BulletCheck[] = [
   {
     name: 'Pronoun usage',
-    check: (b) => {
-      const m = b.match(/\b(I|my|me|we|our|us)\b/i)
-      return m ? { fail: true, detail: b, fix: `Remove "${m[0]}". Rewrite: "${b.replace(/\b(I|my|me|we|our|us)\b/gi, '').trim()}"` } : null
+    check: (b, _i, _bs, lang) => {
+      const regex = lang === 'fr' ? FR_PRONOUNS_REGEX : EN_PRONOUNS_REGEX
+      const m = b.match(regex)
+      if (m) {
+        return {
+          fail: true,
+          detail: b,
+          fix: lang === 'fr'
+            ? `Supprimez "${m[0]}". Rédigez sans pronom personnel.`
+            : `Remove "${m[0]}". Rewrite: "${b.replace(new RegExp(regex.source, 'gi'), '').trim()}"`
+        }
+      }
+      return null
     },
     category: 'style',
     type: 'warning',
   },
   {
     name: 'Weak verb start',
-    check: (b) => {
-      const clean = b.trim().replace(/^[^\w]+/, '')
-      const m = clean.match(WEAK_VERB_STARTERS)
+    check: (b, _i, _bs, lang) => {
+      const clean = b.trim().replace(/^[^\w\u00C0-\u00FF]+/, '')
+      const regex = lang === 'fr' ? FR_WEAK_VERB_STARTERS : WEAK_VERB_STARTERS
+      const m = clean.match(regex)
       if (m) {
-        return { fail: true, detail: b, fix: `Start with a strong verb: ${STRONG_VERB_SUGGESTIONS}` }
+        return {
+          fail: true,
+          detail: b,
+          fix: lang === 'fr'
+            ? `Commencez par un verbe d'action fort: ${FR_STRONG_VERB_SUGGESTIONS}`
+            : `Start with a strong verb: ${STRONG_VERB_SUGGESTIONS}`
+        }
       }
       return null
     },
@@ -59,34 +92,59 @@ const BULLET_CHECKS: BulletCheck[] = [
   },
   {
     name: 'Missing metrics',
-    check: (b) => {
+    check: (b, _i, _bs, lang) => {
       const hasMetric = /[%$\d]{2,}/.test(b)
-      return hasMetric ? null : { fail: true, detail: b, fix: 'Add measurable impact (%, $, numbers, time saved)' }
+      if (hasMetric) return null
+      return {
+        fail: true,
+        detail: b,
+        fix: lang === 'fr'
+          ? 'Ajoutez un impact mesurable (%, $, chiffres, temps gagné)'
+          : 'Add measurable impact (%, $, numbers, time saved)'
+      }
     },
     category: 'style',
     type: 'suggestion',
   },
   {
     name: 'Bullet too short',
-    check: (b) => {
+    check: (b, _i, _bs, lang) => {
       const words = b.trim().split(/\s+/).length
-      return words < 5 ? { fail: true, detail: b, fix: 'Add more detail — who, what, and the impact?' } : null
+      if (words >= 5) return null
+      return {
+        fail: true,
+        detail: b,
+        fix: lang === 'fr'
+          ? 'Ajoutez plus de détails — qui, quoi, et l\'impact ?'
+          : 'Add more detail — who, what, and the impact?'
+      }
     },
     category: 'formatting',
     type: 'suggestion',
   },
   {
     name: 'Bullet too long',
-    check: (b) => {
+    check: (b, _i, _bs, lang) => {
       const words = b.trim().split(/\s+/).length
-      return words > 35 ? { fail: true, detail: b, fix: 'Split into 2–3 shorter, scannable bullets' } : null
+      if (words <= 35) return null
+      return {
+        fail: true,
+        detail: b,
+        fix: lang === 'fr'
+          ? 'Divisez en 2 ou 3 puces plus courtes et faciles à lire'
+          : 'Split into 2–3 shorter, scannable bullets'
+      }
     },
     category: 'formatting',
     type: 'suggestion',
   },
   {
     name: 'Passive voice',
-    check: (b) => {
+    check: (b, _i, _bs, lang) => {
+      if (lang === 'fr') {
+        const m = b.match(/\b(a\s+été|ont\s+été|fut|furent)\s+\w+(é|és|ée|ées)\b/i)
+        return m ? { fail: true, detail: b, fix: `Utilisez la voix active : remplacez "${m[0]}" par une action directe` } : null
+      }
       const m = b.match(/\b(was|were)\s+\w+ed\b/i)
       return m ? { fail: true, detail: b, fix: `Use active voice: replace "${m[0]}" with direct action` } : null
     },
@@ -95,13 +153,19 @@ const BULLET_CHECKS: BulletCheck[] = [
   },
   {
     name: 'Same starter as previous',
-    check: (b, i, bullets) => {
+    check: (b, i, bullets, lang) => {
       if (i === 0) return null
-      const prev = bullets[i - 1]?.trim().replace(/^[^\w]+/, '').match(/^\w+/)?.[0]?.toLowerCase()
-      const curr = b.trim().replace(/^[^\w]+/, '').match(/^\w+/)?.[0]?.toLowerCase()
+      const prev = bullets[i - 1]?.trim().replace(/^[^\w\u00C0-\u00FF]+/, '').match(/^\w+/)?.[0]?.toLowerCase()
+      const curr = b.trim().replace(/^[^\w\u00C0-\u00FF]+/, '').match(/^\w+/)?.[0]?.toLowerCase()
       if (prev && curr && prev === curr) {
-        const alt = getAlternativeStarters(curr)
-        return { fail: true, detail: b, fix: `"${curr}" used in the previous bullet. Try: ${alt.join(', ')}` }
+        const alt = getAlternativeStarters(curr, lang)
+        return {
+          fail: true,
+          detail: b,
+          fix: lang === 'fr'
+            ? `"${curr}" utilisé dans la puce précédente. Essayez : ${alt.join(', ')}`
+            : `"${curr}" used in the previous bullet. Try: ${alt.join(', ')}`
+        }
       }
       return null
     },
@@ -110,18 +174,18 @@ const BULLET_CHECKS: BulletCheck[] = [
   },
 ]
 
-export function auditBullets(bullets: string[], sectionName: string): AtsIssue[] {
+export function auditBullets(bullets: string[], sectionName: string, lang: 'en' | 'fr' = 'en'): AtsIssue[] {
   const issues: AtsIssue[] = []
 
   bullets.forEach((bullet, i) => {
     BULLET_CHECKS.forEach(check => {
-      const result = check.check(bullet, i, bullets)
+      const result = check.check(bullet, i, bullets, lang)
       if (result?.fail) {
         issues.push({
           id: `bullet-${check.name.replace(/\s+/g, '-').toLowerCase()}-${toDomId(sectionName)}-${i}`,
           type: check.type,
           category: check.category === 'style' ? 'style' : 'formatting',
-          issue: `${check.name} in ${sectionName}`,
+          issue: lang === 'fr' ? `${check.name} dans ${sectionName}` : `${check.name} in ${sectionName}`,
           fix: result.fix || '',
           section: sectionName,
           bulletIndex: i,
@@ -136,14 +200,14 @@ export function auditBullets(bullets: string[], sectionName: string): AtsIssue[]
   return issues
 }
 
-export function scoreBulletQuality(resume: ResumeData): AtsCategoryScore {
+export function scoreBulletQuality(resume: ResumeData, lang: 'en' | 'fr' = 'en'): AtsCategoryScore {
   const issues: AtsIssue[] = []
   const max = 5
   const TOO_LONG_CHARS = 180 // ~2 lines at typical resume width
 
   let index = 0
   resume.experience.forEach(exp => {
-    const bulletIssues = auditBullets(exp.bullets, 'experience')
+    const bulletIssues = auditBullets(exp.bullets, 'experience', lang)
     issues.push(...bulletIssues)
 
     exp.bullets.forEach(bullet => {
@@ -153,8 +217,12 @@ export function scoreBulletQuality(resume: ResumeData): AtsCategoryScore {
           id: `bullet-wraps-${index}`,
           type: 'suggestion',
           category: 'style',
-          issue: `Bullet is quite long (${charCount} chars) and may be hard to scan quickly.`,
-          fix: 'Split into two bullets: one for the action/method, one for the quantified result.',
+          issue: lang === 'fr'
+            ? `La puce est assez longue (${charCount} caract.) et peut être difficile à lire rapidement.`
+            : `Bullet is quite long (${charCount} chars) and may be hard to scan quickly.`,
+          fix: lang === 'fr'
+            ? 'Divisez en deux puces : une pour l\'action, une pour le résultat chiffré.'
+            : 'Split into two bullets: one for the action/method, one for the quantified result.',
           section: 'experience',
           bulletIndex: index,
           details: [bullet],
@@ -170,7 +238,7 @@ export function scoreBulletQuality(resume: ResumeData): AtsCategoryScore {
   const raw = Math.max(0, max - issueCount * 0.5)
   const score = Math.round(Math.max(0, Math.min(max, raw)))
 
-  return { key: 'bulletQuality', label: 'Bullet Quality', score, max, weight: DIMENSION_WEIGHTS.bulletQuality, issues }
+  return { key: 'bulletQuality', label: lang === 'fr' ? 'Qualité des puces' : 'Bullet Quality', score, max, weight: DIMENSION_WEIGHTS.bulletQuality, issues }
 }
 
 export function scoreActionVerbs(resume: ResumeData, lang: string): AtsCategoryScore {
