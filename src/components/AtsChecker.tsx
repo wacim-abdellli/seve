@@ -913,7 +913,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider font-mono">Weighted evaluation</span>
                       </div>
                       <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                        {report?.categories.map((cat, idx) => {
+                        {report?.categories?.map((cat, idx) => {
                           const pct = cat.max > 0 ? (cat.score / cat.max) * 100 : 0
                           const color = BAR_COLORS[cat.key] || 'bg-zinc-400'
                           const isDisabled = cat.weight === 0
