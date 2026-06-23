@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { industryKeywords } from '../../utils/atsConstants'
 import { HelpCircle, Sparkles, Plus, X, ChevronDown } from 'lucide-react'
 
@@ -276,6 +276,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
               <button
                 type="button"
                 onClick={() => removeSkill(skill)}
+                aria-label={`Remove ${skill}`}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer rounded-full"
               >
                 <X size={10} />

@@ -365,48 +365,13 @@ export function calculateLocalSemanticScore(resumeText: string, jobDescription: 
   return computeSemanticRelevance(resumeText, jobDescription)
 }
 
-export function calculateSkillsMatrix(resume: ResumeData, jobDescription: string): SkillsMatrixItem[] {
-  // Compile resume text
-  let resumeText = ''
-  if (resume.contact) {
-    resumeText += ` ${resume.contact.fullName} ${resume.contact.email} ${resume.contact.phone} ${resume.contact.linkedin} ${resume.contact.location} ${resume.contact.website || ''}`
-  }
-  resumeText += ` ${resume.summary}`
-  resume.experience.forEach((exp) => {
-    resumeText += ` ${exp.jobTitle} ${exp.company} ${exp.location} ${exp.bullets.join(' ')}`
-  })
-  resume.education.forEach((edu) => {
-    resumeText += ` ${edu.degree} ${edu.school} ${edu.location}`
-  })
-  resume.skills.forEach((s) => {
-    resumeText += ` ${s}`
-  })
-  if (resume.languages) {
-    resume.languages.forEach((l) => {
-      resumeText += ` ${l.name} ${l.proficiency}`
-    })
-  }
-  if (resume.projects) {
-    resume.projects.forEach((proj) => {
-      resumeText += ` ${proj.name} ${proj.description} ${proj.technologies.join(' ')}`
-    })
-  }
-  
-  const lowerResume = resumeText.toLowerCase()
-  const lowerJd = jobDescription.toLowerCase()
-  
-  // Detect language of resume/JD to select correct labels
-  const lang = detectLanguage(resumeText)
+interface SkillCategoryConfig {
+  subject: string
+  keywords: string[]
+}
 
-  const checkPresence = (sourceText: string, keyword: string): boolean => {
-    if (/[^a-z0-9\u00c0-\u00ff]/i.test(keyword)) {
-      return sourceText.includes(keyword.toLowerCase())
-    }
-    const regex = new RegExp(`\\b${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i')
-    return regex.test(sourceText)
-  }
-
-  const SKILL_CATEGORIES_CONFIG = [
+function getSkillCategoriesConfig(lang: 'en' | 'fr'): SkillCategoryConfig[] {
+  return [
     {
       subject: lang === 'fr' ? 'Langages & Algorithmique' : 'Languages & Core Tech',
       keywords: ['javascript', 'typescript', 'python', 'java', 'c++', 'c#', 'go', 'golang', 'rust', 'ruby', 'php', 'swift', 'kotlin', 'scala', 'html', 'css', 'sql', 'bash', 'shell', 'r', 'c']
@@ -428,6 +393,23 @@ export function calculateSkillsMatrix(resume: ResumeData, jobDescription: string
       keywords: ['agile', 'scrum', 'kanban', 'leadership', 'management', 'communication', 'collaboration', 'product management', 'project management', 'mentoring', 'coaching', 'teamwork', 'problem solving', 'creative', 'organization']
     }
   ]
+}
+
+export function calculateSkillsMatrix(resume: ResumeData, jobDescription: string): SkillsMatrixItem[] {
+  const raw = extractResumeText(resume) as string
+  const lowerResume = raw.toLowerCase()
+  const lowerJd = jobDescription.toLowerCase()
+  const lang = detectLanguage(raw)
+
+  const SKILL_CATEGORIES_CONFIG = getSkillCategoriesConfig(lang)
+
+  const checkPresence = (sourceText: string, keyword: string): boolean => {
+    if (/[^a-z0-9\u00c0-\u00ff]/i.test(keyword)) {
+      return sourceText.includes(keyword.toLowerCase())
+    }
+    const regex = new RegExp(`\\b${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i')
+    return regex.test(sourceText)
+  }
 
   const allConfigKeywords = SKILL_CATEGORIES_CONFIG.reduce((acc, cat) => {
     return acc.concat(cat.keywords)
