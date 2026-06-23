@@ -1019,10 +1019,10 @@ function scoreKeywords(resume: ResumeData, jd: string, lang: string): AtsCategor
   }
 
   for (const kw of matched) {
-    matchedWeight += weightsMap[kw] || 1.0
+    matchedWeight += weightsMap[kw] ?? 1.0
   }
   for (const p of partial) {
-    matchedWeight += (weightsMap[p.jdTerm] || 1.0) * 0.7
+    matchedWeight += (weightsMap[p.jdTerm] ?? 1.0) * 0.7
   }
 
   const rawScore = Math.round((matchedWeight / totalJdWeight) * max)
@@ -1478,13 +1478,17 @@ function scoreLength(resume: ResumeData, lang: string, fontSize: number = 10): A
   const max = 5
   const text = extractResumeText(resume)
   const wordCount = text.split(/\s+/).filter(Boolean).length
+  const parseYear = (s: string | undefined | null) => {
+    const m = (s || '').match(/\b(\d{4})\b/)
+    return m ? parseInt(m[1]) : 0
+  }
   const years = resume.experience.reduce((sum, e) => {
-    const start = parseInt(e.startDate?.split('/')[1] || '0') || 0
+    const start = parseYear(e.startDate)
     if (start === 0) return sum
     const endStr = e.endDate
     const end = /present|current/i.test(endStr || '')
       ? new Date().getFullYear()
-      : parseInt(endStr?.split('/')[1] || '0') || 0
+      : parseYear(endStr)
     return sum + Math.max(0, end - start)
   }, 0)
 
