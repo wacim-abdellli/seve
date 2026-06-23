@@ -1,4 +1,0 @@
-{
-	"extends": ["//"],
-	"tags": ["app:server", "runtime:server", "role:adapter"]
-}

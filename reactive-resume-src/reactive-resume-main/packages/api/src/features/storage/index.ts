@@ -1,1 +1,0 @@
-export { getStorageService } from "./service";

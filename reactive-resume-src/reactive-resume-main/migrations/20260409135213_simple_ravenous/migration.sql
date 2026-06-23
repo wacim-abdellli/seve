@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX "user_email_lower_unique_idx" ON "user" (lower("email"));
