@@ -73,6 +73,21 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
     )
   }
 
+  const handleCurrentToggle = (id: string, currentVal: boolean) => {
+    onChange(
+      experience.map((exp) => {
+        if (exp.id === id) {
+          return {
+            ...exp,
+            current: currentVal,
+            endDate: currentVal ? 'Present' : ''
+          }
+        }
+        return exp
+      })
+    )
+  }
+
   const handleBulletChange = (expId: string, bulletIndex: number, val: string) => {
     onChange(
       experience.map((exp) => {
@@ -311,6 +326,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                             <label className="text-[11px] text-zinc-500">Start Date *</label>
                             <input
                               type="text"
+                              inputMode="numeric"
                               placeholder="e.g. 09/2021"
                               className="drawer-input !bg-zinc-950"
                               value={exp.startDate}
@@ -321,9 +337,11 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                             <label className="text-[11px] text-zinc-500">End Date *</label>
                             <input
                               type="text"
+                              inputMode="numeric"
                               placeholder="e.g. Present"
-                              disabled={exp.current}
-                              className="drawer-input !bg-zinc-950"
+                              readOnly={exp.current}
+                              aria-disabled={exp.current}
+                              className={`drawer-input !bg-zinc-950 ${exp.current ? 'opacity-50 cursor-not-allowed' : ''}`}
                               value={exp.current ? 'Present' : exp.endDate}
                               onChange={(e) => handleChange(exp.id, 'endDate', e.target.value)}
                             />
@@ -335,7 +353,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                           <input
                             type="checkbox"
                             checked={exp.current}
-                            onChange={() => handleChange(exp.id, 'current', !exp.current)}
+                            onChange={() => handleCurrentToggle(exp.id, !exp.current)}
                             className="accent-rose-500 w-4 h-4 cursor-pointer"
                           />
                           <span className="text-[12px] text-zinc-400">
