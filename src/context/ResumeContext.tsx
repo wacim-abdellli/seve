@@ -50,6 +50,16 @@ function createDefaultResume(): ResumeProfile {
   }
 }
 
+const parseToUtcMs = (dateStr?: string): number => {
+  if (!dateStr) return 0
+  let normalized = dateStr
+  if (!dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/-\d{2}:\d{2}$/)) {
+    normalized = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z'
+  }
+  const t = Date.parse(normalized)
+  return isNaN(t) ? 0 : t
+}
+
 function loadInitialState(): AppState {
   let saved = localStorage.getItem(LOCAL_STORAGE_KEY)
   if (!saved) {
@@ -158,42 +168,55 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
     if (!isSupabaseConfigured || !supabase) return
 
+    let hasErrors = false
+    let lastError: unknown = null
+
     for (const p of profiles) {
-      const { data: existing, error: selectError } = await supabase
-        .from('resumes')
-        .select('id')
-        .eq('id', p.id)
-        .eq('user_id', userId)
-        .maybeSingle()
-
-      if (selectError) throw selectError
-
-      if (existing) {
-        const { error: updateError } = await supabase
+      try {
+        const { data: existing, error: selectError } = await supabase
           .from('resumes')
-          .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+          .select('id')
           .eq('id', p.id)
           .eq('user_id', userId)
-        if (updateError) throw updateError
-      } else {
-        const { error: insertError } = await supabase
-          .from('resumes')
-          .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+          .maybeSingle()
 
-        if (insertError) {
-          // Race: another client inserted this (user_id, id) between our select and insert
-          if (insertError.code === '23505') {
-            const { error: retryError } = await supabase
-              .from('resumes')
-              .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
-              .eq('id', p.id)
-              .eq('user_id', userId)
-            if (retryError) throw retryError
-            continue
+        if (selectError) throw selectError
+
+        if (existing) {
+          const { error: updateError } = await supabase
+            .from('resumes')
+            .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+            .eq('id', p.id)
+            .eq('user_id', userId)
+          if (updateError) throw updateError
+        } else {
+          const { error: insertError } = await supabase
+            .from('resumes')
+            .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+
+          if (insertError) {
+            // Race: another client inserted this (user_id, id) between our select and insert
+            if (insertError.code === '23505') {
+              const { error: retryError } = await supabase
+                .from('resumes')
+                .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+                .eq('id', p.id)
+                .eq('user_id', userId)
+              if (retryError) throw retryError
+              continue
+            }
+            throw insertError
           }
-          throw insertError
         }
+      } catch (err) {
+        console.error(`Failed to sync profile ${p.id}:`, err)
+        hasErrors = true
+        lastError = err
       }
+    }
+
+    if (hasErrors) {
+      throw lastError
     }
   }, [])
 
@@ -255,7 +278,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
             if (cloudRev > localRev) {
               merged[id] = cloudProfile
               hasChanges = true
-            } else if (cloudRev === localRev && new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
+            } else if (cloudRev === localRev && parseToUtcMs(cloudProfile.updatedAt) > parseToUtcMs(merged[id].updatedAt)) {
               merged[id] = cloudProfile
               hasChanges = true
             }
