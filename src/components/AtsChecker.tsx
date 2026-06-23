@@ -1292,7 +1292,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         </div>
 
                         {/* Guide Navigation */}
-                        <div className="grid grid-cols-3 gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-850 mb-5 shrink-0 relative">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-850 mb-5 shrink-0 relative">
                           {(['formula', 'verbs', 'format'] as const).map((tab) => {
                             const isActive = guideTab === tab;
                             const Icon = tab === 'formula' ? Sparkles : tab === 'verbs' ? Zap : Shield;
