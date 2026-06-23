@@ -3,11 +3,16 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const VISITOR_KEY = 'sv_visitor_id'
 const POLL_INTERVAL = 30_000
+const MAX_RETRIES = 3
 
 function getVisitorId(): string {
   let id = localStorage.getItem(VISITOR_KEY)
   if (!id) {
-    id = crypto.randomUUID()
+    try {
+      id = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    } catch {
+      id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    }
     localStorage.setItem(VISITOR_KEY, id)
   }
   return id
@@ -17,6 +22,13 @@ export function usePageViews() {
   const [totalViews, setTotalViews] = useState<number | null>(null)
   const [monthlyViews, setMonthlyViews] = useState<number | null>(null)
   const logged = useRef(false)
+  const retryCount = useRef(0)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return
@@ -31,7 +43,7 @@ export function usePageViews() {
     const ac = new AbortController()
 
     const logAndFetch = async () => {
-      if (ac.signal.aborted) return
+      if (ac.signal.aborted || !mountedRef.current) return
       try {
         if (!logged.current) {
           const { error: logError } = await db.rpc('log_page_view', {
@@ -43,15 +55,27 @@ export function usePageViews() {
           logged.current = true
         }
 
-        if (ac.signal.aborted) return
-        const [monthly, total] = await Promise.all([
+        if (ac.signal.aborted || !mountedRef.current) return
+        const [monthlyResult, totalResult] = await Promise.allSettled([
           db.rpc('count_distinct_visitors', { since: startOfMonth.toISOString() }, { signal: ac.signal } as Record<string, unknown>),
           db.rpc('count_distinct_visitors', {}, { signal: ac.signal } as Record<string, unknown>),
         ])
-        if (monthly.data !== null) setMonthlyViews(monthly.data as number)
-        if (total.data !== null) setTotalViews(total.data as number)
+
+        if (ac.signal.aborted || !mountedRef.current) return
+
+        if (monthlyResult.status === 'fulfilled' && monthlyResult.value.data !== null) {
+          setMonthlyViews(monthlyResult.value.data as number)
+        }
+        if (totalResult.status === 'fulfilled' && totalResult.value.data !== null) {
+          setTotalViews(totalResult.value.data as number)
+        }
+
+        retryCount.current = 0
       } catch {
-        // Supabase not available or aborted
+        retryCount.current++
+        if (retryCount.current > MAX_RETRIES) {
+          if (mountedRef.current) clearInterval(interval)
+        }
       }
     }
 
