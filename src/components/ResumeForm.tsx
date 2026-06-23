@@ -235,12 +235,11 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
                 key={tab.id}
                 type="button"
                 onClick={() => setLocalActiveSubTab(tab.id)}
-                className={`w-full text-left px-4 py-2.5 rounded-lg flex items-center gap-3 transition-colors text-xs font-bold ${
+                className={`w-full text-left whitespace-nowrap px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-xs font-bold ${
                   isActive
                     ? 'bg-primary text-primary-foreground shadow'
                     : 'text-muted-foreground hover:bg-zinc-900 hover:text-white'
                 }`}
-                style={{ minWidth: '120px' }}
               >
                 <div className="relative flex items-center">
                   <Icon size={14} className={isActive ? 'text-white' : 'text-zinc-500'} />
@@ -248,7 +247,7 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
                     <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-zinc-950 shadow-[0_0_4px_rgba(16,185,129,0.4)]" />
                   )}
                 </div>
-                <span className="hidden md:inline truncate">
+                <span className="truncate">
                   {tab.label}
                 </span>
               </button>
