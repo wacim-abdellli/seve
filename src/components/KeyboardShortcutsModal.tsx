@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { X, Keyboard } from 'lucide-react'
@@ -19,10 +20,43 @@ function isMac() {
 }
 
 export default function KeyboardShortcutsModal({ onClose }: KeyboardShortcutsModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Focus the close button initially
+    const closeBtn = containerRef.current?.querySelector('button')
+    closeBtn?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+
+      if (e.key === 'Tab' && containerRef.current) {
+        const focusables = containerRef.current.querySelectorAll('button, [tabindex="0"]')
+        if (focusables.length === 0) return
+        const first = focusables[0] as HTMLElement
+        const last = focusables[focusables.length - 1] as HTMLElement
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return createPortal(
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <motion.div
+        ref={containerRef}
         initial={{ opacity: 0, scale: 0.95, y: 10, filter: 'blur(6px)' }}
         animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
         exit={{ opacity: 0, scale: 0.95, y: 10, filter: 'blur(6px)' }}

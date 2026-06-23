@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, Copy, Check, FileCode, CheckCircle2, AlertCircle, X, Brain, ArrowRight } from 'lucide-react'
 import type { ResumeData } from '../types/resume'
@@ -97,10 +97,42 @@ Instructions for the AI:
     }
   }
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     localStorage.setItem('seve_ai_onboarded', 'true')
     onClose()
-  }
+  }, [onClose])
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Focus the first focusable element initially
+    const firstFocusable = containerRef.current?.querySelector('button, textarea, input, select') as HTMLElement
+    firstFocusable?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDismiss()
+      }
+
+      if (e.key === 'Tab' && containerRef.current) {
+        const focusables = containerRef.current.querySelectorAll('button, textarea, input, select, [tabindex="0"]')
+        if (focusables.length === 0) return
+        const first = focusables[0] as HTMLElement
+        const last = focusables[focusables.length - 1] as HTMLElement
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleDismiss])
 
   return createPortal(
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
@@ -116,6 +148,7 @@ Instructions for the AI:
 
       {/* Modal Card */}
       <motion.div
+        ref={containerRef}
         initial={{ opacity: 0, scale: 0.95, y: 15, filter: 'blur(8px)' }}
         animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
         exit={{ opacity: 0, scale: 0.95, y: 15, filter: 'blur(8px)' }}
