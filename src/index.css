@@ -284,16 +284,10 @@
 #resume-print-area .resume-section + .resume-section,
 #resume-print-area .resume-section-breakable + .resume-section-breakable,
 #resume-print-area .resume-page > * + *,
-#resume-print-area div:has(> .preview-section) + div:has(> .preview-section),
-#resume-print-area div:has(> .resume-section) + div:has(> .resume-section),
-#resume-print-area div:has(> .resume-section-breakable) + div:has(> .resume-section-breakable),
 .resume-template-print-wrapper .preview-section + .preview-section,
 .resume-template-print-wrapper .resume-section + .resume-section,
 .resume-template-print-wrapper .resume-section-breakable + .resume-section-breakable,
-.resume-template-print-wrapper .resume-page > * + *,
-.resume-template-print-wrapper div:has(> .preview-section) + div:has(> .preview-section),
-.resume-template-print-wrapper div:has(> .resume-section) + div:has(> .resume-section),
-.resume-template-print-wrapper div:has(> .resume-section-breakable) + div:has(> .resume-section-breakable) {
+.resume-template-print-wrapper .resume-page > * + * {
   margin-top: var(--template-section-spacing) !important;
 }
 
@@ -1062,8 +1056,8 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .resume-page {
     background-color: #ffffff !important;
     width: 100% !important;
-    max-width: 794px !important;
-    min-height: 1123px !important;
+    max-width: 21cm !important;
+    min-height: 29.7cm !important;
     height: auto !important; /* Allow continuous flow */
     max-height: none !important; /* Remove cutoff limit */
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
