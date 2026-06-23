@@ -1447,7 +1447,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           const zRest = xyzZ.trim().substring(firstWordCapitalized.length)
                                           const zText = `${firstWordCapitalized}${zRest}`
                                           const resultText = `${zText ? zText + ', ' : ''}${xyzX.trim() ? xyzX.trim() : ''}${xyzY.trim() ? ' ' + xyzY.trim() : ''}.`
-                                          navigator.clipboard.writeText(resultText)
+                                          navigator.clipboard.writeText(resultText).catch(() => {})
                                           setCopiedBullet(true)
                                           setTimeout(() => setCopiedBullet(false), 2000)
                                         }}
@@ -1542,7 +1542,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                               whileTap={{ scale: 0.95 }}
                                               key={verb}
                                               onClick={() => {
-                                                navigator.clipboard.writeText(verb)
+                                                navigator.clipboard.writeText(verb).catch(() => {})
                                                 setCopiedVerb(verb)
                                                 setTimeout(() => setCopiedVerb(null), 1500)
                                               }}
@@ -1587,7 +1587,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           whileTap={{ scale: 0.95 }}
                                           key={verb}
                                           onClick={() => {
-                                            navigator.clipboard.writeText(verb)
+                                            navigator.clipboard.writeText(verb).catch(() => {})
                                             setCopiedVerb(verb)
                                             setTimeout(() => setCopiedVerb(null), 1500)
                                           }}
