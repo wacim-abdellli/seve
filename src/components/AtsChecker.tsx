@@ -267,6 +267,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [selectedVerbCat, setSelectedVerbCat] = useState('Tech & Dev')
   const [copiedVerb, setCopiedVerb] = useState<string | null>(null)
   const [copiedBullet, setCopiedBullet] = useState(false)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(copiedTimerRef.current), [])
   const [verbSearchQuery, setVerbSearchQuery] = useState('')
 
   const [scanStage, setScanStage] = useState(0)
@@ -463,9 +465,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
     return 'text-red-400'
   }, [report?.atsParseability])
 
-  const toggleExpandIssue = (id: string) => {
+  const toggleExpandIssue = useCallback((id: string) => {
     setExpandedIssues(prev => ({ ...prev, [id]: !prev[id] }))
-  }
+  }, [])
 
   // Grouping issues for checklist tab
   const criticalIssues = report?.critical || []
@@ -536,7 +538,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
       {/* ═══ Navigation Tabs ═══ */}
       <div className="px-6 py-3.5 border-b border-zinc-900 bg-zinc-950 shrink-0 z-10">
-        <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+        <div className="inline-flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl" role="tablist" aria-label="ATS report sections">
           {(['overview', 'audit', 'keywords'] as const).map((tab) => {
             const isActive = activeTab === tab
             const isAudit = tab === 'audit'
@@ -545,6 +547,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
             return (
               <button
                 key={tab}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`ats-panel-${tab}`}
                 onClick={() => setActiveTab(tab)}
                 className="relative px-4 py-2 text-xs font-bold rounded-lg transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -609,7 +614,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                     <FileCode size={13} className="text-indigo-400" />
                     Target Job Description
                   </h4>
-                  <button onClick={() => { setShowJdInput(false); setJdDraft(jobDescription); draftTouchedRef.current = false }} className="text-zinc-500 hover:text-white p-1 rounded hover:bg-zinc-800 transition-colors cursor-pointer">
+                  <button onClick={() => { setShowJdInput(false); setJdDraft(jobDescription); draftTouchedRef.current = false }} className="text-zinc-500 hover:text-white p-1 rounded hover:bg-zinc-800 transition-colors cursor-pointer" aria-label="Close job description input">
                     <XCircle size={14} />
                   </button>
                 </div>
@@ -708,7 +713,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       </div>
 
                       {/* Live log — terminal style */}
-                      <div className="w-full bg-zinc-950 rounded-lg border border-zinc-800/20 p-3 min-h-[72px]">
+                      <div className="w-full bg-zinc-950 rounded-lg border border-zinc-800/20 p-3 min-h-[72px]" aria-live="polite" aria-atomic="true">
                         <div className="flex items-center gap-1.5 mb-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                           <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest">scan log</span>
@@ -978,6 +983,11 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <div
                                     className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-800/20' : ''}`}
                                     onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
+                                    role={hasHelpOrDetails ? 'button' : undefined}
+                                    tabIndex={hasHelpOrDetails ? 0 : undefined}
+                                    aria-expanded={hasHelpOrDetails ? isExpanded : undefined}
+                                    aria-controls={hasHelpOrDetails ? `issue-content-${issue.id}` : undefined}
+                                    onKeyDown={hasHelpOrDetails ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandIssue(issue.id) } } : undefined}
                                   >
                                     <div className="flex gap-3.5 items-start min-w-0">
                                       <div className={`w-9 h-9 rounded-lg ${theme.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
@@ -1016,6 +1026,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <AnimatePresence initial={false}>
                                     {isExpanded && hasHelpOrDetails && (
                                       <motion.div
+                                        id={`issue-content-${issue.id}`}
                                         initial={{ height: 0 }}
                                         animate={{ height: 'auto' }}
                                         exit={{ height: 0 }}
@@ -1105,6 +1116,11 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <div 
                                     className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-800/20' : ''}`}
                                     onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
+                                    role={hasHelpOrDetails ? 'button' : undefined}
+                                    tabIndex={hasHelpOrDetails ? 0 : undefined}
+                                    aria-expanded={hasHelpOrDetails ? isExpanded : undefined}
+                                    aria-controls={hasHelpOrDetails ? `issue-content-${issue.id}` : undefined}
+                                    onKeyDown={hasHelpOrDetails ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandIssue(issue.id) } } : undefined}
                                   >
                                     <div className="flex gap-3.5 items-start min-w-0">
                                       <div className={`w-9 h-9 rounded-lg ${theme.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
@@ -1143,6 +1159,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <AnimatePresence initial={false}>
                                     {isExpanded && hasHelpOrDetails && (
                                       <motion.div
+                                        id={`issue-content-${issue.id}`}
                                         initial={{ height: 0 }}
                                         animate={{ height: 'auto' }}
                                         exit={{ height: 0 }}
@@ -1232,6 +1249,11 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <div 
                                     className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-900/20' : ''}`}
                                     onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
+                                    role={hasHelpOrDetails ? 'button' : undefined}
+                                    tabIndex={hasHelpOrDetails ? 0 : undefined}
+                                    aria-expanded={hasHelpOrDetails ? isExpanded : undefined}
+                                    aria-controls={hasHelpOrDetails ? `issue-content-${issue.id}` : undefined}
+                                    onKeyDown={hasHelpOrDetails ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandIssue(issue.id) } } : undefined}
                                   >
                                     <div className="flex gap-3.5 items-start min-w-0">
                                       <div className={`w-9 h-9 rounded-lg ${theme.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
@@ -1270,6 +1292,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <AnimatePresence initial={false}>
                                     {isExpanded && hasHelpOrDetails && (
                                       <motion.div
+                                        id={`issue-content-${issue.id}`}
                                         initial={{ height: 0 }}
                                         animate={{ height: 'auto' }}
                                         exit={{ height: 0 }}
@@ -1345,7 +1368,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         </div>
 
                         {/* Guide Navigation */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-850 mb-5 shrink-0 relative">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-850 mb-5 shrink-0 relative" role="tablist" aria-label="ATS guide sections">
                           {(['formula', 'verbs', 'format'] as const).map((tab) => {
                             const isActive = guideTab === tab;
                             const Icon = tab === 'formula' ? Sparkles : tab === 'verbs' ? Zap : Shield;
@@ -1353,6 +1376,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                             return (
                               <button
                                 key={tab}
+                                role="tab"
+                                aria-selected={isActive}
+                                aria-controls={`ats-guide-panel-${tab}`}
                                 onClick={() => setGuideTab(tab)}
                                 className="relative py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 select-none outline-none"
                                 style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -1449,7 +1475,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           const resultText = `${zText ? zText + ', ' : ''}${xyzX.trim() ? xyzX.trim() : ''}${xyzY.trim() ? ' ' + xyzY.trim() : ''}.`
                                           navigator.clipboard.writeText(resultText).catch(() => {})
                                           setCopiedBullet(true)
-                                          setTimeout(() => setCopiedBullet(false), 2000)
+                                          clearTimeout(copiedTimerRef.current)
+                                          copiedTimerRef.current = setTimeout(() => setCopiedBullet(false), 2000)
                                         }}
                                         className="p-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-450 hover:text-white transition-colors cursor-pointer hover:bg-zinc-900"
                                         title="Copy compiled bullet"
@@ -1544,7 +1571,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                               onClick={() => {
                                                 navigator.clipboard.writeText(verb).catch(() => {})
                                                 setCopiedVerb(verb)
-                                                setTimeout(() => setCopiedVerb(null), 1500)
+                                                clearTimeout(copiedTimerRef.current)
+                                                copiedTimerRef.current = setTimeout(() => setCopiedVerb(null), 1500)
                                               }}
                                               className="px-2.5 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5 shadow-sm"
                                             >
