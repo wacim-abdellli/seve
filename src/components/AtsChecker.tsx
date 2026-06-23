@@ -462,7 +462,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-white tracking-wide">ATS Audit Center</h2>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span className="text-[7px] font-extrabold text-emerald-400 uppercase tracking-widest">Live</span>
               </span>
             </div>
@@ -657,7 +657,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       {/* Live log — terminal style */}
                       <div className="w-full bg-zinc-950 rounded-lg border border-zinc-800/20 p-3 min-h-[72px]">
                         <div className="flex items-center gap-1.5 mb-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                           <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest">scan log</span>
                           <span className="text-[7px] text-zinc-650 font-mono ml-auto">{Math.min(scanStage + 1, SCAN_STAGES.length)}/{SCAN_STAGES.length}</span>
                         </div>
@@ -698,7 +698,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                   <div className="space-y-5">
                     {/* Domain Mismatch Banner */}
                     {report?.critical.some(i => i.id === 'domain-mismatch') && (
-                      <div className="bg-amber-500/5 border border-amber-500/15 text-amber-400 p-4 rounded-xl text-xs flex items-start gap-3 backdrop-blur-sm animate-pulse">
+                      <div className="bg-amber-500/5 border border-amber-500/15 text-amber-400 p-4 rounded-xl text-xs flex items-start gap-3">
                         <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-400" />
                         <span className="leading-relaxed">
                           Your resume targets <strong className="text-white">{resumeDomain.replace(/_/g, ' ')}</strong> roles. This JD is for <strong className="text-white">{jdDomain.replace(/_/g, ' ')}</strong> position. Score reflects formatting &amp; writing quality, not job fit.
@@ -827,7 +827,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                             return (
                               <div
                                 key={issue.id}
-                                className={`flex items-start gap-3 p-3.5 rounded-xl bg-zinc-950 border ${isCritical ? 'border-red-900/50 hover:border-red-800' : 'border-amber-900/50 hover:border-amber-800'} transition-all duration-200 relative overflow-hidden`}
+                                className={`flex items-start gap-3 p-3.5 rounded-xl bg-zinc-950 border ${isCritical ? 'border-red-900/50 hover:border-red-800' : 'border-amber-900/50 hover:border-amber-800'} transition-colors duration-200 relative overflow-hidden`}
                               >
                                 <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isCritical ? 'bg-red-550' : 'bg-amber-550'}`} />
                                 <div className="min-w-0">
@@ -920,7 +920,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={issue.id}
-                                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-all duration-200 border-l-4 border-l-red-500"
+                                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-colors duration-200 border-l-4 border-l-red-500"
                                 >
                                   <div
                                     className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-800/20' : ''}`}
@@ -974,7 +974,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             <div className="space-y-3">
                                               <div>
                                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                                                  <Lightbulb size={11} className="text-indigo-400 animate-pulse" />
+                                                  <Lightbulb size={11} className="text-indigo-400" />
                                                   Why it matters for ATS:
                                                 </p>
                                                 <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">{help.whyItMatters}</p>
@@ -983,7 +983,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 <div className="bg-zinc-950 border border-red-500/20 rounded-lg overflow-hidden">
                                                   <div className="bg-red-500/10 border-b border-red-500/20 px-3 py-1.5 flex items-center justify-between">
                                                     <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider font-mono">✕ Before / Bad Example</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-550" />
                                                   </div>
                                                   <div className="p-3">
                                                     <p className="text-[11.5px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
@@ -992,7 +992,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 <div className="bg-zinc-950 border border-emerald-500/20 rounded-lg overflow-hidden">
                                                   <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-3 py-1.5 flex items-center justify-between">
                                                     <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">✓ Optimized / ATS Safe</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                                   </div>
                                                   <div className="p-3">
                                                     <p className="text-[11.5px] text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
@@ -1047,7 +1047,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={issue.id}
-                                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-all duration-200 border-l-4 border-l-amber-500"
+                                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-colors duration-200 border-l-4 border-l-amber-500"
                                 >
                                   <div 
                                     className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-800/20' : ''}`}
@@ -1101,7 +1101,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             <div className="space-y-3">
                                               <div>
                                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                                                  <Lightbulb size={11} className="text-indigo-400 animate-pulse" />
+                                                  <Lightbulb size={11} className="text-indigo-400" />
                                                   Why it matters for ATS:
                                                 </p>
                                                 <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">{help.whyItMatters}</p>
@@ -1110,7 +1110,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 <div className="bg-zinc-950 border border-red-500/20 rounded-lg overflow-hidden">
                                                   <div className="bg-red-500/10 border-b border-red-500/20 px-3 py-1.5 flex items-center justify-between">
                                                     <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider font-mono">✕ Before / Bad Example</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-550" />
                                                   </div>
                                                   <div className="p-3">
                                                     <p className="text-[11.5px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
@@ -1119,7 +1119,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 <div className="bg-zinc-950 border border-emerald-500/20 rounded-lg overflow-hidden">
                                                   <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-3 py-1.5 flex items-center justify-between">
                                                     <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">✓ Optimized / ATS Safe</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                                   </div>
                                                   <div className="p-3">
                                                     <p className="text-[11.5px] text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
@@ -1154,7 +1154,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       {/* Suggestions Section */}
                       <div className="space-y-3">
                         <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 select-none">
-                          <Lightbulb size={14} className="text-indigo-400 animate-pulse" />
+                          <Lightbulb size={14} className="text-indigo-400" />
                           Suggestions ({suggestionIssues.length})
                         </h4>
                         {suggestionIssues.length === 0 ? (
@@ -1174,7 +1174,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={issue.id}
-                                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-all duration-200 border-l-4 border-l-indigo-500"
+                                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-colors duration-200 border-l-4 border-l-indigo-500"
                                 >
                                   <div 
                                     className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-900/20' : ''}`}
@@ -1228,7 +1228,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             <div className="space-y-3">
                                               <div>
                                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                                                  <Lightbulb size={11} className="text-indigo-400 animate-pulse" />
+                                                  <Lightbulb size={11} className="text-indigo-400" />
                                                   Why it matters for ATS:
                                                 </p>
                                                 <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">{help.whyItMatters}</p>
@@ -1237,7 +1237,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 <div className="bg-zinc-950 border border-red-500/20 rounded-lg overflow-hidden">
                                                   <div className="bg-red-500/10 border-b border-red-500/20 px-3 py-1.5 flex items-center justify-between">
                                                     <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider font-mono">✕ Before / Bad Example</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-red-550" />
                                                   </div>
                                                   <div className="p-3">
                                                     <p className="text-[11.5px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">{help.before}</p>
@@ -1246,7 +1246,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 <div className="bg-zinc-950 border border-emerald-500/20 rounded-lg overflow-hidden">
                                                   <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-3 py-1.5 flex items-center justify-between">
                                                     <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">✓ Optimized / ATS Safe</span>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                                                   </div>
                                                   <div className="p-3">
                                                     <p className="text-[11.5px] text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap">{help.after}</p>
@@ -1577,7 +1577,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                 </span>
                                 <div className="space-y-2">
                                   {FORMATTING_RULES.dos.map((item, idx) => (
-                                    <div key={idx} className="text-xs text-zinc-300 leading-relaxed flex items-start gap-2.5 p-2.5 bg-emerald-950/10 border border-emerald-500/10 rounded-lg border-l-4 border-l-emerald-500 hover:bg-emerald-950/15 transition-all duration-200">
+                                    <div key={idx} className="text-xs text-zinc-300 leading-relaxed flex items-start gap-2.5 p-2.5 bg-emerald-950/10 border border-emerald-500/10 rounded-lg border-l-4 border-l-emerald-500 hover:bg-emerald-950/15 transition-colors duration-200">
                                       <Check size={13} className="text-emerald-400 shrink-0 mt-0.5" strokeWidth={3} />
                                       <span className="select-text">{item}</span>
                                     </div>
@@ -1593,7 +1593,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                 </span>
                                 <div className="space-y-2">
                                   {FORMATTING_RULES.donts.map((item, idx) => (
-                                    <div key={idx} className="text-xs text-zinc-300 leading-relaxed flex items-start gap-2.5 p-2.5 bg-rose-950/10 border border-rose-500/10 rounded-lg border-l-4 border-l-rose-500 hover:bg-rose-950/15 transition-all duration-200">
+                                    <div key={idx} className="text-xs text-zinc-300 leading-relaxed flex items-start gap-2.5 p-2.5 bg-rose-950/10 border border-rose-500/10 rounded-lg border-l-4 border-l-rose-500 hover:bg-rose-950/15 transition-colors duration-200">
                                       <XCircle size={13} className="text-rose-400 shrink-0 mt-0.5" />
                                       <span className="select-text">{item}</span>
                                     </div>
@@ -1635,18 +1635,18 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       <div className="space-y-5">
                         {/* Skills breakdown header info */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-4 hover:border-zinc-750 transition-all duration-300">
+                          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-4 hover:border-zinc-750 transition-colors duration-200">
                             <div className="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                               <Target size={20} className="text-emerald-400" />
                             </div>
                             <div>
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest font-mono">Semantic Overlap</p>
+                              <p className="text-[9px] font-black text-zinc-505 uppercase tracking-widest font-mono">Semantic Overlap</p>
                               <h4 className="text-lg font-black text-white mt-0.5">{report?.semanticScore || 0}% Match</h4>
                               <p className="text-[10px] text-zinc-450 leading-normal mt-0.5">Vocabulary relevance compared to the job description tokens.</p>
                             </div>
                           </div>
 
-                          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-4 hover:border-zinc-750 transition-all duration-300">
+                          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-4 hover:border-zinc-750 transition-colors duration-200">
                             <div className="w-11 h-11 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
                               <TrendingUp size={20} className="text-indigo-400" />
                             </div>
@@ -1668,7 +1668,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div
                                   key={item.subject}
-                                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 hover:border-zinc-750 transition-all duration-300"
+                                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 hover:border-zinc-750 transition-colors duration-200"
                                 >
                                   {/* Item Header */}
                                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -1706,9 +1706,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             return (
                                               <span
                                                 key={kwIdx}
-                                                className="text-[10px] font-bold bg-zinc-950 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400/90 px-3 py-1 rounded-full inline-flex items-center gap-2 transition-all duration-300 cursor-default"
+                                                className="text-[10px] font-bold bg-zinc-950 border border-emerald-500/10 hover:border-emerald-500/30 text-emerald-400/90 px-3 py-1 rounded-full inline-flex items-center gap-2 transition-colors duration-200 cursor-default"
                                               >
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                                                 {kw}
                                                 <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wide border ${
                                                   spec === 'high' 
@@ -1737,7 +1737,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           {item.missing.map((kw, kwIdx) => (
                                             <span
                                               key={kwIdx}
-                                              className="text-[10px] font-bold bg-zinc-950/50 border border-dashed border-zinc-800 text-zinc-500 px-3 py-1 rounded-full inline-flex items-center gap-2 transition-all duration-300 hover:border-rose-500/20 hover:text-rose-400/80 hover:bg-rose-500/5 select-none cursor-help"
+                                              className="text-[10px] font-bold bg-zinc-950/50 border border-dashed border-zinc-800 text-zinc-500 px-3 py-1 rounded-full inline-flex items-center gap-2 transition-colors duration-200 hover:border-rose-500/20 hover:text-rose-400/80 hover:bg-rose-500/5 select-none cursor-help"
                                               title="Incorporate this keyword to improve score density"
                                             >
                                               <span className="w-1.5 h-1.5 rounded-full bg-zinc-800 shrink-0" />

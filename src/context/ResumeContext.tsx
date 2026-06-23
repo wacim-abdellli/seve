@@ -279,14 +279,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   // ---------------------------------------------------------------------------
   // Persist to localStorage with debounce (avoids blocking main thread on every keystroke).
   // ---------------------------------------------------------------------------
-  const isInitialMountRef = useRef(true)
   const prevUserIdRef = useRef<string | null>(null)
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  useEffect(() => {
-    isInitialMountRef.current = false
-    prevUserIdRef.current = user?.id ?? null
-  }, [user?.id])
 
   // Debounced localStorage write — max 500ms delay
   useEffect(() => {
@@ -304,8 +298,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     let hash = 0
     for (const id of Object.keys(resumes)) {
       const r = resumes[id]
-      hash = ((hash << 5) - hash + id.length) | 0
-      hash = ((hash << 5) - hash + (r.updatedAt?.length || 0)) | 0
+      for (let i = 0; i < id.length; i++) {
+        hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0
+      }
+      const updateStr = r.updatedAt || ''
+      for (let i = 0; i < updateStr.length; i++) {
+        hash = ((hash << 5) - hash + updateStr.charCodeAt(i)) | 0
+      }
       hash = ((hash << 5) - hash + r.resumeData.experience.length) | 0
       hash = ((hash << 5) - hash + r.resumeData.education.length) | 0
       hash = ((hash << 5) - hash + r.resumeData.skills.length) | 0
@@ -353,6 +352,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       setLastSyncedState(currentState)
       setCloudStatus('synced')
       setCloudError(null)
+      hasMergedCloudRef.current = true
       showToast('Changes saved to cloud', 'success')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message

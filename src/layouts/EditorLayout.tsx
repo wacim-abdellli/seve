@@ -508,8 +508,6 @@ export default function EditorLayout() {
   return (
     <div className="select-none h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 no-print">
-        <div className="absolute top-[-10%] left-[-10%] w-[800px] h-[800px] ambient-glow-1 rounded-full opacity-60" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[900px] h-[900px] ambient-glow-2 rounded-full opacity-45" />
         <div className="absolute inset-0 premium-grid opacity-30" />
         <div className="absolute inset-0 noise-overlay" />
       </div>
