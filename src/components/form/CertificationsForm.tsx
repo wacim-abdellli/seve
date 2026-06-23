@@ -58,7 +58,7 @@ export default function CertificationsForm({ certifications, onChange }: Certifi
             </span>
             <button
               onClick={() => handleRemove(cert.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Certification"
             >
@@ -71,18 +71,21 @@ export default function CertificationsForm({ certifications, onChange }: Certifi
               value={cert.title}
               onChange={(e) => handleChange(cert.id, 'title', e.target.value)}
               placeholder="e.g. AWS Certified Solutions Architect – Professional"
+              aria-label="Certification Title"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={cert.issuer}
               onChange={(e) => handleChange(cert.id, 'issuer', e.target.value)}
               placeholder="e.g. Amazon Web Services"
+              aria-label="Issuer"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={cert.date}
               onChange={(e) => handleChange(cert.id, 'date', e.target.value)}
               placeholder="e.g. 03/2024"
+              aria-label="Date Issued"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
@@ -90,6 +93,7 @@ export default function CertificationsForm({ certifications, onChange }: Certifi
               onChange={(e) => handleChange(cert.id, 'description', e.target.value)}
               placeholder="e.g. Credential ID: AWS-10293, validating advanced high-scale cloud system design capabilities."
               rows={2}
+              aria-label="Certification Description"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />
           </div>

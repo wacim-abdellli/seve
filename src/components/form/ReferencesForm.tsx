@@ -58,7 +58,7 @@ export default function ReferencesForm({ references, onChange }: ReferencesFormP
             </span>
             <button
               onClick={() => handleRemove(ref.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Reference"
             >
@@ -71,18 +71,21 @@ export default function ReferencesForm({ references, onChange }: ReferencesFormP
               value={ref.name}
               onChange={(e) => handleChange(ref.id, 'name', e.target.value)}
               placeholder="e.g. Sarah Jenkins"
+              aria-label="Reference Name"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={ref.position}
               onChange={(e) => handleChange(ref.id, 'position', e.target.value)}
               placeholder="e.g. Director of Engineering at Google"
+              aria-label="Position and Company"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={ref.phone}
               onChange={(e) => handleChange(ref.id, 'phone', e.target.value)}
               placeholder="e.g. sjenkins@google.com or +1 (555) 019-2834"
+              aria-label="Contact Information"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
@@ -90,6 +93,7 @@ export default function ReferencesForm({ references, onChange }: ReferencesFormP
               onChange={(e) => handleChange(ref.id, 'description', e.target.value)}
               placeholder="e.g. Direct manager for 3 years, supervised several key product launches."
               rows={2}
+              aria-label="Relationship or Notes"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />
           </div>

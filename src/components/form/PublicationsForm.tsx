@@ -58,7 +58,7 @@ export default function PublicationsForm({ publications, onChange }: Publication
             </span>
             <button
               onClick={() => handleRemove(pub.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Publication"
             >
@@ -71,18 +71,21 @@ export default function PublicationsForm({ publications, onChange }: Publication
               value={pub.title}
               onChange={(e) => handleChange(pub.id, 'title', e.target.value)}
               placeholder="e.g. Optimizing Large Scale Distributed Databases"
+              aria-label="Publication Title"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={pub.publisher}
               onChange={(e) => handleChange(pub.id, 'publisher', e.target.value)}
               placeholder="e.g. IEEE Transactions on Cloud Computing"
+              aria-label="Publisher or Conference"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={pub.date}
               onChange={(e) => handleChange(pub.id, 'date', e.target.value)}
               placeholder="e.g. 11/2023 or 2023"
+              aria-label="Publication Date"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
@@ -90,6 +93,7 @@ export default function PublicationsForm({ publications, onChange }: Publication
               onChange={(e) => handleChange(pub.id, 'description', e.target.value)}
               placeholder="e.g. Authored research on optimizing database queries, reducing average latency by 18%."
               rows={2}
+              aria-label="Publication Description"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />
           </div>

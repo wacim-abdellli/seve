@@ -58,7 +58,7 @@ export default function AwardsForm({ awards, onChange }: AwardsFormProps) {
             </span>
             <button
               onClick={() => handleRemove(award.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Award"
             >
@@ -71,18 +71,21 @@ export default function AwardsForm({ awards, onChange }: AwardsFormProps) {
               value={award.title}
               onChange={(e) => handleChange(award.id, 'title', e.target.value)}
               placeholder="e.g. Employee of the Month"
+              aria-label="Award Title"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={award.awarder}
               onChange={(e) => handleChange(award.id, 'awarder', e.target.value)}
               placeholder="e.g. Google"
+              aria-label="Awarder or Organization"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={award.date}
               onChange={(e) => handleChange(award.id, 'date', e.target.value)}
               placeholder="e.g. 05/2024"
+              aria-label="Date Received"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <textarea
@@ -90,6 +93,7 @@ export default function AwardsForm({ awards, onChange }: AwardsFormProps) {
               onChange={(e) => handleChange(award.id, 'description', e.target.value)}
               placeholder="e.g. Recognized for leading the resolution of high-severity production incidents, saving $120k+ in potential SLA breach penalties."
               rows={2}
+              aria-label="Award Description"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all resize-none"
             />
           </div>

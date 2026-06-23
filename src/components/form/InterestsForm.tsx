@@ -56,7 +56,7 @@ export default function InterestsForm({ interests, onChange }: InterestsFormProp
             </span>
             <button
               onClick={() => handleRemove(interest.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Interest"
             >
@@ -69,12 +69,14 @@ export default function InterestsForm({ interests, onChange }: InterestsFormProp
               value={interest.name}
               onChange={(e) => handleChange(interest.id, 'name', e.target.value)}
               placeholder="e.g. Long-Distance Running"
+              aria-label="Interest Name"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
             <input
               value={interest.keywords.join(', ')}
               onChange={(e) => handleChange(interest.id, 'keywords', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
               placeholder="e.g. completed 2 marathons, trail running"
+              aria-label="Keywords"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
           </div>
