@@ -80,7 +80,7 @@ const ExecutiveTemplate = memo(function ExecutiveTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-4 resume-section">
         {leftH2(SECTION_LABELS.skills)}
-        <ResumeSkillsList skills={skills} className="text-[9px] text-slate-700 mt-1 leading-relaxed" />
+        <ResumeSkillsList skills={skills} layout="list" className="text-[9px] text-slate-700 mt-1 leading-relaxed" />
       </div>
     )) : null,
 
