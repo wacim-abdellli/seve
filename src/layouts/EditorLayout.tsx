@@ -59,9 +59,41 @@ interface PrintSettingsModalProps {
 }
 
 function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const firstFocusable = containerRef.current?.querySelector('button, textarea, input, select') as HTMLElement
+    firstFocusable?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+
+      if (e.key === 'Tab' && containerRef.current) {
+        const focusables = containerRef.current.querySelectorAll('button, textarea, input, select, [tabindex="0"]')
+        if (focusables.length === 0) return
+        const first = focusables[0] as HTMLElement
+        const last = focusables[focusables.length - 1] as HTMLElement
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return createPortal(
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print select-none">
-      <div className="bg-[#0c0d12] border border-[#b91c1c]/25 rounded-2xl p-6 md:p-8 w-[640px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in overflow-hidden relative">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div ref={containerRef} className="bg-[#0c0d12] border border-[#b91c1c]/25 rounded-2xl p-6 md:p-8 w-[640px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in overflow-hidden relative">
         {/* Glow ambient */}
         <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#b91c1c]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -193,9 +225,41 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
 }
 
 function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarningModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const firstFocusable = containerRef.current?.querySelector('button, textarea, input, select') as HTMLElement
+    firstFocusable?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+
+      if (e.key === 'Tab' && containerRef.current) {
+        const focusables = containerRef.current.querySelectorAll('button, textarea, input, select, [tabindex="0"]')
+        if (focusables.length === 0) return
+        const first = focusables[0] as HTMLElement
+        const last = focusables[focusables.length - 1] as HTMLElement
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return createPortal(
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
-      <div className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div ref={containerRef} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in relative">
         <div className="flex items-center gap-3 text-amber-500 mb-4">
           <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
@@ -257,6 +321,37 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
   const [pasteValue, setPasteValue] = useState('')
   const [pasteError, setPasteError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const firstFocusable = containerRef.current?.querySelector('button, textarea, input, select') as HTMLElement
+    firstFocusable?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+
+      if (e.key === 'Tab' && containerRef.current) {
+        const focusables = containerRef.current.querySelectorAll('button, textarea, input, select, [tabindex="0"]')
+        if (focusables.length === 0) return
+        const first = focusables[0] as HTMLElement
+        const last = focusables[focusables.length - 1] as HTMLElement
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   const handleCopyTemplate = () => {
     navigator.clipboard.writeText(JSON.stringify(EMPTY_RESUME_TEMPLATE, null, 2))
@@ -334,7 +429,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
 
   return createPortal(
     <div role="dialog" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
-      <div onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
+      <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#b91c1c]/10 border border-[#b91c1c]/30 flex items-center justify-center shrink-0">
