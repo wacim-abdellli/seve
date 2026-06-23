@@ -1,4 +1,4 @@
-import type { Language } from '../../types/resume'
+import type { Language, LanguageProficiency } from '../../types/resume'
 import { Plus, Trash2, Globe } from 'lucide-react'
 
 interface LanguagesFormProps {
@@ -91,7 +91,7 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
             <select
               id={`lang-prof-${lang.id}`}
               value={lang.proficiency}
-              onChange={(e) => handleChange(lang.id, 'proficiency', e.target.value)}
+              onChange={(e) => handleChange(lang.id, 'proficiency', e.target.value as LanguageProficiency)}
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white focus:outline-none focus:border-rose-500/40 transition-all"
             >
               {PROFICIENCY_LEVELS.map((level) => (

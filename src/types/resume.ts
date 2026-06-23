@@ -27,10 +27,12 @@ export interface Education {
   gpa?: string
 }
 
+export type LanguageProficiency = 'Native' | 'Fluent' | 'Advanced' | 'Intermediate' | 'Basic' | 'Professional' | ''
+
 export interface Language {
   id: string
   name: string
-  proficiency: string
+  proficiency: LanguageProficiency
 }
 
 export interface Project {

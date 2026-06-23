@@ -1,4 +1,4 @@
-import type { ResumeData } from '../types/resume'
+import type { ResumeData, LanguageProficiency } from '../types/resume'
 
 type JsonRecord = Record<string, unknown>
 
@@ -79,7 +79,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
     return {
       id: pickStr(e, 'id') || crypto.randomUUID(),
       name: pickStr(e, 'name'),
-      proficiency: pickStr(e, 'proficiency'),
+      proficiency: pickStr(e, 'proficiency') as LanguageProficiency,
     }
   })
 
