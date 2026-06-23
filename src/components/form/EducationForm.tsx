@@ -139,11 +139,20 @@ export default function EducationForm({ education, onChange }: EducationFormProp
               >
                 {/* Collapsed Card view */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
                   onClick={() => toggleExpand(edu.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      toggleExpand(edu.id)
+                    }
+                  }}
                   className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-1 cursor-pointer hover:border-zinc-700 transition-colors flex items-center gap-3 select-none"
                 >
                   <div 
-                    className="cursor-grab text-zinc-655 hover:text-zinc-450 flex-shrink-0"
+                    className="cursor-grab text-zinc-500 hover:text-zinc-400 flex-shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <GripVertical size={16} />
@@ -156,7 +165,7 @@ export default function EducationForm({ education, onChange }: EducationFormProp
 
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-white truncate">
-                      {edu.degree || <span className="text-zinc-550 italic">Untitled Degree</span>}
+                      {edu.degree || <span className="text-zinc-500 italic">Untitled Degree</span>}
                     </p>
                     <p className="text-[11px] text-zinc-500 truncate">
                       {edu.school || 'No Institution'} {edu.graduationDate ? `• Graduated ${edu.graduationDate}` : ''}
@@ -172,7 +181,7 @@ export default function EducationForm({ education, onChange }: EducationFormProp
                     >
                       <Trash2 size={14} />
                     </button>
-                    <ChevronDown className={`w-4 h-4 text-zinc-650 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
 

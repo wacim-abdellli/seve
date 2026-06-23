@@ -211,11 +211,20 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
               >
                 {/* Collapsed/Header Card view */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
                   onClick={() => toggleExpand(exp.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      toggleExpand(exp.id)
+                    }
+                  }}
                   className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-1 cursor-pointer hover:border-zinc-700 transition-colors flex items-center gap-3 select-none"
                 >
                   <div 
-                    className="cursor-grab text-zinc-650 hover:text-zinc-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="cursor-grab text-zinc-500 hover:text-zinc-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <GripVertical size={20} />
@@ -244,7 +253,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                    <ChevronDown className={`w-4 h-4 text-zinc-650 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
 
