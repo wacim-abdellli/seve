@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ResumeProfile } from '../types/resume'
@@ -33,6 +33,38 @@ export default function ResumeManager({
   const [editTitle, setEditTitle] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Focus the first focusable element initially
+    const firstFocusable = containerRef.current?.querySelector('button, textarea, input, select') as HTMLElement
+    firstFocusable?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+
+      if (e.key === 'Tab' && containerRef.current) {
+        const focusables = containerRef.current.querySelectorAll('button, textarea, input, select, [tabindex="0"]')
+        if (focusables.length === 0) return
+        const first = focusables[0] as HTMLElement
+        const last = focusables[focusables.length - 1] as HTMLElement
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTitle.trim()) return
@@ -57,6 +89,7 @@ export default function ResumeManager({
       <div className="absolute inset-0" onClick={onClose} />
 
       <motion.div
+        ref={containerRef}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
