@@ -14,6 +14,9 @@ import {
 
 // Localized UI feedback messages
 // Helper function to extract words from text
+function toDomId(s: string): string {
+  return s.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase()
+}
 function getWords(text: string): string[] {
   return text
     .toLowerCase()
@@ -117,7 +120,28 @@ export function evaluateResume(resume: ResumeData, jobDescription: string, fontS
 
 
 export function autoFix(resume: ResumeData): ResumeData {
-  const fixed = JSON.parse(JSON.stringify(resume)) as ResumeData
+  const raw = JSON.parse(JSON.stringify(resume)) as Record<string, unknown>
+  const fixed: ResumeData = {
+    contact: {
+      fullName: (raw.contact as any)?.fullName ?? '',
+      email: (raw.contact as any)?.email ?? '',
+      phone: (raw.contact as any)?.phone ?? '',
+      linkedin: (raw.contact as any)?.linkedin ?? '',
+      location: (raw.contact as any)?.location ?? '',
+    },
+    summary: typeof raw.summary === 'string' ? raw.summary : '',
+    experience: Array.isArray(raw.experience) ? raw.experience : [],
+    education: Array.isArray(raw.education) ? raw.education : [],
+    skills: Array.isArray(raw.skills) ? raw.skills : [],
+    languages: Array.isArray(raw.languages) ? raw.languages : [],
+    projects: Array.isArray(raw.projects) ? raw.projects : [],
+    awards: Array.isArray(raw.awards) ? raw.awards : [],
+    certifications: Array.isArray(raw.certifications) ? raw.certifications : [],
+    interests: Array.isArray(raw.interests) ? raw.interests : [],
+    publications: Array.isArray(raw.publications) ? raw.publications : [],
+    references: Array.isArray(raw.references) ? raw.references : [],
+    volunteer: Array.isArray(raw.volunteer) ? raw.volunteer : [],
+  }
   
   // Compile content to detect language
   let testText = resume.summary
@@ -611,7 +635,7 @@ export function auditBullets(bullets: string[], sectionName: string): AtsIssue[]
       const result = check.check(bullet, i, bullets)
       if (result?.fail) {
         issues.push({
-          id: `bullet-${check.name.replace(/\s+/g, '-').toLowerCase()}-${sectionName}-${i}`,
+          id: `bullet-${check.name.replace(/\s+/g, '-').toLowerCase()}-${toDomId(sectionName)}-${i}`,
           type: check.type,
           category: check.category === 'style' ? 'style' : 'formatting',
           issue: `${check.name} in ${sectionName}`,
@@ -2036,7 +2060,7 @@ export function scoreAtsParseability(resume: ResumeData): { score: number; issue
     if (!hasStandard) {
       score -= 5
       issues.push({
-        id: `parseability-section-${section.key}`,
+        id: `parseability-section-${toDomId(section.key)}`,
         type: 'suggestion',
         category: 'structure',
         issue: `Section "${section.key}" may use non-standard heading`,

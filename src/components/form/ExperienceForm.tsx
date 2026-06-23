@@ -136,7 +136,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   const updateStarField = (expId: string, field: 's' | 't' | 'a' | 'r', value: string) => {
     setStarFields(prev => ({
       ...prev,
-      [expId]: { ...getStarFields(expId), [field]: value }
+      [expId]: { ...(prev[expId] || { s: '', t: '', a: '', r: '' }), [field]: value }
     }))
   }
 
