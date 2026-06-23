@@ -64,7 +64,7 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-4 resume-section">
         {h2(SECTION_LABELS.skills)}
-        <div className={parseCategorizedSkills(skills).length > 1 ? "grid grid-cols-2 gap-x-6 gap-y-2" : "flex flex-col gap-2"}>
+        <div className={parseCategorizedSkills(skills).length > 1 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col gap-1"}>
           {parseCategorizedSkills(skills).map((group, gIdx) => (
             <div key={gIdx} className="flex items-baseline gap-2">
               {group.category !== 'Skills' && (
