@@ -286,7 +286,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
                   value={group.category}
                   onChange={(e) => handleRenameCategory(idx, e.target.value)}
                   placeholder="Category Name (e.g. Frontend)"
-                  className="bg-transparent text-xs font-black text-white focus:outline-none border-b border-transparent focus:border-rose-500/50 pb-0.5 flex-1"
+                  className="bg-zinc-950/60 border border-zinc-800 focus:border-rose-500/50 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:outline-none flex-1 placeholder:text-zinc-600 transition-all"
                   onClick={(e) => e.stopPropagation()}
                 />
                 {groupedSkills.length > 1 && (

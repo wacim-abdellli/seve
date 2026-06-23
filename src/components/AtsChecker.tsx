@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect, useCallback, useRef, useContext } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useCountUp } from '../hooks/useCountUp'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ResumeData } from '../types/resume'
 import type { RoleDomain } from '../utils/roleClassifier'
 import type { LucideIcon } from 'lucide-react'
-import { evaluateResume, calculateSkillsMatrix, weightKeyword, autoFix } from '../utils/atsEvaluator'
-import { ToastContext } from '../context/ToastContext'
+import { evaluateResume, calculateSkillsMatrix, weightKeyword } from '../utils/atsEvaluator'
+
 import { computeDomainPenalty } from '../utils/roleClassifier'
 import {
   CheckCircle2, XCircle, FileCode, Activity,
@@ -118,7 +118,6 @@ interface AtsCheckerProps {
   resumeData: ResumeData
   jobDescription: string
   onUpdateJobDescription: (jd: string) => void
-  onAutoFix?: (fixed: ResumeData) => void
   onNavigateToSection: (section: string) => void
   templateFontSize?: number
 }
@@ -237,7 +236,7 @@ const SCAN_STAGES = [
   { label: 'Finalizing audit report', pct: 100, log: 'generating insights & recommendations...' },
 ]
 
-export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDescription, onAutoFix, onNavigateToSection, templateFontSize }: AtsCheckerProps) {
+export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDescription, onNavigateToSection, templateFontSize }: AtsCheckerProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'audit' | 'keywords'>('overview')
   const [showJdInput, setShowJdInput] = useState(false)
   const [jdDraft, setJdDraft] = useState(jobDescription)
@@ -275,14 +274,6 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
-  const toast = useContext(ToastContext)
-
-  const handleAutoFix = useCallback(() => {
-    if (!onAutoFix) return
-    const fixed = autoFix(resumeData)
-    onAutoFix(fixed)
-    toast?.showToast('Applied one-click ATS fixes to your resume!', 'success')
-  }, [resumeData, onAutoFix, toast])
 
   const draftTouchedRef = useRef(false)
 
@@ -500,29 +491,6 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
             </div>
             <p className="text-[9.5px] text-zinc-500 font-medium">Last audited: {lastAudited.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
                     </div>
-
-                    {/* ─── One-Click Auto-Fix ─── */}
-                    {onAutoFix && report?.critical.some(i => i.id !== 'domain-mismatch') && (
-                      <div className="bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                              <Zap size={16} className="text-emerald-400" />
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest">One-click ATS auto-fix</h3>
-                              <p className="text-[11px] text-zinc-400 mt-0.5">Auto-clean formatting, pronouns, and weak verbs</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={handleAutoFix}
-                            className="shrink-0 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black rounded-xl transition-all active:scale-[0.97] cursor-pointer"
-                          >
-                            Auto-Fix Resume
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
         <div className="flex items-center gap-2">
