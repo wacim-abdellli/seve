@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react'
-import type { ResumeData, ResumeProfile, ResumeStylePreferences, AppState } from '../types/resume'
+import type { ResumeData, ResumeProfile, ResumeStylePreferences, AppState, Template } from '../types/resume'
 import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { useToast } from '../hooks/useToast'
 import { ResumeContext } from './resumeContextDef'
@@ -66,7 +66,23 @@ function loadInitialState(): AppState {
 
         for (const [id, resume] of Object.entries(parsed.resumes)) {
           const newId = id === 'default-resume' ? defaultResumeId : id
-          migratedResumes[newId] = { ...(resume as ResumeProfile), id: newId, revision: (resume as any).revision || 1 }
+          const raw = resume as Record<string, unknown>
+          migratedResumes[newId] = {
+            id: newId,
+            title: typeof raw.title === 'string' ? raw.title : 'Untitled',
+            createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+            updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
+            revision: typeof (raw as any).revision === 'number' ? (raw as any).revision : 1,
+            resumeData: raw.resumeData && typeof raw.resumeData === 'object'
+              ? { ...INITIAL_RESUME_DATA, ...(raw.resumeData as Record<string, unknown>) }
+              : { ...INITIAL_RESUME_DATA },
+            selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
+            jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
+            sectionOrder: Array.isArray(raw.sectionOrder) ? raw.sectionOrder : [...DEFAULT_SECTION_ORDER],
+            stylePrefs: raw.stylePrefs && typeof raw.stylePrefs === 'object'
+              ? { ...DEFAULT_STYLE_PREFS, ...(raw.stylePrefs as Record<string, unknown>) }
+              : { ...DEFAULT_STYLE_PREFS },
+          }
           if (parsed.selectedResumeId === id) migratedSelectedId = newId
         }
 
@@ -88,7 +104,7 @@ function loadInitialState(): AppState {
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
               resumeData: parsed.resumeData,
-              selectedTemplate: parsed.selectedTemplate || 'classic',
+              selectedTemplate: (parsed.selectedTemplate as Template) || 'classic' as Template,
               jobDescription: parsed.jobDescription || '',
               sectionOrder: sectionOrder || [...DEFAULT_SECTION_ORDER],
               stylePrefs: { ...DEFAULT_STYLE_PREFS },
@@ -200,7 +216,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await supabase
         .from('resumes')
-        .select('*', { signal } as Record<string, unknown>)
+        .select('*', { signal } as unknown as { head?: boolean; count?: 'exact' | 'planned' | 'estimated' })
 
       if (error) throw error
 
@@ -209,8 +225,24 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
       if (data && data.length > 0) {
         const cloudResumes: Record<string, ResumeProfile> = {}
+        const validateProfile = (raw: Record<string, unknown>): ResumeProfile => ({
+          id: typeof raw.id === 'string' ? raw.id : crypto.randomUUID(),
+          title: typeof raw.title === 'string' ? raw.title : 'Untitled',
+          createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+          updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
+          revision: typeof raw.revision === 'number' ? raw.revision : 1,
+          resumeData: raw.resumeData && typeof raw.resumeData === 'object'
+            ? { ...INITIAL_RESUME_DATA, ...(raw.resumeData as Record<string, unknown>) }
+            : { ...INITIAL_RESUME_DATA },
+          selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
+          jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
+          sectionOrder: Array.isArray(raw.sectionOrder) ? raw.sectionOrder : [...DEFAULT_SECTION_ORDER],
+          stylePrefs: raw.stylePrefs && typeof raw.stylePrefs === 'object'
+            ? { ...DEFAULT_STYLE_PREFS, ...(raw.stylePrefs as Record<string, unknown>) }
+            : { ...DEFAULT_STYLE_PREFS },
+        })
         for (const row of data) {
-          cloudResumes[row.id] = row.resume_data as ResumeProfile
+          cloudResumes[row.id] = validateProfile(row.resume_data as Record<string, unknown>)
         }
 
         const merged = { ...currentState.resumes }
@@ -316,19 +348,12 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   // ---------------------------------------------------------------------------
   const computeResumeHash = useCallback((resumes: AppState['resumes']): string => {
     let hash = 0
-    for (const id of Object.keys(resumes)) {
+    for (const id of Object.keys(resumes).sort()) {
       const r = resumes[id]
-      for (let i = 0; i < id.length; i++) {
-        hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0
+      const content = `${r.updatedAt}|${r.revision}|${JSON.stringify(r.resumeData)}`
+      for (let i = 0; i < content.length; i++) {
+        hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0
       }
-      const updateStr = r.updatedAt || ''
-      for (let i = 0; i < updateStr.length; i++) {
-        hash = ((hash << 5) - hash + updateStr.charCodeAt(i)) | 0
-      }
-      hash = ((hash << 5) - hash + r.resumeData.experience.length) | 0
-      hash = ((hash << 5) - hash + r.resumeData.education.length) | 0
-      hash = ((hash << 5) - hash + r.resumeData.skills.length) | 0
-      hash = ((hash << 5) - hash + (r.resumeData.languages?.length || 0)) | 0
     }
     return hash.toString(36)
   }, [])
@@ -420,6 +445,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     historyRef.current.push(data)
     if (historyRef.current.length > 30) {
       historyRef.current.shift()
+      historyIndexRef.current = Math.min(historyIndexRef.current, historyRef.current.length - 1)
     } else {
       historyIndexRef.current++
     }
