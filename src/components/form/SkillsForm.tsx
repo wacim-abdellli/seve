@@ -194,11 +194,11 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
     <div className="flex flex-col gap-4">
       {/* List Header and Info Button */}
       <div className="flex justify-between items-center mb-2">
-        <span className="text-label">Skills Inventory</span>
+        <label htmlFor="skills-search-input" className="text-label">Skills Inventory</label>
         <button
           type="button"
           onClick={() => setShowTooltip(!showTooltip)}
-          className="text-zinc-550 hover:text-white transition-colors cursor-pointer"
+          className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
           title="Formatting Guidelines"
         >
           <HelpCircle size={15} />
@@ -222,12 +222,12 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
         <div className="flex gap-2">
           <div className="relative flex-1 group">
             <input
+              id="skills-search-input"
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="e.g. TypeScript, GraphQL (Press Enter to add)"
-              aria-label="Add a skill"
               className="drawer-input"
             />
 
@@ -263,7 +263,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
 
       {/* Added Chips */}
       <div className="flex flex-col gap-2">
-        <h4 className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest">
+        <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
           Added Skills ({skills.length})
         </h4>
         <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1.5 custom-scrollbar py-1">
@@ -277,14 +277,14 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
                 type="button"
                 onClick={() => removeSkill(skill)}
                 aria-label={`Remove ${skill}`}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer rounded-full"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer rounded-full"
               >
                 <X size={10} />
               </button>
             </div>
           ))}
           {skills.length === 0 && (
-            <p className="text-xs text-zinc-555 italic font-light">No skills registered yet.</p>
+            <p className="text-xs text-zinc-500 italic font-light">No skills registered yet.</p>
           )}
         </div>
       </div>
@@ -309,7 +309,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
             </button>
 
             {showIndustryDropdown && (
-              <div className="absolute left-0 sm:left-auto sm:right-0 top-[110%] w-[200px] max-h-[220px] overflow-y-auto bg-zinc-900 border border-zinc-855 rounded-lg shadow-2xl custom-scrollbar py-1 animate-scale-in">
+              <div className="absolute left-0 sm:left-auto sm:right-0 top-[110%] w-[200px] max-h-[220px] overflow-y-auto bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl custom-scrollbar py-1 animate-scale-in">
                 {Object.entries(INDUSTRY_LABELS).map(([key, label]) => (
                   <button
                     key={key}
@@ -318,10 +318,10 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
                       setSelectedCategory(key)
                       setShowIndustryDropdown(false)
                     }}
-                    className={`w-full text-left px-3 py-1.5 text-[10px] font-medium border-b border-zinc-850/40 last:border-b-0 transition-colors cursor-pointer ${
+                    className={`w-full text-left px-3 py-1.5 text-[10px] font-medium border-b border-zinc-800/40 last:border-b-0 transition-colors cursor-pointer ${
                       key === selectedCategory
                         ? 'bg-rose-955/30 text-rose-400 font-bold border-l-2 border-rose-500 pl-2.5'
-                        : 'text-zinc-300 hover:bg-zinc-850'
+                        : 'text-zinc-300 hover:bg-zinc-800'
                     }`}
                   >
                     {label}
@@ -345,7 +345,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
             </button>
           ))}
           {industrySuggestions.length === 0 && (
-            <p className="text-[10px] text-zinc-550 italic font-light py-2">
+            <p className="text-[10px] text-zinc-500 italic font-light py-2">
               All recommended skills added for this industry.
             </p>
           )}

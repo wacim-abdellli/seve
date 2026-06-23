@@ -84,7 +84,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
             </span>
             <button 
               onClick={() => handleRemove(project.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Project"
             >
@@ -100,6 +100,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
               value={project.name}
               onChange={(e) => handleChange(project.id, 'name', e.target.value)}
               placeholder="e.g. Serverless Task API"
+              aria-label="Project Name"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
 
@@ -109,12 +110,14 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
                 value={project.link || ''}
                 onChange={(e) => handleChange(project.id, 'link', e.target.value)}
                 placeholder="e.g. github.com/username/project"
+                aria-label="Project Link"
                 className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
               />
               <input
                 value={project.date || ''}
                 onChange={(e) => handleChange(project.id, 'date', e.target.value)}
                 placeholder="e.g. 2023 - Present"
+                aria-label="Project Date or Duration"
                 className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
               />
             </div>
@@ -131,7 +134,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
                       <span>{tech}</span>
                       <button 
                         onClick={() => removeTech(project.id, tech)}
-                        className="text-zinc-550 hover:text-zinc-300 transition-colors cursor-pointer"
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
                         type="button"
                       >
                         <X className="w-2.5 h-2.5" />
@@ -142,6 +145,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
               )}
               <input
                 placeholder="e.g. React (Press Enter to add)"
+                aria-label="Add Technology"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
@@ -149,7 +153,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
                     e.currentTarget.value = ''
                   }
                 }}
-                className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-zinc-655 focus:outline-none focus:border-rose-500/40 transition-all"
+                className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-zinc-500 focus:outline-none focus:border-rose-500/40 transition-all"
               />
             </div>
 
@@ -159,6 +163,7 @@ export default function ProjectsForm({ projects, onChange }: ProjectsFormProps) 
               onChange={(e) => handleChange(project.id, 'description', e.target.value)}
               placeholder="e.g. Developed a serverless task scheduler processing 10k concurrent requests. Reduced latency by 15% using Redis caching."
               rows={3}
+              aria-label="Project Description"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white leading-relaxed placeholder:text-zinc-600 resize-none focus:outline-none focus:border-rose-500/40 transition-all"
             />
           </div>
