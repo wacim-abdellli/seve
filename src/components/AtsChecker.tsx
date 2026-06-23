@@ -20,7 +20,7 @@ function getCategoryTheme(id: string) {
   const common = {
     border: 'border-zinc-800',
     borderHover: 'hover:border-zinc-700',
-    iconBg: 'bg-zinc-950 border border-zinc-850',
+    iconBg: 'bg-zinc-950 border border-zinc-800',
     glow: ''
   }
 
@@ -528,7 +528,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowJdInput(true)}
-            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850 hover:border-zinc-700 transition-all cursor-pointer flex items-center gap-1.5 select-none"
+            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 transition-all cursor-pointer flex items-center gap-1.5 select-none"
           >
             <FileCode size={12} className="text-zinc-500" />
             {jobDescription ? 'Update JD' : 'Configure JD'}
@@ -557,7 +557,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                 {isActive && (
                   <motion.div
                     layoutId="activeAtsTab"
-                    className="absolute inset-0 bg-zinc-950 border border-zinc-850 rounded-lg"
+                    className="absolute inset-0 bg-zinc-950 border border-zinc-800 rounded-lg"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -717,7 +717,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                         <div className="flex items-center gap-1.5 mb-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                           <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest">scan log</span>
-                          <span className="text-[7px] text-zinc-650 font-mono ml-auto">{Math.min(scanStage + 1, SCAN_STAGES.length)}/{SCAN_STAGES.length}</span>
+                          <span className="text-[7px] text-zinc-600 font-mono ml-auto">{Math.min(scanStage + 1, SCAN_STAGES.length)}/{SCAN_STAGES.length}</span>
                         </div>
                         <div className="space-y-0.5">
                           {scanLogs.map((log, i) => (
@@ -786,15 +786,15 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                           {/* Quick stat chips */}
                           <div className="flex flex-wrap gap-2.5">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-850 hover:border-zinc-800 transition-all duration-200 cursor-default select-none">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-800 transition-all duration-200 cursor-default select-none">
                               <Activity size={12} className="text-indigo-400" />
                               <span className="text-[10.5px] text-zinc-300 font-bold">{totalWords} words</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-850 hover:border-zinc-800 transition-all duration-200 cursor-default select-none">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-800 transition-all duration-200 cursor-default select-none">
                               <FileText size={12} className={parseabilityColor} />
                               <span className="text-[10.5px] text-zinc-300 font-bold">{parseabilityStatus}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-850 hover:border-zinc-800 transition-all duration-200 cursor-default select-none">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-800 transition-all duration-200 cursor-default select-none">
                               <BookOpen size={12} className="text-cyan-400" />
                               <span className="text-[10.5px] text-zinc-300 font-bold">{readabilityLabel}</span>
                             </div>
@@ -811,7 +811,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                 className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full border-2 border-zinc-950 -ml-1.75 shadow-lg z-10"
                               />
                             </div>
-                            <div className="flex justify-between text-[8px] text-zinc-555 font-bold mt-1.5 px-0.5 tracking-wider font-mono">
+                            <div className="flex justify-between text-[8px] text-zinc-500 font-bold mt-1.5 px-0.5 tracking-wider font-mono">
                               <span>0</span>
                               <span>25</span>
                               <span>50</span>
@@ -869,7 +869,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                            <ShieldAlert size={14} className="text-zinc-555" />
+                            <ShieldAlert size={14} className="text-zinc-500" />
                             Issues at a glance
                           </h3>
                           <button
@@ -1363,12 +1363,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                           <BookOpen size={15} className="text-indigo-400" />
                           <div>
                             <h4 className="text-sm font-bold text-white tracking-wide">ATS Excellence Guide</h4>
-                            <p className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider font-mono">Writing standard &amp; format compliance</p>
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider font-mono">Writing standard &amp; format compliance</p>
                           </div>
                         </div>
 
                         {/* Guide Navigation */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-850 mb-5 shrink-0 relative" role="tablist" aria-label="ATS guide sections">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-800 mb-5 shrink-0 relative" role="tablist" aria-label="ATS guide sections">
                           {(['formula', 'verbs', 'format'] as const).map((tab) => {
                             const isActive = guideTab === tab;
                             const Icon = tab === 'formula' ? Sparkles : tab === 'verbs' ? Zap : Shield;
@@ -1414,7 +1414,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
                               <span className="text-white font-bold block text-[12px]">Accomplished [X]</span>
                               <span className="text-zinc-400 block">as measured by [Y]</span>
-                              <span className="text-zinc-450 block">by doing [Z]</span>
+                              <span className="text-zinc-400 block">by doing [Z]</span>
                             </div>
 
                             {/* Interactive XYZ Builder */}
@@ -1429,7 +1429,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     value={xyzX}
                                     onChange={(e) => setXyzX(e.target.value)}
                                     placeholder="e.g., reduced database query latency"
-                                    className="w-full bg-zinc-950/80 border border-zinc-850 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
+                                    className="w-full bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                                   />
                                 </div>
                                 
@@ -1440,7 +1440,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     value={xyzY}
                                     onChange={(e) => setXyzY(e.target.value)}
                                     placeholder="e.g., by 40% (saving 12 hours of processing time)"
-                                    className="w-full bg-zinc-950/80 border border-zinc-855 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
+                                    className="w-full bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                                   />
                                 </div>
                                 
@@ -1451,7 +1451,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                     value={xyzZ}
                                     onChange={(e) => setXyzZ(e.target.value)}
                                     placeholder="e.g., implementing query index caching and Redis stores"
-                                    className="w-full bg-zinc-950/80 border border-zinc-855 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
+                                    className="w-full bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                                   />
                                 </div>
                               </div>
@@ -1465,7 +1465,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                         <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
                                         <span className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
                                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
-                                        <span className="text-[10px] text-zinc-550 font-mono ml-2">bullet_compiler.sh</span>
+                                        <span className="text-[10px] text-zinc-500 font-mono ml-2">bullet_compiler.sh</span>
                                       </div>
                                       <button
                                         onClick={() => {
@@ -1478,7 +1478,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                           clearTimeout(copiedTimerRef.current)
                                           copiedTimerRef.current = setTimeout(() => setCopiedBullet(false), 2000)
                                         }}
-                                        className="p-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-450 hover:text-white transition-colors cursor-pointer hover:bg-zinc-900"
+                                        className="p-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-zinc-900"
                                         title="Copy compiled bullet"
                                       >
                                         {copiedBullet ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
@@ -1521,9 +1521,9 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                 value={verbSearchQuery}
                                 onChange={(e) => setVerbSearchQuery(e.target.value)}
                                 placeholder="Search 150+ action verbs..."
-                                className="w-full bg-zinc-950/80 border border-zinc-850 rounded-lg pl-8 pr-8 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
+                                className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg pl-8 pr-8 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
                               />
-                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-650">
+                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600">
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
@@ -1531,7 +1531,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               {verbSearchQuery && (
                                 <button 
                                   onClick={() => setVerbSearchQuery('')}
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-550 hover:text-zinc-300 text-[10px] bg-zinc-900 border border-zinc-855 px-1.5 py-0.5 rounded-md cursor-pointer"
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-[10px] bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded-md cursor-pointer"
                                 >
                                   Clear
                                 </button>
@@ -1551,7 +1551,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
                                 if (allVerbs.length === 0) {
                                   return (
-                                    <div className="py-6 text-center text-xs text-zinc-500 border border-dashed border-zinc-850 rounded-xl select-none">
+                                    <div className="py-6 text-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl select-none">
                                       No matching verbs found for "{verbSearchQuery}"
                                     </div>
                                   );
@@ -1561,7 +1561,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                   <div className="space-y-3.5 max-h-48 overflow-y-auto pr-1 font-sans">
                                     {allVerbs.map(group => (
                                       <div key={group.category} className="space-y-1.5">
-                                        <span className="text-[8px] font-black text-zinc-550 uppercase tracking-widest block font-mono">{group.category}</span>
+                                        <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest block font-mono">{group.category}</span>
                                         <div className="flex flex-wrap gap-1.5">
                                           {group.verbs.map(verb => (
                                             <motion.button
@@ -1574,13 +1574,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                 clearTimeout(copiedTimerRef.current)
                                                 copiedTimerRef.current = setTimeout(() => setCopiedVerb(null), 1500)
                                               }}
-                                              className="px-2.5 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5 shadow-sm"
+                                              className="px-2.5 py-1 rounded bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5 shadow-sm"
                                             >
                                               {verb}
                                               {copiedVerb === verb ? (
                                                 <Check size={9} className="text-emerald-400" />
                                               ) : (
-                                                <Copy size={9} className="text-zinc-650" />
+                                                <Copy size={9} className="text-zinc-600" />
                                               )}
                                             </motion.button>
                                           ))}
@@ -1594,12 +1594,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               return (
                                 <div className="space-y-4">
                                   {/* Verb category picker */}
-                                  <div className="flex flex-wrap gap-1 border-b border-zinc-850 pb-2.5">
+                                  <div className="flex flex-wrap gap-1 border-b border-zinc-800 pb-2.5">
                                     {POWER_VERBS.map((c) => (
                                       <button
                                         key={c.category}
                                         onClick={() => setSelectedVerbCat(c.category)}
-                                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${selectedVerbCat === c.category ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-950 border border-zinc-850 text-zinc-500 hover:text-zinc-300'}`}
+                                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${selectedVerbCat === c.category ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/20' : 'bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}
                                       >
                                         {c.category}
                                       </button>
@@ -1619,13 +1619,13 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                             setCopiedVerb(verb)
                                             setTimeout(() => setCopiedVerb(null), 1500)
                                           }}
-                                          className="px-2.5 py-1 rounded bg-zinc-950/80 border border-zinc-850 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5 shadow-sm"
+                                          className="px-2.5 py-1 rounded bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer font-mono inline-flex items-center gap-1.5 shadow-sm"
                                         >
                                           {verb}
                                           {copiedVerb === verb ? (
                                             <Check size={9} className="text-emerald-400" />
                                           ) : (
-                                            <Copy size={9} className="text-zinc-650" />
+                                            <Copy size={9} className="text-zinc-600" />
                                           )}
                                         </motion.button>
                                       ))}
@@ -1667,7 +1667,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                               </div>
 
                               {/* DON'TS LIST */}
-                              <div className="space-y-3 pt-3 border-t border-zinc-850">
+                              <div className="space-y-3 pt-3 border-t border-zinc-800">
                                 <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1.5 select-none">
                                   <XCircle size={13} className="text-rose-400" />
                                   Don'ts (Parser Risk)
@@ -1695,8 +1695,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                     {/* Empty JD State */}
                     {!jobDescription ? (
                       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 flex flex-col items-center text-center max-w-lg mx-auto space-y-5 my-8 relative overflow-hidden">
-                        <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-855 flex items-center justify-center text-zinc-500 shadow-inner">
-                          <Target size={26} className="text-zinc-650" />
+                        <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 shadow-inner">
+                          <Target size={26} className="text-zinc-600" />
                         </div>
                         <div>
                           <h4 className="text-base font-bold text-white tracking-wide">Compare with Job Description</h4>
@@ -1723,7 +1723,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                             <div>
                               <p className="text-[9px] font-black text-zinc-505 uppercase tracking-widest font-mono">Semantic Overlap</p>
                               <h4 className="text-lg font-black text-white mt-0.5">{report?.semanticScore || 0}% Match</h4>
-                              <p className="text-[10px] text-zinc-450 leading-normal mt-0.5">Vocabulary relevance compared to the job description tokens.</p>
+                              <p className="text-[10px] text-zinc-400 leading-normal mt-0.5">Vocabulary relevance compared to the job description tokens.</p>
                             </div>
                           </div>
 
@@ -1796,7 +1796,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                                                     ? 'bg-rose-500/10 border-rose-500/10 text-rose-400' 
                                                     : spec === 'medium'
                                                     ? 'bg-amber-500/10 border-amber-500/10 text-amber-400'
-                                                    : 'bg-zinc-800 border-zinc-700 text-zinc-550'
+                                                    : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                                                 }`}>
                                                   {spec}
                                                 </span>
