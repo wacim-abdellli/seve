@@ -275,7 +275,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
               <button
                 type="button"
                 onClick={() => removeSkill(skill)}
-                className="w-4 h-4 rounded-full flex items-center justify-center text-zinc-550 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer rounded-full"
               >
                 <X size={10} />
               </button>

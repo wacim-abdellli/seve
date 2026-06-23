@@ -167,7 +167,7 @@ export default function EducationForm({ education, onChange }: EducationFormProp
                     <button
                       type="button"
                       onClick={(e) => handleRemove(edu.id, e)}
-                      className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors cursor-pointer"
+                      className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-rose-400 transition-colors cursor-pointer"
                       title="Delete School"
                     >
                       <Trash2 size={14} />

@@ -538,7 +538,7 @@ export default function EditorLayout() {
           </div>
           <button 
             onClick={() => setIsResumeManagerOpen(true)} 
-            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2.5 rounded-full transition-all cursor-pointer hover:border-zinc-700 min-w-0 shrink-0 max-w-[160px]"
+            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2.5 rounded-full transition-all cursor-pointer hover:border-zinc-700 min-w-0 shrink-0 max-w-[200px]"
           >
             <span className="truncate">{activeResume?.title || 'My Resume'}</span>
             <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono shrink-0 min-w-4 h-4 flex items-center justify-center">
@@ -631,10 +631,24 @@ export default function EditorLayout() {
 
           <button 
             onClick={() => setShowAiGuide(true)} 
+            className="flex sm:hidden items-center justify-center w-8 h-8 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full transition-all cursor-pointer shrink-0"
+            aria-label="AI Fill"
+          >
+            <Sparkles size={12} className="shrink-0" />
+          </button>
+          <button 
+            onClick={() => setShowAiGuide(true)} 
             className="hidden sm:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0"
           >
             <Sparkles size={12} className="shrink-0" />
             <span className="hidden lg:inline">AI Fill</span>
+          </button>
+          <button 
+            onClick={() => setActiveMode('analyze')} 
+            className={`flex md:hidden items-center justify-center w-8 h-8 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full transition-all cursor-pointer shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-800 border-zinc-600 text-white' : ''}`}
+            aria-label="ATS Analysis"
+          >
+            <CheckCircle2 size={12} className="shrink-0" />
           </button>
           <button 
             onClick={() => setActiveMode('analyze')} 

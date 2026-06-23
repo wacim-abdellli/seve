@@ -44,7 +44,7 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
     <div className="flex flex-col h-full font-sans select-text space-y-4">
       <button
         onClick={handleAdd}
-        className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-zinc-800 rounded-xl text-[13px] text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] border border-dashed border-zinc-800 rounded-xl text-[13px] text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors cursor-pointer"
         type="button"
       >
         <Plus className="w-4 h-4" />
@@ -65,7 +65,7 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
             </span>
             <button
               onClick={() => handleRemove(lang.id)}
-              className="p-1 text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-red-400 transition-colors cursor-pointer"
               type="button"
               title="Delete Language"
             >

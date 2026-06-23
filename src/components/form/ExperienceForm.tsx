@@ -210,10 +210,10 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                   className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-1 cursor-pointer hover:border-zinc-700 transition-colors flex items-center gap-3 select-none"
                 >
                   <div 
-                    className="cursor-grab text-zinc-650 hover:text-zinc-400 flex-shrink-0"
+                    className="cursor-grab text-zinc-650 hover:text-zinc-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <GripVertical size={16} />
+                    <GripVertical size={20} />
                   </div>
 
                   {/* Company avatar */}
@@ -233,7 +233,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button 
                       onClick={(e) => handleRemove(exp.id, e)}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
+                      className="w-11 h-11 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
                       type="button"
                       aria-label="Delete Entry"
                     >
@@ -356,11 +356,11 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                                 />
 
                                 {/* Hover Actions */}
-                                <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex gap-1 flex-shrink-0 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveBullet(exp.id, bIdx)}
-                                    className="p-1 text-zinc-550 hover:text-rose-400 rounded transition-colors cursor-pointer"
+                                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-rose-400 rounded transition-colors cursor-pointer"
                                     title="Remove Bullet"
                                   >
                                     <X className="w-3.5 h-3.5" />
