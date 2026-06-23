@@ -20,6 +20,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   const [starOpenId, setStarOpenId] = useState<string | null>(null)
   const [starFields, setStarFields] = useState<Record<string, { s: string; t: string; a: string; r: string }>>({}) 
   const rafRefs = useRef<Map<HTMLTextAreaElement, number>>(new Map())
+  const bulletKeysRef = useRef<Record<string, string[]>>({})
 
   // Batch textarea height measurement into rAF to prevent layout reflow per keystroke
   const autoResize = useCallback((el: HTMLTextAreaElement) => {
@@ -86,6 +87,8 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   }
 
   const handleAddBullet = (expId: string) => {
+    const currentKeys = bulletKeysRef.current[expId] || []
+    bulletKeysRef.current[expId] = [...currentKeys, crypto.randomUUID()]
     onChange(
       experience.map((exp) => {
         if (exp.id === expId) {
@@ -97,6 +100,8 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   }
 
   const handleRemoveBullet = (expId: string, bulletIndex: number) => {
+    const currentKeys = bulletKeysRef.current[expId] || []
+    bulletKeysRef.current[expId] = currentKeys.filter((_, idx) => idx !== bulletIndex)
     onChange(
       experience.map((exp) => {
         if (exp.id === expId) {
@@ -339,12 +344,21 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                         {/* Bullets list */}
                         <div className="space-y-2">
                           {exp.bullets.map((b, bIdx) => {
+                            if (!bulletKeysRef.current[exp.id]) {
+                              bulletKeysRef.current[exp.id] = exp.bullets.map(() => crypto.randomUUID())
+                            } else if (bulletKeysRef.current[exp.id].length !== exp.bullets.length) {
+                              const diff = exp.bullets.length - bulletKeysRef.current[exp.id].length
+                              if (diff > 0) {
+                                bulletKeysRef.current[exp.id] = [...bulletKeysRef.current[exp.id], ...Array(diff).fill(null).map(() => crypto.randomUUID())]
+                              }
+                            }
+                            const stableKey = bulletKeysRef.current[exp.id][bIdx] || bIdx
                             return (
                               <div
-                                key={bIdx}
-                                className="flex items-start gap-2 bg-zinc-950 border border-zinc-850 rounded-lg p-3 hover:border-zinc-700 transition-colors group relative"
+                                key={stableKey}
+                                className="flex items-start gap-2 bg-zinc-950 border border-zinc-800 rounded-lg p-3 hover:border-zinc-700 transition-colors group relative"
                               >
-                                <span className="text-zinc-650 mt-0.5 flex-shrink-0 text-sm">•</span>
+                                <span className="text-zinc-500 mt-0.5 flex-shrink-0 text-sm">•</span>
                                 <textarea
                                   value={b}
                                   onChange={(e) => handleBulletChange(exp.id, bIdx, e.target.value)}
@@ -360,7 +374,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveBullet(exp.id, bIdx)}
-                                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-550 hover:text-rose-400 rounded transition-colors cursor-pointer"
+                                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-rose-400 rounded transition-colors cursor-pointer"
                                     title="Remove Bullet"
                                   >
                                     <X className="w-3.5 h-3.5" />
