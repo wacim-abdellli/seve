@@ -627,6 +627,33 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setState(prev => {
       const next = { ...prev.resumes }
       delete next[id]
+      if (Object.keys(next).length === 0) {
+        const defaultId = crypto.randomUUID()
+        const defaultProfile: ResumeProfile = {
+          id: defaultId,
+          title: 'My Resume',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          resumeData: {
+            contact: { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' },
+            summary: '',
+            experience: [],
+            education: [],
+            skills: [],
+            languages: [],
+            projects: [],
+          },
+          selectedTemplate: 'classic',
+          jobDescription: '',
+          sectionOrder: ['summary', 'experience', 'projects', 'education', 'skills'],
+          themeColor: '#b91c1c',
+          templateFontSize: 10,
+          templateFontWeight: 400,
+          stylePrefs: { ...DEFAULT_STYLE_PREFS },
+          revision: 1,
+        }
+        return { ...prev, resumes: { [defaultId]: defaultProfile }, selectedResumeId: defaultId }
+      }
       const nextSelectedId = prev.selectedResumeId === id
         ? (Object.keys(next)[0] || '')
         : prev.selectedResumeId
