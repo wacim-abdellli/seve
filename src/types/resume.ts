@@ -184,6 +184,7 @@ export interface ResumeProfile {
   templateFontSize?: number
   templateFontWeight?: number
   stylePrefs?: ResumeStylePreferences
+  revision: number
 }
 
 export interface AppState {

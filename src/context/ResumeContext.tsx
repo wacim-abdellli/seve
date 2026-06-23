@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const LOCAL_STORAGE_KEY = 'seve_state'
+const DELETED_IDS_KEY = 'seve_deleted_ids'
 // Fixed UUID for the default resume. The schema uses composite PK (user_id, id)
 // with id TEXT, so any string ID is valid. Kept as a fixed deterministic UUID
 // for backwards compatibility with existing localStorage data.
@@ -45,6 +46,7 @@ function createDefaultResume(): ResumeProfile {
     templateFontSize: 10,
     templateFontWeight: 400,
     stylePrefs: { ...DEFAULT_STYLE_PREFS },
+    revision: 1,
   }
 }
 
@@ -64,7 +66,7 @@ function loadInitialState(): AppState {
 
         for (const [id, resume] of Object.entries(parsed.resumes)) {
           const newId = id === 'default-resume' ? defaultResumeId : id
-          migratedResumes[newId] = { ...(resume as ResumeProfile), id: newId }
+          migratedResumes[newId] = { ...(resume as ResumeProfile), id: newId, revision: (resume as any).revision || 1 }
           if (parsed.selectedResumeId === id) migratedSelectedId = newId
         }
 
@@ -90,6 +92,7 @@ function loadInitialState(): AppState {
               jobDescription: parsed.jobDescription || '',
               sectionOrder: sectionOrder || [...DEFAULT_SECTION_ORDER],
               stylePrefs: { ...DEFAULT_STYLE_PREFS },
+              revision: 1,
             },
           },
           selectedResumeId: defaultResumeId,
@@ -184,6 +187,17 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setCloudStatus('syncing')
     setCloudError(null)
     try {
+      // Process any pending offline deletions
+      try {
+        const deletedIds: string[] = JSON.parse(localStorage.getItem(DELETED_IDS_KEY) || '[]')
+        if (deletedIds.length > 0) {
+          for (const deletedId of deletedIds) {
+            await supabase.from('resumes').delete().eq('id', deletedId).eq('user_id', userId)
+          }
+          localStorage.setItem(DELETED_IDS_KEY, '[]')
+        }
+      } catch { /* ignore — will retry on next sync */ }
+
       const { data, error } = await supabase
         .from('resumes')
         .select('*', { signal } as Record<string, unknown>)
@@ -203,7 +217,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         let hasChanges = false
         for (const [id, cloudProfile] of Object.entries(cloudResumes)) {
           if (merged[id]) {
-            if (new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
+            // Prefer revision counter over raw timestamps to avoid clock-skew issues
+            const localRev = merged[id].revision || 0
+            const cloudRev = cloudProfile.revision || 0
+            if (cloudRev > localRev) {
+              merged[id] = cloudProfile
+              hasChanges = true
+            } else if (cloudRev === localRev && new Date(cloudProfile.updatedAt) > new Date(merged[id].updatedAt)) {
               merged[id] = cloudProfile
               hasChanges = true
             }
@@ -488,7 +508,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         ...prev,
         resumes: {
           ...prev.resumes,
-          [updated.id]: { ...updated, updatedAt: new Date().toISOString() },
+          [updated.id]: { ...updated, updatedAt: new Date().toISOString(), revision: active.revision + 1 },
         },
       }
     })
@@ -513,6 +533,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           templateFontSize: 10,
           templateFontWeight: 400,
           stylePrefs: { ...DEFAULT_STYLE_PREFS },
+          revision: 1,
         },
       },
       selectedResumeId: newId,
@@ -534,6 +555,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
             title: `${source.title} (Copy)`,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            revision: 1,
           },
         },
         selectedResumeId: newId,
@@ -549,7 +571,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         ...prev,
         resumes: {
           ...prev.resumes,
-          [id]: { ...target, title: newTitle, updatedAt: new Date().toISOString() },
+          [id]: { ...target, title: newTitle, updatedAt: new Date().toISOString(), revision: target.revision + 1 },
         },
       }
     })
@@ -561,7 +583,15 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         await supabase.from('resumes').delete().eq('id', id).eq('user_id', user.id)
       } catch (err) {
         console.error('[Seve] Cloud delete failed:', err)
-        showToast('Failed to delete from cloud — it may reappear on re-login', 'error')
+        // Queue the deletion for retry on next sync
+        try {
+          const existing = JSON.parse(localStorage.getItem(DELETED_IDS_KEY) || '[]')
+          if (!existing.includes(id)) {
+            existing.push(id)
+            localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(existing))
+          }
+        } catch { /* ignore storage errors */ }
+        showToast('Cloud delete queued for retry on next sync', 'error')
       }
     }
     setState(prev => {
