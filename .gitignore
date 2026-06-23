@@ -27,3 +27,7 @@ dist-ssr
 # Backup and temporary files
 reactive-resume-src/
 reactive-resume.zip
+
+# AI Agent files
+.agents/
+skills-lock.json
