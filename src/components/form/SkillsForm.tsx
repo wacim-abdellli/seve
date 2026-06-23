@@ -241,7 +241,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
                     className={`w-full text-left px-4 py-2 flex items-center justify-between text-xs font-medium border-b border-zinc-800/40 last:border-b-0 transition-all cursor-pointer ${
                       idx === selectedIndex 
                         ? 'bg-rose-955/40 text-rose-400 font-bold border-l-2 border-rose-500 pl-3.5' 
-                        : 'text-zinc-300 hover:bg-zinc-850'
+                        : 'text-zinc-300 hover:bg-zinc-800'
                     }`}
                   >
                     <span>{suggestion}</span>

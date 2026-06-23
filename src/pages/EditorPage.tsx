@@ -118,7 +118,7 @@ export default function EditorPage() {
       <div className="space-y-6">
         {/* Templates */}
         <div className="space-y-3">
-          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-450 block select-none font-display">Layout Template</label>
+          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-400 block select-none font-display">Layout Template</label>
           <div className="grid grid-cols-2 gap-2">
             {templatesList.map(t => {
               const isSelected = selectedTemplate === t.id
@@ -143,8 +143,8 @@ export default function EditorPage() {
 
         {/* Size */}
         <div className="space-y-3 pt-4 border-t border-zinc-800/40">
-          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-450 block select-none font-display">Base Font Size</label>
-          <div className="flex items-center bg-zinc-950 border border-zinc-850 rounded-xl p-0.5 h-10 w-full justify-between">
+          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-400 block select-none font-display">Base Font Size</label>
+          <div className="flex items-center bg-zinc-950 border border-zinc-800 rounded-xl p-0.5 h-10 w-full justify-between">
             <button 
               onClick={() => onChangeFontSize(Math.max(6, Number((templateFontSize - 0.5).toFixed(1))))}
               className="px-3 text-zinc-400 hover:text-white hover:bg-zinc-900/65 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center font-bold text-xs"
@@ -154,7 +154,7 @@ export default function EditorPage() {
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <div className="flex items-center gap-1.5 px-2 text-zinc-300 font-mono select-none">
-              <Type className="w-4 h-4 text-zinc-550" />
+              <Type className="w-4 h-4 text-zinc-500" />
               <span className="text-xs font-black">{templateFontSize}pt</span>
             </div>
             <button 
@@ -170,8 +170,8 @@ export default function EditorPage() {
 
         {/* Weight */}
         <div className="space-y-3 pt-4 border-t border-zinc-800/40">
-          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-450 block select-none font-display">Font Weight</label>
-          <div className="flex items-center bg-zinc-950 border border-zinc-850 rounded-xl p-0.5 h-10 w-full justify-between mb-2.5">
+          <label className="text-[11px] font-black uppercase tracking-wider text-zinc-400 block select-none font-display">Font Weight</label>
+          <div className="flex items-center bg-zinc-950 border border-zinc-800 rounded-xl p-0.5 h-10 w-full justify-between mb-2.5">
             <button 
               onClick={() => onChangeFontWeight(Math.max(300, templateFontWeight - 100))}
               className="px-3 text-zinc-455 hover:text-white hover:bg-zinc-900/65 rounded-lg transition-colors cursor-pointer h-full flex items-center justify-center font-bold text-xs"
@@ -200,7 +200,7 @@ export default function EditorPage() {
                 className={`flex-1 h-7 text-[10px] font-black rounded-lg transition-colors cursor-pointer border ${
                   templateFontWeight === w
                     ? 'bg-[#b91c1c]/15 border-[#b91c1c]/30 text-[#b91c1c]'
-                    : 'bg-zinc-950/60 border-zinc-850 text-zinc-550 hover:text-zinc-300 hover:bg-zinc-900'
+                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'
                 }`}
                 type="button"
                 role="radio"

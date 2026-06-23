@@ -150,7 +150,7 @@ export default function DesignStylePanel({ stylePrefs, updateStylePrefs, themeCo
 
   return (
     <div className="space-y-3 pt-4 border-t border-zinc-800/40">
-      <span className="text-[11px] font-black uppercase tracking-wider text-zinc-450 block select-none font-display px-1 pb-1">Typography & Design</span>
+      <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400 block select-none font-display px-1 pb-1">Typography & Design</span>
 
       {/* Typography */}
       <AccordionSection title="Typography" icon={<Type size={14} />} defaultOpen>

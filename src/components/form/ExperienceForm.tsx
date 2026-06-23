@@ -426,7 +426,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                           <button
                             type="button"
                             onClick={() => setStarOpenId(starOpenId === exp.id ? null : exp.id)}
-                            className="text-xs text-zinc-550 hover:text-white font-bold transition-colors cursor-pointer"
+                            className="text-xs text-zinc-500 hover:text-white font-bold transition-colors cursor-pointer"
                           >
                             {starOpenId === exp.id ? 'Close STAR Builder' : 'Open STAR Achievement Builder'}
                           </button>

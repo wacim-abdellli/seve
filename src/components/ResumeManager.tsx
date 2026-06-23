@@ -183,7 +183,7 @@ export default function ResumeManager({
                   {/* Metadata line */}
                   <div className="flex items-center gap-3 mt-1.5 text-[10px] text-zinc-500 flex-wrap">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-zinc-650" />
+                      <Calendar className="w-3 h-3 text-zinc-600" />
                       {dateStr}
                     </span>
                     <span>•</span>

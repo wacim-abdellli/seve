@@ -187,7 +187,7 @@ export default function SectionSidebar({
                     <div className="flex justify-between items-center w-full">
                       <span className="text-[11px] text-zinc-500 font-semibold tracking-widest uppercase flex items-center gap-1 group-hover:text-zinc-350 transition-colors">
                         RESUME COMPLETION
-                        <ChevronDown size={10} className={`text-zinc-650 group-hover:text-zinc-400 transition-transform ${showChecklist ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={10} className={`text-zinc-600 group-hover:text-zinc-400 transition-transform ${showChecklist ? 'rotate-180' : ''}`} />
                       </span>
                       <span className="text-white font-bold text-xs">{resumeCompletion}%</span>
                     </div>
@@ -213,7 +213,7 @@ export default function SectionSidebar({
                           <div className="space-y-1.5">
                             <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 flex items-center justify-between">
                               <span>CORE (REQUIRED)</span>
-                              <span className="text-[9px] font-normal text-zinc-650 italic">Required for 90%</span>
+                              <span className="text-[9px] font-normal text-zinc-600 italic">Required for 90%</span>
                             </h4>
                             {coreSections.map((sec) => {
                               const isComplete = status[sec.id]
@@ -223,7 +223,7 @@ export default function SectionSidebar({
                                   <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-center">
                                       <span className={`text-[13px] font-medium leading-none transition-colors ${isComplete ? 'text-zinc-300 group-hover/item:text-white' : 'text-zinc-500 group-hover/item:text-zinc-350'}`}>{sec.label}</span>
-                                      {!isComplete && <span className="text-[10px] font-mono text-zinc-650 group-hover/item:text-rose-400">{sec.score}</span>}
+                                      {!isComplete && <span className="text-[10px] font-mono text-zinc-600 group-hover/item:text-rose-400">{sec.score}</span>}
                                     </div>
                                     {!isComplete && <p className="text-[10px] text-zinc-655 mt-0.5 leading-normal">{sec.desc}</p>}
                                   </div>

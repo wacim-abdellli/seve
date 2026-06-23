@@ -82,25 +82,25 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
             </div>
 
             <div className="space-y-2.5">
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-850 text-[11px] leading-relaxed">
+              <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] leading-relaxed">
                 <span className="text-[#b91c1c] shrink-0 font-bold font-mono text-xs">1.</span>
                 <div>
                   <p className="text-white font-bold text-xs">Set Destination to "Save as PDF"</p>
-                  <p className="text-zinc-450 mt-0.5">This tells your browser to generate a high-quality PDF file instead of sending it to a physical printer.</p>
+                  <p className="text-zinc-400 mt-0.5">This tells your browser to generate a high-quality PDF file instead of sending it to a physical printer.</p>
                 </div>
               </div>
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-850 text-[11px] leading-relaxed">
+              <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] leading-relaxed">
                 <span className="text-amber-450 shrink-0 font-bold font-mono text-xs">2.</span>
                 <div>
                   <p className="text-white font-bold text-xs">Change Margins to "None"</p>
-                  <p className="text-zinc-450 mt-0.5">Under <span className="text-zinc-300 font-semibold">More Settings</span>, set Margins to None to prevent white spacing borders.</p>
+                  <p className="text-zinc-400 mt-0.5">Under <span className="text-zinc-300 font-semibold">More Settings</span>, set Margins to None to prevent white spacing borders.</p>
                 </div>
               </div>
-              <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-850 text-[11px] leading-relaxed">
+              <div className="flex gap-3 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-[11px] leading-relaxed">
                 <span className="text-purple-400 shrink-0 font-bold font-mono text-xs">3.</span>
                 <div>
                   <p className="text-white font-bold text-xs">Enable Background Graphics</p>
-                  <p className="text-zinc-450 mt-0.5">Check the box for Background Graphics to preserve all template colors, accents, and custom styling.</p>
+                  <p className="text-zinc-400 mt-0.5">Check the box for Background Graphics to preserve all template colors, accents, and custom styling.</p>
                 </div>
               </div>
             </div>
@@ -112,15 +112,15 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
           </div>
 
           {/* Right Side: Visual Mockup */}
-          <div className="w-full md:w-[240px] bg-zinc-950/80 border border-zinc-850 rounded-xl p-4 flex flex-col font-sans shrink-0">
+          <div className="w-full md:w-[240px] bg-zinc-950/80 border border-zinc-800 rounded-xl p-4 flex flex-col font-sans shrink-0">
             {/* Mockup Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-850 mb-3">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800 mb-3">
               <div className="flex gap-1">
                 <span className="w-2 h-2 rounded-full bg-rose-500/80" />
                 <span className="w-2 h-2 rounded-full bg-amber-500/80" />
                 <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
               </div>
-              <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest font-display">Browser Print Settings</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-display">Browser Print Settings</span>
             </div>
 
             {/* Mockup Controls */}
@@ -137,14 +137,14 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
               {/* Pages */}
               <div className="space-y-1">
                 <label className="text-zinc-500 font-bold block">Pages</label>
-                <div className="bg-zinc-900/50 border border-zinc-850 rounded px-2 py-1 flex items-center justify-between text-zinc-400">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded px-2 py-1 flex items-center justify-between text-zinc-400">
                   <span>All</span>
                   <span className="text-zinc-700">▼</span>
                 </div>
               </div>
 
               {/* More settings expander */}
-              <div className="py-1 border-t border-b border-zinc-900 flex items-center justify-between text-zinc-450 font-semibold cursor-default">
+              <div className="py-1 border-t border-b border-zinc-900 flex items-center justify-between text-zinc-400 font-semibold cursor-default">
                 <span>More settings</span>
                 <span>▲</span>
               </div>
@@ -152,7 +152,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
               {/* Paper size */}
               <div className="space-y-1">
                 <label className="text-zinc-500 font-bold block">Paper size</label>
-                <div className="bg-zinc-900/50 border border-zinc-850 rounded px-2 py-1 flex items-center justify-between text-zinc-450">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded px-2 py-1 flex items-center justify-between text-zinc-400">
                   <span>A4</span>
                   <span className="text-zinc-750">▼</span>
                 </div>
@@ -351,7 +351,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
         </div>
         <div className="space-y-5">
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-zinc-450 uppercase tracking-wider font-display">Default Template</label>
+            <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-display">Default Template</label>
             <select value={selectedTemplate} onChange={(e) => onUpdateTemplate(e.target.value as Template)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#b91c1c]/50 font-bold appearance-none cursor-pointer">
               <option value="classic">Classic (Serif)</option>
               <option value="modern">Modern (Tech/Sans)</option>
@@ -366,18 +366,18 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-zinc-450 uppercase tracking-wider font-display">Data Management</label>
+            <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-display">Data Management</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
+              <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Download className="w-3.5 h-3.5 text-zinc-400" /> Backup
               </button>
-              <button onClick={handleImport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
+              <button onClick={handleImport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Upload className="w-3.5 h-3.5 text-zinc-400" /> Import File
               </button>
-              <button onClick={() => { setShowPasteBox(!showPasteBox); setPasteError(null) }} className={`h-10 rounded-xl border font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${showPasteBox ? 'bg-[#b91c1c]/10 border-[#b91c1c]/35 text-[#b91c1c]' : 'bg-zinc-950/40 border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white'}`}>
+              <button onClick={() => { setShowPasteBox(!showPasteBox); setPasteError(null) }} className={`h-10 rounded-xl border font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${showPasteBox ? 'bg-[#b91c1c]/10 border-[#b91c1c]/35 text-[#b91c1c]' : 'bg-zinc-950/40 border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white'}`}>
                 <FileCode className="w-3.5 h-3.5" /> Paste Code
               </button>
-              <button onClick={handleCopyTemplate} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-850 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
+              <button onClick={handleCopyTemplate} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Copy className="w-3.5 h-3.5 text-zinc-400" /> {copied ? 'Copied!' : 'Template'}
               </button>
             </div>
@@ -561,7 +561,7 @@ export default function EditorLayout() {
             <button
               onClick={undo}
               disabled={!canUndo}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-850 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="Undo (Ctrl+Z)"
             >
               <Undo size={13} />
@@ -569,7 +569,7 @@ export default function EditorLayout() {
             <button
               onClick={redo}
               disabled={!canRedo}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-850 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="Redo (Ctrl+Y)"
             >
               <Redo size={13} />
