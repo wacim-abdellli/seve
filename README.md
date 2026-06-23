@@ -1,88 +1,63 @@
-# Seve — Free, Honest AI-Powered ATS Resume Builder & Career Coach
+# Seve
 
-**Seve** is an AI-powered resume builder designed to help job seekers build professional, ATS-optimized resumes. Built with a commitment to transparency.
+Seve is a free, open-source, local-first resume builder designed to build clean, ATS-optimized resumes. It runs entirely in your browser, keeping your data local unless you choose to enable cloud sync.
 
----
+## Key Features
 
-## 🔒 Privacy & Data Architecture
+- **Local-First & Offline Capable**: Your resume data is stored directly in your browser (`localStorage`). You can create, edit, and export resumes offline without signing in.
+- **Privacy-First PDF Export**: PDFs are rendered locally using your browser's print engine (`Ctrl+P` / `Cmd+P`) combined with print-optimized CSS. No external APIs or servers process your resume text during rendering.
+- **Optional Cloud Sync**: Sync resumes across devices via Supabase. Local changes sync automatically when online, with timezone-independent sync resolution.
+- **Real-Time ATS Quality Scoring**: Instant feedback based on formatting guidelines:
+  - **Completeness & Structure**: Ensures essential sections (summary, experience, education, skills, contact) are complete.
+  - **Job Description Keyword Matching**: Checks target job descriptions against resume keywords in real time.
+  - **Action Verbs & Impact Metrics**: Flags passive phrasing and counts quantified results (percentages, numbers).
+  - **Formatting Safety Audit**: Flags tables, text boxes, and special symbols that interfere with ATS parsers.
+  - **Date Validation**: Ensures date patterns match recruiter-friendly standards (`MM/YYYY`).
+- **10 Professional Templates**: Built with print-safe CSS rules (`21cm` x `29.7cm` A4 layouts) and fine-tuned typography (Classic, Modern, Clean, Compact, Technical, Executive, Minimalist, Creative, Professional, Academic).
 
-Seve uses a **local-first** storage model with optional cloud features:
+## Tech Stack
 
-- **Local-First Editing:** All resume data, settings, and preferences are saved locally in your browser's `localStorage` (`seve_state`). You can use the full editor without signing in.
-- **Anonymous Analytics:** Aggregate page-view counts are recorded through Supabase to measure usage. No personal data is associated with these counts.
-- **Cloud Sync:** When you sign in with Google, your resume data is synced to Supabase for backup and cross-device access. After sign-in, local edits are saved locally first; use the Save button or Ctrl+S to push updates to the cloud. No sign-in is required for editing or PDF export.
-- **PDF Export:** Uses your browser's built-in print dialog — no data is sent to external servers for rendering.
- 
----
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS, Vanilla CSS Variables
+- **Backend & Database**: Supabase (Auth & JSON-based profile storage)
 
-## ✨ Features
-
-### 1. ATS Scoring Engine (Local Offline Heuristics)
-Evaluates your resume in real time using local rule-based heuristics inspired by common ATS and recruiter readability checks, scoring out of 100 points:
-- **Section Completeness (20 pts):** Ensures contact info, summary, experience, education, and skills are present.
-- **Keyword Match (25 pts):** Scans your resume text against keywords extracted from your target job description.
-- **Formatting Safety (20 pts):** Highlights potential parsing traps (tables, text boxes, non-standard symbols).
-- **Action Verbs (10 pts):** Verifies that experience bullet points start with strong, professional verbs.
-- **Quantified Results (10 pts):** Identifies whether you have included measurable impact metrics.
-- **Contact Info (5 pts):** Checks for name, email, and LinkedIn profile format.
-- **Date Consistency (5 pts):** Scans dates to ensure they use a standard candidate-friendly format (`MM/YYYY`).
-- **Length Appropriateness (5 pts):** Warns if your resume is too long relative to your experience level.
-
-### 2. One-Click ATS Auto-Fix
-Instantly sanitizes your draft: standardizes date formats, eliminates personal pronouns (I, me, my, we), and strips formatting-unfriendly special characters.
-
-### 3. Print-Perfect Templates
-Includes ten professionally-crafted, ATS-compliant templates:
-- **Classic:** Traditional serif layout (`Georgia`), recommended for corporate, finance, and legal fields.
-- **Modern:** Contemporary clean sans-serif layout (`Arial`) with subtle color accents, ideal for tech and startups.
-- **Executive:** Distinguished divider bar formatting for senior management and leadership.
-- **Minimalist:** Airy padding and structured whitespace for maximum readability.
-- **Creative:** Distinct layout tags with left-border accents for design and marketing roles.
-- **Professional:** Bold section headers with a structured, achievement-focused layout.
-- **Technical:** Clean monospace-inspired layout with a skills-forward emphasis.
-- **Compact:** Dense two-column layout optimized for fitting extensive experience on a single page.
-- **Clean:** Open, readable layout with generous whitespace and subtle section dividers.
-- **Academic:** Publication and research-oriented layout with citation-friendly formatting.
-- *Exports clean, text-readable PDFs utilizing your browser's print dialog (`Ctrl+P` / `Cmd+P`) combined with custom responsive CSS `@media print` stylesheets.*
-
----
-
-## 🛠️ Tech Stack
-
-- **Framework:** React + TypeScript + Vite
-- **Styling:** Tailwind CSS (Vanilla CSS for theme custom variables)
-- **Icons:** Lucide React
- 
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-Ensure you have [Node.js](https://nodejs.org/) installed (version 18+ recommended).
 
-### Installation & Run
+- Node.js (version 18 or higher)
+- npm or yarn
 
-1. Clone the repository:
+### Local Setup
+
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/wacim-abdellli/seve.git
    cd seve
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. Start the local development server:
+3. **Configure Environment Variables:**
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your Supabase URL and anonymous key inside `.env`.
+
+4. **Run the Development Server:**
    ```bash
    npm run dev
    ```
+   Open your browser at `http://localhost:5173`.
 
-4. Open your browser and navigate to `http://localhost:5173`.
+### Production Build
 
-### Building for Production
-To generate the production bundle:
+To build the static application bundle:
 ```bash
 npm run build
 ```
-The static files will be generated in the `dist/` directory, ready to be hosted on Netlify, Vercel, GitHub Pages, or any static hosting service.
+The compiled output is saved to the `dist/` directory, ready to be deployed to static hosting providers (Vercel, Netlify, GitHub Pages, etc.).
