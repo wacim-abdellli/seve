@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none no-print">
+      <div className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[9999] flex flex-col gap-2 pointer-events-none no-print">
         {toasts.map((toast) => {
           const Icon = {
             success: CheckCircle2,
@@ -51,7 +51,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return (
             <div
               key={toast.id}
-              className="toast-enter pointer-events-auto flex items-center gap-3 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 shadow-2xl shadow-black/50 min-w-[280px] max-w-[380px]"
+              className="toast-enter pointer-events-auto flex items-center gap-3 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 shadow-2xl shadow-black/50 min-w-0 sm:min-w-[280px] max-w-full sm:max-w-[380px]"
             >
               <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center ${iconBg}`}>
                 <Icon className="w-4 h-4" />
