@@ -100,7 +100,8 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
 
   // Auto-detect industry when job title changes
   useEffect(() => {
-    setTimeout(() => { setSelectedCategory(detectCategory(jobTitle)) })
+    const t = setTimeout(() => { setSelectedCategory(detectCategory(jobTitle)) })
+    return () => clearTimeout(t)
   }, [jobTitle])
 
   // Filter autocomplete suggestions based on user typing (debounced 150ms)
