@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useEffect, useRef, useMemo, createContext, useContext } from 'react'
 import { FileEdit, Info, GripVertical } from 'lucide-react'
 
@@ -10,11 +9,17 @@ interface SectionReorderContextType {
 
 const SectionReorderContext = createContext<SectionReorderContextType | null>(null)
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSectionReorder() {
   return useContext(SectionReorderContext)
 }
 
 export const SectionReorderProvider = SectionReorderContext.Provider
+
+export function isSectionKey(id: string): id is SectionKey {
+  const VALID_KEYS: SectionKey[] = ['contact', 'summary', 'experience', 'education', 'skills', 'languages', 'projects', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer']
+  return VALID_KEYS.includes(id as SectionKey)
+}
 
 interface PreviewSectionWrapperProps {
   sectionId: string
@@ -23,9 +28,9 @@ interface PreviewSectionWrapperProps {
   atsRating?: string
   atsFeedback?: string
   onEdit?: (section: string) => void
-  onDragStart?: (e: React.DragEvent) => void
+  onDragStart?: (e: React.DragEvent, sectionId: string) => void
   onDragOver?: (e: React.DragEvent) => void
-  onDrop?: (e: React.DragEvent) => void
+  onDrop?: (sectionId: string) => void
   onDragEnd?: (e: React.DragEvent) => void
   children: React.ReactNode
 }
@@ -82,17 +87,23 @@ export default function PreviewSectionWrapper({
 
   const reorder = useSectionReorder()
 
+  const handleDragStart = (e: React.DragEvent) => {
+    if (onDragStart) onDragStart(e, sectionId)
+  }
+
+  const handleDrop = () => {
+    if (onDrop) onDrop(sectionId)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const VALID_KEYS: readonly SectionKey[] = ['contact', 'summary', 'experience', 'education', 'skills', 'languages', 'projects', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer']
-    const key = sectionId as SectionKey
-    if (!(VALID_KEYS as readonly string[]).includes(key)) return
+    if (!isSectionKey(sectionId)) return
     if (e.altKey && e.key === 'ArrowUp') {
       e.preventDefault()
-      reorder?.moveSection(key, 'up')
+      reorder?.moveSection(sectionId, 'up')
     }
     if (e.altKey && e.key === 'ArrowDown') {
       e.preventDefault()
-      reorder?.moveSection(key, 'down')
+      reorder?.moveSection(sectionId, 'down')
     }
   }
 
@@ -103,9 +114,9 @@ export default function PreviewSectionWrapper({
       role="region"
       aria-roledescription="resume section"
       draggable={isDraggable}
-      onDragStart={onDragStart}
+      onDragStart={isDraggable ? handleDragStart : undefined}
       onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDrop={isDraggable ? handleDrop : undefined}
       onDragEnd={onDragEnd}
       onKeyDown={(e) => {
         handleKeyDown(e)
@@ -115,7 +126,7 @@ export default function PreviewSectionWrapper({
         }
       }}
       tabIndex={0}
-      aria-label={`${sectionIdLabel} section. ${isDraggable ? 'Alt+Arrow keys to reorder.' : ''}`}
+      aria-label={`${sectionIdLabel} section. ${isDraggable ? 'Alt or Option + Arrow keys to reorder.' : ''}`}
       className={`preview-section ${ripple ? 'animate-ripple' : ''}`}
       style={{
         borderLeft: isActive ? '2px solid rgba(251,146,60,0.6)' : '2px solid transparent',
@@ -135,6 +146,7 @@ export default function PreviewSectionWrapper({
       {/* Floating Controls Rail (Left margin outside page boundaries) */}
       <div 
         className="floating-rail no-print"
+        aria-hidden={!isActive}
         style={{
           opacity: isActive ? 1 : undefined,
           pointerEvents: isActive ? 'auto' : undefined,
@@ -165,6 +177,7 @@ export default function PreviewSectionWrapper({
         {!atsMode && (
           <button
             onClick={handleEditClick}
+            tabIndex={isActive ? 0 : -1}
             className="flex items-center justify-center"
             style={{ width: 24, height: 24, padding: 0 }}
             title={`Edit ${sectionId}`}

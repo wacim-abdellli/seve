@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import type { ResumeData } from '../types/resume'
 import ErrorBoundary from './ErrorBoundary'
 
@@ -29,7 +28,7 @@ interface TemplateRendererProps extends TemplateProps {
   type: string
 }
 
-const TEMPLATES: Record<string, React.ComponentType<any>> = {
+const TEMPLATES: Record<string, React.ComponentType<TemplateProps>> = {
   classic: ClassicTemplate,
   modern: ModernTemplate,
   executive: ExecutiveTemplate,
@@ -43,7 +42,7 @@ const TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 export default function TemplateRenderer({ type, ...props }: TemplateRendererProps) {
-  const Template = useMemo(() => TEMPLATES[type], [type])
+  const Template = TEMPLATES[type]
   if (!Template) return null
 
   return (

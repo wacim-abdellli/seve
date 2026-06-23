@@ -4,8 +4,6 @@ import { evaluateSectionAts } from '../../utils/atsEvaluator'
 import { getPageBreakSections } from '../../utils/layoutHelper'
 
 export interface TemplateSectionData {
-  atsRating: string
-  atsFeedback: string | undefined
   data: ResumeData
   activeSection: string | null | undefined
   atsMode: boolean | undefined
@@ -45,26 +43,26 @@ export function useTemplateData(
   ats: Record<string, { rating: string; feedback: string | undefined }>
   sectionData: TemplateSectionData
 } {
-  const contact = data?.contact || { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' }
-  const summary = data?.summary || ''
-  const experience = (data?.experience || []).filter(
+  const contact = useMemo(() => data?.contact || { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' }, [data])
+  const summary = useMemo(() => data?.summary || '', [data])
+  const experience = useMemo(() => (data?.experience || []).filter(
     (exp) => exp?.jobTitle?.trim() && exp?.company?.trim()
-  )
-  const education = (data?.education || []).filter(
+  ), [data])
+  const education = useMemo(() => (data?.education || []).filter(
     (edu) => edu?.school?.trim() && edu?.degree?.trim()
-  )
-  const skills = (data?.skills || []).filter((s) => s?.trim())
-  const projects = (data?.projects || []).filter((p) => p?.name?.trim())
-  const languages = (data?.languages || []).filter((l) => l?.name?.trim())
-  const awards = (data?.awards || []).filter((a) => a?.title?.trim())
-  const certifications = (data?.certifications || []).filter((c) => c?.title?.trim())
-  const interests = (data?.interests || []).filter((i) => i?.name?.trim())
-  const publications = (data?.publications || []).filter((p) => p?.title?.trim())
-  const references = (data?.references || []).filter((r) => r?.name?.trim())
-  const volunteer = (data?.volunteer || []).filter((v) => v?.organization?.trim())
+  ), [data])
+  const skills = useMemo(() => (data?.skills || []).filter((s) => s?.trim()), [data])
+  const projects = useMemo(() => (data?.projects || []).filter((p) => p?.name?.trim()), [data])
+  const languages = useMemo(() => (data?.languages || []).filter((l) => l?.name?.trim()), [data])
+  const awards = useMemo(() => (data?.awards || []).filter((a) => a?.title?.trim()), [data])
+  const certifications = useMemo(() => (data?.certifications || []).filter((c) => c?.title?.trim()), [data])
+  const interests = useMemo(() => (data?.interests || []).filter((i) => i?.name?.trim()), [data])
+  const publications = useMemo(() => (data?.publications || []).filter((p) => p?.title?.trim()), [data])
+  const references = useMemo(() => (data?.references || []).filter((r) => r?.name?.trim()), [data])
+  const volunteer = useMemo(() => (data?.volunteer || []).filter((v) => v?.organization?.trim()), [data])
 
-  const atsEntries = ['contact', 'summary', 'experience', 'projects', 'education', 'skills',
-    'languages', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer'] as const
+  const atsEntries = useMemo(() => ['contact', 'summary', 'experience', 'projects', 'education', 'skills',
+    'languages', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer'] as const, [])
 
   const ats = useMemo(() => {
     const result: Record<string, { rating: string; feedback: string | undefined }> = {}
@@ -73,30 +71,45 @@ export function useTemplateData(
       result[section] = { rating: r.rating, feedback: r.feedback }
     }
     return result
-  }, [data])
+  }, [data, atsEntries])
 
-  const { page1Sections, page2Sections } = getPageBreakSections(data, sectionOrder)
+  const { page1Sections, page2Sections } = useMemo(() => getPageBreakSections(data, sectionOrder), [data, sectionOrder])
 
-  const sectionData: TemplateSectionData = {
-    atsRating: '',
-    atsFeedback: '',
+  const sectionData: TemplateSectionData = useMemo(() => ({
     data,
     activeSection,
     atsMode,
-    onEditSection: onEditSection as ((section: string) => void) | undefined,
-    onDragStart: onDragStart as ((e: React.DragEvent, sectionId: string) => void) | undefined,
+    onEditSection,
+    onDragStart,
     onDragOver,
-    onDrop: onDrop as ((sectionId: string) => void) | undefined,
+    onDrop,
     sectionOrder,
     page1Sections,
     page2Sections,
     contactAts: ats.contact,
-  }
+  }), [
+    data,
+    activeSection,
+    atsMode,
+    onEditSection,
+    onDragStart,
+    onDragOver,
+    onDrop,
+    sectionOrder,
+    page1Sections,
+    page2Sections,
+    ats.contact
+  ])
 
-  return {
+  return useMemo(() => ({
     contact, summary, experience, education, skills, projects, languages,
     awards, certifications, interests, publications, references, volunteer,
     ats,
     sectionData,
-  }
+  }), [
+    contact, summary, experience, education, skills, projects, languages,
+    awards, certifications, interests, publications, references, volunteer,
+    ats,
+    sectionData
+  ])
 }
