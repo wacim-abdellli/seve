@@ -13,7 +13,7 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
 import ResumeManager from '../components/ResumeManager'
-import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
@@ -411,6 +411,7 @@ export default function EditorLayout() {
     selectResume, createResume, duplicateResume, renameResume, deleteResume,
     updateActiveResume, updateStylePrefs, importResumeData, sectionOrder, updateSectionOrder,
     saveChangesToCloud, restoreFromBackup,
+    undo, redo, canUndo, canRedo,
   } = useResume()
   const { user, signInWithGoogle, signOut } = useAuth()
 
@@ -542,8 +543,28 @@ export default function EditorLayout() {
           </button>
         </div>
 
-        {/* Zone 2 — Center: Cloud Status Pill */}
-        <div className="hidden sm:flex flex-1 items-center justify-center min-w-0">
+        {/* Zone 2 — Center: Cloud Status & History Controls */}
+        <div className="hidden sm:flex flex-1 items-center justify-center gap-3.5 min-w-0">
+          {/* History (Undo / Redo) Buttons */}
+          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-full p-0.5">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-850 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo size={13} />
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-850 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo size={13} />
+            </button>
+          </div>
+
           <div
             className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 w-[140px] justify-center ${
               cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
