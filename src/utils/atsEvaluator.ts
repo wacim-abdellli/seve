@@ -78,6 +78,7 @@ function detectDateFormat(dateStr: string, lang: 'en' | 'fr'): 'MM/YYYY' | 'Mont
 }
 
 export function evaluateResume(resume: ResumeData, jobDescription: string, fontSize: number = 10): AtsScore & { language: 'en' | 'fr'; reportV2: AtsReport } {
+  clearResumeTextCache()
   const report = generateAtsReportV2(resume, jobDescription, null, fontSize)
   
   // Map categories back to the V1 "sections" format
@@ -657,12 +658,25 @@ export function auditBullets(bullets: string[], sectionName: string): AtsIssue[]
    Phase 1: evaluateSectionAts() — for PDF templates
    ═══════════════════════════════════════════ */
 
-function extractResumeText(resume: ResumeData): string {
+let _resumeTextCache: string | null = null
+
+export function clearResumeTextCache(): void {
+  _resumeTextCache = null
+}
+
+function extractResumeText(resume: ResumeData): string
+function extractResumeText(resume: ResumeData, options: { excludeContact?: boolean; asWordCount: true }): number
+function extractResumeText(resume: ResumeData, options?: { excludeContact?: boolean; asWordCount?: boolean }): string | number {
+  if (_resumeTextCache !== null && !options?.excludeContact && !options?.asWordCount) {
+    return _resumeTextCache
+  }
+  const excludeContact = options?.excludeContact ?? false
+  const asWordCount = options?.asWordCount ?? false
   let text = ''
-  if (resume.contact) {
+  if (!excludeContact && resume.contact) {
     text += ` ${resume.contact.fullName} ${resume.contact.email} ${resume.contact.phone} ${resume.contact.linkedin} ${resume.contact.location} ${resume.contact.website || ''}`
   }
-  text += ` ${resume.summary}`
+  text += ` ${resume.summary || ''}`
   resume.experience.forEach(exp => {
     text += ` ${exp.jobTitle} ${exp.company} ${exp.location} ${exp.bullets.join(' ')}`
   })
@@ -674,43 +688,15 @@ function extractResumeText(resume: ResumeData): string {
   if (resume.projects) resume.projects.forEach(p => { text += ` ${p.name} ${p.description} ${p.technologies.join(' ')}` })
   if (resume.certifications) resume.certifications.forEach(c => { text += ` ${c.title} ${c.issuer}` })
   if (resume.awards) resume.awards.forEach(a => { text += ` ${a.title}` })
-  return text
+  if (!excludeContact && !asWordCount) {
+    _resumeTextCache = text
+  }
+  return asWordCount ? text.split(/\s+/).filter(w => w.length > 0).length : text
 }
 
-/**
- * Count substantive content words in a resume (excludes contact info fields
- * like name, email, phone, LinkedIn URL which inflate word count).
- */
+/** Count substantive content words (excludes contact info). */
 function countContentWords(resume: ResumeData): number {
-  let text = ''
-  // Summary
-  text += ` ${resume.summary || ''}`
-  // Experience (job title + company + location + all bullets)
-  resume.experience.forEach(exp => {
-    text += ` ${exp.jobTitle} ${exp.company} ${exp.location}`
-    text += ` ${exp.bullets.join(' ')}`
-  })
-  // Education
-  resume.education.forEach(edu => {
-    text += ` ${edu.degree} ${edu.school} ${edu.location}`
-  })
-  // Skills
-  text += ` ${resume.skills.join(' ')}`
-  // Projects
-  if (resume.projects) {
-    resume.projects.forEach(p => {
-      text += ` ${p.name} ${p.description} ${p.technologies.join(' ')}`
-    })
-  }
-  // Certifications
-  if (resume.certifications) {
-    resume.certifications.forEach(c => { text += ` ${c.title} ${c.issuer}` })
-  }
-  // Languages
-  if (resume.languages) {
-    resume.languages.forEach(l => { text += ` ${l.name}` })
-  }
-  return text.split(/\s+/).filter(w => w.length > 0).length
+  return extractResumeText(resume, { excludeContact: true, asWordCount: true }) as number
 }
 
 /**
@@ -2199,6 +2185,7 @@ export function generateAtsReportV2(
   previousReport?: AtsReport | null,
   fontSize: number = 10
 ): AtsReport {
+  clearResumeTextCache()
   const text = extractResumeText(resume)
   const lang = detectLanguage(text)
   const industryId = detectIndustry(jd, resume)
