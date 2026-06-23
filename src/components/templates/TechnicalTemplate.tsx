@@ -1,4 +1,5 @@
 import type { ResumeData } from '../../types/resume'
+import { parseCategorizedSkills } from '../../utils/atsUtils'
 import { memo } from 'react'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
@@ -63,9 +64,20 @@ const TechnicalTemplate = memo(function TechnicalTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-4 resume-section">
         {h2(SECTION_LABELS.skills)}
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
-          {skills.map((sk) => (
-            <span key={sk} className="text-[9px] font-mono px-2 py-0.5 rounded" style={{ backgroundColor: `${themeColor}10`, color: themeColor }}>{sk}</span>
+        <div className="flex flex-col gap-2">
+          {parseCategorizedSkills(skills).map((group, gIdx) => (
+            <div key={gIdx} className="flex items-baseline gap-2">
+              {group.category !== 'Skills' && (
+                <div className="text-[9.5px] font-bold text-slate-800 min-w-[70px] shrink-0">{group.category}:</div>
+              )}
+              <div className="flex flex-wrap gap-1.5">
+                {group.items.map((item) => (
+                  <span key={item} className="text-[9px] font-mono px-2 py-0.5 rounded" style={{ backgroundColor: `${themeColor}10`, color: themeColor }}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

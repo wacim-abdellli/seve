@@ -1,4 +1,5 @@
 import type { ResumeData } from '../../types/resume'
+import { parseCategorizedSkills } from '../../utils/atsUtils'
 import { memo, Fragment } from 'react'
 import { SECTION_LABELS } from '../../utils/sectionLabels'
 import { formatDate } from '../../utils/dateUtils'
@@ -73,11 +74,20 @@ const CreativeTemplate = memo(function CreativeTemplate({
     skills: skills.length > 0 ? wrap('skills', (
       <div className="mb-5 resume-section">
         {leftH2(SECTION_LABELS.skills)}
-        <div className="flex flex-wrap gap-1 mt-2">
-          {skills.map((sk) => (
-            <span key={sk} className="text-[8px] font-bold px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>
-              {sk}
-            </span>
+        <div className="flex flex-col gap-2.5 mt-2">
+          {parseCategorizedSkills(skills).map((group, gIdx) => (
+            <div key={gIdx} className="flex flex-col gap-1">
+              {group.category !== 'Skills' && (
+                <div className="text-[7.5px] font-bold tracking-wider uppercase text-slate-500">{group.category}</div>
+              )}
+              <div className="flex flex-wrap gap-1">
+                {group.items.map((item) => (
+                  <span key={item} className="text-[8.5px] font-medium px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

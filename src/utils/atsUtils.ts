@@ -187,3 +187,39 @@ export function getActualSkillsCount(skills: string[]): number {
   return count
 }
 
+export interface ParsedSkillGroup {
+  category: string
+  items: string[]
+}
+
+export function parseCategorizedSkills(skills: string[]): ParsedSkillGroup[] {
+  const parsed: ParsedSkillGroup[] = []
+  if (!skills) return parsed
+  
+  for (const item of skills) {
+    const colonIdx = item.indexOf(':')
+    if (colonIdx > 0) {
+      const cat = item.substring(0, colonIdx).trim()
+      const skillsText = item.substring(colonIdx + 1).trim()
+      const items = skillsText
+        ? skillsText.split(',').map(s => s.trim()).filter(Boolean)
+        : []
+      parsed.push({ category: cat, items })
+    } else {
+      if (item.trim()) {
+        const defaultCat = 'Skills'
+        const existing = parsed.find(p => p.category.toLowerCase() === defaultCat.toLowerCase())
+        if (existing) {
+          if (!existing.items.includes(item.trim())) {
+            existing.items.push(item.trim())
+          }
+        } else {
+          parsed.push({ category: defaultCat, items: [item.trim()] })
+        }
+      }
+    }
+  }
+  return parsed
+}
+
+
