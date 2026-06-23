@@ -6,6 +6,7 @@ import { ToastContext } from '../context/ToastContext'
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+  const idCounterRef = useRef(0)
 
   useEffect(() => {
     const timers = timersRef.current
@@ -13,7 +14,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = Date.now().toString() + Math.random().toString(36).substring(2, 9)
+    const id = (++idCounterRef.current).toString()
     setToasts((prev) => [...prev, { id, message, type }])
     
     const timer = setTimeout(() => {
@@ -32,7 +33,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[9999] flex flex-col gap-2 pointer-events-none no-print">
+      <div role="alert" aria-live="polite" className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[9999] flex flex-col gap-2 pointer-events-none no-print">
         {toasts.map((toast) => {
           const Icon = {
             success: CheckCircle2,
@@ -54,7 +55,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               className="toast-enter pointer-events-auto flex items-center gap-3 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 shadow-2xl shadow-black/50 min-w-0 sm:min-w-[280px] max-w-full sm:max-w-[380px]"
             >
               <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center ${iconBg}`}>
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4" aria-hidden="true" />
               </div>
 
               <p className="text-[13px] text-white flex-1 leading-relaxed">{toast.message}</p>

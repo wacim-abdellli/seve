@@ -20,6 +20,22 @@ import {
   Globe
 } from 'lucide-react'
 
+const SECTIONS: { id: SectionType; icon: React.ElementType }[] = [
+  { id: 'contact', icon: User },
+  { id: 'summary', icon: FileText },
+  { id: 'experience', icon: Briefcase },
+  { id: 'education', icon: GraduationCap },
+  { id: 'skills', icon: Wrench },
+  { id: 'languages', icon: Globe },
+  { id: 'projects', icon: FolderGit },
+  { id: 'awards', icon: Trophy },
+  { id: 'certifications', icon: Award },
+  { id: 'interests', icon: Heart },
+  { id: 'publications', icon: BookOpen },
+  { id: 'references', icon: Phone },
+  { id: 'volunteer', icon: HandHeart },
+]
+
 interface BentoDashboardProps {
   resumeData: ResumeData
   onSelectSection: (section: SectionType) => void
@@ -113,22 +129,6 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
     )
   }
 
-  const sections: { id: SectionType; icon: React.ElementType }[] = [
-    { id: 'contact', icon: User },
-    { id: 'summary', icon: FileText },
-    { id: 'experience', icon: Briefcase },
-    { id: 'education', icon: GraduationCap },
-    { id: 'skills', icon: Wrench },
-    { id: 'languages', icon: Globe },
-    { id: 'projects', icon: FolderGit },
-    { id: 'awards', icon: Trophy },
-    { id: 'certifications', icon: Award },
-    { id: 'interests', icon: Heart },
-    { id: 'publications', icon: BookOpen },
-    { id: 'references', icon: Phone },
-    { id: 'volunteer', icon: HandHeart },
-  ]
-
   return (
     <div className="flex flex-col gap-5 h-full">
       <div>
@@ -140,7 +140,7 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
 
       <div className="flex-1 overflow-y-auto pr-1.5 custom-scrollbar pb-6">
         <div className="flex flex-col gap-3.5">
-          {sections.map((sec) => {
+          {SECTIONS.map((sec) => {
             const Icon = sec.icon
             const { percent, status, label } = getSectionStats(sec.id)
             
@@ -148,7 +148,10 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
               <div
                 key={sec.id}
                 onClick={() => onSelectSection(sec.id)}
-                className="tm-card flex flex-col justify-between min-h-[96px] p-3 cursor-pointer hover:border-red-500/25 transition-all group"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectSection(sec.id) } }}
+                role="button"
+                tabIndex={0}
+                className="tm-card flex flex-col justify-between min-h-[96px] p-3 cursor-pointer hover:border-red-500/25 transition-all group focus-visible:outline-2 focus-visible:outline-red-500"
               >
                 <div>
                   <div className="flex items-center justify-between">

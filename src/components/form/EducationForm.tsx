@@ -243,13 +243,14 @@ export default function EducationForm({ education, onChange }: EducationFormProp
                               onChange={(e) => handleChange(edu.id, 'gpa', e.target.value)}
                               className="drawer-input !bg-zinc-950"
                               placeholder="e.g. 3.8"
+                              aria-invalid={edu.gpa !== undefined && edu.gpa !== '' && parseFloat(edu.gpa) < 3.5 || undefined}
                             />
                           </div>
                         </div>
 
-                        {showGpaWarning && (
-                          <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-normal">
-                            ⚠️ <strong>GPA Guidance:</strong> Stating low GPA scores might lead to automatic filter exclusions in candidate matching. Consider clearing this field if it is below 3.5.
+                          {showGpaWarning && (
+                            <div role="alert" className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-normal">
+                              <span aria-hidden="true">⚠️</span> <strong>GPA Guidance:</strong> Stating low GPA scores might lead to automatic filter exclusions in candidate matching. Consider clearing this field if it is below 3.5.
                           </div>
                         )}
                       </div>

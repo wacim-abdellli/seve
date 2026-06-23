@@ -78,12 +78,14 @@ export default function LanguagesForm({ languages, onChange }: LanguagesFormProp
               value={lang.name}
               onChange={(e) => handleChange(lang.id, 'name', e.target.value)}
               placeholder="e.g. English, French, Arabic"
+              aria-label="Language name"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500/40 transition-all"
             />
 
             <select
               value={lang.proficiency}
               onChange={(e) => handleChange(lang.id, 'proficiency', e.target.value)}
+              aria-label="Language proficiency"
               className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg px-3 py-2.5 text-[13px] text-white focus:outline-none focus:border-rose-500/40 transition-all"
             >
               {PROFICIENCY_LEVELS.map((level) => (

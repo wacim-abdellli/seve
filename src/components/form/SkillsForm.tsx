@@ -227,6 +227,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="e.g. TypeScript, GraphQL (Press Enter to add)"
+              aria-label="Add a skill"
               className="drawer-input"
             />
 

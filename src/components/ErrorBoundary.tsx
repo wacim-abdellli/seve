@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, createRef, type ErrorInfo, type ReactNode } from 'react'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -10,6 +10,8 @@ interface ErrorBoundaryState {
 }
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private buttonRef = createRef<HTMLButtonElement>()
+
   constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { hasError: false }
@@ -23,6 +25,12 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     console.error('Resume template error:', error, errorInfo)
   }
 
+  componentDidUpdate(_prevProps: ErrorBoundaryProps, prevState: ErrorBoundaryState) {
+    if (!prevState.hasError && this.state.hasError) {
+      this.buttonRef.current?.focus()
+    }
+  }
+
   reset = () => {
     this.setState({ hasError: false })
   }
@@ -30,9 +38,10 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <div role="alert" className="flex flex-col items-center justify-center gap-4 p-8 text-center">
           {this.props.fallback}
           <button
+            ref={this.buttonRef}
             onClick={this.reset}
             className="px-4 py-2 text-sm font-medium text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg transition-colors"
           >

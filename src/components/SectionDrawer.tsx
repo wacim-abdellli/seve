@@ -79,12 +79,38 @@ export default function SectionDrawer({
   // Escape key support — use ref to avoid re-attaching on parent re-renders
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
+  const drawerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCloseRef.current()
+      // Focus trap: cycle Tab within drawer
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        if (focusable.length === 0) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
     }
     document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
+    // Body scroll lock
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    // Auto-focus close button
+    const closeBtn = drawerRef.current?.querySelector<HTMLElement>('button[aria-label="Close editor"]')
+    closeBtn?.focus()
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [])
 
   const meta = sectionMeta[section] || { 
@@ -95,6 +121,10 @@ export default function SectionDrawer({
 
   return (
     <motion.div
+      ref={drawerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="section-drawer-title"
       initial={{ x: '100%', opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: '100%', opacity: 0 }}
@@ -103,7 +133,7 @@ export default function SectionDrawer({
     >
       {/* Drawer Header — Title + Close */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-zinc-800/60 flex-shrink-0">
-        <span className="text-[15px] font-semibold text-white">
+        <span id="section-drawer-title" className="text-[15px] font-semibold text-white">
           {meta.title}
         </span>
         <button

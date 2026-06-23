@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { ResumeData } from '../types/resume'
 import ContactForm from './form/ContactForm'
 import SummaryForm from './form/SummaryForm'
@@ -24,17 +24,33 @@ interface ResumeFormProps {
 
 type Tab = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
 
+const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+  { id: 'contact', label: 'Contact', icon: User },
+  { id: 'summary', label: 'Summary', icon: FileText },
+  { id: 'experience', label: 'Experience', icon: Briefcase },
+  { id: 'education', label: 'Education', icon: GraduationCap },
+  { id: 'skills', label: 'Skills', icon: Wrench },
+  { id: 'languages', label: 'Languages', icon: Globe },
+  { id: 'projects', label: 'Projects', icon: FolderGit },
+  { id: 'awards', label: 'Awards', icon: Trophy },
+  { id: 'certifications', label: 'Certs', icon: Award },
+  { id: 'interests', label: 'Interests', icon: Heart },
+  { id: 'publications', label: 'Publications', icon: BookOpen },
+  { id: 'references', label: 'References', icon: Phone },
+  { id: 'volunteer', label: 'Volunteer', icon: HandHeart },
+]
+
 export default function ResumeForm({ resumeData, onChange, activeSection }: ResumeFormProps) {
   const [localActiveSubTab, setLocalActiveSubTab] = useState<Tab>('contact')
   const activeSubTab = activeSection || localActiveSubTab
   const isControlled = activeSection !== undefined
 
-  const updateSection = <K extends keyof ResumeData>(section: K, value: ResumeData[K]) => {
+  const updateSection = useCallback(<K extends keyof ResumeData>(section: K, value: ResumeData[K]) => {
     onChange({
       ...resumeData,
       [section]: value,
     })
-  }
+  }, [onChange, resumeData])
 
   const isSectionComplete = (tabId: Tab): boolean => {
     switch (tabId) {
@@ -74,22 +90,6 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
         return false
     }
   }
-
-  const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: 'contact', label: 'Contact', icon: User },
-    { id: 'summary', label: 'Summary', icon: FileText },
-    { id: 'experience', label: 'Experience', icon: Briefcase },
-    { id: 'education', label: 'Education', icon: GraduationCap },
-    { id: 'skills', label: 'Skills', icon: Wrench },
-    { id: 'languages', label: 'Languages', icon: Globe },
-    { id: 'projects', label: 'Projects', icon: FolderGit },
-    { id: 'awards', label: 'Awards', icon: Trophy },
-    { id: 'certifications', label: 'Certs', icon: Award },
-    { id: 'interests', label: 'Interests', icon: Heart },
-    { id: 'publications', label: 'Publications', icon: BookOpen },
-    { id: 'references', label: 'References', icon: Phone },
-    { id: 'volunteer', label: 'Volunteer', icon: HandHeart },
-  ]
 
   const sectionMeta = {
     contact: { title: 'Contact Info', subtitle: 'Provide your professional contact details', icon: User },
@@ -224,8 +224,8 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 h-full m-0">
       {/* Visual Navigation Sub-tabs */}
       <div className="md:col-span-3 flex flex-col gap-1 border-r border-border pr-4 select-none no-print">
-        <div className="flex md:flex-col overflow-x-auto w-full gap-1">
-          {tabs.map((tab) => {
+        <div className="flex md:flex-col overflow-x-auto w-full gap-1" role="tablist" aria-label="Resume sections">
+          {TABS.map((tab) => {
             const Icon = tab.icon
             const isTabComplete = isSectionComplete(tab.id)
             const isActive = activeSubTab === tab.id
@@ -233,8 +233,30 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`form-panel-${tab.id}`}
                 type="button"
                 onClick={() => setLocalActiveSubTab(tab.id)}
+                onKeyDown={(e) => {
+                  const tabs = TABS
+                  const idx = tabs.findIndex(t => t.id === tab.id)
+                  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                    e.preventDefault()
+                    const next = tabs[(idx + 1) % tabs.length]
+                    setLocalActiveSubTab(next.id)
+                  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                    e.preventDefault()
+                    const prev = tabs[(idx - 1 + tabs.length) % tabs.length]
+                    setLocalActiveSubTab(prev.id)
+                  } else if (e.key === 'Home') {
+                    e.preventDefault()
+                    setLocalActiveSubTab(tabs[0].id)
+                  } else if (e.key === 'End') {
+                    e.preventDefault()
+                    setLocalActiveSubTab(tabs[tabs.length - 1].id)
+                  }
+                }}
                 className={`w-full text-left whitespace-nowrap px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-xs font-bold ${
                   isActive
                     ? 'bg-primary text-primary-foreground shadow'
@@ -257,7 +279,7 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
       </div>
 
       {/* Render active subform panel */}
-      <div className="md:col-span-9 flex-1 pl-5">
+      <div id={`form-panel-${activeSubTab}`} role="tabpanel" className="md:col-span-9 flex-1 pl-5">
         {formContent}
       </div>
     </div>
