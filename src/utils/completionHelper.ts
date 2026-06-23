@@ -1,4 +1,5 @@
 import type { ResumeData } from '../types/resume'
+import { getActualSkillsCount } from './atsUtils'
 
 export function getSectionStatus(resumeData: ResumeData): Record<string, boolean> {
   const hasContact = !!(
@@ -15,7 +16,7 @@ export function getSectionStatus(resumeData: ResumeData): Record<string, boolean
     (resumeData.experience[0].bullets?.length ?? 0) >= 2
   const hasEducation = resumeData.education.length > 0 &&
     !!resumeData.education.some(e => e.school?.trim() || e.degree?.trim())
-  const hasSkills = (resumeData.skills?.length ?? 0) >= 3
+  const hasSkills = getActualSkillsCount(resumeData.skills || []) >= 3
   const hasLanguages = !!(resumeData.languages && resumeData.languages.length > 0 &&
     resumeData.languages.some(l => l.name?.trim()))
   const hasProjects = !!(resumeData.projects && resumeData.projects.length > 0 &&

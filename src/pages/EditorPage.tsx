@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { getActualSkillsCount } from '../utils/atsUtils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ArrowLeft, Type, ZoomOut, ZoomIn } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
@@ -60,7 +61,7 @@ const getSectionPreview = (section: string, data: ResumeData): string => {
       return data.experience.length === 0 ? 'No positions added yet'
         : `${data.experience[0].jobTitle || 'Untitled'} at ${data.experience[0].company || 'No Company'}` + (data.experience.length > 1 ? ` +${data.experience.length - 1} more` : '')
     case 'education': return data.education.length === 0 ? 'No institutions added yet' : `${data.education.length} institution(s) added`
-    case 'skills': return data.skills.length === 0 ? 'No skills added yet' : data.skills.slice(0, 4).join(', ') + (data.skills.length > 4 ? '...' : '')
+    case 'skills': return getActualSkillsCount(data.skills) === 0 ? 'No skills added yet' : data.skills.slice(0, 4).join(', ') + (data.skills.length > 4 ? '...' : '')
     case 'languages': { const l = data.languages || []; return l.length === 0 ? 'No languages added' : l.map(x => x.name).join(', ') + (l.length > 3 ? '...' : '') }
     case 'projects': { const l = data.projects || []; return l.length === 0 ? 'No projects added' : `${l.length} project(s)` }
     case 'awards': { const l = data.awards || []; return l.length === 0 ? 'No awards added' : l.map(x => x.title).filter(Boolean).join(', ') }

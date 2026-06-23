@@ -11,7 +11,8 @@ import {
   detectLanguage,
   detectDateFormat,
   toDomId,
-  countSyllables
+  countSyllables,
+  getActualSkillsCount
 } from './atsUtils'
 import {
   DIMENSION_WEIGHTS,
@@ -98,11 +99,12 @@ export function evaluateSectionAts(
     }
 
     case 'skills': {
-      if (!resumeData.skills || resumeData.skills.length === 0) {
+      const actualCount = getActualSkillsCount(resumeData.skills || [])
+      if (actualCount === 0) {
         return { rating: 'danger', feedback: detectedLang === 'fr' ? 'Ajoutez des compétences pour le ciblage.' : 'List skills to enable keyword indexing.', issues: [] }
       }
       const issues = evaluateSkillsQuality(resumeData)
-      if (resumeData.skills.length < 6) {
+      if (actualCount < 6) {
         return { rating: 'warning', feedback: detectedLang === 'fr' ? 'Ajoutez au moins 6 compétences.' : 'List at least 6 core technical skills.', issues }
       }
       return { rating: issues.length > 0 ? 'warning' : 'safe', feedback: detectedLang === 'fr' ? 'Compétences listées de façon optimale.' : 'Skills list covers critical keywords.', issues }
@@ -751,7 +753,7 @@ export function scoreLength(resume: ResumeData, lang: string, fontSize: number =
   // Compute overflow heuristic: how much content spills onto page 2
   const hasContent = (key: string): boolean => {
     if (key === 'summary') return !!(resume.summary && resume.summary.trim() !== '')
-    if (key === 'skills') return !!(resume.skills && resume.skills.length > 0)
+    if (key === 'skills') return !!(resume.skills && getActualSkillsCount(resume.skills) > 0)
     const val = (resume as unknown as Record<string, unknown>)[key]
     return Array.isArray(val) && val.length > 0
   }
@@ -945,7 +947,7 @@ export function scoreContentDepth(resume: ResumeData, lang: string): AtsCategory
   }
 
   // 3. Skills depth (0-3 points)
-  const skillCount = resume.skills?.length || 0
+  const skillCount = getActualSkillsCount(resume.skills || [])
   if (skillCount >= 6) {
     score += 3
   } else if (skillCount >= 3) {

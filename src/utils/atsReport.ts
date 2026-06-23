@@ -9,7 +9,8 @@ import {
   hashContent,
   buildSectionHashes,
   loadTimeline,
-  countSyllables
+  countSyllables,
+  getActualSkillsCount
 } from './atsUtils'
 import {
   scoreCompleteness,
@@ -391,7 +392,7 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
     resume.contact?.fullName, resume.summary,
     ...(resume.experience.length ? ['x'] : []),
     ...(resume.education.length ? ['x'] : []),
-    ...(resume.skills.length ? ['x'] : []),
+    ...(getActualSkillsCount(resume.skills) > 0 ? ['x'] : []),
     ...(resume.languages?.length ? ['x'] : []),
     ...(resume.projects?.length ? ['x'] : []),
     ...(resume.certifications?.length ? ['x'] : []),
@@ -596,7 +597,7 @@ export function generateAtsReportV2(
     resume.contact?.fullName, resume.summary,
     ...(resume.experience.length ? ['x'] : []),
     ...(resume.education.length ? ['x'] : []),
-    ...(resume.skills.length ? ['x'] : []),
+    ...(getActualSkillsCount(resume.skills) > 0 ? ['x'] : []),
     ...(resume.languages?.length ? ['x'] : []),
     ...(resume.projects?.length ? ['x'] : []),
     ...(resume.certifications?.length ? ['x'] : []),

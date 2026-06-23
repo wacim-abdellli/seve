@@ -168,3 +168,22 @@ export function saveTimelineEntry(score: number, label: string): void {
     // localStorage full or unavailable — silently degrade
   }
 }
+
+export function getActualSkillsCount(skills: string[]): number {
+  if (!skills) return 0
+  let count = 0
+  for (const skill of skills) {
+    if (skill.includes(':')) {
+      const parts = skill.split(':')
+      const listStr = parts[1] || ''
+      const items = listStr.split(',').map(s => s.trim()).filter(Boolean)
+      count += items.length
+    } else {
+      if (skill.trim().length > 0) {
+        count += 1
+      }
+    }
+  }
+  return count
+}
+

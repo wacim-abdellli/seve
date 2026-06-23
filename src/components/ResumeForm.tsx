@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { ResumeData } from '../types/resume'
+import { getActualSkillsCount } from '../utils/atsUtils'
 import ContactForm from './form/ContactForm'
 import SummaryForm from './form/SummaryForm'
 import ExperienceForm from './form/ExperienceForm'
@@ -69,7 +70,7 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
       case 'education':
         return resumeData.education.length > 0 && !!resumeData.education[0].school.trim()
       case 'skills':
-        return resumeData.skills.length >= 3
+        return getActualSkillsCount(resumeData.skills || []) >= 3
       case 'languages':
         return !!(resumeData.languages && resumeData.languages.length > 0 && resumeData.languages[0].name.trim())
       case 'projects':
