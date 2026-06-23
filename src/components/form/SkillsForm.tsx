@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { industryKeywords } from '../../utils/atsConstants'
 import { HelpCircle, Sparkles, Plus, X, ChevronDown } from 'lucide-react'
 
@@ -93,10 +93,47 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('softwareTech')
   const [showIndustryDropdown, setShowIndustryDropdown] = useState(false)
+  const [isGrouped, setIsGrouped] = useState(() => skills.some(s => s.includes(':')))
+  const [activeCatIdx, setActiveCatIdx] = useState(0)
   
   const containerRef = useRef<HTMLDivElement>(null)
   const industryDropdownRef = useRef<HTMLDivElement>(null)
   const filterTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const groupedSkills = useMemo(() => {
+    const parsed: { category: string; items: string[] }[] = []
+    for (const item of skills) {
+      const colonIdx = item.indexOf(':')
+      if (colonIdx > 0) {
+        const cat = item.substring(0, colonIdx).trim()
+        const skillsText = item.substring(colonIdx + 1).trim()
+        const items = skillsText
+          ? skillsText.split(',').map(s => s.trim()).filter(Boolean)
+          : []
+        parsed.push({ category: cat, items })
+      } else {
+        const defaultCat = 'Core Skills'
+        const existing = parsed.find(p => p.category.toLowerCase() === defaultCat.toLowerCase())
+        if (existing) {
+          if (!existing.items.includes(item)) {
+            existing.items.push(item)
+          }
+        } else {
+          parsed.push({ category: defaultCat, items: [item] })
+        }
+      }
+    }
+    if (parsed.length === 0) {
+      parsed.push({ category: 'Languages & Tech', items: [] })
+    }
+    return parsed
+  }, [skills])
+
+  const serializeSkills = (groups: { category: string; items: string[] }[]): string[] => {
+    return groups
+      .filter(g => g.category.trim() !== '')
+      .map(g => `${g.category.trim()}: ${g.items.join(', ')}`)
+  }
 
   // Auto-detect industry when job title changes
   useEffect(() => {
@@ -120,7 +157,15 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
       const matches = allAvailableSkills.filter(
         (skill) => 
           skill.toLowerCase().includes(cleanInput) && 
-          !skills.some(s => s.toLowerCase() === skill.toLowerCase())
+          !skills.some(existing => {
+            const cleanExisting = existing.toLowerCase()
+            const cleanSkill = skill.toLowerCase()
+            if (cleanExisting.includes(':')) {
+              const parts = cleanExisting.split(':')[1] || ''
+              return parts.split(',').map(x => x.trim()).includes(cleanSkill)
+            }
+            return cleanExisting === cleanSkill
+          })
       )
 
       queueMicrotask(() => {
@@ -147,6 +192,59 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const handleToggleMode = () => {
+    if (isGrouped) {
+      // Flatten grouped list into simple tags
+      const flat: string[] = []
+      for (const group of groupedSkills) {
+        for (const item of group.items) {
+          if (!flat.includes(item)) flat.push(item)
+        }
+      }
+      onChange(flat)
+      setIsGrouped(false)
+    } else {
+      // Convert flat tags into a single category
+      if (skills.length > 0) {
+        onChange([`Core Skills: ${skills.join(', ')}`])
+      }
+      setIsGrouped(true)
+      setActiveCatIdx(0)
+    }
+  }
+
+  const handleAddCategory = () => {
+    const updated = [...groupedSkills, { category: 'New Category', items: [] }]
+    onChange(serializeSkills(updated))
+    setActiveCatIdx(updated.length - 1)
+  }
+
+  const handleRemoveCategory = (index: number) => {
+    const updated = groupedSkills.filter((_, i) => i !== index)
+    onChange(serializeSkills(updated))
+    setActiveCatIdx(prev => Math.min(prev, updated.length - 1))
+  }
+
+  const handleRenameCategory = (index: number, newName: string) => {
+    const updated = groupedSkills.map((g, i) => i === index ? { ...g, category: newName } : g)
+    onChange(serializeSkills(updated))
+  }
+
+  const handleAddSkillToCategory = (catIndex: number, skillName: string) => {
+    const trimmed = skillName.trim()
+    if (!trimmed) return
+    const group = groupedSkills[catIndex]
+    if (!group) return
+    if (group.items.some(item => item.toLowerCase() === trimmed.toLowerCase())) return
+    const updated = groupedSkills.map((g, i) => i === catIndex ? { ...g, items: [...g.items, trimmed] } : g)
+    onChange(serializeSkills(updated))
+  }
+
+  const handleRemoveSkillFromCategory = (catIndex: number, skillName: string) => {
+    const updated = groupedSkills.map((g, i) => i === catIndex ? { ...g, items: g.items.filter(item => item !== skillName) } : g)
+    onChange(serializeSkills(updated))
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -172,10 +270,18 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
 
   const addSkill = (skill: string) => {
     const trimmed = skill.trim()
-    if (trimmed && !skills.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
-      onChange([...skills, trimmed])
+    if (!trimmed) return
+    
+    if (isGrouped) {
+      handleAddSkillToCategory(activeCatIdx, trimmed)
       setInputValue('')
       setShowDropdown(false)
+    } else {
+      if (!skills.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
+        onChange([...skills, trimmed])
+        setInputValue('')
+        setShowDropdown(false)
+      }
     }
   }
 
@@ -185,7 +291,15 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
 
   const getIndustrySuggestions = (): string[] => {
     const allCategorySkills = industryKeywords[selectedCategory] || []
-    return allCategorySkills.filter((s) => !skills.some(existing => existing.toLowerCase() === s.toLowerCase()))
+    return allCategorySkills.filter((s) => !skills.some(existing => {
+      const cleanExisting = existing.toLowerCase()
+      const cleanSkill = s.toLowerCase()
+      if (cleanExisting.includes(':')) {
+        const parts = cleanExisting.split(':')[1] || ''
+        return parts.split(',').map(x => x.trim()).includes(cleanSkill)
+      }
+      return cleanExisting === cleanSkill
+    }))
   }
 
   const industrySuggestions = getIndustrySuggestions()
@@ -193,7 +307,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
   return (
     <div className="flex flex-col gap-4">
       {/* List Header and Info Button */}
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-1">
         <label htmlFor="skills-search-input" className="text-label">Skills Inventory</label>
         <button
           type="button"
@@ -217,6 +331,24 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
         </div>
       )}
 
+      {/* Grouping Toggle Selector */}
+      <div className="flex p-0.5 bg-zinc-900 border border-zinc-800 rounded-lg select-none mb-1">
+        <button
+          type="button"
+          onClick={handleToggleMode}
+          className={`flex-1 text-center py-1.5 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${!isGrouped ? 'bg-[#b91c1c]/15 border border-[#b91c1c]/25 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+        >
+          Simple List
+        </button>
+        <button
+          type="button"
+          onClick={handleToggleMode}
+          className={`flex-1 text-center py-1.5 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${isGrouped ? 'bg-[#b91c1c]/15 border border-[#b91c1c]/25 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+        >
+          Group by Category
+        </button>
+      </div>
+
       {/* Input Autocomplete */}
       <div ref={containerRef} className="relative flex flex-col gap-2">
         <div className="flex gap-2">
@@ -227,7 +359,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="e.g. TypeScript, GraphQL (Press Enter to add)"
+              placeholder={isGrouped ? `Add to "${groupedSkills[activeCatIdx]?.category || 'Category'}"...` : "e.g. TypeScript, GraphQL (Press Enter to add)"}
               className="drawer-input"
             />
 
@@ -261,33 +393,116 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
         </div>
       </div>
 
-      {/* Added Chips */}
-      <div className="flex flex-col gap-2">
-        <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          Added Skills ({skills.length})
-        </h4>
-        <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1.5 custom-scrollbar py-1">
-          {skills.map((skill) => (
-            <div
-              key={skill}
-              className="rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 font-medium gap-1.5 py-1 pl-3 pr-2 flex items-center text-xs h-7"
-            >
-              {skill}
-              <button
-                type="button"
-                onClick={() => removeSkill(skill)}
-                aria-label={`Remove ${skill}`}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer rounded-full"
+      {/* Added Chips in Simple Mode */}
+      {!isGrouped && (
+        <div className="flex flex-col gap-2">
+          <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+            Added Skills ({skills.length})
+          </h4>
+          <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1.5 custom-scrollbar py-1">
+            {skills.map((skill) => (
+              <div
+                key={skill}
+                className="rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 font-medium gap-1.5 py-1 pl-3 pr-2 flex items-center text-xs h-7"
               >
-                <X size={10} />
-              </button>
-            </div>
-          ))}
-          {skills.length === 0 && (
-            <p className="text-xs text-zinc-500 italic font-light">No skills registered yet.</p>
-          )}
+                {skill}
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  aria-label={`Remove ${skill}`}
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer rounded-full"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+            {skills.length === 0 && (
+              <p className="text-xs text-zinc-500 italic font-light">No skills registered yet.</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Added Categories inside Grouped Mode */}
+      {isGrouped && (
+        <div className="flex flex-col gap-3">
+          <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+            Skill Categories
+          </h4>
+          <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+            {groupedSkills.map((group, idx) => {
+              const isActive = idx === activeCatIdx
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setActiveCatIdx(idx)}
+                  className={`p-3.5 rounded-xl border transition-all flex flex-col gap-3 cursor-pointer ${
+                    isActive 
+                      ? 'bg-zinc-900/40 border-rose-500/35 shadow-[0_0_10px_rgba(185,28,28,0.05)]' 
+                      : 'bg-zinc-900/10 border-zinc-800 hover:border-zinc-700/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <input
+                      type="text"
+                      value={group.category}
+                      onChange={(e) => handleRenameCategory(idx, e.target.value)}
+                      placeholder="Category Name (e.g. Frontend)"
+                      className="bg-transparent text-xs font-black text-white focus:outline-none border-b border-transparent focus:border-rose-500/50 pb-0.5 flex-1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    {groupedSkills.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRemoveCategory(idx)
+                        }}
+                        className="text-[9.5px] font-bold text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.items.map((item) => (
+                      <div
+                        key={item}
+                        className="rounded-full bg-zinc-950 border border-zinc-800 text-zinc-300 font-medium gap-1 py-0.5 pl-2.5 pr-1 flex items-center text-[10.5px] h-6"
+                      >
+                        {item}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRemoveSkillFromCategory(idx, item)
+                          }}
+                          aria-label={`Remove ${item}`}
+                          className="w-4 h-4 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-900 rounded-full transition-colors cursor-pointer"
+                        >
+                          <X size={8} />
+                        </button>
+                      </div>
+                    ))}
+                    {group.items.length === 0 && (
+                      <p className="text-[10px] text-zinc-500 italic font-light py-0.5">Empty group. Search or type to add skills.</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddCategory}
+            className="w-full py-2 bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1"
+          >
+            <Plus size={12} /> Add Category Group
+          </button>
+        </div>
+      )}
 
       {/* Recommended Suggestions with Custom Dropdown Selector */}
       <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/20 flex flex-col gap-3 relative">
