@@ -17,7 +17,13 @@ export default function ResumeSkillsList({ skills, separator = ' · ', className
   const isGrid = layout === 'grid' && groups.length > 1
 
   return (
-    <div className={`${isGrid ? 'grid grid-cols-2 gap-x-3 gap-y-1' : 'flex flex-col gap-1'} ${className}`} style={style}>
+    <div 
+      className={`${isGrid ? 'grid gap-y-1' : 'flex flex-col gap-1'} ${className}`} 
+      style={{
+        ...style,
+        ...(isGrid ? { gridTemplateColumns: 'fit-content(48%) 1fr', columnGap: '1.5rem' } : {})
+      }}
+    >
       {groups.map((group, idx) => (
         <div key={idx} className="leading-normal">
           {group.category !== 'Skills' && (
