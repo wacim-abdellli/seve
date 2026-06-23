@@ -282,8 +282,12 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
     toast?.showToast('Applied one-click ATS fixes to your resume!', 'success')
   }, [resumeData, onAutoFix, toast])
 
+  const draftTouchedRef = useRef(false)
+
   useEffect(() => {
-    setJdDraft(jobDescription)
+    if (!draftTouchedRef.current) {
+      setJdDraft(jobDescription)
+    }
   }, [jobDescription])
 
   // FNV-1a hash for fast resume comparison (avoids JSON.stringify on every render)
@@ -605,20 +609,20 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                     <FileCode size={13} className="text-indigo-400" />
                     Target Job Description
                   </h4>
-                  <button onClick={() => { setShowJdInput(false); setJdDraft(jobDescription) }} className="text-zinc-500 hover:text-white p-1 rounded hover:bg-zinc-800 transition-colors cursor-pointer">
+                  <button onClick={() => { setShowJdInput(false); setJdDraft(jobDescription); draftTouchedRef.current = false }} className="text-zinc-500 hover:text-white p-1 rounded hover:bg-zinc-800 transition-colors cursor-pointer">
                     <XCircle size={14} />
                   </button>
                 </div>
                 <p className="text-[10px] text-zinc-500 mb-2.5">Paste a job description to analyze keyword overlap, semantic fit, and weighted scoring.</p>
                 <textarea
                   value={jdDraft}
-                  onChange={e => setJdDraft(e.target.value)}
+                  onChange={e => { setJdDraft(e.target.value); draftTouchedRef.current = true }}
                   placeholder="Paste a job description here..."
                   className="w-full h-28 bg-zinc-950/80 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"
                 />
                 <div className="flex justify-end gap-2 mt-3">
                   <button
-                    onClick={() => { setShowJdInput(false); setJdDraft(jobDescription) }}
+                    onClick={() => { setShowJdInput(false); setJdDraft(jobDescription); draftTouchedRef.current = false }}
                     className="px-3 py-1.5 text-[10px] font-semibold text-zinc-400 hover:text-white border border-zinc-800 rounded-lg hover:bg-zinc-800/30 transition-all cursor-pointer"
                   >
                     Cancel
