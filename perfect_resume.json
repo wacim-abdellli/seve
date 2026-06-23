@@ -63,18 +63,9 @@
     }
   ],
   "skills": [
-    "React",
-    "TypeScript",
-    "Node.js",
-    "AWS",
-    "Docker",
-    "PostgreSQL",
-    "Redis",
-    "CI/CD",
-    "Git",
-    "Python",
-    "GraphQL",
-    "Kubernetes"
+    "Frontend: React, TypeScript, GraphQL",
+    "Backend: Node.js, Python, PostgreSQL, Redis",
+    "Tools: AWS, Docker, Kubernetes, CI/CD, Git"
   ],
   "languages": [
     {

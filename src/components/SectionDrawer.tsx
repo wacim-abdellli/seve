@@ -60,7 +60,7 @@ const sectionMeta: Record<string, { title: string; icon: LucideIcon; example: st
   summary: { title: 'Profile Summary', icon: FileText, example: 'Senior Engineer with 8+ years leading cross-functional teams. Expert in React, Node.js, AWS. Boosted platform performance by 40%, reduced costs by 15%.' },
   experience: { title: 'Work Experience', icon: Briefcase, example: 'Led 4 engineers building a real-time messaging pipeline handling 10M+ daily requests. Reduced deploy times by 40% with automated CI/CD.' },
   education: { title: 'Education History', icon: GraduationCap, example: 'M.S. Computer Science · Stanford · GPA 3.8 · Distributed Systems & AI focus' },
-  skills: { title: 'Skills & Stack', icon: Code2, example: 'Languages: JS, TS, Python · Frameworks: React, Next.js, Node.js · Tools: Docker, AWS, PostgreSQL' },
+  skills: { title: 'Skills & Stack', icon: Code2, example: 'Frontend: React, TypeScript, Tailwind · Backend: Node.js, Express, PostgreSQL · Tools: Git, Docker, AWS' },
   languages: { title: 'Languages', icon: Globe, example: 'English (Native) · Spanish (Fluent) · French (Conversational)' },
   projects: { title: 'Projects', icon: FolderOpen, example: 'Seve · Open-source React resume builder with ATS parsing · 1.2k+ GitHub stars' },
   awards: { title: 'Awards & Honors', icon: Trophy, example: 'Outstanding Engineer of the Year (2024) — saved $120k+ in SLA penalties' },

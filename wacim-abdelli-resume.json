@@ -71,34 +71,10 @@
     }
   ],
   "skills": [
-    "JavaScript",
-    "TypeScript",
-    "React",
-    "Node.js",
-    "Next.js",
-    "Express",
-    "NestJS",
-    "Python",
-    "Go",
-    "PostgreSQL",
-    "MongoDB",
-    "Redis",
-    "Docker",
-    "Kubernetes",
-    "AWS",
-    "Terraform",
-    "GitHub Actions",
-    "Jenkins",
-    "Kafka",
-    "GraphQL",
-    "REST API Design",
-    "System Design",
-    "Microservices",
-    "CI/CD",
-    "Testing",
-    "Tailwind CSS",
-    "HTML",
-    "CSS"
+    "Frontend: React, Next.js, TypeScript, JavaScript, Tailwind CSS, HTML, CSS",
+    "Backend: Node.js, Express, NestJS, Go, Python, PostgreSQL, MongoDB, Redis, Kafka, GraphQL",
+    "Tools: Docker, Kubernetes, AWS, Terraform, GitHub Actions, Jenkins, CI/CD",
+    "Concepts: System Design, Microservices, REST API Design, Testing"
   ],
   "languages": [
     {

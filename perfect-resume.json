@@ -63,10 +63,9 @@
     }
   ],
   "skills": [
-    "React", "TypeScript", "Node.js", "Go", "Python",
-    "PostgreSQL", "MongoDB", "Redis", "Elasticsearch",
-    "AWS", "Docker", "Kubernetes", "Terraform",
-    "Kafka", "Flink", "CI/CD", "Git", "Linux"
+    "Frontend: React, TypeScript",
+    "Backend: Go, Python, Node.js, PostgreSQL, MongoDB, Redis, Elasticsearch, Kafka, Flink",
+    "Tools: AWS, Docker, Kubernetes, Terraform, CI/CD, Git, Linux"
   ],
   "languages": [
     { "name": "English", "proficiency": "Native" },

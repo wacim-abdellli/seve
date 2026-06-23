@@ -256,8 +256,16 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
             ATS Keyword Rules:
           </span>
           <p className="font-light">
-            Aim for 10-15 relevant capabilities. Grouping skills by category (e.g. "Languages", "Tools") makes your resume highly readable for both ATS algorithms and human recruiters.
+            Aim for 10-15 relevant capabilities. Grouping skills by category makes your resume highly readable for both ATS algorithms and human recruiters.
           </p>
+          <div className="mt-1 bg-zinc-950/60 p-2.5 rounded-lg border border-zinc-800/60">
+            <span className="font-semibold text-white block text-[9.5px] uppercase tracking-wider mb-1.5">Example Layout:</span>
+            <div className="font-mono text-[10px] text-zinc-300 space-y-1">
+              <div><span className="text-rose-400 font-semibold">Frontend:</span> React, TypeScript, Tailwind CSS</div>
+              <div><span className="text-rose-400 font-semibold">Backend:</span> Node.js, Express, PostgreSQL</div>
+              <div><span className="text-rose-455 font-semibold">Tools:</span> Git, Docker, AWS</div>
+            </div>
+          </div>
         </div>
       )}
 

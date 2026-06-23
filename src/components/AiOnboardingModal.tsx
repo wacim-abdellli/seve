@@ -15,7 +15,7 @@ const EMPTY_RESUME_TEMPLATE = {
   summary: 'Professional summary of your career and skills.',
   experience: [{ id: 'exp-1', jobTitle: 'Software Engineer', company: 'Tech Inc', location: 'San Francisco, CA', startDate: '2022-01', endDate: 'Present', current: true, bullets: ['Developed cloud-based applications.', 'Collaborated with cross-functional teams.'] }],
   education: [{ id: 'edu-1', degree: 'B.S. Computer Science', school: 'State University', location: 'Boston, MA', graduationDate: '2021-05', gpa: '3.8' }],
-  skills: ['React', 'TypeScript', 'Node.js', 'TailwindCSS'],
+  skills: ['Frontend: React, TypeScript, TailwindCSS', 'Backend: Node.js', 'Tools: Git'],
   languages: [{ id: 'lang-1', name: 'English', proficiency: 'Native' }],
   projects: [{ id: 'proj-1', name: 'Resume Builder', description: 'Interactive AI-powered resume builder.', technologies: ['React', 'TypeScript'] }],
   awards: [{ id: 'award-1', title: 'Outstanding Dev', awarder: 'Tech Inc', date: '2023-12', description: 'Awarded for exceptional product delivery.' }],
