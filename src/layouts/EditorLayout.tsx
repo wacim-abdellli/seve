@@ -276,7 +276,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
     a.href = url
     a.download = 'seve-backup.json'
     a.click()
-    URL.revokeObjectURL(url)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const handleImport = () => {
@@ -451,15 +451,21 @@ export default function EditorLayout() {
 
   const stylePrefs = activeResume?.stylePrefs || { ...DEFAULT_STYLE_PREFS }
 
+  const resumeDataRef = useRef(resumeData)
+  resumeDataRef.current = resumeData
+  const pageCountRef = useRef(pageCount)
+  pageCountRef.current = pageCount
+
   const { activeWarnings, showPrintModal, handlePrint: handlePrintModal, dismissWarnings, exportAnyway, dismissPrintModal, confirmPrint } = usePrintResume()
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handlePrint = useCallback(() => {
-    handlePrintModal(resumeData, pageCount)
-  }, [resumeData, pageCount, handlePrintModal])
+    handlePrintModal(resumeDataRef.current, pageCountRef.current)
+  }, [handlePrintModal])
 
   const handlePrintRef = useRef(handlePrint)
   handlePrintRef.current = handlePrint
@@ -518,7 +524,7 @@ export default function EditorLayout() {
         <div className="absolute inset-0 noise-overlay" />
       </div>
 
-      <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-6 h-14 bg-zinc-950/80 backdrop-blur-md border-b border-border sticky top-0 no-print flex-shrink-0 overflow-visible">
+      <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-6 h-14 bg-zinc-950/80 backdrop-blur-md border-b border-border no-print flex-shrink-0 overflow-visible">
         {/* Zone 1 — Left: Navigation & Identity */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 min-w-0">
           <button 

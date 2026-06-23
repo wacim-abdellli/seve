@@ -427,7 +427,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
 
   const activeResumeId = state.selectedResumeId
-  const activeResume = state.resumes[activeResumeId] || Object.values(state.resumes)[0] || createDefaultResume()
+  const activeResume = useMemo(() => state.resumes[activeResumeId] || Object.values(state.resumes)[0] || createDefaultResume(), [state.resumes, activeResumeId])
   const resumeData = activeResume.resumeData
   const selectedTemplate = activeResume.selectedTemplate
   const jobDescription = activeResume.jobDescription
@@ -495,15 +495,19 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
 
   // Reset history on resume switch (NOT on resumeData changes — that would wipe undo on every keystroke)
   const prevResumeIdRef = useRef(activeResume?.id)
+  const resumeDataRef = useRef(resumeData)
+  resumeDataRef.current = resumeData
+
+  // History init on resume switch — resumeData stable via ref, effect only runs on ID change
   useEffect(() => {
     if (prevResumeIdRef.current !== activeResume?.id) {
       prevResumeIdRef.current = activeResume?.id
-      historyRef.current = [resumeData]
+      historyRef.current = [resumeDataRef.current]
       historyIndexRef.current = 0
       setCanUndo(false)
       setCanRedo(false)
     }
-  }, [activeResume?.id, resumeData])
+  }, [activeResume?.id])
 
   // Keyboard shortcuts: Ctrl+Z/Y for undo/redo
   useEffect(() => {
@@ -676,7 +680,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     if (active) {
       historyRef.current = [active.resumeData]
       historyIndexRef.current = 0
-      setTimeout(() => { setCanUndo(false); setCanRedo(false) })
+      const timer = setTimeout(() => { setCanUndo(false); setCanRedo(false) })
+      return () => clearTimeout(timer)
     }
   }, [])
 
