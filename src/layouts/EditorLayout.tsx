@@ -714,7 +714,7 @@ export default function EditorLayout() {
             )}
             {cloudStatus === 'unsaved' && !isSaving && (
               <button onClick={saveChangesToCloud} className="shrink-0 text-white hover:text-zinc-200 transition-colors cursor-pointer font-bold ml-0.5" title="Save now">
-                Save
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 align-middle" />Save
               </button>
             )}
           </div>
