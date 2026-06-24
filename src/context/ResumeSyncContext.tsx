@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react'
-import type { AppState, ResumeProfile, Template } from '../types/resume'
+import type { AppState, ResumeData, ResumeProfile, Template } from '../types/resume'
 import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { ResumeContext, type ResumeContextType, type CloudStatus } from './resumeContextDef'
 import { useResumeDataContext } from './resumeDataContextDef'
@@ -136,7 +136,7 @@ export function ResumeSyncProvider({ children }: { children: ReactNode }) {
           createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
           updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
           revision: typeof raw.revision === 'number' ? raw.revision : 1,
-          resumeData: null as any,
+          resumeData: null as unknown as ResumeData,
           selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
           jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
           sectionOrder: Array.isArray(raw.sectionOrder) ? raw.sectionOrder : [...DEFAULT_SECTION_ORDER],
@@ -237,8 +237,10 @@ export function ResumeSyncProvider({ children }: { children: ReactNode }) {
     const isMergeUpdate = isMergingRef.current
 
     if (!user) {
-      setCloudStatus('local')
-      setCloudError(null)
+      queueMicrotask(() => {
+        setCloudStatus('local')
+        setCloudError(null)
+      })
       return
     }
 
@@ -249,11 +251,8 @@ export function ResumeSyncProvider({ children }: { children: ReactNode }) {
     if (hasMergedCloudRef.current && !isMergeUpdate) {
       const currentHash = computeResumeHash(state.resumes)
       const syncedHash = computeResumeHash(lastSyncedState.resumes)
-      if (currentHash !== syncedHash) {
-        setCloudStatus('unsaved')
-      } else {
-        setCloudStatus('synced')
-      }
+      const nextStatus = currentHash !== syncedHash ? 'unsaved' : 'synced'
+      queueMicrotask(() => setCloudStatus(nextStatus))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, user?.id, lastSyncedState])
