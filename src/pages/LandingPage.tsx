@@ -131,18 +131,35 @@ export default function LandingPage() {
                 Beautiful templates, smart ATS checker, and optional AI tools — all in your browser. No paywalls, free to try.
               </p>
               
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <Button onClick={() => navigate('/editor')} className="font-extrabold gap-2 text-white bg-gradient-to-r from-[#b91c1c] to-[#7f1d1d] hover:opacity-95 hover:scale-[1.02] shadow-[0_0_30px_rgba(185,28,28,0.3)] border border-[#b91c1c]/35 h-11 px-7 transition-all duration-300 font-display rounded-xl">
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center">
+                <Button onClick={() => navigate('/editor')} className="font-extrabold gap-2 text-white bg-gradient-to-r from-[#b91c1c] to-[#7f1d1d] hover:opacity-95 hover:scale-[1.02] shadow-[0_0_30px_rgba(185,28,28,0.3)] border border-[#b91c1c]/35 h-11 px-7 transition-all duration-300 font-display rounded-xl w-full sm:w-auto">
                   Build Your Resume
                   <ArrowRight size={16} />
                 </Button>
+                
+                <a 
+                  href="https://github.com/wacim-abdellli/seve" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="group flex items-center gap-3 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl px-5 h-11 transition-all duration-300 font-display text-xs text-zinc-300 hover:text-white w-full sm:w-auto justify-center"
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 group-hover:text-white transition-colors">
+                    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                    <path d="M9 18c-4.51 2-5-2-7-2" />
+                  </svg>
+                  <div className="flex flex-col items-start leading-none text-left">
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Open Source</span>
+                    <span className="font-black mt-1 text-white">GitHub Repo</span>
+                  </div>
+                </a>
               </div>
 
               <PageViewsWidget />
 
-              <div className="mt-4 pt-4 border-t border-border/60 w-full max-w-xs text-center lg:text-left">
-                <span className="text-[10px] text-muted-foreground/80 italic">
-                  Built by a developer who was tired of paying for resume builders.
+              <div className="mt-6 pt-4 border-t border-border/60 w-full max-w-xs flex items-center justify-center lg:justify-start gap-2.5 text-xs text-muted-foreground/85">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#b91c1c] animate-pulse" />
+                <span>
+                  Designed & crafted by <a href="https://github.com/wacim-abdellli" target="_blank" rel="noreferrer" className="text-white hover:text-red-400 font-bold transition-colors font-display">Wacim Abdelli</a>
                 </span>
               </div>
             </div>
@@ -504,7 +521,7 @@ export default function LandingPage() {
       {/* 5. Footer */}
       <footer className="py-12 border-t border-border bg-background z-10 relative no-print">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-muted-foreground">
-          <div>© {new Date().getFullYear()} Seve. Free and local-first.</div>
+          <div>© {new Date().getFullYear()} Seve. Open-source initiative by <a href="https://github.com/wacim-abdellli" target="_blank" rel="noreferrer" className="text-white hover:text-red-400 font-bold transition-colors">Wacim Abdelli</a>.</div>
           <div className="flex items-center gap-6">
             <button 
               onClick={() => navigate('/privacy')} 
