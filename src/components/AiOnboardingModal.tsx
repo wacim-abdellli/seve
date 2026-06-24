@@ -68,15 +68,11 @@ Instructions for the AI:
 
     try {
       let cleaned = val.trim()
-      if (cleaned.startsWith('```')) {
-        const lines = cleaned.split('\n')
-        if (lines[0].startsWith('```')) lines.shift()
-        if (lines[lines.length - 1].startsWith('```')) lines.pop()
-        cleaned = lines.join('\n').trim()
-      }
+      const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (match) cleaned = match[1].trim()
 
       const raw = JSON.parse(cleaned)
-      if (!raw || typeof raw !== 'object') {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
         throw new Error('JSON is not an object.')
       }
 

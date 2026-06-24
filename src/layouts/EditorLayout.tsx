@@ -405,12 +405,15 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
 
   const handlePasteImport = () => {
     try {
-      if (!pasteValue.trim()) {
+      let cleaned = pasteValue.trim()
+      if (!cleaned) {
         setPasteError('Please paste some JSON code first.')
         return
       }
-      const rawData = JSON.parse(pasteValue)
-      if (!rawData || typeof rawData !== 'object') {
+      const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (match) cleaned = match[1].trim()
+      const rawData = JSON.parse(cleaned)
+      if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
         throw new Error('Invalid JSON format. Expected an object.')
       }
       if (rawData?.version === 1 && rawData?.type === 'seve-full-backup' && rawData?.data) {

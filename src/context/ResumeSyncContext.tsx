@@ -53,21 +53,54 @@ export function ResumeSyncProvider({ children }: { children: ReactNode }) {
   const syncToCloud = useCallback(async (profiles: ResumeProfile[], userId: string) => {
     if (!isSupabaseConfigured || !supabase) return
 
-    const rows = profiles.map(p => ({
-      id: p.id,
-      user_id: userId,
-      title: p.title,
-      resume_data: p,
-      updated_at: new Date().toISOString(),
-    }))
+    let hasErrors = false
+    let lastError: unknown = null
 
-    const { error } = await supabase
-      .from('resumes')
-      .upsert(rows, { onConflict: 'id', ignoreDuplicates: false })
+    for (const p of profiles) {
+      try {
+        const { data: existing, error: selectError } = await supabase
+          .from('resumes')
+          .select('id')
+          .eq('id', p.id)
+          .eq('user_id', userId)
+          .maybeSingle()
 
-    if (error) {
-      console.error('Batch sync failed:', error)
-      throw error
+        if (selectError) throw selectError
+
+        if (existing) {
+          const { error: updateError } = await supabase
+            .from('resumes')
+            .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+            .eq('id', p.id)
+            .eq('user_id', userId)
+          if (updateError) throw updateError
+        } else {
+          const { error: insertError } = await supabase
+            .from('resumes')
+            .insert({ id: p.id, user_id: userId, title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+
+          if (insertError) {
+            if (insertError.code === '23505') {
+              const { error: retryError } = await supabase
+                .from('resumes')
+                .update({ title: p.title, resume_data: p, updated_at: new Date().toISOString() })
+                .eq('id', p.id)
+                .eq('user_id', userId)
+              if (retryError) throw retryError
+              continue
+            }
+            throw insertError
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to sync profile ${p.id}:`, err)
+        hasErrors = true
+        lastError = err
+      }
+    }
+
+    if (hasErrors) {
+      throw lastError
     }
   }, [])
 
