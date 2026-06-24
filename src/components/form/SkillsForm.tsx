@@ -112,12 +112,9 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
 
   // Filter autocomplete suggestions based on active category typing
   const activeInputValue = inputValues[activeCatIdx] || ''
+
   useEffect(() => {
-    if (!activeInputValue.trim()) {
-      setFilteredSuggestions([])
-      setShowDropdownIdx(null)
-      return
-    }
+    if (!activeInputValue.trim()) return
 
     clearTimeout(filterTimerRef.current)
     filterTimerRef.current = setTimeout(() => {
@@ -274,7 +271,7 @@ export default function SkillsForm({ skills, jobTitle, onChange }: SkillsFormPro
         {groupedSkills.map((group, idx) => {
           const isActive = idx === activeCatIdx
           const currentInputValue = inputValues[idx] || ''
-          const showDropdown = showDropdownIdx === idx
+          const showDropdown = showDropdownIdx === idx && currentInputValue.trim().length > 0
           
           return (
             <div
