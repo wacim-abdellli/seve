@@ -78,9 +78,9 @@ export default function SectionDrawer({
   const { resumeData, updateResumeData: onChange } = useResume()
   // Escape key support — use ref to avoid re-attaching on parent re-renders
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
   const drawerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
+    onCloseRef.current = onClose
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCloseRef.current()
       // Focus trap: cycle Tab within drawer

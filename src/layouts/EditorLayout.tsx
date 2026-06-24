@@ -544,12 +544,17 @@ export default function EditorLayout() {
     updateActiveResume(prev => ({ ...prev, templateFontWeight: weight }))
   }, [updateActiveResume])
 
-  const stylePrefs = activeResume?.stylePrefs || { ...DEFAULT_STYLE_PREFS }
+  const stylePrefs = useMemo(
+    () => activeResume?.stylePrefs ?? { ...DEFAULT_STYLE_PREFS },
+    [activeResume?.stylePrefs]
+  )
 
   const resumeDataRef = useRef(resumeData)
-  resumeDataRef.current = resumeData
   const pageCountRef = useRef(pageCount)
-  pageCountRef.current = pageCount
+  useEffect(() => {
+    resumeDataRef.current = resumeData
+    pageCountRef.current = pageCount
+  })
 
   const { activeWarnings, showPrintModal, handlePrint: handlePrintModal, dismissWarnings, exportAnyway, dismissPrintModal, confirmPrint } = usePrintResume()
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
@@ -563,9 +568,11 @@ export default function EditorLayout() {
   }, [handlePrintModal])
 
   const handlePrintRef = useRef(handlePrint)
-  handlePrintRef.current = handlePrint
   const saveChangesRef = useRef(saveChangesToCloud)
-  saveChangesRef.current = saveChangesToCloud
+  useEffect(() => {
+    handlePrintRef.current = handlePrint
+    saveChangesRef.current = saveChangesToCloud
+  })
 
   // Keyboard shortcuts: Ctrl+P -> Print / Save as PDF, Ctrl+S -> save to cloud
   useEffect(() => {
