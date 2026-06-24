@@ -78,13 +78,14 @@ export function evaluateResume(resume: ResumeData, jobDescription: string, fontS
 
 export function autoFix(resume: ResumeData): ResumeData {
   const raw = JSON.parse(JSON.stringify(resume)) as Record<string, unknown>
+  const contact = raw.contact as Record<string, unknown> | undefined
   const fixed: ResumeData = {
     contact: {
-      fullName: (raw.contact as any)?.fullName ?? '',
-      email: (raw.contact as any)?.email ?? '',
-      phone: (raw.contact as any)?.phone ?? '',
-      linkedin: (raw.contact as any)?.linkedin ?? '',
-      location: (raw.contact as any)?.location ?? '',
+      fullName: (contact?.fullName as string) ?? '',
+      email: (contact?.email as string) ?? '',
+      phone: (contact?.phone as string) ?? '',
+      linkedin: (contact?.linkedin as string) ?? '',
+      location: (contact?.location as string) ?? '',
     },
     summary: typeof raw.summary === 'string' ? raw.summary : '',
     experience: Array.isArray(raw.experience) ? raw.experience : [],
