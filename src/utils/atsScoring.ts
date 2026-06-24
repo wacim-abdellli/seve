@@ -35,9 +35,12 @@ export function weightKeyword(keyword: string): 'high' | 'medium' | 'low' {
 
 export function evaluateSectionAts(
   sectionId: string,
-  resumeData: ResumeData,
+  resumeData?: ResumeData,
   lang?: string
 ): AtsRatingResult {
+  if (!resumeData) {
+    return { rating: 'danger', feedback: 'No resume data available.', issues: [] }
+  }
   const detectedLang = lang || detectLanguage(extractResumeText(resumeData))
 
   switch (sectionId) {

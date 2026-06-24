@@ -250,9 +250,9 @@ export default function ResumePreview({
     'interests', 'references'
   ]
   const sectionsWithData = activeSectionKeys.filter(key => {
-    if (key === 'summary') return resumeData.summary && resumeData.summary.trim() !== ''
-    if (key === 'skills') return resumeData.skills && resumeData.skills.length > 0
-    const val = resumeData[key as keyof ResumeData]
+    if (key === 'summary') return resumeData?.summary && typeof resumeData.summary === 'string' && resumeData.summary.trim() !== ''
+    if (key === 'skills') return resumeData?.skills && Array.isArray(resumeData.skills) && resumeData.skills.length > 0
+    const val = resumeData?.[key as keyof ResumeData]
     return Array.isArray(val) && val.length > 0
   })
 
@@ -267,11 +267,11 @@ export default function ResumePreview({
 
   // Check if resume is completely empty
   const isEmpty = 
-    !resumeData.contact.fullName.trim() &&
-    !resumeData.summary.trim() &&
-    (!resumeData.experience || resumeData.experience.length === 0) &&
-    (!resumeData.education || resumeData.education.length === 0) &&
-    (!resumeData.skills || resumeData.skills.length === 0)
+    !(resumeData?.contact?.fullName || '').trim() &&
+    !(resumeData?.summary || '').trim() &&
+    (!resumeData?.experience || resumeData.experience.length === 0) &&
+    (!resumeData?.education || resumeData.education.length === 0) &&
+    (!resumeData?.skills || resumeData.skills.length === 0)
 
   // Drag Handlers
   const handleDragStart = (e: React.DragEvent, sectionId: SectionKey) => {
@@ -310,6 +310,8 @@ export default function ResumePreview({
       onSectionOrderChange(updated)
     }
   }
+
+  const reorderContextValue = useMemo(() => ({ moveSection: handleMoveSection }), [handleMoveSection])
 
   return (
     <div className="w-full flex flex-col gap-4 select-text relative">
@@ -592,7 +594,7 @@ export default function ResumePreview({
           ) : (
             /* Normal Template Rendering with Drag-and-drop handlers */
             <div className="resume-template-wrapper">
-              <SectionReorderProvider value={useMemo(() => ({ moveSection: handleMoveSection }), [handleMoveSection])}>
+              <SectionReorderProvider value={reorderContextValue}>
                 <TemplateRenderer
                   type={selectedTemplate}
                   data={resumeData}

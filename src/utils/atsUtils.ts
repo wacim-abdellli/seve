@@ -71,9 +71,10 @@ export function clearResumeTextCache(): void {
   _resumeTextCache = null
 }
 
-export function extractResumeText(resume: ResumeData): string
-export function extractResumeText(resume: ResumeData, options: { excludeContact?: boolean; asWordCount: true }): number
-export function extractResumeText(resume: ResumeData, options?: { excludeContact?: boolean; asWordCount?: boolean }): string | number {
+export function extractResumeText(resume?: ResumeData): string
+export function extractResumeText(resume?: ResumeData, options?: { excludeContact?: boolean; asWordCount: true }): number
+export function extractResumeText(resume?: ResumeData, options?: { excludeContact?: boolean; asWordCount?: boolean }): string | number {
+  if (!resume) return options?.asWordCount ? 0 : ''
   if (_resumeTextCache !== null && !options?.excludeContact && !options?.asWordCount) {
     return _resumeTextCache
   }
@@ -81,20 +82,23 @@ export function extractResumeText(resume: ResumeData, options?: { excludeContact
   const asWordCount = options?.asWordCount ?? false
   let text = ''
   if (!excludeContact && resume.contact) {
-    text += ` ${resume.contact.fullName} ${resume.contact.email} ${resume.contact.phone} ${resume.contact.linkedin} ${resume.contact.location} ${resume.contact.website || ''}`
+    const contact = resume.contact || {}
+    text += ` ${contact.fullName || ''} ${contact.email || ''} ${contact.phone || ''} ${contact.linkedin || ''} ${contact.location || ''} ${contact.website || ''}`
   }
   text += ` ${resume.summary || ''}`
-  resume.experience.forEach(exp => {
-    text += ` ${exp.jobTitle} ${exp.company} ${exp.location} ${exp.bullets.join(' ')}`
+  ;(resume.experience || []).forEach(exp => {
+    if (!exp) return
+    text += ` ${exp.jobTitle || ''} ${exp.company || ''} ${exp.location || ''} ${(exp.bullets || []).filter(Boolean).join(' ')}`
   })
-  resume.education.forEach(edu => {
-    text += ` ${edu.degree} ${edu.school} ${edu.location}`
+  ;(resume.education || []).forEach(edu => {
+    if (!edu) return
+    text += ` ${edu.degree || ''} ${edu.school || ''} ${edu.location || ''}`
   })
-  text += ` ${resume.skills.join(' ')}`
-  if (resume.languages) resume.languages.forEach(l => { text += ` ${l.name}` })
-  if (resume.projects) resume.projects.forEach(p => { text += ` ${p.name} ${p.description} ${p.technologies.join(' ')}` })
-  if (resume.certifications) resume.certifications.forEach(c => { text += ` ${c.title} ${c.issuer}` })
-  if (resume.awards) resume.awards.forEach(a => { text += ` ${a.title}` })
+  text += ` ${(resume.skills || []).filter(Boolean).join(' ')}`
+  if (resume.languages) (resume.languages || []).forEach(l => { if (l?.name) text += ` ${l.name}` })
+  if (resume.projects) (resume.projects || []).forEach(p => { if (p) text += ` ${p.name || ''} ${p.description || ''} ${(p.technologies || []).filter(Boolean).join(' ')}` })
+  if (resume.certifications) (resume.certifications || []).forEach(c => { if (c) text += ` ${c.title || ''} ${c.issuer || ''}` })
+  if (resume.awards) (resume.awards || []).forEach(a => { if (a?.title) text += ` ${a.title}` })
   if (!excludeContact && !asWordCount) {
     _resumeTextCache = text
   }
@@ -112,9 +116,9 @@ export function countContentWords(resume: ResumeData): number {
  */
 export function countMeaningfulBullets(resume: ResumeData): number {
   let count = 0
-  resume.experience.forEach(exp => {
-    exp.bullets.forEach(b => {
-      if (b.trim().length >= 15) count++
+  ;(resume?.experience || []).forEach(exp => {
+    ;(exp?.bullets || []).forEach(b => {
+      if (b && b.trim().length >= 15) count++
     })
   })
   return count
@@ -139,14 +143,14 @@ export function hashContent(data: unknown): string {
 
 export function buildSectionHashes(resume: ResumeData): Record<string, string> {
   return {
-    contact: hashContent(resume.contact || ''),
-    summary: hashContent(resume.summary || ''),
-    experience: hashContent(resume.experience),
-    education: hashContent(resume.education),
-    skills: hashContent(resume.skills),
-    projects: hashContent(resume.projects || []),
-    certifications: hashContent(resume.certifications || []),
-    languages: hashContent(resume.languages || []),
+    contact: hashContent(resume?.contact || ''),
+    summary: hashContent(resume?.summary || ''),
+    experience: hashContent(resume?.experience || []),
+    education: hashContent(resume?.education || []),
+    skills: hashContent(resume?.skills || []),
+    projects: hashContent(resume?.projects || []),
+    certifications: hashContent(resume?.certifications || []),
+    languages: hashContent(resume?.languages || []),
   }
 }
 

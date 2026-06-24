@@ -5,6 +5,7 @@ import { useToast } from '../hooks/useToast'
 import { ResumeContext } from './resumeContextDef'
 import { useAuth } from './AuthContext'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { clearResumeTextCache } from '../utils/atsUtils'
 
 const LOCAL_STORAGE_KEY = 'seve_state'
 const DELETED_IDS_KEY = 'seve_deleted_ids'
@@ -32,13 +33,39 @@ const INITIAL_RESUME_DATA: ResumeData = {
 
 const DEFAULT_SECTION_ORDER = ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
 
+function sanitizeResumeData(raw: any): ResumeData {
+  const contact = raw?.contact || {}
+  return {
+    contact: {
+      fullName: typeof contact.fullName === 'string' ? contact.fullName : '',
+      email: typeof contact.email === 'string' ? contact.email : '',
+      phone: typeof contact.phone === 'string' ? contact.phone : '',
+      linkedin: typeof contact.linkedin === 'string' ? contact.linkedin : '',
+      location: typeof contact.location === 'string' ? contact.location : '',
+      website: typeof contact.website === 'string' ? contact.website : '',
+    },
+    summary: typeof raw?.summary === 'string' ? raw.summary : '',
+    experience: Array.isArray(raw?.experience) ? raw.experience : [],
+    education: Array.isArray(raw?.education) ? raw.education : [],
+    skills: Array.isArray(raw?.skills) ? raw.skills : [],
+    languages: Array.isArray(raw?.languages) ? raw.languages : [],
+    projects: Array.isArray(raw?.projects) ? raw.projects : [],
+    awards: Array.isArray(raw?.awards) ? raw.awards : [],
+    certifications: Array.isArray(raw?.certifications) ? raw.certifications : [],
+    interests: Array.isArray(raw?.interests) ? raw.interests : [],
+    publications: Array.isArray(raw?.publications) ? raw.publications : [],
+    references: Array.isArray(raw?.references) ? raw.references : [],
+    volunteer: Array.isArray(raw?.volunteer) ? raw.volunteer : [],
+  }
+}
+
 function createDefaultResume(): ResumeProfile {
   return {
     id: defaultResumeId,
     title: 'My Resume',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    resumeData: { ...INITIAL_RESUME_DATA },
+    resumeData: sanitizeResumeData(null),
     selectedTemplate: 'classic',
     jobDescription: '',
     sectionOrder: [...DEFAULT_SECTION_ORDER],
@@ -83,12 +110,13 @@ function loadInitialState(): AppState {
             createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
             updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
             revision: typeof (raw as any).revision === 'number' ? (raw as any).revision : 1,
-            resumeData: raw.resumeData && typeof raw.resumeData === 'object'
-              ? { ...INITIAL_RESUME_DATA, ...(raw.resumeData as Record<string, unknown>) }
-              : { ...INITIAL_RESUME_DATA },
+            resumeData: sanitizeResumeData(raw.resumeData),
             selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
             jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
             sectionOrder: Array.isArray(raw.sectionOrder) ? raw.sectionOrder : [...DEFAULT_SECTION_ORDER],
+            themeColor: typeof raw.themeColor === 'string' ? raw.themeColor : '#b91c1c',
+            templateFontSize: typeof raw.templateFontSize === 'number' ? raw.templateFontSize : 10,
+            templateFontWeight: typeof raw.templateFontWeight === 'number' ? raw.templateFontWeight : 400,
             stylePrefs: raw.stylePrefs && typeof raw.stylePrefs === 'object'
               ? { ...DEFAULT_STYLE_PREFS, ...(raw.stylePrefs as Record<string, unknown>) }
               : { ...DEFAULT_STYLE_PREFS },
@@ -113,11 +141,16 @@ function loadInitialState(): AppState {
               title: 'My Resume',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-              resumeData: parsed.resumeData,
+              resumeData: sanitizeResumeData(parsed.resumeData),
               selectedTemplate: (parsed.selectedTemplate as Template) || 'classic' as Template,
               jobDescription: parsed.jobDescription || '',
               sectionOrder: sectionOrder || [...DEFAULT_SECTION_ORDER],
-              stylePrefs: { ...DEFAULT_STYLE_PREFS },
+              themeColor: typeof parsed.themeColor === 'string' ? parsed.themeColor : '#b91c1c',
+              templateFontSize: typeof parsed.templateFontSize === 'number' ? parsed.templateFontSize : 10,
+              templateFontWeight: typeof parsed.templateFontWeight === 'number' ? parsed.templateFontWeight : 400,
+              stylePrefs: parsed.stylePrefs && typeof parsed.stylePrefs === 'object'
+                ? { ...DEFAULT_STYLE_PREFS, ...(parsed.stylePrefs as Record<string, unknown>) }
+                : { ...DEFAULT_STYLE_PREFS },
               revision: 1,
             },
           },
@@ -254,12 +287,13 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
           updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
           revision: typeof raw.revision === 'number' ? raw.revision : 1,
-          resumeData: raw.resumeData && typeof raw.resumeData === 'object'
-            ? { ...INITIAL_RESUME_DATA, ...(raw.resumeData as Record<string, unknown>) }
-            : { ...INITIAL_RESUME_DATA },
+          resumeData: sanitizeResumeData(raw.resumeData),
           selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
           jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
           sectionOrder: Array.isArray(raw.sectionOrder) ? raw.sectionOrder : [...DEFAULT_SECTION_ORDER],
+          themeColor: typeof raw.themeColor === 'string' ? raw.themeColor : '#b91c1c',
+          templateFontSize: typeof raw.templateFontSize === 'number' ? raw.templateFontSize : 10,
+          templateFontWeight: typeof raw.templateFontWeight === 'number' ? raw.templateFontWeight : 400,
           stylePrefs: raw.stylePrefs && typeof raw.stylePrefs === 'object'
             ? { ...DEFAULT_STYLE_PREFS, ...(raw.stylePrefs as Record<string, unknown>) }
             : { ...DEFAULT_STYLE_PREFS },
@@ -549,6 +583,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [handleUndo, handleRedo])
 
   const selectResume = useCallback((id: string) => {
+    clearResumeTextCache()
     setState(prev => ({ ...prev, selectedResumeId: id }))
   }, [])
 
@@ -594,6 +629,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const duplicateResume = useCallback((id: string) => {
+    clearResumeTextCache()
     setState(prev => {
       const source = prev.resumes[id]
       if (!source) return prev
@@ -647,6 +683,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         showToast('Cloud delete queued for retry on next sync', 'error')
       }
     }
+    clearResumeTextCache()
     setState(prev => {
       const next = { ...prev.resumes }
       delete next[id]
@@ -657,15 +694,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
           title: 'My Resume',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          resumeData: {
-            contact: { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' },
-            summary: '',
-            experience: [],
-            education: [],
-            skills: [],
-            languages: [],
-            projects: [],
-          },
+          resumeData: sanitizeResumeData(null),
           selectedTemplate: 'classic',
           jobDescription: '',
           sectionOrder: ['summary', 'experience', 'projects', 'education', 'skills'],
@@ -685,8 +714,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [user, showToast])
 
   const updateResumeData = useCallback((data: ResumeData) => {
-    pushHistory(data)
-    updateActiveResume(prev => ({ ...prev, resumeData: data }))
+    clearResumeTextCache()
+    const sanitized = sanitizeResumeData(data)
+    pushHistory(sanitized)
+    updateActiveResume(prev => ({ ...prev, resumeData: sanitized }))
   }, [pushHistory, updateActiveResume])
 
   const updateSectionOrder = useCallback((newOrder: string[]) => {
@@ -694,8 +725,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [updateActiveResume])
 
   const importResumeData = useCallback((data: ResumeData) => {
-    pushHistory(data)
-    updateActiveResume(prev => ({ ...prev, resumeData: data }))
+    clearResumeTextCache()
+    const sanitized = sanitizeResumeData(data)
+    pushHistory(sanitized)
+    updateActiveResume(prev => ({ ...prev, resumeData: sanitized }))
   }, [pushHistory, updateActiveResume])
 
   const updateStylePrefs = useCallback((updater: (prev: ResumeStylePreferences) => ResumeStylePreferences) => {
@@ -724,6 +757,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   }, [user, fetchAndMergeCloud, saveChangesToCloud])
 
   const restoreFromBackup = useCallback((backup: AppState) => {
+    clearResumeTextCache()
     setState(backup)
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(backup))
     const active = backup.resumes[backup.selectedResumeId]

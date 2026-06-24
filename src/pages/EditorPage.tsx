@@ -53,23 +53,32 @@ const truncateText = (str: string, max: number) => {
   return str.length > max ? str.slice(0, max) + '...' : str
 }
 
-const getSectionPreview = (section: string, data: ResumeData): string => {
+const getSectionPreview = (section: string, data?: ResumeData): string => {
+  if (!data) return ''
   switch (section) {
-    case 'contact': return data.contact.email || 'Add your details'
-    case 'summary': return truncateText(data.summary, 45) || 'Write a summary'
-    case 'experience':
-      return data.experience.length === 0 ? 'No positions added yet'
-        : `${data.experience[0].jobTitle || 'Untitled'} at ${data.experience[0].company || 'No Company'}` + (data.experience.length > 1 ? ` +${data.experience.length - 1} more` : '')
-    case 'education': return data.education.length === 0 ? 'No institutions added yet' : `${data.education.length} institution(s) added`
-    case 'skills': return getActualSkillsCount(data.skills) === 0 ? 'No skills added yet' : data.skills.slice(0, 4).join(', ') + (data.skills.length > 4 ? '...' : '')
-    case 'languages': { const l = data.languages || []; return l.length === 0 ? 'No languages added' : l.map(x => x.name).join(', ') + (l.length > 3 ? '...' : '') }
+    case 'contact': return data.contact?.email || 'Add your details'
+    case 'summary': return truncateText(data.summary || '', 45) || 'Write a summary'
+    case 'experience': {
+      const exp = data.experience || []
+      return exp.length === 0 ? 'No positions added yet'
+        : `${exp[0]?.jobTitle || 'Untitled'} at ${exp[0]?.company || 'No Company'}` + (exp.length > 1 ? ` +${exp.length - 1} more` : '')
+    }
+    case 'education': {
+      const edu = data.education || []
+      return edu.length === 0 ? 'No institutions added yet' : `${edu.length} institution(s) added`
+    }
+    case 'skills': {
+      const sk = data.skills || []
+      return getActualSkillsCount(sk) === 0 ? 'No skills added yet' : sk.slice(0, 4).join(', ') + (sk.length > 4 ? '...' : '')
+    }
+    case 'languages': { const l = data.languages || []; return l.length === 0 ? 'No languages added' : l.map(x => x?.name).filter(Boolean).join(', ') + (l.length > 3 ? '...' : '') }
     case 'projects': { const l = data.projects || []; return l.length === 0 ? 'No projects added' : `${l.length} project(s)` }
-    case 'awards': { const l = data.awards || []; return l.length === 0 ? 'No awards added' : l.map(x => x.title).filter(Boolean).join(', ') }
-    case 'certifications': { const l = data.certifications || []; return l.length === 0 ? 'No certifications added' : l.map(x => x.title).filter(Boolean).join(', ') }
-    case 'interests': { const l = data.interests || []; return l.length === 0 ? 'No interests added' : l.map(x => x.name).filter(Boolean).join(', ') }
-    case 'publications': { const l = data.publications || []; return l.length === 0 ? 'No publications added' : l.map(x => x.title).filter(Boolean).join(', ') }
-    case 'references': { const l = data.references || []; return l.length === 0 ? 'No references added' : l.map(x => x.name).filter(Boolean).join(', ') }
-    case 'volunteer': { const l = data.volunteer || []; return l.length === 0 ? 'No volunteer experience added' : l.map(x => x.organization).filter(Boolean).join(', ') }
+    case 'awards': { const l = data.awards || []; return l.length === 0 ? 'No awards added' : l.map(x => x?.title).filter(Boolean).join(', ') }
+    case 'certifications': { const l = data.certifications || []; return l.length === 0 ? 'No certifications added' : l.map(x => x?.title).filter(Boolean).join(', ') }
+    case 'interests': { const l = data.interests || []; return l.length === 0 ? 'No interests added' : l.map(x => x?.name).filter(Boolean).join(', ') }
+    case 'publications': { const l = data.publications || []; return l.length === 0 ? 'No publications added' : l.map(x => x?.title).filter(Boolean).join(', ') }
+    case 'references': { const l = data.references || []; return l.length === 0 ? 'No references added' : l.map(x => x?.name).filter(Boolean).join(', ') }
+    case 'volunteer': { const l = data.volunteer || []; return l.length === 0 ? 'No volunteer experience added' : l.map(x => x?.organization).filter(Boolean).join(', ') }
     default: return ''
   }
 }
