@@ -42,7 +42,7 @@ const ModernTemplate = memo(function ModernTemplate({
     ats, sectionData,
   } = useTemplateData(data, activeSection, atsMode, onEditSection, onDragStart, onDragOver, onDrop, sectionOrder)
 
-  const renderPreviewWrapper = useCallback((sectionId: string, children: React.ReactNode, _dragSection?: string) => (
+  const renderPreviewWrapper = useCallback((sectionId: string, children: React.ReactNode) => (
     <PreviewSectionWrapper
       sectionId={sectionId}
       activeSection={activeSection}
