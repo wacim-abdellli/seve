@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import type { ResumeStylePreferences } from '../types/resume'
 import { ChevronDown, Type, AlignLeft, Palette, Eye } from 'lucide-react'
-import { themeColors } from './ResumePreview'
+import { themeColors } from './resumePreviewConstants'
 
 function AccordionSection({ title, icon, defaultOpen = false, children }: { title: string; icon: ReactNode; defaultOpen?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)

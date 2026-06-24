@@ -22,7 +22,9 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Resume template error:', error, errorInfo)
+    if (import.meta.env.DEV) {
+      console.error('Resume template error:', error, errorInfo)
+    }
   }
 
   componentDidUpdate(_prevProps: ErrorBoundaryProps, prevState: ErrorBoundaryState) {
