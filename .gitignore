@@ -31,3 +31,8 @@ reactive-resume.zip
 # AI Agent files
 .agents/
 skills-lock.json
+
+# Personal resume JSON files
+*.resume.json
+*-resume.json
+*_resume.json
