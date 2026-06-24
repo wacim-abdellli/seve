@@ -42,7 +42,7 @@ export default function DownloadGuideModal({ onClose, onContinue }: DownloadGuid
   }, [onClose])
 
   const modalContent = (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print">
+    <div role="dialog" aria-labelledby="download-guide-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -65,7 +65,7 @@ export default function DownloadGuideModal({ onClose, onContinue }: DownloadGuid
         {/* Header Section */}
         <div className="flex items-center justify-between mb-5 flex-shrink-0">
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-1.5">
+            <h3 id="download-guide-heading" className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-1.5">
               <Download className="w-4 h-4 text-red-400" />
               Download as PDF
             </h3>

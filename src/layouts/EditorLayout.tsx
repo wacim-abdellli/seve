@@ -820,7 +820,7 @@ export default function EditorLayout() {
       <div className="flex flex-1 overflow-hidden relative z-10 bg-transparent">
         <ModeRail activeMode={activeMode} onChangeMode={(m) => { setActiveMode(m); if (m === 'studio' || m === 'design') setMobileView('edit') }} onSettingsClick={() => setIsSettingsOpen(true)} />
 
-        <div className="flex flex-1 flex-row overflow-hidden relative bg-transparent pb-16 lg:pb-0">
+        <div id="main-content" className="flex flex-1 flex-row overflow-hidden relative bg-transparent pb-16 lg:pb-0">
           <Outlet context={editorContext} />
         </div>
       </div>

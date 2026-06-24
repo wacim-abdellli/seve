@@ -112,7 +112,7 @@ export default function LandingPage() {
       </header>
 
       {/* 2. Hero Section */}
-      <main className="flex-1 py-12 md:py-24 flex items-center z-10 relative">
+      <main id="main-content" className="flex-1 py-12 md:py-24 flex items-center z-10 relative">
         <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             

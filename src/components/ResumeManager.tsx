@@ -84,7 +84,7 @@ export default function ResumeManager({
   }
 
   const modalContent = (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+    <div role="dialog" aria-labelledby="resume-manager-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       {/* Backdrop close area */}
       <div className="absolute inset-0" onClick={onClose} />
 
@@ -103,7 +103,7 @@ export default function ResumeManager({
               <FolderOpen className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold tracking-tight text-white uppercase">Manage Resumes</h3>
+              <h3 id="resume-manager-heading" className="text-sm font-extrabold tracking-tight text-white uppercase">Manage Resumes</h3>
               <p className="text-[11px] text-zinc-400">Switch, duplicate, rename, or create resume versions</p>
             </div>
           </div>
