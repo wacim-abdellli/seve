@@ -1,589 +1,629 @@
-# Seve — Agent Fix Guide (8.1 → 10/10)
+# Seve — Fix Guide v2 (9.1 → 10/10)
 
-> This guide was written by Claude after cloning and fully reading the seve codebase.
-> Follow the tasks in order. Each section is self-contained.
-> After all tasks are done, run `npm test` and `npm run build` — both must pass clean.
-
----
-
-## Current state summary
-
-- **18,954 lines** of TypeScript/TSX across 60+ files
-- **Stack:** React 19, TypeScript strict, Vite, Tailwind, Supabase, Framer Motion
-- **Tests:** 13 tests in 2 files (critically low for an ATS scoring engine)
-- **Passing issues:** 0 console.logs, 0 TODO/FIXMEs, clean git history ✅
-- **Failing issues:** god components, low test coverage, root clutter, version stuck at 0.0.0
+**Goal:** Fix all 23 lint errors, add code splitting, add CONTRIBUTING.md.
+**After every fix, run:** `npm run lint` and `npm test` — both must stay clean.
+**Total files to edit:** 9 files + 1 new file + 1 new file.
 
 ---
 
-## TASK 1 — Remove personal data and root clutter
+## HOW TO VERIFY YOU ARE DONE
 
-**Why:** Personal resume JSON files committed to an open-source repo is a privacy/professionalism issue.
-**Files to delete from the repo (git rm):**
-
-```
-perfect-resume.json
-perfect_resume.json
-wacim-abdelli-resume.json
-```
-
-**Commands:**
+Run this after all fixes:
 ```bash
-git rm perfect-resume.json perfect_resume.json wacim-abdelli-resume.json
-git commit -m "clean: remove personal resume JSON files from repo root"
-```
-
-**Also add to `.gitignore`:**
-```
-*.resume.json
-*-resume.json
-*_resume.json
+npm run lint    # must output: 0 problems
+npm test        # must output: 76 passed
+npm run build   # must complete with no errors
 ```
 
 ---
 
-## TASK 2 — Bump version to 1.0.0
+## FIX 1 — `EditorLayout.tsx` — 4 ref-during-render errors + 1 useMemo warning
 
-**File:** `package.json`
+**File:** `src/layouts/EditorLayout.tsx`
 
-Change:
-```json
-"version": "0.0.0"
+**The problem:** These 4 lines are at the top level of the component function body. React 19 does not allow writing to `.current` during render:
+```
+line 550:  resumeDataRef.current = resumeData       ← ERROR
+line 552:  pageCountRef.current = pageCount         ← ERROR
+line 566:  handlePrintRef.current = handlePrint     ← ERROR
+line 568:  saveChangesRef.current = saveChangesToCloud  ← ERROR
+```
+
+Also line 547: `stylePrefs` is a plain `||` expression used inside a `useMemo` dep array — it creates a new object every render, making the memo useless.
+
+**Step 1 — Find this block** (around line 547–570):
+```ts
+const stylePrefs = activeResume?.stylePrefs || { ...DEFAULT_STYLE_PREFS }
+
+const resumeDataRef = useRef(resumeData)
+resumeDataRef.current = resumeData
+const pageCountRef = useRef(pageCount)
+pageCountRef.current = pageCount
+```
+
+**Replace that entire block** with:
+```ts
+const stylePrefs = useMemo(
+  () => activeResume?.stylePrefs ?? { ...DEFAULT_STYLE_PREFS },
+  [activeResume?.stylePrefs]
+)
+
+const resumeDataRef = useRef(resumeData)
+const pageCountRef = useRef(pageCount)
+useEffect(() => {
+  resumeDataRef.current = resumeData
+  pageCountRef.current = pageCount
+})
+```
+
+**Step 2 — Find this block** (around line 564–569):
+```ts
+const handlePrintRef = useRef(handlePrint)
+handlePrintRef.current = handlePrint
+const saveChangesRef = useRef(saveChangesToCloud)
+saveChangesRef.current = saveChangesToCloud
+```
+
+**Replace** with:
+```ts
+const handlePrintRef = useRef(handlePrint)
+const saveChangesRef = useRef(saveChangesToCloud)
+useEffect(() => {
+  handlePrintRef.current = handlePrint
+  saveChangesRef.current = saveChangesToCloud
+})
+```
+
+**Make sure `useMemo` and `useEffect` are in the imports** at the top of the file. The file already imports `useEffect` and `useMemo` so this is fine — just check.
+
+**Verify:** Run `npm run lint` — the 4 EditorLayout ref errors and the stylePrefs warning should be gone.
+
+---
+
+## FIX 2 — `SectionDrawer.tsx` — 1 ref-during-render error
+
+**File:** `src/components/SectionDrawer.tsx`
+
+**The problem:** Line 81: `onCloseRef.current = onClose` is at the top level of the component.
+
+**Find this block** (around line 78–82):
+```ts
+const onCloseRef = useRef(onClose)
+onCloseRef.current = onClose
+```
+
+**Replace** with:
+```ts
+const onCloseRef = useRef(onClose)
+useEffect(() => {
+  onCloseRef.current = onClose
+})
+```
+
+Make sure `useEffect` is already in the imports at the top — if not, add it.
+
+---
+
+## FIX 3 — `ExperienceForm.tsx` — 1 ref-during-render error
+
+**File:** `src/components/form/ExperienceForm.tsx`
+
+**The problem:** Line 212: a ref `.current` is being set at the top level of the component.
+
+**Find the line** around 212 that looks like:
+```ts
+someRef.current = someValue
+```
+
+**Wrap it** the same way — find the ref declaration just above it and combine:
+```ts
+const someRef = useRef(someValue)
+useEffect(() => {
+  someRef.current = someValue
+})
+```
+
+Make sure `useEffect` is imported at the top of the file.
+
+---
+
+## FIX 4 — `SkillsForm.tsx` — 1 setState-in-effect error
+
+**File:** `src/components/form/SkillsForm.tsx`
+
+**The problem:** Line 117: `setState` is being called synchronously inside a `useEffect`, which can trigger cascading renders.
+
+**Find the `useEffect`** around line 115–120 that calls a state setter immediately (no condition, no async). It looks like:
+```ts
+useEffect(() => {
+  setSomeState(someValue)   // ← this is the problem
+  ...
+}, [dependency])
+```
+
+**Fix:** Add a guard so the setState only fires when the value actually changed:
+```ts
+useEffect(() => {
+  if (currentValue !== someValue) {
+    setSomeState(someValue)
+  }
+}, [dependency])
+```
+
+The exact variable names depend on what's on line 117. Look at that line and apply the conditional pattern above.
+
+---
+
+## FIX 5 — `ResumeDataContext.tsx` — 3 errors (fast-refresh + 2x `any` + 1 ref-during-render)
+
+**File:** `src/context/ResumeDataContext.tsx`
+
+### 5a — Fast-refresh error on line 26 (`DEFAULT_SECTION_ORDER` export)
+
+**Problem:** A non-component constant is exported from a file that also exports a component/provider.
+
+**Find line 26:**
+```ts
+export const DEFAULT_SECTION_ORDER = [...]
+```
+
+**Fix:** Add the eslint-disable comment on the line before it:
+```ts
+// eslint-disable-next-line react-refresh/only-export-components
+export const DEFAULT_SECTION_ORDER = [...]
+```
+
+### 5b — Fast-refresh error on line 178 (`useResumeDataContext` export)
+
+**Find line 178:**
+```ts
+export function useResumeDataContext(): ResumeDataContextType {
+```
+
+**Fix:** Add the eslint-disable comment on the line before it:
+```ts
+// eslint-disable-next-line react-refresh/only-export-components
+export function useResumeDataContext(): ResumeDataContextType {
+```
+
+### 5c — `any` on line 28 (`sanitizeResumeData` parameter)
+
+**Find:**
+```ts
+function sanitizeResumeData(raw: any): ResumeData {
+```
+
+**Replace with:**
+```ts
+function sanitizeResumeData(raw: unknown): ResumeData {
+  const r = raw as Record<string, unknown>
+  const contact = (r?.contact as Record<string, unknown>) || {}
+```
+
+Then inside the function body, change `raw?.contact` → `r?.contact`, `raw?.summary` → `r?.summary`, etc. The pattern is: cast `raw` to `Record<string, unknown>` at the top, then access fields through that typed variable.
+
+### 5d — `any` on lines 92, 92 (`(raw as any).revision`)
+
+**Find** (around line 92):
+```ts
+revision: typeof (raw as any).revision === 'number' ? (raw as any).revision : 1,
+```
+
+**Replace with:**
+```ts
+revision: typeof (raw as Record<string, unknown>).revision === 'number'
+  ? (raw as Record<string, unknown>).revision as number
+  : 1,
+```
+
+### 5e — Ref-during-render on line 254
+
+**Find** around line 254:
+```ts
+resumeDataRef.current = resumeData
+```
+
+**Replace** the declaration + assignment block with:
+```ts
+const resumeDataRef = useRef(resumeData)
+useEffect(() => {
+  resumeDataRef.current = resumeData
+})
+```
+
+---
+
+## FIX 6 — `ResumeSyncContext.tsx` — 2 errors (`any` + setState-in-effect)
+
+**File:** `src/context/ResumeSyncContext.tsx`
+
+### 6a — `any` on line 138 (`resumeData: null as any`)
+
+**Find:**
+```ts
+resumeData: null as any,
+```
+
+**Replace with:**
+```ts
+resumeData: sanitizeResumeData(raw.resume_data ?? {}),
+```
+
+If `sanitizeResumeData` is not imported here, import it from `./ResumeDataContext`:
+```ts
+import { sanitizeResumeData } from './ResumeDataContext'
+```
+
+But wait — `sanitizeResumeData` is currently a private function in ResumeDataContext. You need to **export it first**:
+
+In `ResumeDataContext.tsx`, change:
+```ts
+function sanitizeResumeData(raw: unknown): ResumeData {
 ```
 To:
-```json
-"version": "1.0.0"
+```ts
+// eslint-disable-next-line react-refresh/only-export-components
+export function sanitizeResumeData(raw: unknown): ResumeData {
 ```
 
-Commit: `chore: bump version to 1.0.0`
-
----
-
-## TASK 3 — Split AtsChecker.tsx (1,817 lines → 5 focused files)
-
-**Why:** `src/components/AtsChecker.tsx` is 1,817 lines. It contains multiple distinct UI concerns that should be separate components. This is the single biggest architectural issue.
-
-**Current internal structure of AtsChecker.tsx:**
-- Lines 19–124: `getCategoryTheme()` utility function
-- Lines 125–138: `getResumeHash()` utility
-- Lines 140–169: `ScoreGauge` component
-- Lines 170–201: `MetricTile` component
-- Lines 202–238: constants (SECTION_LABELS, BAR_COLORS, SCAN_STAGES)
-- Lines 239+: `AtsChecker` main component (everything else)
-
-**Action — extract into these files:**
-
-### 3a. `src/components/ats/AtsCheckerUtils.ts`
-Move here:
-- `getCategoryTheme()` function
-- `getResumeHash()` function
-- `SECTION_LABELS` constant
-- `BAR_COLORS` constant
-- `SCAN_STAGES` constant
-
-Export all of them.
-
-### 3b. `src/components/ats/AtsScoreHeader.tsx`
-Extract the top score header section of the checker — the part containing:
-- The animated score gauge display
-- Grade pill + label
-- The 4–6 MetricTile cards (word count, read time, ATS parseability, etc.)
-- The job description input textarea
-
-Props interface:
-```typescript
-interface AtsScoreHeaderProps {
-  report: AtsReport
-  jobDescription: string
-  onUpdateJobDescription: (jd: string) => void
-  isScanning: boolean
-}
+Then in `ResumeSyncContext.tsx` add at the top:
+```ts
+import { sanitizeResumeData, DEFAULT_SECTION_ORDER } from './ResumeDataContext'
 ```
 
-### 3c. `src/components/ats/AtsCategorySection.tsx`
-Extract the categories accordion section:
-- The list of expandable category rows
-- Each category's issues list
-- The fix suggestions per issue
+And replace the `null as any` with the actual sanitized value from `raw.resume_data`.
 
-Props interface:
-```typescript
-interface AtsCategorySectionProps {
-  categories: AtsCategoryScore[]
-  expandedCategory: string | null
-  onToggleCategory: (id: string) => void
-  onNavigateToSection?: (section: string) => void
-}
+### 6b — setState-in-effect on line 239
+
+**Find the `useEffect`** around line 237–242 that calls `setCloudStatus` or similar state setter synchronously:
+```ts
+useEffect(() => {
+  setCloudStatus('unsaved')   // ← called synchronously without a guard
+  ...
+}, [state, user?.id, lastSyncedState])
 ```
 
-### 3d. `src/components/ats/AtsSkillsMatrix.tsx`
-Extract the skills matrix tab/panel:
-- The radar/bar chart showing matched vs missing keywords
-- The matched keywords list
-- The missing keywords list with "Add to resume" affordances
-
-### 3e. `src/components/ats/AtsGuidePanel.tsx`
-Extract the guide/reference panel:
-- Power verbs list
-- Formatting rules
-- Issue explanations reference
-
-**After extraction, `AtsChecker.tsx` should be ~300 lines** — just the orchestration: state, the tab switcher, and importing/composing the sub-components above.
-
-**Import pattern in the refactored AtsChecker.tsx:**
-```typescript
-import { AtsScoreHeader } from './ats/AtsScoreHeader'
-import { AtsCategorySection } from './ats/AtsCategorySection'
-import { AtsSkillsMatrix } from './ats/AtsSkillsMatrix'
-import { AtsGuidePanel } from './ats/AtsGuidePanel'
-import { getCategoryTheme, getResumeHash, SCAN_STAGES } from './ats/AtsCheckerUtils'
-```
-
-Note: `src/components/ats/` already exists with: `AtsCategoryBars.tsx`, `AtsGradePill.tsx`, `AtsMetricTile.tsx`, `AtsScoreGauge.tsx`, `AtsSpectrumBar.tsx`, `StatBadge.tsx`. Reuse these — don't duplicate them.
-
----
-
-## TASK 4 — Split ResumeContext.tsx (819 lines → 3 focused files)
-
-**Why:** One monolithic context with all app state causes the entire tree to re-render on any state change.
-
-**Current file:** `src/context/ResumeContext.tsx` — 819 lines containing:
-- Cloud sync logic (Supabase fetch/push, conflict resolution, deleted IDs)
-- Resume CRUD (create, duplicate, delete, update fields)
-- Undo/redo history stack
-- Template + style preferences
-- Section ordering
-
-**Action — split into:**
-
-### 4a. `src/context/ResumeDataContext.tsx`
-Responsible for: resume CRUD, selected resume ID, section order, undo/redo.
-State it owns: `state` (AppState), `canUndo`, `canRedo`
-
-### 4b. `src/context/ResumeSyncContext.tsx`
-Responsible for: Supabase cloud sync, conflict resolution, deleted IDs tracking.
-State it owns: `cloudStatus`, `cloudError`, `isSaving`, `lastSyncedState`
-
-### 4c. Keep `src/context/ResumeContext.tsx` as a thin composer
-```typescript
-// ResumeContext.tsx — now just composes the two providers
-export function ResumeProvider({ children }: { children: ReactNode }) {
-  return (
-    <ResumeDataProvider>
-      <ResumeSyncProvider>
-        {children}
-      </ResumeSyncProvider>
-    </ResumeDataProvider>
-  )
-}
-```
-
-**Keep `src/context/resumeContextDef.ts` as-is** — it already correctly separates the type definition.
-
-**Important:** `useResume()` hook in `src/hooks/useResume.ts` should keep working unchanged — the hook can pull from whichever context(s) expose the needed values. The split is internal; external API stays the same.
-
----
-
-## TASK 5 — Expand test coverage (13 → 60+ tests)
-
-**Why:** The ATS scoring engine is the core of this product. Users make real job decisions based on its output. Bugs in scoring logic could hurt real people. 13 tests for 18k lines of code is not enough.
-
-**Add these test files:**
-
-### 5a. `src/utils/__tests__/atsScoring.test.ts`
-
-Test the scoring functions in `atsScoring.ts`. Key cases to cover:
-
-```typescript
-import { describe, it, expect } from 'vitest'
-// Import scoring functions from atsScoring.ts — check exact export names
-
-describe('keyword scoring', () => {
-  it('scores 100 when all JD keywords are in resume')
-  it('scores 0 when no JD keywords match resume')
-  it('is case-insensitive for keyword matching')
-  it('handles synonyms (e.g. "JS" matches "JavaScript")')
-  it('handles empty job description — returns 0, not error')
-  it('handles job description with only stop words — returns 0')
-  it('scores partial matches proportionally')
-})
-
-describe('action verb scoring', () => {
-  it('scores bullets starting with strong verbs higher')
-  it('penalizes "responsible for" / "helped with" / "assisted in"')
-  it('penalizes passive voice ("was given", "was tasked")')
-  it('handles bullets array being empty — returns 0, not error')
-})
-
-describe('quantified results scoring', () => {
-  it('detects percentage metrics (e.g. "increased by 40%")')
-  it('detects dollar amounts (e.g. "$50K", "$1.2M")')
-  it('detects raw numbers (e.g. "led a team of 12")')
-  it('scores 0 when no metrics found')
-  it('handles non-numeric percent symbols without crashing')
-})
-
-describe('section completeness scoring', () => {
-  it('penalizes missing summary')
-  it('penalizes missing experience')
-  it('penalizes missing education')
-  it('penalizes missing skills')
-  it('gives full score when all core sections are present')
-  it('handles optional sections (languages, projects) without penalty')
-})
-
-describe('date consistency scoring', () => {
-  it('accepts MM/YYYY format')
-  it('accepts "Present" as end date')
-  it('penalizes free-text date like "January 2020"')
-  it('penalizes missing dates on experience entries')
-  it('handles empty experience array without crashing')
-})
-
-describe('contact info scoring', () => {
-  it('gives full score with all fields present')
-  it('penalizes missing email')
-  it('penalizes missing phone')
-  it('penalizes missing LinkedIn')
-  it('handles completely empty contact without crashing')
-})
-
-describe('score bounds', () => {
-  it('total score is always between 0 and 100')
-  it('individual section scores are always between 0 and their max')
-  it('perfect resume with matching JD scores above 85')
-  it('empty resume scores below 20')
-})
-```
-
-### 5b. `src/utils/__tests__/atsBullets.test.ts`
-
-```typescript
-describe('bullet audit', () => {
-  it('flags "Responsible for managing..." as weak')
-  it('flags "Worked on..." as weak')
-  it('flags "Helped with..." as weak')
-  it('does not flag "Architected payment pipeline..." as weak')
-  it('does not flag "Reduced latency by 42%..." as weak')
-  it('detects missing quantification in experience bullets')
-  it('handles empty bullets array without crashing')
-  it('handles bullets with only whitespace without crashing')
-  it('handles very long bullets (500+ chars) without crashing')
-})
-```
-
-### 5c. `src/utils/__tests__/resumeNormalizer.test.ts` (extend existing)
-
-Add to the existing 3 tests:
-```typescript
-it('normalizes experience with missing optional fields')
-it('normalizes project with no technologies array')
-it('normalizes volunteer with no dates')
-it('round-trips data through normalize without data loss')
-it('handles null input gracefully')
-```
-
-### 5d. `src/utils/__tests__/roleClassifier.test.ts`
-
-```typescript
-describe('role classification', () => {
-  it('classifies "Software Engineer" as tech domain')
-  it('classifies "Marketing Manager" as marketing domain')
-  it('classifies "Product Manager" correctly')
-  it('returns a fallback domain for unknown roles')
-  it('handles empty string job title')
-})
-```
-
-**Target: at least 60 tests total. Run `npm test` after each file — all must pass.**
-
----
-
-## TASK 6 — Fix the AppErrorBoundary console.error leak
-
-**File:** `src/App.tsx`, line ~28
-
-```typescript
-componentDidCatch(error: Error, info: ErrorInfo) {
-  console.error('App crashed:', error, info)  // ← this is the only console call in the app
-}
-```
-
-In production, `console.error` leaks internal error details to the browser console. Replace with a no-op or a proper error reporting hook:
-
-```typescript
-componentDidCatch(error: Error, _info: ErrorInfo) {
-  // In production, send to your error tracking service here
-  // e.g. Sentry.captureException(error)
-  if (import.meta.env.DEV) {
-    console.error('App crashed:', error, _info)
+**Look at the full effect.** It already has if/else conditions inside. Make sure every `setState` call is inside an `if` branch, not at the top level of the effect callback. If you see a setter called unconditionally, wrap it:
+```ts
+useEffect(() => {
+  if (!user) {
+    setCloudStatus('local')  // already conditional — fine
+    return
   }
+  // ... rest of the logic
+}, [state, user?.id, lastSyncedState])
+```
+
+The ESLint rule fires when a setter is reachable without any condition. Read the effect body and make sure every `set*` call has a condition before it.
+
+---
+
+## FIX 7 — `atsReport.ts` — 5 `any` errors
+
+**File:** `src/utils/atsReport.ts`
+
+**Find lines 83–87:**
+```ts
+fullName: (raw.contact as any)?.fullName ?? '',
+email: (raw.contact as any)?.email ?? '',
+phone: (raw.contact as any)?.phone ?? '',
+linkedin: (raw.contact as any)?.linkedin ?? '',
+location: (raw.contact as any)?.location ?? '',
+```
+
+**Replace** with (cast once at the top of the block, before these lines):
+```ts
+const contact = (raw.contact as Record<string, unknown>) ?? {}
+const fixed: ResumeData = {
+  contact: {
+    fullName: typeof contact.fullName === 'string' ? contact.fullName : '',
+    email: typeof contact.email === 'string' ? contact.email : '',
+    phone: typeof contact.phone === 'string' ? contact.phone : '',
+    linkedin: typeof contact.linkedin === 'string' ? contact.linkedin : '',
+    location: typeof contact.location === 'string' ? contact.location : '',
+  },
+```
+
+---
+
+## FIX 8 — `ResumePreview.tsx` — fast-refresh + useMemo warning
+
+**File:** `src/components/ResumePreview.tsx`
+
+### 8a — Move constants to a new file
+
+**Create a new file:** `src/components/resumePreviewConstants.ts`
+
+**Put this content in it:**
+```ts
+import type { Template } from '../types/resume'
+
+export const templatesList: { id: Template; label: string; colorDot: string }[] = [
+  { id: 'classic', label: 'Classic', colorDot: 'bg-zinc-400' },
+  { id: 'modern', label: 'Modern', colorDot: 'bg-blue-500' },
+  { id: 'executive', label: 'Executive', colorDot: 'bg-amber-500' },
+  { id: 'minimalist', label: 'Minimalist', colorDot: 'bg-teal-500' },
+  { id: 'creative', label: 'Creative', colorDot: 'bg-rose-500' },
+  { id: 'compact', label: 'Compact', colorDot: 'bg-sky-500' },
+  { id: 'professional', label: 'Professional', colorDot: 'bg-slate-600' },
+  { id: 'technical', label: 'Technical', colorDot: 'bg-emerald-500' },
+  { id: 'academic', label: 'Academic', colorDot: 'bg-violet-500' },
+  { id: 'clean', label: 'Clean', colorDot: 'bg-teal-400' },
+]
+
+export const themeColors = [
+  { value: '#b91c1c', label: 'Crimson', bgClass: 'bg-rose-500' },
+  { value: '#7c3aed', label: 'Violet', bgClass: 'bg-violet-500' },
+  { value: '#2563eb', label: 'Royal Blue', bgClass: 'bg-blue-600' },
+  { value: '#0f766e', label: 'Teal/Emerald', bgClass: 'bg-teal-700' },
+  { value: '#b45309', label: 'Bronze/Amber', bgClass: 'bg-amber-700' },
+  { value: '#334155', label: 'Graphite', bgClass: 'bg-slate-600' },
+]
+```
+
+**In `ResumePreview.tsx`:** Delete the `templatesList` and `themeColors` constant blocks. Add this import at the top:
+```ts
+export { templatesList, themeColors } from './resumePreviewConstants'
+```
+
+Wait — re-exporting from a component file still triggers the fast-refresh rule. Instead, **do not re-export from ResumePreview.tsx at all**. Remove the exports from ResumePreview.tsx completely.
+
+**Update the two files that import from ResumePreview:**
+
+In `src/pages/EditorPage.tsx`, change:
+```ts
+import ResumePreview, { templatesList } from '../components/ResumePreview'
+```
+To:
+```ts
+import ResumePreview from '../components/ResumePreview'
+import { templatesList } from '../components/resumePreviewConstants'
+```
+
+In `src/components/DesignStylePanel.tsx`, change:
+```ts
+import { themeColors } from './ResumePreview'
+```
+To:
+```ts
+import { themeColors } from './resumePreviewConstants'
+```
+
+### 8b — Fix the `handleMoveSection` useMemo warning (line 302/314)
+
+**Find in ResumePreview.tsx** (around line 302):
+```ts
+const handleMoveSection = (sectionId: SectionKey, direction: 'up' | 'down') => {
+  ...
+}
+const reorderContextValue = useMemo(() => ({ moveSection: handleMoveSection }), [handleMoveSection])
+```
+
+**Replace** by wrapping `handleMoveSection` in `useCallback`:
+```ts
+const handleMoveSection = useCallback((sectionId: SectionKey, direction: 'up' | 'down') => {
+  const idx = sectionOrder.indexOf(sectionId)
+  if (idx === -1) return
+  const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+  if (swapIdx < 0 || swapIdx >= sectionOrder.length) return
+  const updated = [...sectionOrder]
+  ;[updated[idx], updated[swapIdx]] = [updated[swapIdx], updated[idx]]
+  if (onSectionOrderChange) {
+    onSectionOrderChange(updated)
+  }
+}, [sectionOrder, onSectionOrderChange])
+
+const reorderContextValue = useMemo(() => ({ moveSection: handleMoveSection }), [handleMoveSection])
+```
+
+Make sure `useCallback` is imported at the top of `ResumePreview.tsx`.
+
+---
+
+## FIX 9 — `PreviewSectionWrapper.tsx` — 2 fast-refresh errors
+
+**File:** `src/components/PreviewSectionWrapper.tsx`
+
+**Problem:** Lines 13 and 17/19 export non-component things (`useSectionReorder`, `SectionReorderProvider`, `isSectionKey`) from a file that also exports a default component.
+
+**Fix — create a new file:** `src/components/sectionReorderContext.ts`
+
+**Put this in it** (cut from PreviewSectionWrapper.tsx):
+```ts
+import { createContext, useContext } from 'react'
+
+export type SectionKey = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
+
+interface SectionReorderContextType {
+  moveSection: (sectionId: SectionKey, direction: 'up' | 'down') => void
+}
+
+const SectionReorderContext = createContext<SectionReorderContextType | null>(null)
+
+export function useSectionReorder() {
+  return useContext(SectionReorderContext)
+}
+
+export const SectionReorderProvider = SectionReorderContext.Provider
+
+export function isSectionKey(id: string): id is SectionKey {
+  const VALID_KEYS: SectionKey[] = ['contact', 'summary', 'experience', 'education', 'skills', 'languages', 'projects', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer']
+  return VALID_KEYS.includes(id as SectionKey)
 }
 ```
 
-This keeps dev DX intact while being clean in production.
-
----
-
-## TASK 7 — Add GitHub Actions CI for tests
-
-**Why:** The repo has a `react-doctor` workflow but no test runner CI. Tests should run on every push and PR.
-
-**Create:** `.github/workflows/ci.yml`
-
-```yaml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder' }}
+**In `PreviewSectionWrapper.tsx`:** Remove those exports and import from the new file instead:
+```ts
+import { SectionReorderProvider, useSectionReorder, isSectionKey, type SectionKey } from './sectionReorderContext'
 ```
 
-Commit: `ci: add test and build workflow`
+Remove the `createContext` import if it's no longer used in that file.
+
+**Find every other file that imports from `PreviewSectionWrapper`** and update those imports too:
+```bash
+grep -rn "from.*PreviewSectionWrapper" src/
+```
+For each result, change the import of `useSectionReorder`, `SectionReorderProvider`, `isSectionKey`, `SectionKey` to come from `./sectionReorderContext` (adjust relative path as needed).
 
 ---
 
-## TASK 8 — Add test coverage thresholds to vitest config
+## FIX 10 — `ModernTemplate.tsx` — unused variable `_dragSection`
 
-**File:** `vitest.config.ts`
+**File:** `src/components/templates/ModernTemplate.tsx`
 
-Add coverage configuration so you can track progress:
-
-```typescript
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      include: ['src/utils/**/*.ts'],
-      exclude: ['src/utils/__tests__/**'],
-      thresholds: {
-        lines: 40,
-        functions: 40,
-        branches: 30,
-      },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-})
+**Find line 45:**
+```ts
+const renderPreviewWrapper = useCallback((sectionId: string, children: React.ReactNode, _dragSection?: string) => (
 ```
 
-Install coverage provider: `npm install -D @vitest/coverage-v8`
+The parameter `_dragSection` is prefixed with `_` (which normally suppresses the warning) but ESLint still flags it. Fix by removing the parameter entirely since it's never used:
 
-Run with: `npm run test -- --coverage`
-
----
-
-## TASK 9 — Fix atsEvaluator.ts naming confusion
-
-**File:** `src/utils/atsEvaluator.ts` — currently only 5 lines, just re-exports from other modules.
-
-The name `atsEvaluator` implies it's the main scoring engine, but it's a barrel file. This confuses anyone reading the codebase.
-
-**Option A (preferred):** Rename to `src/utils/atsEvaluatorAPI.ts` or `src/utils/index.ts` to signal it's an aggregation point. Update all imports accordingly.
-
-**Option B:** Add a JSDoc comment at the top explaining its purpose:
-```typescript
-/**
- * Public API barrel for the ATS evaluation engine.
- * Import all ATS functionality through this file rather than
- * reaching into individual scoring modules directly.
- */
+```ts
+const renderPreviewWrapper = useCallback((sectionId: string, children: React.ReactNode) => (
 ```
 
-Option B is lower risk and still improves clarity.
+If any callsite passes a third argument to `renderPreviewWrapper`, those calls will need the third argument removed too. Search for all calls to `renderPreviewWrapper` in that file and remove any third argument.
 
 ---
 
-## TASK 10 — Add a `CONTRIBUTING.md`
+## FIX 11 — Code splitting (bundle 858KB → target under 500KB)
 
-**Why:** The repo is public and open-source. Without contribution guidelines, outside contributors can't onboard. This is a quick win for project maturity.
+**File:** `src/App.tsx`
 
-**Create:** `CONTRIBUTING.md`
+**Current imports (static — everything loads upfront):**
+```ts
+import LandingPage from './pages/LandingPage'
+import PrivacyPage from './pages/PrivacyPage'
+import EditorPage from './pages/EditorPage'
+import EditorLayout from './layouts/EditorLayout'
+import NotFoundPage from './pages/NotFoundPage'
+```
 
+**Replace** with lazy imports and add `Suspense`:
+```ts
+import { useState, useEffect, Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const EditorPage = lazy(() => import('./pages/EditorPage'))
+const EditorLayout = lazy(() => import('./layouts/EditorLayout'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+```
+
+**Then wrap `<Routes>` in a `<Suspense>` fallback** in the `AppContent` function:
+```tsx
+return (
+  <>
+    {showSplash && <SplashScreen onDone={handleSplashDone} />}
+    <div style={{ display: showSplash ? 'none' : 'block', height: '100vh' }}>
+      <Suspense fallback={<div className="h-screen bg-zinc-950" />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route element={<EditorLayout />}>
+            <Route path="/editor" element={<EditorPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </div>
+  </>
+)
+```
+
+**After this change**, run `npm run build`. The output should show multiple chunk files instead of one large `index-*.js`. The warning about chunks >500KB should be gone.
+
+---
+
+## FIX 12 — Create `CONTRIBUTING.md`
+
+**Create file:** `CONTRIBUTING.md` in the repo root.
+
+**Content:**
 ```markdown
 # Contributing to Seve
 
-Thanks for your interest in contributing!
+Thanks for your interest! Seve is open source and welcomes contributions.
 
-## Setup
+## Local setup
 
 ```bash
 git clone https://github.com/wacim-abdellli/seve.git
 cd seve
 npm install
 cp .env.example .env
-# Add your Supabase credentials to .env
+# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env
 npm run dev
+# Open http://localhost:5173
 ```
 
 ## Running tests
 
 ```bash
-npm test           # run once
-npm run test:watch # watch mode
+npm test              # run once
+npm run test:watch    # watch mode during development
 ```
 
-## Commit convention
+## Commit style
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/):
+Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-- `feat:` — new feature
-- `fix:` — bug fix
-- `docs:` — documentation only
-- `clean:` — removing files, dead code
-- `chore:` — tooling, config, dependencies
-- `test:` — adding or updating tests
-- `ci:` — CI/CD changes
+| Prefix | When to use |
+|--------|-------------|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `test:` | Adding or updating tests |
+| `refactor:` | Code change that is not a fix or feature |
+| `docs:` | Documentation only |
+| `ci:` | CI/CD config |
+| `clean:` | Removing files or dead code |
+| `chore:` | Tooling, dependencies |
 
-## Pull request checklist
+## Before opening a PR
 
-- [ ] `npm test` passes
-- [ ] `npm run build` passes  
-- [ ] No new `console.log` statements
-- [ ] New logic has tests
+- [ ] `npm run lint` — 0 errors
+- [ ] `npm test` — all tests pass
+- [ ] `npm run build` — clean build
+- [ ] No new `console.log` statements in src/
 
-## Architecture overview
+## Project structure
 
-- `src/utils/ats*.ts` — The ATS scoring engine (pure functions, no React)
-- `src/context/` — App state (resumes, cloud sync)
-- `src/components/ats/` — ATS UI components
-- `src/components/templates/` — The 10 resume templates
-- `src/pages/` — Route-level pages
+```
+src/
+  components/ats/     ATS checker UI (split into focused components)
+  components/form/    Form inputs per resume section
+  components/templates/ The 10 resume templates
+  context/            App state (ResumeDataContext + ResumeSyncContext)
+  hooks/              Custom React hooks
+  pages/              Route-level page components
+  utils/              ATS scoring engine (pure TS, no React)
+  types/              TypeScript interfaces
 ```
 
----
+## Architecture notes
 
-## TASK 11 — Add `aria-label` to icon-only buttons
-
-**Why:** There are several icon-only buttons in the editor (mode rail, toolbar actions) with no accessible label. This is a real accessibility gap.
-
-**How to find them:**
-```bash
-grep -rn "onClick\|button" src/components/ModeRail.tsx src/layouts/EditorLayout.tsx | grep -v "aria-label"
-```
-
-For every `<button>` that contains only an icon (no visible text), add `aria-label`:
-
-```tsx
-// Before
-<button onClick={handlePrint}>
-  <Printer className="w-4 h-4" />
-</button>
-
-// After
-<button onClick={handlePrint} aria-label="Print resume">
-  <Printer className="w-4 h-4" />
-</button>
-```
-
-Also ensure modals have `role="dialog"` and `aria-labelledby` pointing to their heading.
-
----
-
-## TASK 12 — Add `<meta name="author">` and `<link rel="canonical">` to index.html
-
-**File:** `index.html`
-
-Currently missing canonical URL (important for SEO when the same page is reachable via multiple URLs):
-
-```html
-<link rel="canonical" href="https://www.seve.live/" />
-```
-
-Also add structured data (JSON-LD) for better search engine understanding:
-
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Seve",
-  "description": "Free resume builder with ATS checker. No sign-up required.",
-  "url": "https://www.seve.live",
-  "applicationCategory": "BusinessApplication",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
-}
-</script>
+- **Local-first:** All resume data lives in `localStorage`. Supabase sync is optional.
+- **ATS engine:** Pure TypeScript in `src/utils/ats*.ts`. No React. Fully testable.
+- **No `any` types:** Use `unknown` + type guards instead.
+- **No ref-during-render:** Always update `ref.current` inside `useEffect`, never at component top level.
 ```
 
 ---
 
-## Verification checklist
+## FINAL VERIFICATION
 
-After completing all tasks, verify:
+Run all three commands. All must pass clean with zero errors:
 
 ```bash
-# 1. No personal files in root
-ls *.json  # should only show package.json, package-lock.json, tsconfig*.json, vercel.json
+npm run lint
+# Expected: ✖ 0 problems
 
-# 2. Version updated
-cat package.json | grep '"version"'  # → "1.0.0"
+npm test
+# Expected: 76 passed
 
-# 3. All tests pass
-npm test  # should show 60+ tests, all green
-
-# 4. Build passes clean
-npm run build  # no errors, no warnings about missing exports
-
-# 5. No console.log in source
-grep -rn "console\.log" src/ --include="*.ts" --include="*.tsx"  # → 0 results
-
-# 6. AtsChecker.tsx is under 400 lines
-wc -l src/components/AtsChecker.tsx  # → < 400
-
-# 7. Lint passes
-npm run lint  # → 0 errors
+npm run build
+# Expected: built in Xs, no chunk size warnings
 ```
 
----
-
-## Priority order if time is limited
-
-If you can't do everything, do tasks in this order:
-
-1. **TASK 1** — remove personal files (5 min, high impact)
-2. **TASK 5** — add tests (high impact, core product quality)
-3. **TASK 3** — split AtsChecker (medium effort, big architecture win)
-4. **TASK 7** — add CI (15 min, prevents future regressions)
-5. **TASK 2** — version bump (2 min)
-6. **TASK 6** — console.error guard (5 min)
-7. **TASK 4** — split ResumeContext (higher effort, lower urgency)
-8. **TASK 8–12** — polish (do after the above)
-
----
-
-*Guide written by Claude after cloning and reading the full seve codebase at commit `c0d94e6`.*
-*Re-run the analysis after completing these tasks to get an updated rating.*
+If `npm run lint` still shows errors, read the error message carefully — it tells you the exact file and line number. Go fix that specific line using the same patterns shown in this guide.
