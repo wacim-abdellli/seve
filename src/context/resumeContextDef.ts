@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 import type { AppState, ResumeData, ResumeProfile, ResumeStylePreferences, Template } from '../types/resume'
-import type { CloudStatus } from './ResumeContext'
+
+export type CloudStatus = 'local' | 'syncing' | 'synced' | 'error' | 'unsaved'
 
 export interface ResumeContextType {
   resumes: Record<string, ResumeProfile>
