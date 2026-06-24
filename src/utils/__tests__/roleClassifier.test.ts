@@ -36,7 +36,7 @@ describe('computeDomainPenalty', () => {
   })
 
   it('returns negative value for mismatched domains', () => {
-    const penalty = computeDomainPenalty('software_engineering', 'marketing')
+    const penalty = computeDomainPenalty('software_engineering', 'marketing_communications')
     expect(penalty).toBeLessThan(0)
   })
 

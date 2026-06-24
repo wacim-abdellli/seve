@@ -16,7 +16,9 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
     return { hasError: true }
   }
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('App crashed:', error, info)
+    if (import.meta.env.DEV) {
+      console.error('App crashed:', error, info)
+    }
   }
   render() {
     if (this.state.hasError) {
