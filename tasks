@@ -1,0 +1,589 @@
+# Seve — Agent Fix Guide (8.1 → 10/10)
+
+> This guide was written by Claude after cloning and fully reading the seve codebase.
+> Follow the tasks in order. Each section is self-contained.
+> After all tasks are done, run `npm test` and `npm run build` — both must pass clean.
+
+---
+
+## Current state summary
+
+- **18,954 lines** of TypeScript/TSX across 60+ files
+- **Stack:** React 19, TypeScript strict, Vite, Tailwind, Supabase, Framer Motion
+- **Tests:** 13 tests in 2 files (critically low for an ATS scoring engine)
+- **Passing issues:** 0 console.logs, 0 TODO/FIXMEs, clean git history ✅
+- **Failing issues:** god components, low test coverage, root clutter, version stuck at 0.0.0
+
+---
+
+## TASK 1 — Remove personal data and root clutter
+
+**Why:** Personal resume JSON files committed to an open-source repo is a privacy/professionalism issue.
+**Files to delete from the repo (git rm):**
+
+```
+perfect-resume.json
+perfect_resume.json
+wacim-abdelli-resume.json
+```
+
+**Commands:**
+```bash
+git rm perfect-resume.json perfect_resume.json wacim-abdelli-resume.json
+git commit -m "clean: remove personal resume JSON files from repo root"
+```
+
+**Also add to `.gitignore`:**
+```
+*.resume.json
+*-resume.json
+*_resume.json
+```
+
+---
+
+## TASK 2 — Bump version to 1.0.0
+
+**File:** `package.json`
+
+Change:
+```json
+"version": "0.0.0"
+```
+To:
+```json
+"version": "1.0.0"
+```
+
+Commit: `chore: bump version to 1.0.0`
+
+---
+
+## TASK 3 — Split AtsChecker.tsx (1,817 lines → 5 focused files)
+
+**Why:** `src/components/AtsChecker.tsx` is 1,817 lines. It contains multiple distinct UI concerns that should be separate components. This is the single biggest architectural issue.
+
+**Current internal structure of AtsChecker.tsx:**
+- Lines 19–124: `getCategoryTheme()` utility function
+- Lines 125–138: `getResumeHash()` utility
+- Lines 140–169: `ScoreGauge` component
+- Lines 170–201: `MetricTile` component
+- Lines 202–238: constants (SECTION_LABELS, BAR_COLORS, SCAN_STAGES)
+- Lines 239+: `AtsChecker` main component (everything else)
+
+**Action — extract into these files:**
+
+### 3a. `src/components/ats/AtsCheckerUtils.ts`
+Move here:
+- `getCategoryTheme()` function
+- `getResumeHash()` function
+- `SECTION_LABELS` constant
+- `BAR_COLORS` constant
+- `SCAN_STAGES` constant
+
+Export all of them.
+
+### 3b. `src/components/ats/AtsScoreHeader.tsx`
+Extract the top score header section of the checker — the part containing:
+- The animated score gauge display
+- Grade pill + label
+- The 4–6 MetricTile cards (word count, read time, ATS parseability, etc.)
+- The job description input textarea
+
+Props interface:
+```typescript
+interface AtsScoreHeaderProps {
+  report: AtsReport
+  jobDescription: string
+  onUpdateJobDescription: (jd: string) => void
+  isScanning: boolean
+}
+```
+
+### 3c. `src/components/ats/AtsCategorySection.tsx`
+Extract the categories accordion section:
+- The list of expandable category rows
+- Each category's issues list
+- The fix suggestions per issue
+
+Props interface:
+```typescript
+interface AtsCategorySectionProps {
+  categories: AtsCategoryScore[]
+  expandedCategory: string | null
+  onToggleCategory: (id: string) => void
+  onNavigateToSection?: (section: string) => void
+}
+```
+
+### 3d. `src/components/ats/AtsSkillsMatrix.tsx`
+Extract the skills matrix tab/panel:
+- The radar/bar chart showing matched vs missing keywords
+- The matched keywords list
+- The missing keywords list with "Add to resume" affordances
+
+### 3e. `src/components/ats/AtsGuidePanel.tsx`
+Extract the guide/reference panel:
+- Power verbs list
+- Formatting rules
+- Issue explanations reference
+
+**After extraction, `AtsChecker.tsx` should be ~300 lines** — just the orchestration: state, the tab switcher, and importing/composing the sub-components above.
+
+**Import pattern in the refactored AtsChecker.tsx:**
+```typescript
+import { AtsScoreHeader } from './ats/AtsScoreHeader'
+import { AtsCategorySection } from './ats/AtsCategorySection'
+import { AtsSkillsMatrix } from './ats/AtsSkillsMatrix'
+import { AtsGuidePanel } from './ats/AtsGuidePanel'
+import { getCategoryTheme, getResumeHash, SCAN_STAGES } from './ats/AtsCheckerUtils'
+```
+
+Note: `src/components/ats/` already exists with: `AtsCategoryBars.tsx`, `AtsGradePill.tsx`, `AtsMetricTile.tsx`, `AtsScoreGauge.tsx`, `AtsSpectrumBar.tsx`, `StatBadge.tsx`. Reuse these — don't duplicate them.
+
+---
+
+## TASK 4 — Split ResumeContext.tsx (819 lines → 3 focused files)
+
+**Why:** One monolithic context with all app state causes the entire tree to re-render on any state change.
+
+**Current file:** `src/context/ResumeContext.tsx` — 819 lines containing:
+- Cloud sync logic (Supabase fetch/push, conflict resolution, deleted IDs)
+- Resume CRUD (create, duplicate, delete, update fields)
+- Undo/redo history stack
+- Template + style preferences
+- Section ordering
+
+**Action — split into:**
+
+### 4a. `src/context/ResumeDataContext.tsx`
+Responsible for: resume CRUD, selected resume ID, section order, undo/redo.
+State it owns: `state` (AppState), `canUndo`, `canRedo`
+
+### 4b. `src/context/ResumeSyncContext.tsx`
+Responsible for: Supabase cloud sync, conflict resolution, deleted IDs tracking.
+State it owns: `cloudStatus`, `cloudError`, `isSaving`, `lastSyncedState`
+
+### 4c. Keep `src/context/ResumeContext.tsx` as a thin composer
+```typescript
+// ResumeContext.tsx — now just composes the two providers
+export function ResumeProvider({ children }: { children: ReactNode }) {
+  return (
+    <ResumeDataProvider>
+      <ResumeSyncProvider>
+        {children}
+      </ResumeSyncProvider>
+    </ResumeDataProvider>
+  )
+}
+```
+
+**Keep `src/context/resumeContextDef.ts` as-is** — it already correctly separates the type definition.
+
+**Important:** `useResume()` hook in `src/hooks/useResume.ts` should keep working unchanged — the hook can pull from whichever context(s) expose the needed values. The split is internal; external API stays the same.
+
+---
+
+## TASK 5 — Expand test coverage (13 → 60+ tests)
+
+**Why:** The ATS scoring engine is the core of this product. Users make real job decisions based on its output. Bugs in scoring logic could hurt real people. 13 tests for 18k lines of code is not enough.
+
+**Add these test files:**
+
+### 5a. `src/utils/__tests__/atsScoring.test.ts`
+
+Test the scoring functions in `atsScoring.ts`. Key cases to cover:
+
+```typescript
+import { describe, it, expect } from 'vitest'
+// Import scoring functions from atsScoring.ts — check exact export names
+
+describe('keyword scoring', () => {
+  it('scores 100 when all JD keywords are in resume')
+  it('scores 0 when no JD keywords match resume')
+  it('is case-insensitive for keyword matching')
+  it('handles synonyms (e.g. "JS" matches "JavaScript")')
+  it('handles empty job description — returns 0, not error')
+  it('handles job description with only stop words — returns 0')
+  it('scores partial matches proportionally')
+})
+
+describe('action verb scoring', () => {
+  it('scores bullets starting with strong verbs higher')
+  it('penalizes "responsible for" / "helped with" / "assisted in"')
+  it('penalizes passive voice ("was given", "was tasked")')
+  it('handles bullets array being empty — returns 0, not error')
+})
+
+describe('quantified results scoring', () => {
+  it('detects percentage metrics (e.g. "increased by 40%")')
+  it('detects dollar amounts (e.g. "$50K", "$1.2M")')
+  it('detects raw numbers (e.g. "led a team of 12")')
+  it('scores 0 when no metrics found')
+  it('handles non-numeric percent symbols without crashing')
+})
+
+describe('section completeness scoring', () => {
+  it('penalizes missing summary')
+  it('penalizes missing experience')
+  it('penalizes missing education')
+  it('penalizes missing skills')
+  it('gives full score when all core sections are present')
+  it('handles optional sections (languages, projects) without penalty')
+})
+
+describe('date consistency scoring', () => {
+  it('accepts MM/YYYY format')
+  it('accepts "Present" as end date')
+  it('penalizes free-text date like "January 2020"')
+  it('penalizes missing dates on experience entries')
+  it('handles empty experience array without crashing')
+})
+
+describe('contact info scoring', () => {
+  it('gives full score with all fields present')
+  it('penalizes missing email')
+  it('penalizes missing phone')
+  it('penalizes missing LinkedIn')
+  it('handles completely empty contact without crashing')
+})
+
+describe('score bounds', () => {
+  it('total score is always between 0 and 100')
+  it('individual section scores are always between 0 and their max')
+  it('perfect resume with matching JD scores above 85')
+  it('empty resume scores below 20')
+})
+```
+
+### 5b. `src/utils/__tests__/atsBullets.test.ts`
+
+```typescript
+describe('bullet audit', () => {
+  it('flags "Responsible for managing..." as weak')
+  it('flags "Worked on..." as weak')
+  it('flags "Helped with..." as weak')
+  it('does not flag "Architected payment pipeline..." as weak')
+  it('does not flag "Reduced latency by 42%..." as weak')
+  it('detects missing quantification in experience bullets')
+  it('handles empty bullets array without crashing')
+  it('handles bullets with only whitespace without crashing')
+  it('handles very long bullets (500+ chars) without crashing')
+})
+```
+
+### 5c. `src/utils/__tests__/resumeNormalizer.test.ts` (extend existing)
+
+Add to the existing 3 tests:
+```typescript
+it('normalizes experience with missing optional fields')
+it('normalizes project with no technologies array')
+it('normalizes volunteer with no dates')
+it('round-trips data through normalize without data loss')
+it('handles null input gracefully')
+```
+
+### 5d. `src/utils/__tests__/roleClassifier.test.ts`
+
+```typescript
+describe('role classification', () => {
+  it('classifies "Software Engineer" as tech domain')
+  it('classifies "Marketing Manager" as marketing domain')
+  it('classifies "Product Manager" correctly')
+  it('returns a fallback domain for unknown roles')
+  it('handles empty string job title')
+})
+```
+
+**Target: at least 60 tests total. Run `npm test` after each file — all must pass.**
+
+---
+
+## TASK 6 — Fix the AppErrorBoundary console.error leak
+
+**File:** `src/App.tsx`, line ~28
+
+```typescript
+componentDidCatch(error: Error, info: ErrorInfo) {
+  console.error('App crashed:', error, info)  // ← this is the only console call in the app
+}
+```
+
+In production, `console.error` leaks internal error details to the browser console. Replace with a no-op or a proper error reporting hook:
+
+```typescript
+componentDidCatch(error: Error, _info: ErrorInfo) {
+  // In production, send to your error tracking service here
+  // e.g. Sentry.captureException(error)
+  if (import.meta.env.DEV) {
+    console.error('App crashed:', error, _info)
+  }
+}
+```
+
+This keeps dev DX intact while being clean in production.
+
+---
+
+## TASK 7 — Add GitHub Actions CI for tests
+
+**Why:** The repo has a `react-doctor` workflow but no test runner CI. Tests should run on every push and PR.
+
+**Create:** `.github/workflows/ci.yml`
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder' }}
+```
+
+Commit: `ci: add test and build workflow`
+
+---
+
+## TASK 8 — Add test coverage thresholds to vitest config
+
+**File:** `vitest.config.ts`
+
+Add coverage configuration so you can track progress:
+
+```typescript
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/utils/**/*.ts'],
+      exclude: ['src/utils/__tests__/**'],
+      thresholds: {
+        lines: 40,
+        functions: 40,
+        branches: 30,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+```
+
+Install coverage provider: `npm install -D @vitest/coverage-v8`
+
+Run with: `npm run test -- --coverage`
+
+---
+
+## TASK 9 — Fix atsEvaluator.ts naming confusion
+
+**File:** `src/utils/atsEvaluator.ts` — currently only 5 lines, just re-exports from other modules.
+
+The name `atsEvaluator` implies it's the main scoring engine, but it's a barrel file. This confuses anyone reading the codebase.
+
+**Option A (preferred):** Rename to `src/utils/atsEvaluatorAPI.ts` or `src/utils/index.ts` to signal it's an aggregation point. Update all imports accordingly.
+
+**Option B:** Add a JSDoc comment at the top explaining its purpose:
+```typescript
+/**
+ * Public API barrel for the ATS evaluation engine.
+ * Import all ATS functionality through this file rather than
+ * reaching into individual scoring modules directly.
+ */
+```
+
+Option B is lower risk and still improves clarity.
+
+---
+
+## TASK 10 — Add a `CONTRIBUTING.md`
+
+**Why:** The repo is public and open-source. Without contribution guidelines, outside contributors can't onboard. This is a quick win for project maturity.
+
+**Create:** `CONTRIBUTING.md`
+
+```markdown
+# Contributing to Seve
+
+Thanks for your interest in contributing!
+
+## Setup
+
+```bash
+git clone https://github.com/wacim-abdellli/seve.git
+cd seve
+npm install
+cp .env.example .env
+# Add your Supabase credentials to .env
+npm run dev
+```
+
+## Running tests
+
+```bash
+npm test           # run once
+npm run test:watch # watch mode
+```
+
+## Commit convention
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation only
+- `clean:` — removing files, dead code
+- `chore:` — tooling, config, dependencies
+- `test:` — adding or updating tests
+- `ci:` — CI/CD changes
+
+## Pull request checklist
+
+- [ ] `npm test` passes
+- [ ] `npm run build` passes  
+- [ ] No new `console.log` statements
+- [ ] New logic has tests
+
+## Architecture overview
+
+- `src/utils/ats*.ts` — The ATS scoring engine (pure functions, no React)
+- `src/context/` — App state (resumes, cloud sync)
+- `src/components/ats/` — ATS UI components
+- `src/components/templates/` — The 10 resume templates
+- `src/pages/` — Route-level pages
+```
+
+---
+
+## TASK 11 — Add `aria-label` to icon-only buttons
+
+**Why:** There are several icon-only buttons in the editor (mode rail, toolbar actions) with no accessible label. This is a real accessibility gap.
+
+**How to find them:**
+```bash
+grep -rn "onClick\|button" src/components/ModeRail.tsx src/layouts/EditorLayout.tsx | grep -v "aria-label"
+```
+
+For every `<button>` that contains only an icon (no visible text), add `aria-label`:
+
+```tsx
+// Before
+<button onClick={handlePrint}>
+  <Printer className="w-4 h-4" />
+</button>
+
+// After
+<button onClick={handlePrint} aria-label="Print resume">
+  <Printer className="w-4 h-4" />
+</button>
+```
+
+Also ensure modals have `role="dialog"` and `aria-labelledby` pointing to their heading.
+
+---
+
+## TASK 12 — Add `<meta name="author">` and `<link rel="canonical">` to index.html
+
+**File:** `index.html`
+
+Currently missing canonical URL (important for SEO when the same page is reachable via multiple URLs):
+
+```html
+<link rel="canonical" href="https://www.seve.live/" />
+```
+
+Also add structured data (JSON-LD) for better search engine understanding:
+
+```html
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Seve",
+  "description": "Free resume builder with ATS checker. No sign-up required.",
+  "url": "https://www.seve.live",
+  "applicationCategory": "BusinessApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+```
+
+---
+
+## Verification checklist
+
+After completing all tasks, verify:
+
+```bash
+# 1. No personal files in root
+ls *.json  # should only show package.json, package-lock.json, tsconfig*.json, vercel.json
+
+# 2. Version updated
+cat package.json | grep '"version"'  # → "1.0.0"
+
+# 3. All tests pass
+npm test  # should show 60+ tests, all green
+
+# 4. Build passes clean
+npm run build  # no errors, no warnings about missing exports
+
+# 5. No console.log in source
+grep -rn "console\.log" src/ --include="*.ts" --include="*.tsx"  # → 0 results
+
+# 6. AtsChecker.tsx is under 400 lines
+wc -l src/components/AtsChecker.tsx  # → < 400
+
+# 7. Lint passes
+npm run lint  # → 0 errors
+```
+
+---
+
+## Priority order if time is limited
+
+If you can't do everything, do tasks in this order:
+
+1. **TASK 1** — remove personal files (5 min, high impact)
+2. **TASK 5** — add tests (high impact, core product quality)
+3. **TASK 3** — split AtsChecker (medium effort, big architecture win)
+4. **TASK 7** — add CI (15 min, prevents future regressions)
+5. **TASK 2** — version bump (2 min)
+6. **TASK 6** — console.error guard (5 min)
+7. **TASK 4** — split ResumeContext (higher effort, lower urgency)
+8. **TASK 8–12** — polish (do after the above)
+
+---
+
+*Guide written by Claude after cloning and reading the full seve codebase at commit `c0d94e6`.*
+*Re-run the analysis after completing these tasks to get an updated rating.*
