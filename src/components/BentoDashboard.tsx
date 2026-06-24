@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { ResumeData } from '../types/resume'
 import type { SectionType } from './SectionSidebar'
+import { getSectionStatus } from '../utils/completionHelper'
 import { 
   User, 
   FileText, 
@@ -45,62 +46,35 @@ export default function BentoDashboard({ resumeData, onSelectSection }: BentoDas
   
   // Pre-compute all section stats once per resumeData change (instead of per-section function calls)
   const allSectionStats = useMemo(() => {
-    const stats: Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }> = {} as Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }>
+    const boolStatus = getSectionStatus(resumeData)
 
-    const contactInfo = resumeData.contact
-    let contactPoints = 0
-    if (contactInfo.fullName?.trim()) contactPoints += 30
-    if (contactInfo.email?.trim()) contactPoints += 25
-    if (contactInfo.phone?.trim()) contactPoints += 20
-    if (contactInfo.location?.trim()) contactPoints += 15
-    if (contactInfo.linkedin?.trim()) contactPoints += 10
-    stats.contact = { percent: contactPoints, status: contactPoints === 0 ? 'empty' : contactPoints >= 75 ? 'complete' : 'partial', label: 'Contact Info' }
-
-    const summaryLen = resumeData.summary?.trim().length || 0
-    const summaryPercent = Math.min(100, Math.round((summaryLen / 150) * 100))
-    stats.summary = { percent: summaryPercent, status: summaryLen === 0 ? 'empty' : summaryLen > 100 ? 'complete' : 'partial', label: 'Profile Summary' }
-
-    const expItems = resumeData.experience || []
-    if (expItems.length === 0) { stats.experience = { percent: 0, status: 'empty', label: 'Work History' } }
-    else {
-      const first = expItems[0]
-      let expPts = 50
-      if (first.jobTitle?.trim()) expPts += 15
-      if (first.company?.trim()) expPts += 15
-      if (first.bullets && first.bullets.length > 0) expPts += 20
-      const expTotal = Math.min(100, expPts + (expItems.length - 1) * 15)
-      stats.experience = { percent: expTotal, status: expTotal >= 80 ? 'complete' : 'partial', label: 'Work Experience' }
+    const SECTION_LABELS: Record<SectionType, string> = {
+      contact: 'Contact Info', summary: 'Profile Summary', experience: 'Work Experience',
+      education: 'Education', skills: 'Core Skills', languages: 'Languages',
+      projects: 'Projects', awards: 'Awards & Honors', certifications: 'Certifications',
+      interests: 'Interests', publications: 'Publications', references: 'References',
+      volunteer: 'Volunteer',
     }
 
-    const eduItems = resumeData.education || []
-    if (eduItems.length === 0) { stats.education = { percent: 0, status: 'empty', label: 'Academic Path' } }
-    else { const eduTotal = Math.min(100, 60 + (eduItems.length - 1) * 40); stats.education = { percent: eduTotal, status: eduTotal >= 100 ? 'complete' : 'partial', label: 'Education' } }
+    const result = {} as Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }>
 
-    const skillLen = resumeData.skills?.length || 0
-    const skillPercent = Math.min(100, Math.round((skillLen / 8) * 100))
-    stats.skills = { percent: skillPercent, status: skillLen === 0 ? 'empty' : skillLen >= 5 ? 'complete' : 'partial', label: 'Core Skills' }
+    for (const key of Object.keys(boolStatus) as SectionType[]) {
+      const isComplete = boolStatus[key]
+      const isEmpty = (() => {
+        if (key === 'contact') return !resumeData.contact?.fullName?.trim() && !resumeData.contact?.email?.trim()
+        if (key === 'summary') return !resumeData.summary?.trim()
+        const arr = (resumeData as unknown as Record<string, unknown>)[key]
+        return Array.isArray(arr) ? arr.length === 0 : false
+      })()
 
-    const projItems = resumeData.projects || []
-    if (projItems.length === 0) { stats.projects = { percent: 0, status: 'empty', label: 'Projects List' } }
-    else { const projTotal = Math.min(100, 60 + (projItems.length - 1) * 40); stats.projects = { percent: projTotal, status: projTotal >= 100 ? 'complete' : 'partial', label: 'Projects' } }
-
-    const langItems = resumeData.languages || []
-    if (langItems.length === 0) { stats.languages = { percent: 0, status: 'empty', label: 'Languages' } }
-    else { const langPercent = Math.min(100, Math.round((langItems.length / 3) * 100)); stats.languages = { percent: langPercent, status: langItems.length >= 3 ? 'complete' : 'partial', label: 'Languages' } }
-
-    const simpleSections: { key: SectionType; items: unknown[]; label: string }[] = [
-      { key: 'awards', items: resumeData.awards || [], label: 'Awards & Honors' },
-      { key: 'certifications', items: resumeData.certifications || [], label: 'Certifications' },
-      { key: 'interests', items: resumeData.interests || [], label: 'Interests' },
-      { key: 'publications', items: resumeData.publications || [], label: 'Publications' },
-      { key: 'references', items: resumeData.references || [], label: 'References' },
-      { key: 'volunteer', items: resumeData.volunteer || [], label: 'Volunteer' },
-    ]
-    for (const s of simpleSections) {
-      stats[s.key] = s.items.length === 0 ? { percent: 0, status: 'empty', label: s.label } : { percent: 100, status: 'complete', label: s.label }
+      result[key] = {
+        percent: isComplete ? 100 : isEmpty ? 0 : 50,
+        status: isComplete ? 'complete' : isEmpty ? 'empty' : 'partial',
+        label: SECTION_LABELS[key],
+      }
     }
 
-    return stats
+    return result
   }, [resumeData])
 
   const getSectionStats = (section: SectionType) => allSectionStats[section]
