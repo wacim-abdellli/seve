@@ -192,6 +192,7 @@ export interface ResumeProfile {
 export interface AppState {
   resumes: Record<string, ResumeProfile>
   selectedResumeId: string
+  schemaVersion: number
 }
 
 export interface SkillsMatrixItem {

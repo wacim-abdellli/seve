@@ -181,7 +181,7 @@ export function ResumeSyncProvider({ children }: { children: ReactNode }) {
       await syncToCloud(Object.values(currentResumes), userId)
 
       const latestState = stateRef.current
-      setLastSyncedState({ resumes: latestState.resumes, selectedResumeId: latestState.selectedResumeId })
+      setLastSyncedState({ resumes: latestState.resumes, selectedResumeId: latestState.selectedResumeId, schemaVersion: latestState.schemaVersion })
       setCloudStatus('synced')
       setCloudError(null)
       hasMergedCloudRef.current = true

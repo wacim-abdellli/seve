@@ -107,6 +107,7 @@ function loadInitialState(): AppState {
         return {
           resumes: migratedResumes,
           selectedResumeId: migratedSelectedId,
+          schemaVersion: typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 0,
         }
       } else if (parsed.resumeData) {
         let sectionOrder = parsed.sectionOrder
@@ -135,6 +136,7 @@ function loadInitialState(): AppState {
             },
           },
           selectedResumeId: defaultResumeId,
+          schemaVersion: 1,
         }
       }
     } catch (e) {
@@ -144,6 +146,7 @@ function loadInitialState(): AppState {
   return {
     resumes: { [defaultResumeId]: createDefaultResume() },
     selectedResumeId: defaultResumeId,
+    schemaVersion: 1,
   }
 }
 

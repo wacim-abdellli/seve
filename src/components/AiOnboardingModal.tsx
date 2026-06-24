@@ -135,7 +135,7 @@ Instructions for the AI:
   }, [handleDismiss])
 
   return createPortal(
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
+    <div role="dialog" aria-labelledby="ai-import-dialog-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print select-none">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -166,7 +166,7 @@ Instructions for the AI:
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-display flex items-center gap-1.5">
+              <h3 id="ai-import-dialog-heading" className="text-base font-extrabold text-white tracking-tight uppercase font-display flex items-center gap-1.5">
                 AI Resume Fast Fill
               </h3>
               <p className="text-[11px] text-zinc-400 mt-0.5">Use AI to build your resume in seconds</p>
