@@ -1,11 +1,11 @@
-import { useState, useEffect, Component, type ErrorInfo, type ReactNode } from 'react'
+import { useState, useEffect, lazy, Suspense, Component, type ErrorInfo, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
-import LandingPage from './pages/LandingPage'
-import PrivacyPage from './pages/PrivacyPage'
-import EditorPage from './pages/EditorPage'
-import EditorLayout from './layouts/EditorLayout'
-import NotFoundPage from './pages/NotFoundPage'
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const EditorPage = lazy(() => import('./pages/EditorPage'))
+const EditorLayout = lazy(() => import('./layouts/EditorLayout'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -94,14 +94,16 @@ function AppContent() {
     <>
       {showSplash && <SplashScreen onDone={handleSplashDone} />}
       <div style={{ display: showSplash ? 'none' : 'block', height: '100vh' }}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route element={<EditorLayout />}>
-            <Route path="/editor" element={<EditorPage />} />
-          </Route>
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <Suspense fallback={<div className="flex items-center justify-center h-full bg-zinc-950 text-zinc-400 text-sm">Loading...</div>}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route element={<EditorLayout />}>
+              <Route path="/editor" element={<EditorPage />} />
+            </Route>
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </div>
     </>
   )

@@ -64,7 +64,7 @@ const ModernTemplate = memo(function ModernTemplate({
         <SectionHeading label={SECTION_LABELS.summary} color={themeColor} />
         <p className="text-[10px] leading-relaxed text-justify text-slate-750">{summary}</p>
       </div>
-    ), 'summary') : null,
+    )) : null,
 
     experience: experience.length > 0 ? renderPreviewWrapper('experience', (
       <div className="mb-5 resume-section-breakable">
@@ -86,7 +86,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'experience') : null,
+    )) : null,
 
     education: education.length > 0 ? renderPreviewWrapper('education', (
       <div className="mb-5 resume-section-breakable">
@@ -107,14 +107,14 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'education') : null,
+    )) : null,
 
     skills: skills.length > 0 ? renderPreviewWrapper('skills', (
       <div className="mb-2 resume-section">
         <SectionHeading label={SECTION_LABELS.skills} color={themeColor} />
         <ResumeSkillsList skills={skills} className="text-[10px] leading-relaxed text-slate-700" />
       </div>
-    ), 'skills') : null,
+    )) : null,
 
     projects: projects.length > 0 ? renderPreviewWrapper('projects', (
       <div className="mb-5 resume-section-breakable">
@@ -133,7 +133,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'projects') : null,
+    )) : null,
 
     languages: languages.length > 0 ? renderPreviewWrapper('languages', (
       <div className="mb-5 resume-section">
@@ -144,7 +144,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </p>
       </div>
-    ), 'languages') : null,
+    )) : null,
 
     awards: awards.length > 0 ? renderPreviewWrapper('awards', (
       <div className="mb-5 resume-section">
@@ -162,7 +162,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'awards') : null,
+    )) : null,
 
     certifications: certifications.length > 0 ? renderPreviewWrapper('certifications', (
       <div className="mb-5 resume-section">
@@ -180,7 +180,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'certifications') : null,
+    )) : null,
 
     interests: interests.length > 0 ? renderPreviewWrapper('interests', (
       <div className="mb-5 resume-section">
@@ -191,7 +191,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </p>
       </div>
-    ), 'interests') : null,
+    )) : null,
 
     publications: publications.length > 0 ? renderPreviewWrapper('publications', (
       <div className="mb-5 resume-section">
@@ -209,7 +209,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'publications') : null,
+    )) : null,
 
     references: references.length > 0 ? renderPreviewWrapper('references', (
       <div className="mb-5 resume-section">
@@ -227,7 +227,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'references') : null,
+    )) : null,
 
     volunteer: volunteer.length > 0 ? renderPreviewWrapper('volunteer', (
       <div className="mb-5 resume-section">
@@ -245,7 +245,7 @@ const ModernTemplate = memo(function ModernTemplate({
           ))}
         </div>
       </div>
-    ), 'volunteer') : null,
+    )) : null,
   }), [summary, experience, education, skills, projects, languages, awards, certifications, interests, publications, references, volunteer, themeColor, renderPreviewWrapper])
 
   return (
