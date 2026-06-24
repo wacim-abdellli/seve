@@ -91,7 +91,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
   }, [onClose])
 
   return createPortal(
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print select-none">
+    <div role="dialog" aria-labelledby="export-dialog-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print select-none">
       <div className="absolute inset-0" onClick={onClose} />
       <div ref={containerRef} className="bg-[#0c0d12] border border-[#b91c1c]/25 rounded-2xl p-6 md:p-8 w-[640px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in overflow-hidden relative">
         {/* Glow ambient */}
@@ -108,7 +108,7 @@ function PrintSettingsModal({ onClose, onContinue }: PrintSettingsModalProps) {
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Export to PDF</h3>
+                <h3 id="export-dialog-heading" className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Export to PDF</h3>
                 <p className="text-[11px] text-zinc-400">Configure browser settings for a perfect PDF</p>
               </div>
             </div>
@@ -257,7 +257,7 @@ function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarning
   }, [onClose])
 
   return createPortal(
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+    <div role="dialog" aria-labelledby="review-dialog-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       <div className="absolute inset-0" onClick={onClose} />
       <div ref={containerRef} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[480px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in relative">
         <div className="flex items-center gap-3 text-amber-500 mb-4">
@@ -267,7 +267,7 @@ function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarning
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Export Review</h3>
+            <h3 id="review-dialog-heading" className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Export Review</h3>
             <p className="text-[11px] text-zinc-400">Please review these warnings before exporting</p>
           </div>
         </div>
@@ -428,7 +428,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
   }
 
   return createPortal(
-    <div role="dialog" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+    <div role="dialog" aria-labelledby="settings-dialog-heading" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
       <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -436,11 +436,11 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
               <Settings className="w-5 h-5 text-[#b91c1c]" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Settings</h3>
+              <h3 id="settings-dialog-heading" className="text-sm font-extrabold tracking-tight text-white uppercase font-display">Settings</h3>
               <p className="text-[11px] text-zinc-400">Manage your resume configuration</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer">
+          <button onClick={onClose} aria-label="Close settings" className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -656,6 +656,7 @@ export default function EditorLayout() {
             <button
               onClick={undo}
               disabled={!canUndo}
+              aria-label="Undo"
               className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="Undo (Ctrl+Z)"
             >
@@ -664,6 +665,7 @@ export default function EditorLayout() {
             <button
               onClick={redo}
               disabled={!canRedo}
+              aria-label="Redo"
               className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="Redo (Ctrl+Y)"
             >
@@ -760,6 +762,7 @@ export default function EditorLayout() {
           </button>
           <button 
             onClick={() => setIsSettingsOpen(true)} 
+            aria-label="Settings"
             className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
             title="Settings"
           >
