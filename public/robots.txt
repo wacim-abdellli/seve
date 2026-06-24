@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /editor
 
-Sitemap: https://seve.live/sitemap.xml
+Sitemap: https://www.seve.live/sitemap.xml

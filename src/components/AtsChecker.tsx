@@ -246,7 +246,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                     <XCircle size={14} />
                   </button>
                 </div>
-                <p className="text-[10px] text-zinc-500 mb-2.5">Paste a job description to analyze keyword overlap, semantic fit, and weighted scoring.</p>
+                <p className="text-[10px] text-zinc-500 mb-2.5">Paste a job description to analyze keyword overlap and weighted ATS scoring.</p>
                 <textarea value={jdDraft} onChange={e => { setJdDraft(e.target.value); draftTouchedRef.current = true }}
                   placeholder="Paste a job description here..."
                   className="w-full h-28 bg-zinc-950/80 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"

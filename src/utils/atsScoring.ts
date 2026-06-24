@@ -279,7 +279,7 @@ export function scoreSemantic(resume: ResumeData, jd: string, lang: string): Ats
   const weight = jd.trim() ? DIMENSION_WEIGHTS.semantic : 0
 
   if (!jd.trim()) {
-    return { key: 'semantic', label: 'Semantic Relevance', score: 0, max, weight, issues }
+    return { key: 'semantic', label: 'Keyword Overlap', score: 0, max, weight, issues }
   }
 
   const resumeText = extractResumeText(resume)
@@ -290,7 +290,7 @@ export function scoreSemantic(resume: ResumeData, jd: string, lang: string): Ats
       id: 'semantic-low-relevance',
       type: 'warning',
       category: 'semantic',
-      issue: lang === 'fr' ? `Faible pertinence sémantique (${score}%)` : `Low semantic relevance (${score}%)`,
+      issue: lang === 'fr' ? `Faible chevauchement de mots-clés (${score}%)` : `Low keyword overlap (${score}%)`,
       fix: lang === 'fr' 
         ? 'Enrichissez votre CV avec le vocabulaire et le contexte du poste' 
         : 'Align your resume context and vocabulary closer to the target job role',
@@ -299,7 +299,7 @@ export function scoreSemantic(resume: ResumeData, jd: string, lang: string): Ats
     })
   }
 
-  return { key: 'semantic', label: 'Semantic Relevance', score, max, weight, issues }
+  return { key: 'semantic', label: 'Keyword Overlap', score, max, weight, issues }
 }
 
 export function scoreKeywords(resume: ResumeData, jd: string, lang: string): AtsCategoryScore {

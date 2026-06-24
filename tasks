@@ -1,117 +1,531 @@
-Full audit summary + DeepSeek agent implementation guide
-Overall verdict: 76/100 — solid B+. The architecture, TypeScript, and ATS engine are genuinely good work. Four critical issues and five warnings need fixing before this is a polished product.
+Now the complete agent guide — 9 precise fixes to get from 84 → 97+:
 
-Fix 1 — Extract the duplicated sidebar JSX (Critical)
-EditorPage.tsx renders the exact same sectionGroups.map() block twice — once for desktop, once for mobile — around 200 lines of copy-paste. This is the highest-priority refactor.
+9 agent-ready fixes, ordered by impact
+
+Fix A — Generate og-preview.png (Critical — SEO blocker)
+Every share on Twitter/LinkedIn/WhatsApp shows a blank card right now. This is the highest-ROI single fix.
 Prompt for DeepSeek:
-In src/pages/EditorPage.tsx, the sectionGroups.map() block that renders the section navigation list is copy-pasted identically for desktop (inside the hidden lg:flex div) and mobile (inside the lg:hidden div). 
+Create a file at public/og-preview.png for the Seve resume builder.
 
-Extract this into a new internal component called SectionNavList, defined at the top of the file:
+Since we can't generate a real PNG in code, create a script at scripts/generate-og.mjs that produces it:
 
-interface SectionNavListProps {
-  isMobile?: boolean
+import { createCanvas } from 'canvas'
+import { writeFileSync } from 'fs'
+
+const canvas = createCanvas(1200, 630)
+const ctx = canvas.getContext('2d')
+
+// Background
+ctx.fillStyle = '#09090b'
+ctx.fillRect(0, 0, 1200, 630)
+
+// Subtle grid
+ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+ctx.lineWidth = 1
+for (let x = 0; x < 1200; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 630); ctx.stroke() }
+for (let y = 0; y < 630; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1200, y); ctx.stroke() }
+
+// Red glow
+const glow = ctx.createRadialGradient(600, 200, 0, 600, 200, 500)
+glow.addColorStop(0, 'rgba(185,28,28,0.25)')
+glow.addColorStop(1, 'transparent')
+ctx.fillStyle = glow; ctx.fillRect(0, 0, 1200, 630)
+
+// Logo S with dot
+ctx.fillStyle = '#ffffff'
+ctx.font = 'bold 120px Georgia, serif'
+ctx.textAlign = 'left'
+ctx.fillText('S', 80, 240)
+ctx.fillStyle = '#b91c1c'
+ctx.beginPath(); ctx.arc(218, 148, 14, 0, Math.PI * 2); ctx.fill()
+ctx.fillStyle = '#ffffff'
+ctx.fillText('eve', 234, 240)
+
+// Tagline
+ctx.fillStyle = '#a1a1aa'
+ctx.font = '32px system-ui, sans-serif'
+ctx.fillText('Free Resume Builder · Smart ATS Checker', 80, 310)
+
+// Badge
+ctx.fillStyle = 'rgba(185,28,28,0.15)'
+ctx.strokeStyle = 'rgba(185,28,28,0.4)'
+ctx.lineWidth = 1.5
+roundRect(ctx, 80, 360, 280, 46, 8)
+ctx.fill(); ctx.stroke()
+ctx.fillStyle = '#f87171'
+ctx.font = 'bold 20px system-ui, sans-serif'
+ctx.fillText('No sign-up required', 100, 390)
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y)
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r); ctx.lineTo(x+w, y+h-r)
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h); ctx.lineTo(x+r, y+h)
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r); ctx.lineTo(x, y+r)
+  ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath()
 }
 
-function SectionNavList({ isMobile = false }: SectionNavListProps) {
-  // move all the sectionGroups.map() logic here
-  // use isMobile to conditionally add `min-h-[52px] active:bg-white/[0.05]` on buttons
+writeFileSync('public/og-preview.png', canvas.toBuffer('image/png'))
+console.log('✓ og-preview.png generated')
+
+Then run: npm install canvas --save-dev && node scripts/generate-og.mjs
+
+If canvas npm package fails, as a fallback: create a placeholder 1200x630 PNG at public/og-preview.png using any tool (Figma, even a screenshot). The file MUST exist or all social sharing cards are broken.
+
+Fix B — Fix the "Semantic Relevance" label in atsScoring.ts (Critical)
+The function was renamed but the user-visible string wasn't touched. It still says "Semantic Relevance" in two places.
+Prompt for DeepSeek:
+In src/utils/atsScoring.ts, find the scoreSemantic() function (around line 276).
+
+Change both occurrences of label: 'Semantic Relevance' to label: 'Keyword Overlap'.
+
+Also change these strings inside the function:
+- issue string: `Low semantic relevance (${score}%)` → `Low keyword overlap (${score}%)`  
+- French issue string: `Faible pertinence sémantique (${score}%)` → `Faible chevauchement de mots-clés (${score}%)`
+- fix string in English: "Align your resume context and vocabulary closer to the target job role" → keep as-is (it's still accurate)
+
+Also in src/components/AtsChecker.tsx line ~249:
+Change: "Paste a job description to analyze keyword overlap, semantic fit, and weighted scoring."
+To: "Paste a job description to analyze keyword overlap and weighted ATS scoring."
+
+This is a label-only fix — do NOT change any logic.
+
+Fix C — Batch Supabase upsert (eliminate N+1 calls)
+Right now syncing 3 resumes fires 6 separate Supabase round-trips. Supabase supports batch upsert in one call.
+Prompt for DeepSeek:
+In src/context/ResumeSyncContext.tsx, find the syncToCloud() function. It currently loops over profiles with a for...of loop, firing a SELECT + UPDATE/INSERT per profile — that's N×2 round-trips.
+
+Replace the entire loop with a single batch upsert:
+
+async function syncToCloud(profiles: ResumeProfile[], userId: string) {
+  if (!isSupabaseConfigured || !supabase) return
+
+  const rows = profiles.map(p => ({
+    id: p.id,
+    user_id: userId,
+    title: p.title,
+    resume_data: p,
+    updated_at: new Date().toISOString(),
+  }))
+
+  const { error } = await supabase
+    .from('resumes')
+    .upsert(rows, { onConflict: 'id', ignoreDuplicates: false })
+
+  if (error) {
+    console.error('Batch sync failed:', error)
+    throw error
+  }
 }
 
-Then replace both occurrences with <SectionNavList /> and <SectionNavList isMobile />.
-Also replace all 6 hardcoded `13` values with a computed constant:
-const TOTAL_SECTIONS = sectionGroups.flatMap(g => g.sections).length
+Make sure the function signature and all callers remain the same. The return type stays void. Keep the existing error handling around the call site — only replace the internal loop body.
 
-Fix 2 — Remove the magic number 13 (Critical)
+Note: this requires the Supabase resumes table to have a unique constraint on id. Verify this in supabase-schema.sql — if id is the primary key (which it should be), upsert on conflict: 'id' works correctly.
+
+Fix D — Unify BentoDashboard with completionHelper
+Two places compute section completion with different thresholds. When you change one, the other silently diverges.
 Prompt for DeepSeek:
-In src/pages/EditorPage.tsx, find all occurrences of the hardcoded number 13 used as the total section count (completedCount === 13, 13 - completedCount, /13, etc.).
+In src/components/BentoDashboard.tsx, the allSectionStats useMemo block computes its own completion percentages and statuses from scratch (contactPoints logic, summaryPercent, skillLen >= 5 for complete, etc.).
 
-Add this constant after the sectionGroups definition:
-const TOTAL_SECTIONS = sectionGroups.flatMap(g => g.sections).length
+Replace the entire allSectionStats useMemo with one that derives from getSectionStatus() from completionHelper:
 
-Replace every hardcoded 13 with TOTAL_SECTIONS. There are 6 occurrences — make sure you catch all of them including both the desktop and mobile sidebar copies.
+import { getSectionStatus } from '../utils/completionHelper'
 
-Fix 3 — Fix the seve_theme_color state desync bug (Critical)
+const allSectionStats = useMemo(() => {
+  const boolStatus = getSectionStatus(resumeData)
+  
+  // Map boolean complete/incomplete to the percent+status shape BentoDashboard needs
+  // For sections where we want a partial state, compute it here from resumeData directly
+  // but only for display — completeness truth comes from getSectionStatus
+
+  const result: Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }> = {} as Record<SectionType, ...>
+
+  const SECTION_LABELS: Record<SectionType, string> = {
+    contact: 'Contact Info', summary: 'Profile Summary', experience: 'Work Experience',
+    education: 'Education', skills: 'Core Skills', languages: 'Languages',
+    projects: 'Projects', awards: 'Awards & Honors', certifications: 'Certifications',
+    interests: 'Interests', publications: 'Publications', references: 'References',
+    volunteer: 'Volunteer',
+  }
+
+  for (const key of Object.keys(boolStatus) as SectionType[]) {
+    const isComplete = boolStatus[key]
+    // For sections with array data, check if array is empty for 'empty' state
+    const isEmpty = (() => {
+      if (key === 'contact') return !resumeData.contact?.fullName?.trim() && !resumeData.contact?.email?.trim()
+      if (key === 'summary') return !resumeData.summary?.trim()
+      const arr = (resumeData as Record<string, unknown>)[key]
+      return Array.isArray(arr) ? arr.length === 0 : false
+    })()
+    
+    result[key] = {
+      percent: isComplete ? 100 : isEmpty ? 0 : 50,
+      status: isComplete ? 'complete' : isEmpty ? 'empty' : 'partial',
+      label: SECTION_LABELS[key],
+    }
+  }
+  return result
+}, [resumeData])
+
+This removes the divergence — there's now exactly one source of truth for what "complete" means.
+
+Fix E — Add skip-to-content link (Accessibility)
+One line of HTML, massive impact for keyboard and screen reader users.
 Prompt for DeepSeek:
-In src/layouts/EditorLayout.tsx, around line 531, there is this line:
-  const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#b91c1c'
+In src/App.tsx, inside the AppContent function's JSX, add a visually-hidden skip link as the very first element inside the outer fragment, before {showSplash && <SplashScreen ... />}:
 
-And the setter also writes to localStorage:
-  localStorage.setItem('seve_theme_color', color)
 
-This is a bug: themeColor has two sources of truth. Remove the localStorage fallback entirely. The themeColor should only come from the active resume profile in context (activeResume?.themeColor ?? '#b91c1c'). Also remove the localStorage.setItem('seve_theme_color', color) line from the setter — the theme color is already persisted inside the main seve_state AppState via updateActiveResume.
+  href="#main-content"
+  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-zinc-900 focus:text-white focus:rounded-lg focus:text-sm focus:font-bold focus:border focus:border-zinc-700 focus:shadow-xl"
+>
+  Skip to content
+</a>
 
-Fix 4 — Rename computeSemanticRelevance to be honest (Critical)
+Then in src/pages/LandingPage.tsx, add id="main-content" to the <main> element (it already exists as a <main> tag).
+
+In src/layouts/EditorLayout.tsx, add id="main-content" to the main editor content area div (the div that wraps the Outlet and ModeRail).
+
+This is a WCAG 2.1 Level A requirement.
+
+Fix F — Add aria-labelledby to ResumeManager and DownloadGuideModal (Accessibility)
+Both modals have role="dialog" and aria-modal but screen readers announce them as unnamed dialogs.
 Prompt for DeepSeek:
-In src/utils/semanticScorer.ts, rename the function computeSemanticRelevance to computeKeywordOverlapRatio. 
+In src/components/ResumeManager.tsx:
+1. Find the outer dialog div: <div role="dialog" aria-modal="true" ...>
+2. Add aria-labelledby="resume-manager-heading" to it
+3. Find the modal's title heading (likely "Manage Resumes" or similar) and add id="resume-manager-heading" to it
 
-Update all callers:
-- src/utils/atsScoring.ts imports it as computeSemanticRelevance — update the import and the call site
-- The function is called calculateLocalSemanticScore in atsScoring.ts which wraps it — rename that to calculateKeywordOverlapScore
+In src/components/DownloadGuideModal.tsx:
+1. Find the outer dialog div: <div role="dialog" aria-modal="true" ...>  
+2. Add aria-labelledby="download-guide-heading" to it
+3. Find the modal's title element and add id="download-guide-heading" to it
 
-In the ATS checker UI (src/components/ats/AtsScoreHeader.tsx or wherever the "Semantic Score" label appears), change the label from "Semantic" or "Semantic Relevance" to "Keyword Overlap".
+Pattern reference — look at how AiOnboardingModal.tsx already does this correctly with aria-labelledby="ai-import-dialog-heading".
 
-This is a naming fix only — do NOT change any logic.
-
-Fix 5 — Fix the aria-modal gap on AiOnboardingModal (Warning)
+Fix G — Add --coverage flag to CI pipeline
+The coverage thresholds in vitest.config.ts are fully configured but never actually run in CI. Dead config.
 Prompt for DeepSeek:
-In src/components/AiOnboardingModal.tsx, find the outermost overlay div rendered via createPortal. Add role="dialog", aria-modal="true", and aria-labelledby pointing to the modal's heading element. 
+In .github/workflows/ci.yml, find the npm test step:
+  - run: npm test
 
-Pattern to follow — look at how PrintSettingsModal in src/layouts/EditorLayout.tsx already does this correctly:
-  <div role="dialog" aria-labelledby="export-dialog-heading" aria-modal="true" ...>
-    ...
-    <h3 id="export-dialog-heading" ...>Export to PDF</h3>
+Change it to:
+  - run: npm run test -- --coverage
 
-Apply the same pattern to AiOnboardingModal with a matching heading id like "ai-import-dialog-heading".
+This makes vitest collect coverage and enforce the existing thresholds (lines: 40, functions: 40, branches: 30) on every push and PR. If coverage falls below those thresholds, the CI job fails.
 
-Fix 6 — Fix the meta theme-color mismatch (Warning)
+No other changes needed — vitest.config.ts is already correctly configured with provider: 'v8' and the threshold values.
+
+Fix H — Fix sitemap/canonical URL inconsistency
+Canonical says www.seve.live, sitemap says seve.live. Google treats these as different URLs and may split PageRank.
 Prompt for DeepSeek:
-In index.html, change:
-  <meta name="theme-color" content="#7c3aed" />
-to:
-  <meta name="theme-color" content="#b91c1c" />
+Pick www.seve.live as the canonical domain (it's already in the HTML canonical tag and JSON-LD).
 
-This makes the browser chrome color on Android match the actual app accent color.
+In public/sitemap.xml, change:
+  <loc>https://seve.live/</loc>
+  to: <loc>https://www.seve.live/</loc>
 
-Fix 7 — Add a schema version field to AppState (Warning)
+  <loc>https://seve.live/privacy</loc>
+  to: <loc>https://www.seve.live/privacy</loc>
+
+In public/robots.txt, change:
+  Sitemap: https://seve.live/sitemap.xml
+  to: Sitemap: https://www.seve.live/sitemap.xml
+
+That's it. Keep index.html canonical as www.seve.live — it's already correct.
+
+Fix I — Add PWA manifest.json
+Zero code changes to the app. Just a file drop that gets Lighthouse PWA score to green.
 Prompt for DeepSeek:
-In src/types/resume.ts, add a schemaVersion field to the AppState interface:
+Create a new file at public/manifest.json with this content:
 
-export interface AppState {
-  schemaVersion?: number   // add this
-  resumes: Record<string, ResumeProfile>
-  selectedResumeId: string
+{
+  "name": "Seve — Resume Builder",
+  "short_name": "Seve",
+  "description": "Free resume builder with ATS checker. No sign-up required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#b91c1c",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/favicon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/favicon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "en-US",
+  "scope": "/"
 }
 
-In src/context/ResumeDataContext.tsx, inside loadInitialState(), after successfully parsing saved data, check if schemaVersion is missing or less than the current version (define CURRENT_SCHEMA_VERSION = 1 as a constant at the top of the file). For now just set it to 1 on the returned state if missing — this creates a migration hook for future use.
+Then in index.html, inside the <head>, add:
+<link rel="manifest" href="/manifest.json" />
 
-Also set schemaVersion: CURRENT_SCHEMA_VERSION when writing to localStorage via the persist effect.
-
-Fix 8 — Add dirty-state indicator to the save button (Warning/UX)
-Prompt for DeepSeek:
-In src/layouts/EditorLayout.tsx, find the cloud Save button (it likely shows the Cloud icon and triggers syncToCloud). 
-
-Add a visual dirty-state indicator: compare state (the current AppState) against lastSyncedState. If they differ and cloudStatus is not 'saving', add a small orange/amber dot indicator to the save button (a w-2 h-2 rounded-full bg-amber-400 positioned absolute at top-right of the button).
-
-The comparison should be lightweight — use the existing computeResumeHash function on both state.resumes and lastSyncedState.resumes and compare the results. If hashes differ, show the dot. If hashes match or cloudStatus === 'synced', hide it.
-
-Fix 9 — Font display optimization (Warning/Performance)
-Prompt for DeepSeek:
-In index.html, the Google Fonts link currently loads 4 font families synchronously. Replace the single <link href="https://fonts.googleapis.com/css2?..."> with a version that uses font-display=swap parameter:
-
-Change the Google Fonts URL to add &display=swap to the end of the URL query string. Also add <link rel="preload"> hints for the most critical font (EB Garamond, used in the logo):
-
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700&display=swap" />
-
-This prevents fonts from blocking first contentful paint.
+That's it. The favicon PNGs already exist in /public so no additional image work is needed.
 
 Priority order for your agent
-Run these fixes in this sequence — each is independent but 1 and 2 should go together:
+Run these in this exact sequence — each is independent but some are faster than others:
+#FixTimeImpactAog-preview.png5 minCritical — social cards broken right nowBSemantic label strings2 minCritical — misleads usersHsitemap URL1 minQuick winImanifest.json2 minQuick winGCI coverage flag1 minQuick winESkip-to-content5 minAccessibilityFaria-labelledby on 2 modals5 minAccessibilityCSupabase batch upsert15 minPerformanceDBentoDashboard unification20 minCode quality
+Now the complete agent guide — 9 precise fixes to get from 84 → 97+:
 
-Fix 1 + Fix 2 (sidebar dedup + magic number) — same file, do together
-Fix 3 (themeColor desync) — standalone
-Fix 6 (theme-color meta) — 1-line change
-Fix 4 (semantic scorer rename) — pure rename, low risk
-Fix 5 (aria-modal) — accessibility
-Fix 7 (schema version) — future-proofing
-Fix 8 (dirty state indicator) — UX polish
-Fix 9 (font preload) — performance
+9 agent-ready fixes, ordered by impact
+
+Fix A — Generate og-preview.png (Critical — SEO blocker)
+Every share on Twitter/LinkedIn/WhatsApp shows a blank card right now. This is the highest-ROI single fix.
+Prompt for DeepSeek:
+Create a file at public/og-preview.png for the Seve resume builder.
+
+Since we can't generate a real PNG in code, create a script at scripts/generate-og.mjs that produces it:
+
+import { createCanvas } from 'canvas'
+import { writeFileSync } from 'fs'
+
+const canvas = createCanvas(1200, 630)
+const ctx = canvas.getContext('2d')
+
+// Background
+ctx.fillStyle = '#09090b'
+ctx.fillRect(0, 0, 1200, 630)
+
+// Subtle grid
+ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+ctx.lineWidth = 1
+for (let x = 0; x < 1200; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 630); ctx.stroke() }
+for (let y = 0; y < 630; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1200, y); ctx.stroke() }
+
+// Red glow
+const glow = ctx.createRadialGradient(600, 200, 0, 600, 200, 500)
+glow.addColorStop(0, 'rgba(185,28,28,0.25)')
+glow.addColorStop(1, 'transparent')
+ctx.fillStyle = glow; ctx.fillRect(0, 0, 1200, 630)
+
+// Logo S with dot
+ctx.fillStyle = '#ffffff'
+ctx.font = 'bold 120px Georgia, serif'
+ctx.textAlign = 'left'
+ctx.fillText('S', 80, 240)
+ctx.fillStyle = '#b91c1c'
+ctx.beginPath(); ctx.arc(218, 148, 14, 0, Math.PI * 2); ctx.fill()
+ctx.fillStyle = '#ffffff'
+ctx.fillText('eve', 234, 240)
+
+// Tagline
+ctx.fillStyle = '#a1a1aa'
+ctx.font = '32px system-ui, sans-serif'
+ctx.fillText('Free Resume Builder · Smart ATS Checker', 80, 310)
+
+// Badge
+ctx.fillStyle = 'rgba(185,28,28,0.15)'
+ctx.strokeStyle = 'rgba(185,28,28,0.4)'
+ctx.lineWidth = 1.5
+roundRect(ctx, 80, 360, 280, 46, 8)
+ctx.fill(); ctx.stroke()
+ctx.fillStyle = '#f87171'
+ctx.font = 'bold 20px system-ui, sans-serif'
+ctx.fillText('No sign-up required', 100, 390)
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y)
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r); ctx.lineTo(x+w, y+h-r)
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h); ctx.lineTo(x+r, y+h)
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r); ctx.lineTo(x, y+r)
+  ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath()
+}
+
+writeFileSync('public/og-preview.png', canvas.toBuffer('image/png'))
+console.log('✓ og-preview.png generated')
+
+Then run: npm install canvas --save-dev && node scripts/generate-og.mjs
+
+If canvas npm package fails, as a fallback: create a placeholder 1200x630 PNG at public/og-preview.png using any tool (Figma, even a screenshot). The file MUST exist or all social sharing cards are broken.
+
+Fix B — Fix the "Semantic Relevance" label in atsScoring.ts (Critical)
+The function was renamed but the user-visible string wasn't touched. It still says "Semantic Relevance" in two places.
+Prompt for DeepSeek:
+In src/utils/atsScoring.ts, find the scoreSemantic() function (around line 276).
+
+Change both occurrences of label: 'Semantic Relevance' to label: 'Keyword Overlap'.
+
+Also change these strings inside the function:
+- issue string: `Low semantic relevance (${score}%)` → `Low keyword overlap (${score}%)`  
+- French issue string: `Faible pertinence sémantique (${score}%)` → `Faible chevauchement de mots-clés (${score}%)`
+- fix string in English: "Align your resume context and vocabulary closer to the target job role" → keep as-is (it's still accurate)
+
+Also in src/components/AtsChecker.tsx line ~249:
+Change: "Paste a job description to analyze keyword overlap, semantic fit, and weighted scoring."
+To: "Paste a job description to analyze keyword overlap and weighted ATS scoring."
+
+This is a label-only fix — do NOT change any logic.
+
+Fix C — Batch Supabase upsert (eliminate N+1 calls)
+Right now syncing 3 resumes fires 6 separate Supabase round-trips. Supabase supports batch upsert in one call.
+Prompt for DeepSeek:
+In src/context/ResumeSyncContext.tsx, find the syncToCloud() function. It currently loops over profiles with a for...of loop, firing a SELECT + UPDATE/INSERT per profile — that's N×2 round-trips.
+
+Replace the entire loop with a single batch upsert:
+
+async function syncToCloud(profiles: ResumeProfile[], userId: string) {
+  if (!isSupabaseConfigured || !supabase) return
+
+  const rows = profiles.map(p => ({
+    id: p.id,
+    user_id: userId,
+    title: p.title,
+    resume_data: p,
+    updated_at: new Date().toISOString(),
+  }))
+
+  const { error } = await supabase
+    .from('resumes')
+    .upsert(rows, { onConflict: 'id', ignoreDuplicates: false })
+
+  if (error) {
+    console.error('Batch sync failed:', error)
+    throw error
+  }
+}
+
+Make sure the function signature and all callers remain the same. The return type stays void. Keep the existing error handling around the call site — only replace the internal loop body.
+
+Note: this requires the Supabase resumes table to have a unique constraint on id. Verify this in supabase-schema.sql — if id is the primary key (which it should be), upsert on conflict: 'id' works correctly.
+
+Fix D — Unify BentoDashboard with completionHelper
+Two places compute section completion with different thresholds. When you change one, the other silently diverges.
+Prompt for DeepSeek:
+In src/components/BentoDashboard.tsx, the allSectionStats useMemo block computes its own completion percentages and statuses from scratch (contactPoints logic, summaryPercent, skillLen >= 5 for complete, etc.).
+
+Replace the entire allSectionStats useMemo with one that derives from getSectionStatus() from completionHelper:
+
+import { getSectionStatus } from '../utils/completionHelper'
+
+const allSectionStats = useMemo(() => {
+  const boolStatus = getSectionStatus(resumeData)
+  
+  // Map boolean complete/incomplete to the percent+status shape BentoDashboard needs
+  // For sections where we want a partial state, compute it here from resumeData directly
+  // but only for display — completeness truth comes from getSectionStatus
+
+  const result: Record<SectionType, { percent: number; status: 'empty' | 'partial' | 'complete'; label: string }> = {} as Record<SectionType, ...>
+
+  const SECTION_LABELS: Record<SectionType, string> = {
+    contact: 'Contact Info', summary: 'Profile Summary', experience: 'Work Experience',
+    education: 'Education', skills: 'Core Skills', languages: 'Languages',
+    projects: 'Projects', awards: 'Awards & Honors', certifications: 'Certifications',
+    interests: 'Interests', publications: 'Publications', references: 'References',
+    volunteer: 'Volunteer',
+  }
+
+  for (const key of Object.keys(boolStatus) as SectionType[]) {
+    const isComplete = boolStatus[key]
+    // For sections with array data, check if array is empty for 'empty' state
+    const isEmpty = (() => {
+      if (key === 'contact') return !resumeData.contact?.fullName?.trim() && !resumeData.contact?.email?.trim()
+      if (key === 'summary') return !resumeData.summary?.trim()
+      const arr = (resumeData as Record<string, unknown>)[key]
+      return Array.isArray(arr) ? arr.length === 0 : false
+    })()
+    
+    result[key] = {
+      percent: isComplete ? 100 : isEmpty ? 0 : 50,
+      status: isComplete ? 'complete' : isEmpty ? 'empty' : 'partial',
+      label: SECTION_LABELS[key],
+    }
+  }
+  return result
+}, [resumeData])
+
+This removes the divergence — there's now exactly one source of truth for what "complete" means.
+
+Fix E — Add skip-to-content link (Accessibility)
+One line of HTML, massive impact for keyboard and screen reader users.
+Prompt for DeepSeek:
+In src/App.tsx, inside the AppContent function's JSX, add a visually-hidden skip link as the very first element inside the outer fragment, before {showSplash && <SplashScreen ... />}:
+
+
+  href="#main-content"
+  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[99999] focus:px-4 focus:py-2 focus:bg-zinc-900 focus:text-white focus:rounded-lg focus:text-sm focus:font-bold focus:border focus:border-zinc-700 focus:shadow-xl"
+>
+  Skip to content
+</a>
+
+Then in src/pages/LandingPage.tsx, add id="main-content" to the <main> element (it already exists as a <main> tag).
+
+In src/layouts/EditorLayout.tsx, add id="main-content" to the main editor content area div (the div that wraps the Outlet and ModeRail).
+
+This is a WCAG 2.1 Level A requirement.
+
+Fix F — Add aria-labelledby to ResumeManager and DownloadGuideModal (Accessibility)
+Both modals have role="dialog" and aria-modal but screen readers announce them as unnamed dialogs.
+Prompt for DeepSeek:
+In src/components/ResumeManager.tsx:
+1. Find the outer dialog div: <div role="dialog" aria-modal="true" ...>
+2. Add aria-labelledby="resume-manager-heading" to it
+3. Find the modal's title heading (likely "Manage Resumes" or similar) and add id="resume-manager-heading" to it
+
+In src/components/DownloadGuideModal.tsx:
+1. Find the outer dialog div: <div role="dialog" aria-modal="true" ...>  
+2. Add aria-labelledby="download-guide-heading" to it
+3. Find the modal's title element and add id="download-guide-heading" to it
+
+Pattern reference — look at how AiOnboardingModal.tsx already does this correctly with aria-labelledby="ai-import-dialog-heading".
+
+Fix G — Add --coverage flag to CI pipeline
+The coverage thresholds in vitest.config.ts are fully configured but never actually run in CI. Dead config.
+Prompt for DeepSeek:
+In .github/workflows/ci.yml, find the npm test step:
+  - run: npm test
+
+Change it to:
+  - run: npm run test -- --coverage
+
+This makes vitest collect coverage and enforce the existing thresholds (lines: 40, functions: 40, branches: 30) on every push and PR. If coverage falls below those thresholds, the CI job fails.
+
+No other changes needed — vitest.config.ts is already correctly configured with provider: 'v8' and the threshold values.
+
+Fix H — Fix sitemap/canonical URL inconsistency
+Canonical says www.seve.live, sitemap says seve.live. Google treats these as different URLs and may split PageRank.
+Prompt for DeepSeek:
+Pick www.seve.live as the canonical domain (it's already in the HTML canonical tag and JSON-LD).
+
+In public/sitemap.xml, change:
+  <loc>https://seve.live/</loc>
+  to: <loc>https://www.seve.live/</loc>
+
+  <loc>https://seve.live/privacy</loc>
+  to: <loc>https://www.seve.live/privacy</loc>
+
+In public/robots.txt, change:
+  Sitemap: https://seve.live/sitemap.xml
+  to: Sitemap: https://www.seve.live/sitemap.xml
+
+That's it. Keep index.html canonical as www.seve.live — it's already correct.
+
+Fix I — Add PWA manifest.json
+Zero code changes to the app. Just a file drop that gets Lighthouse PWA score to green.
+Prompt for DeepSeek:
+Create a new file at public/manifest.json with this content:
+
+{
+  "name": "Seve — Resume Builder",
+  "short_name": "Seve",
+  "description": "Free resume builder with ATS checker. No sign-up required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#b91c1c",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/favicon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/favicon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "en-US",
+  "scope": "/"
+}
+
+Then in index.html, inside the <head>, add:
+<link rel="manifest" href="/manifest.json" />
+
+That's it. The favicon PNGs already exist in /public so no additional image work is needed.
+
+Priority order for your agent
+Run these in this exact sequence — each is independent but some are faster than others:
+#FixTimeImpactAog-preview.png5 minCritical — social cards broken right nowBSemantic label strings2 minCritical — misleads usersHsitemap URL1 minQuick winImanifest.json2 minQuick winGCI coverage flag1 minQuick winESkip-to-content5 minAccessibilityFaria-labelledby on 2 modals5 minAccessibilityCSupabase batch upsert15 minPerformanceDBentoDashboard unification20 minCode quality
+After all 9 land, re-run npm run test -- --coverage and npm run build — both should be clean 

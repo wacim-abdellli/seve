@@ -49,7 +49,7 @@ export default function AtsSkillsMatrix({ skillsMatrix, semanticScore, resumeDom
               <div>
                 <h4 className="text-base font-bold text-white tracking-wide">Compare with Job Description</h4>
                 <p className="text-xs text-zinc-400 mt-2 max-w-sm leading-relaxed">
-                  Paste a job listing to compare skill keywords automatically. Unlocks the Skills Matrix, matched vocabulary checks, and semantic relevance scores.
+                  Paste a job listing to compare skill keywords automatically. Unlocks the Skills Matrix, matched vocabulary checks, and keyword overlap scores.
                 </p>
               </div>
               <button
