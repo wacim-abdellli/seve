@@ -20,7 +20,6 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   const [starOpenId, setStarOpenId] = useState<string | null>(null)
   const [starFields, setStarFields] = useState<Record<string, { s: string; t: string; a: string; r: string }>>({}) 
   const rafRefs = useRef<Map<HTMLTextAreaElement, number>>(new Map())
-  const bulletKeysRef = useRef<Record<string, string[]>>({})
 
   // Batch textarea height measurement into rAF to prevent layout reflow per keystroke
   const autoResize = useCallback((el: HTMLTextAreaElement) => {
@@ -371,15 +370,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                         {/* Bullets list */}
                         <div className="space-y-2">
                           {exp.bullets.map((b, bIdx) => {
-                            if (!bulletKeysRef.current[exp.id]) {
-                              bulletKeysRef.current[exp.id] = exp.bullets.map(() => crypto.randomUUID())
-                            } else if (bulletKeysRef.current[exp.id].length !== exp.bullets.length) {
-                              const diff = exp.bullets.length - bulletKeysRef.current[exp.id].length
-                              if (diff > 0) {
-                                bulletKeysRef.current[exp.id] = [...bulletKeysRef.current[exp.id], ...Array(diff).fill(null).map(() => crypto.randomUUID())]
-                              }
-                            }
-                            const stableKey = bulletKeysRef.current[exp.id][bIdx] || bIdx
+                            const stableKey = bulletKeysRef.current[exp.id]?.[bIdx] ?? bIdx
                             return (
                               <div
                                 key={stableKey}
