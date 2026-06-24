@@ -76,6 +76,29 @@ Instructions for the AI:
         throw new Error('JSON is not an object.')
       }
 
+      // Handle full AppState backup format (has resumes + selectedResumeId)
+      if (raw.resumes && raw.selectedResumeId) {
+        const resume = raw.resumes[raw.selectedResumeId] || Object.values(raw.resumes)[0]
+        if (resume?.resumeData) {
+          const normalized = normalizeResumeData(resume.resumeData)
+          setParsedData(normalized)
+          setValidationError(null)
+          return
+        }
+      }
+
+      // Handle backup wrapper format (version + type + data)
+      if (raw.version && raw.type && raw.data?.resumes) {
+        const backup = raw.data
+        const resume = backup.resumes[backup.selectedResumeId] || Object.values(backup.resumes)[0]
+        if (resume?.resumeData) {
+          const normalized = normalizeResumeData(resume.resumeData)
+          setParsedData(normalized)
+          setValidationError(null)
+          return
+        }
+      }
+
       const normalized = normalizeResumeData(raw)
       setParsedData(normalized)
       setValidationError(null)
