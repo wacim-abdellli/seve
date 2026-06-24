@@ -10,9 +10,7 @@ import {
   Activity,
   Brain,
   ChevronDown,
-  ChevronUp,
-  Star,
-  Quote
+  ChevronUp
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -30,30 +28,6 @@ const templatesInfo = [
   { id: 'technical', name: 'Technical', font: 'SF Mono / Monospace', desc: 'Monospace tech-optimized template with skill badges.' },
   { id: 'academic', name: 'Academic', font: 'Georgia / Serif', desc: 'Research-focused layout prioritizing education and publications.' },
   { id: 'clean', name: 'Clean', font: 'Inter / Sans-Serif', desc: 'Ultra-minimalist design with maximum whitespace and readability.' },
-]
-
-const testimonials = [
-  {
-    quote: "I was tired of resume builders asking for my credit card after 30 minutes of editing. Seve is completely free, runs locally in the browser, and the ATS checker actually improved my score to 92. Landed a Senior role at Vercel.",
-    author: "Alex Rivers",
-    role: "Senior Staff Engineer",
-    avatarColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    initial: "A"
-  },
-  {
-    quote: "The interface is gorgeous and ultra-responsive. The live PDF print export is perfect — it uses real CSS paging so there's no layout break or weird overlapping text like in other tools.",
-    author: "Elena Rostova",
-    role: "Product Designer",
-    avatarColor: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-    initial: "E"
-  },
-  {
-    quote: "Being able to manage multiple resumes and switch between templates instantly made tailoring my application for different roles super easy. The local-first privacy is a game-changer.",
-    author: "Marcus Vance",
-    role: "Technical Product Manager",
-    avatarColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    initial: "M"
-  }
 ]
 
 const faqItems = [
@@ -157,31 +131,11 @@ export default function LandingPage() {
                 Beautiful templates, smart ATS checker, and optional AI tools — all in your browser. No paywalls, free to try.
               </p>
               
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center">
-                <Button onClick={() => navigate('/editor')} className="font-extrabold gap-2 text-white bg-gradient-to-r from-[#b91c1c] to-[#7f1d1d] hover:opacity-95 hover:scale-[1.02] shadow-[0_0_30px_rgba(185,28,28,0.3)] border border-[#b91c1c]/35 h-11 px-7 transition-all duration-300 font-display rounded-xl w-full sm:w-auto">
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <Button onClick={() => navigate('/editor')} className="font-extrabold gap-2 text-white bg-gradient-to-r from-[#b91c1c] to-[#7f1d1d] hover:opacity-95 hover:scale-[1.02] shadow-[0_0_30px_rgba(185,28,28,0.3)] border border-[#b91c1c]/35 h-11 px-7 transition-all duration-300 font-display rounded-xl">
                   Build Your Resume
                   <ArrowRight size={16} />
                 </Button>
-              </div>
-
-              {/* Social Proof Trust Counter */}
-              <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-muted-foreground select-none">
-                <div className="flex -space-x-2">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-black text-rose-400">A</div>
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-black text-emerald-400">E</div>
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-black text-amber-400">M</div>
-                </div>
-                <div className="flex flex-col items-start text-left">
-                  <div className="flex items-center gap-1">
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <span className="text-white font-bold pl-1">4.9/5 Rating</span>
-                  </div>
-                  <span className="text-[10px]">Trusted by <strong className="text-white">15,000+ applicants</strong> this month</span>
-                </div>
               </div>
 
               <PageViewsWidget />
@@ -510,52 +464,6 @@ export default function LandingPage() {
               </div>
             </div>
           </Card>
-        </div>
-      </section>
-
-      {/* Testimonials / Social Proof Section */}
-      <section className="py-16 md:py-24 border-t border-border bg-zinc-950/40 z-10 relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-xl mx-auto mb-16">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-red-400 mb-2">User Feedback</h2>
-            <h3 className="text-2xl md:text-3xl font-extrabold text-white font-display">What professionals say about Seve</h3>
-            <p className="text-sm text-muted-foreground mt-4 leading-relaxed font-light">
-              Don't take our word for it. Join thousands of candidates who bypassed paywalls and landed job interviews.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 select-text">
-            {testimonials.map((t, idx) => (
-              <Card key={idx} className="flex flex-col justify-between p-6 bg-card/30 border-border/80 hover:border-zinc-700/80 transition-colors relative overflow-hidden">
-                <div className="absolute top-4 right-4 text-zinc-800 opacity-20 pointer-events-none">
-                  <Quote size={40} className="transform rotate-180" />
-                </div>
-                
-                <div className="flex flex-col gap-4">
-                  <div className="flex gap-0.5">
-                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                  </div>
-                  <p className="text-xs text-zinc-300 leading-relaxed font-light italic">
-                    "{t.quote}"
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border/20">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black border ${t.avatarColor}`}>
-                    {t.initial}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white leading-none">{t.author}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1">{t.role}</div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 
