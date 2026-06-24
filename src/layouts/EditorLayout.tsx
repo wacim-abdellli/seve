@@ -528,9 +528,8 @@ export default function EditorLayout() {
   }, [])
 
   
-  const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#b91c1c'
+  const themeColor = activeResume?.themeColor ?? '#b91c1c'
   const setThemeColor = useCallback((color: string) => {
-    localStorage.setItem('seve_theme_color', color)
     updateActiveResume(prev => ({ ...prev, themeColor: color }))
   }, [updateActiveResume])
 

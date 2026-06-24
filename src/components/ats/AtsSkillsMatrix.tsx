@@ -19,7 +19,7 @@ export default function AtsSkillsMatrix({ skillsMatrix, semanticScore, resumeDom
             <Target size={20} className="text-emerald-400" />
           </div>
           <div>
-            <p className="text-[9px] font-black text-zinc-505 uppercase tracking-widest font-mono">Semantic Overlap</p>
+            <p className="text-[9px] font-black text-zinc-505 uppercase tracking-widest font-mono">Keyword Overlap</p>
             <h4 className="text-lg font-black text-white mt-0.5">{semanticScore || 0}% Match</h4>
             <p className="text-[10px] text-zinc-400 leading-normal mt-0.5">Vocabulary relevance compared to the job description tokens.</p>
           </div>

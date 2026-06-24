@@ -23,7 +23,7 @@ import {
   scoreReadability,
   scoreContentDepth,
   scoreAtsParseability,
-  calculateLocalSemanticScore
+  calculateKeywordOverlapScore
 } from './atsScoring'
 import {
   scoreBulletQuality,
@@ -632,7 +632,7 @@ export function generateAtsReportV2(
     .map(c => c.label)
 
   // Compute semantic score
-  const semanticScore = calculateLocalSemanticScore(text, jd)
+  const semanticScore = calculateKeywordOverlapScore(text, jd)
 
   return {
     total,

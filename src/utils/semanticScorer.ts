@@ -5,7 +5,7 @@ function tokenize(text: string): string[] {
     .filter(w => w.length > 2)
 }
 
-export function computeSemanticRelevance(resumeText: string, jdText: string): number {
+export function computeKeywordOverlapRatio(resumeText: string, jdText: string): number {
   if (!jdText.trim()) return 0
 
   const resumeTokens = new Set(tokenize(resumeText))

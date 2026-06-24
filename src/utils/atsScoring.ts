@@ -1,6 +1,6 @@
 import type { ResumeData, AtsCategoryScore, AtsIssue, AtsRatingResult, SectionTier } from '../types/resume'
 import { classifyDomain, computeDomainPenalty } from './roleClassifier'
-import { computeSemanticRelevance } from './semanticScorer'
+import { computeKeywordOverlapRatio } from './semanticScorer'
 import { estimatePageCount, getSectionHeights } from './layoutHelper'
 import { tokenize, matchKeywords } from './atsKeywords'
 import { evaluateSkillsQuality } from './atsMatrix'
@@ -22,8 +22,8 @@ import {
   USABLE_PER_PAGE
 } from './atsConstants'
 
-export function calculateLocalSemanticScore(resumeText: string, jobDescription: string): number {
-  return computeSemanticRelevance(resumeText, jobDescription)
+export function calculateKeywordOverlapScore(resumeText: string, jobDescription: string): number {
+  return computeKeywordOverlapRatio(resumeText, jobDescription)
 }
 
 export function weightKeyword(keyword: string): 'high' | 'medium' | 'low' {
@@ -283,7 +283,7 @@ export function scoreSemantic(resume: ResumeData, jd: string, lang: string): Ats
   }
 
   const resumeText = extractResumeText(resume)
-  const score = computeSemanticRelevance(resumeText, jd)
+  const score = computeKeywordOverlapRatio(resumeText, jd)
 
   if (score < 40) {
     issues.push({
