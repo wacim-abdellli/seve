@@ -90,7 +90,7 @@ function loadInitialState(): AppState {
             createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
             updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
             revision: typeof raw.revision === 'number' ? (raw.revision as number) : 1,
-            resumeData: sanitizeResumeData(raw.resumeData),
+            resumeData: sanitizeResumeData(raw.resumeData as Record<string, unknown> | null),
             selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
             jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
             sectionOrder: Array.isArray(raw.sectionOrder) ? raw.sectionOrder : [...DEFAULT_SECTION_ORDER],
@@ -121,7 +121,7 @@ function loadInitialState(): AppState {
               title: 'My Resume',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-              resumeData: sanitizeResumeData(parsed.resumeData),
+              resumeData: sanitizeResumeData(parsed.resumeData as Record<string, unknown> | null),
               selectedTemplate: (parsed.selectedTemplate as Template) || 'classic' as Template,
               jobDescription: parsed.jobDescription || '',
               sectionOrder: sectionOrder || [...DEFAULT_SECTION_ORDER],
@@ -361,7 +361,7 @@ export function ResumeDataProvider({ children }: { children: ReactNode }) {
 
   const updateResumeData = useCallback((data: ResumeData) => {
     clearResumeTextCache()
-    const sanitized = sanitizeResumeData(data)
+    const sanitized = sanitizeResumeData(data as unknown as Record<string, unknown>)
     pushHistory(sanitized)
     updateActiveResume(prev => ({ ...prev, resumeData: sanitized }))
   }, [pushHistory, updateActiveResume])
@@ -372,7 +372,7 @@ export function ResumeDataProvider({ children }: { children: ReactNode }) {
 
   const importResumeData = useCallback((data: ResumeData) => {
     clearResumeTextCache()
-    const sanitized = sanitizeResumeData(data)
+    const sanitized = sanitizeResumeData(data as unknown as Record<string, unknown>)
     pushHistory(sanitized)
     updateActiveResume(prev => ({ ...prev, resumeData: sanitized }))
   }, [pushHistory, updateActiveResume])

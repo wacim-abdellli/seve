@@ -243,25 +243,29 @@ export default function ResumePreview({
     }
   }
 
-  // Section Order — comes from context via props
-  const activeSectionKeys: SectionKey[] = [
-    'summary', 'experience', 'projects', 'education', 'skills',
-    'languages', 'awards', 'certifications', 'publications', 'volunteer',
-    'interests', 'references'
-  ]
-  const sectionsWithData = activeSectionKeys.filter(key => {
-    if (key === 'summary') return resumeData?.summary && typeof resumeData.summary === 'string' && resumeData.summary.trim() !== ''
-    if (key === 'skills') return resumeData?.skills && Array.isArray(resumeData.skills) && resumeData.skills.length > 0
-    const val = resumeData?.[key as keyof ResumeData]
-    return Array.isArray(val) && val.length > 0
-  })
+  const sectionsWithData = useMemo(() => {
+    const keys: SectionKey[] = [
+      'summary', 'experience', 'projects', 'education', 'skills',
+      'languages', 'awards', 'certifications', 'publications', 'volunteer',
+      'interests', 'references'
+    ]
+    return keys.filter(key => {
+      if (key === 'summary') return resumeData?.summary && typeof resumeData.summary === 'string' && resumeData.summary.trim() !== ''
+      if (key === 'skills') return resumeData?.skills && Array.isArray(resumeData.skills) && resumeData.skills.length > 0
+      const val = resumeData?.[key as keyof ResumeData]
+      return Array.isArray(val) && val.length > 0
+    })
+  }, [resumeData])
 
-  const sectionOrder = [...(propsSectionOrder || [])]
-  sectionsWithData.forEach(sec => {
-    if (!sectionOrder.includes(sec)) {
-      sectionOrder.push(sec)
-    }
-  })
+  const sectionOrder = useMemo(() => {
+    const order = [...(propsSectionOrder || [])]
+    sectionsWithData.forEach(sec => {
+      if (!order.includes(sec)) {
+        order.push(sec)
+      }
+    })
+    return order
+  }, [propsSectionOrder, sectionsWithData])
 
   const [draggedSectionId, setDraggedSectionId] = useState<SectionKey | null>(null)
 
@@ -299,7 +303,7 @@ export default function ResumePreview({
     setDraggedSectionId(null)
   }
 
-  const handleMoveSection = (sectionId: SectionKey, direction: 'up' | 'down') => {
+  const handleMoveSection = useCallback((sectionId: SectionKey, direction: 'up' | 'down') => {
     const idx = sectionOrder.indexOf(sectionId)
     if (idx === -1) return
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1
@@ -309,7 +313,7 @@ export default function ResumePreview({
     if (onSectionOrderChange) {
       onSectionOrderChange(updated)
     }
-  }
+  }, [sectionOrder, onSectionOrderChange])
 
   const reorderContextValue = useMemo(() => ({ moveSection: handleMoveSection }), [handleMoveSection])
 

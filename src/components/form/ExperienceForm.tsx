@@ -14,6 +14,15 @@ interface ExperienceFormProps {
   onChange: (updated: Experience[]) => void
 }
 
+const bulletKeysStore: Record<string, string[]> = {}
+
+function ensureBulletKeys(expId: string, length: number): string[] {
+  if (!bulletKeysStore[expId] || bulletKeysStore[expId].length !== length) {
+    bulletKeysStore[expId] = Array.from({ length }, () => crypto.randomUUID())
+  }
+  return bulletKeysStore[expId]
+}
+
 export default function ExperienceForm({ experience, onChange }: ExperienceFormProps) {
   const [expandedId, setExpandedId] = useState<string | null>(experience[0]?.id || null)
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
@@ -101,8 +110,8 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   }
 
   const handleAddBullet = (expId: string) => {
-    const currentKeys = bulletKeysRef.current[expId] || []
-    bulletKeysRef.current[expId] = [...currentKeys, crypto.randomUUID()]
+    const currentKeys = bulletKeysStore[expId] || []
+    bulletKeysStore[expId] = [...currentKeys, crypto.randomUUID()]
     onChange(
       experience.map((exp) => {
         if (exp.id === expId) {
@@ -114,8 +123,8 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
   }
 
   const handleRemoveBullet = (expId: string, bulletIndex: number) => {
-    const currentKeys = bulletKeysRef.current[expId] || []
-    bulletKeysRef.current[expId] = currentKeys.filter((_, idx) => idx !== bulletIndex)
+    const currentKeys = bulletKeysStore[expId] || []
+    bulletKeysStore[expId] = currentKeys.filter((_, idx) => idx !== bulletIndex)
     onChange(
       experience.map((exp) => {
         if (exp.id === expId) {
@@ -370,7 +379,8 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                         {/* Bullets list */}
                         <div className="space-y-2">
                           {exp.bullets.map((b, bIdx) => {
-                            const stableKey = bulletKeysRef.current[exp.id]?.[bIdx] ?? bIdx
+                            const bulletKeys = ensureBulletKeys(exp.id, exp.bullets.length)
+                            const stableKey = bulletKeys[bIdx] ?? bIdx
                             return (
                               <div
                                 key={stableKey}
