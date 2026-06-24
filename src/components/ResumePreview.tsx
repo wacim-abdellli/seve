@@ -5,7 +5,7 @@ import type { ResumeData, ResumeStylePreferences, Template } from '../types/resu
 import { stylePrefsToCssVars } from '../utils/stylePrefsToCssVars'
 
 import TemplateRenderer from './TemplateRenderer'
-import { SectionReorderProvider } from './PreviewSectionWrapper'
+import { SectionReorderProvider } from './sectionReorder'
 import { useToast } from '../hooks/useToast'
 import { 
   Sparkles,

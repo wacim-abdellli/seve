@@ -1,25 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo, createContext, useContext } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { FileEdit, Info, GripVertical } from 'lucide-react'
-
-export type SectionKey = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'projects' | 'awards' | 'certifications' | 'interests' | 'publications' | 'references' | 'volunteer'
-
-interface SectionReorderContextType {
-  moveSection: (sectionId: SectionKey, direction: 'up' | 'down') => void
-}
-
-const SectionReorderContext = createContext<SectionReorderContextType | null>(null)
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useSectionReorder() {
-  return useContext(SectionReorderContext)
-}
-
-export const SectionReorderProvider = SectionReorderContext.Provider
-
-export function isSectionKey(id: string): id is SectionKey {
-  const VALID_KEYS: SectionKey[] = ['contact', 'summary', 'experience', 'education', 'skills', 'languages', 'projects', 'awards', 'certifications', 'interests', 'publications', 'references', 'volunteer']
-  return VALID_KEYS.includes(id as SectionKey)
-}
+import { useSectionReorder, isSectionKey } from './sectionReorder'
 
 interface PreviewSectionWrapperProps {
   sectionId: string
