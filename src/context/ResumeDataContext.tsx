@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react'
 import type { ResumeData, ResumeProfile, ResumeStylePreferences, AppState, Template } from '../types/resume'
 import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { clearResumeTextCache } from '../utils/atsUtils'
+import { DEFAULT_SECTION_ORDER } from './constants'
+import ResumeDataContextInternal from './resumeDataContextDef'
 
 const LOCAL_STORAGE_KEY = 'seve_state'
 const defaultResumeId = '00000000-0000-0000-0000-000000000001'
@@ -23,10 +25,8 @@ const INITIAL_RESUME_DATA: ResumeData = {
   projects: [],
 }
 
-export const DEFAULT_SECTION_ORDER = ['summary', 'experience', 'projects', 'education', 'languages', 'skills', 'awards', 'certifications', 'publications', 'volunteer', 'interests', 'references']
-
-function sanitizeResumeData(raw: any): ResumeData {
-  const contact = raw?.contact || {}
+function sanitizeResumeData(raw: Record<string, unknown> | null): ResumeData {
+  const contact = (raw?.contact as Record<string, unknown> | undefined) || {}
   return {
     contact: {
       fullName: typeof contact.fullName === 'string' ? contact.fullName : '',
@@ -89,7 +89,7 @@ function loadInitialState(): AppState {
             title: typeof raw.title === 'string' ? raw.title : 'Untitled',
             createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
             updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
-            revision: typeof (raw as any).revision === 'number' ? (raw as any).revision : 1,
+            revision: typeof raw.revision === 'number' ? (raw.revision as number) : 1,
             resumeData: sanitizeResumeData(raw.resumeData),
             selectedTemplate: (typeof raw.selectedTemplate === 'string' ? raw.selectedTemplate : 'classic') as Template,
             jobDescription: typeof raw.jobDescription === 'string' ? raw.jobDescription : '',
@@ -145,40 +145,6 @@ function loadInitialState(): AppState {
     resumes: { [defaultResumeId]: createDefaultResume() },
     selectedResumeId: defaultResumeId,
   }
-}
-
-export interface ResumeDataContextType {
-  state: AppState
-  setState: React.Dispatch<React.SetStateAction<AppState>>
-  activeResume: ResumeProfile
-  resumeData: ResumeData
-  selectedTemplate: Template
-  jobDescription: string
-  sectionOrder: string[]
-  selectResume: (id: string) => void
-  createResume: (title: string) => void
-  duplicateResume: (id: string) => void
-  renameResume: (id: string, newTitle: string) => void
-  deleteResume: (id: string) => Promise<void>
-  updateResumeData: (data: ResumeData) => void
-  updateActiveResume: (updater: (prev: ResumeProfile) => ResumeProfile) => void
-  updateSectionOrder: (newOrder: string[]) => void
-  importResumeData: (data: ResumeData) => void
-  updateStylePrefs: (updater: (prev: ResumeStylePreferences) => ResumeStylePreferences) => void
-  undo: () => void
-  redo: () => void
-  canUndo: boolean
-  canRedo: boolean
-  computeResumeHash: (resumes: AppState['resumes']) => string
-  restoreFromBackup: (backup: AppState) => void
-}
-
-const ResumeDataContextInternal = createContext<ResumeDataContextType | undefined>(undefined)
-
-export function useResumeDataContext(): ResumeDataContextType {
-  const ctx = useContext(ResumeDataContextInternal)
-  if (!ctx) throw new Error('useResumeDataContext must be used within ResumeDataProvider')
-  return ctx
 }
 
 export function ResumeDataProvider({ children }: { children: ReactNode }) {
@@ -251,9 +217,9 @@ export function ResumeDataProvider({ children }: { children: ReactNode }) {
 
   const prevResumeIdRef = useRef(activeResume?.id)
   const resumeDataRef = useRef(resumeData)
-  resumeDataRef.current = resumeData
 
   useEffect(() => {
+    resumeDataRef.current = resumeData
     if (prevResumeIdRef.current !== activeResume?.id) {
       prevResumeIdRef.current = activeResume?.id
       historyRef.current = [resumeDataRef.current]
@@ -261,7 +227,7 @@ export function ResumeDataProvider({ children }: { children: ReactNode }) {
       setCanUndo(false)
       setCanRedo(false)
     }
-  }, [activeResume?.id])
+  }, [activeResume?.id, resumeData])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
