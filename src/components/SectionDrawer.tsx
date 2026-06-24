@@ -111,6 +111,8 @@ export default function SectionDrawer({
       document.removeEventListener('keydown', handleKey)
       document.body.style.overflow = prevOverflow
     }
+  // onClose intentionally omitted: ref pattern keeps listener stable without re-registering
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const meta = sectionMeta[section] || { 
