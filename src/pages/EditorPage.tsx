@@ -49,6 +49,64 @@ const sectionGroups = [
   },
 ]
 
+const TOTAL_SECTIONS = sectionGroups.reduce((acc, g) => acc + g.sections.length, 0)
+
+interface SectionNavListProps {
+  isMobile?: boolean
+}
+
+function SectionNavList({ isMobile = false }: SectionNavListProps) {
+  const { resumeData } = useResume()
+  const ctx = useOutletContext<EditorContextType>()
+  const { activeStudioSection, openDrawer } = ctx
+  const sectionStatus = useMemo(() => getSectionStatus(resumeData), [resumeData])
+
+  return (
+    <>
+      {sectionGroups.map((group) => (
+        <div key={group.label}>
+          <div className="px-4 pt-4 pb-1 flex items-center gap-2.5">
+            <span className="text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: '#52525b' }}>
+              {group.label}
+            </span>
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
+          </div>
+          {group.sections.map((section) => {
+            const isComplete = sectionStatus[section.id]
+            const previewText = getSectionPreview(section.id, resumeData)
+            const Icon = section.icon
+            const isActive = activeStudioSection === section.id
+            const groupStyles = getGroupStyles(group.label, isActive)
+            return (
+              <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-3 px-4 py-[10px] transition-all duration-150 cursor-pointer border-l-2 border-b border-b-zinc-800/25 last:border-b-0 ${isActive ? 'border-l-[var(--accent)] bg-[var(--accent-soft)]' : 'border-l-transparent hover:bg-white/[0.03]'}${isMobile ? ' min-h-[52px] active:bg-white/[0.05]' : ''}`}>
+                <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-150"
+                  style={{ 
+                    background: groupStyles.bg, 
+                    border: groupStyles.border
+                  }}>
+                  <Icon className={`w-[15px] h-[15px] transition-colors ${groupStyles.icon}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">{section.title}</p>
+                  <p className="text-[11px] text-zinc-500 mt-0.5 truncate leading-normal">{previewText}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {isComplete ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.4)]" title="Complete" />
+                  ) : (
+                    <span className="w-1.5 h-1.5 rounded-full border border-zinc-600 bg-transparent shrink-0" title="Incomplete" />
+                  )}
+                  <ChevronRight className="w-4 h-4 text-zinc-700 opacity-0 group-hover:opacity-100 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      ))}
+    </>
+  )
+}
+
 const truncateText = (str: string, max: number) => {
   if (!str) return ''
   return str.length > max ? str.slice(0, max) + '...' : str
@@ -108,8 +166,8 @@ const getGroupStyles = (label: string, isActive: boolean) => {
     case 'OPTIONAL':
     default:
       return {
-        bg: 'rgba(251, 113, 133, 0.06)',
-        border: '1px solid rgba(251, 113, 133, 0.15)',
+        bg: 'rgba(251, 1TOTAL_SECTIONS, TOTAL_SECTIONS3, 0.06)',
+        border: '1px solid rgba(251, 1TOTAL_SECTIONS, TOTAL_SECTIONS3, 0.15)',
         icon: 'text-rose-400/90 group-hover:text-rose-300',
       }
   }
@@ -119,7 +177,7 @@ export default function EditorPage() {
   const { resumeData, selectedTemplate, jobDescription, updateActiveResume } = useResume()
   const ctx = useOutletContext<EditorContextType>()
 
-  const { activeMode, setActiveMode, openDrawer, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint, setShowAiGuide } = ctx
+  const { activeMode, setActiveMode, activeStudioSection, setActiveStudioSection, setPageCount, templateFontSize, onChangeFontSize, templateFontWeight, onChangeFontWeight, stylePrefs, updateStylePrefs, sectionOrder, onSectionOrderChange, mobileView, setMobileView, themeColor, setThemeColor, handlePrint, setShowAiGuide } = ctx
 
   const sectionStatus = useMemo(() => getSectionStatus(resumeData), [resumeData])
   const completedCount = Object.values(sectionStatus).filter(Boolean).length
@@ -249,61 +307,22 @@ export default function EditorPage() {
                       <div>
                         <h2 className="text-base font-semibold text-white">Resume Builder</h2>
                         <p className="text-[11px] text-zinc-500 mt-0.5">
-                          {completedCount === 13 ? 'All sections complete ✓' : `${13 - completedCount} section${13 - completedCount !== 1 ? 's' : ''} remaining`}
+                          {completedCount === TOTAL_SECTIONS ? 'All sections complete ✓' : `${TOTAL_SECTIONS - completedCount} section${TOTAL_SECTIONS - completedCount !== 1 ? 's' : ''} remaining`}
                         </p>
                       </div>
                       <span className="text-[11px] text-zinc-500 font-mono whitespace-nowrap">
-                        {completedCount}/13
+                        {completedCount}/{TOTAL_SECTIONS}
                       </span>
                     </div>
                     <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
                       <div
                         className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${(completedCount / 13) * 100}%`, backgroundColor: 'var(--accent)' }}
+                        style={{ width: `${(completedCount / TOTAL_SECTIONS) * 100}%`, backgroundColor: 'var(--accent)' }}
                       />
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel">
-                    {sectionGroups.map((group) => (
-                      <div key={group.label}>
-                        <div className="px-4 pt-4 pb-1 flex items-center gap-2.5">
-                          <span className="text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: '#52525b' }}>
-                            {group.label}
-                          </span>
-                          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
-                        </div>
-                        {group.sections.map((section) => {
-                          const isComplete = sectionStatus[section.id]
-                          const previewText = getSectionPreview(section.id, resumeData)
-                          const Icon = section.icon
-                          const isActive = activeStudioSection === section.id
-                          const groupStyles = getGroupStyles(group.label, isActive)
-                          return (
-                            <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-3 px-4 py-[10px] transition-all duration-150 cursor-pointer border-l-2 border-b border-b-zinc-800/25 last:border-b-0 ${isActive ? 'border-l-[var(--accent)] bg-[var(--accent-soft)]' : 'border-l-transparent hover:bg-white/[0.03]'}`}>
-                              <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-150"
-                                style={{ 
-                                  background: groupStyles.bg, 
-                                  border: groupStyles.border
-                                }}>
-                                <Icon className={`w-[15px] h-[15px] transition-colors ${groupStyles.icon}`} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white">{section.title}</p>
-                                <p className="text-[11px] text-zinc-500 mt-0.5 truncate leading-normal">{previewText}</p>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                {isComplete ? (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.4)]" title="Complete" />
-                                ) : (
-                                  <span className="w-1.5 h-1.5 rounded-full border border-zinc-600 bg-transparent shrink-0" title="Incomplete" />
-                                )}
-                                <ChevronRight className="w-4 h-4 text-zinc-700 opacity-0 group-hover:opacity-100 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all shrink-0" />
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ))}
+                    <SectionNavList />
                   </div>
                 </>
               ) : (
@@ -331,62 +350,23 @@ export default function EditorPage() {
                       <div>
                         <h2 className="text-base font-semibold text-white">Resume Builder</h2>
                         <p className="text-[11px] text-zinc-500 mt-0.5">
-                          {completedCount === 13 ? 'All sections complete ✓' : `${13 - completedCount} section${13 - completedCount !== 1 ? 's' : ''} remaining`}
+                          {completedCount === TOTAL_SECTIONS ? 'All sections complete ✓' : `${TOTAL_SECTIONS - completedCount} section${TOTAL_SECTIONS - completedCount !== 1 ? 's' : ''} remaining`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-zinc-500 font-mono">{completedCount}/13</span>
+                        <span className="text-[11px] text-zinc-500 font-mono">{completedCount}/{TOTAL_SECTIONS}</span>
                         <button onClick={() => setMobileView('preview')} className="font-bold text-xs h-9 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white transition-colors cursor-pointer active:scale-95">Preview</button>
                       </div>
                     </div>
                     <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
                       <div
                         className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${(completedCount / 13) * 100}%`, backgroundColor: 'var(--accent)' }}
+                        style={{ width: `${(completedCount / TOTAL_SECTIONS) * 100}%`, backgroundColor: 'var(--accent)' }}
                       />
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel pb-16 lg:pb-0">
-                    {sectionGroups.map((group) => (
-                      <div key={group.label}>
-                        <div className="px-4 pt-4 pb-1 flex items-center gap-2.5">
-                          <span className="text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: '#52525b' }}>
-                            {group.label}
-                          </span>
-                          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
-                        </div>
-                        {group.sections.map((section) => {
-                          const isComplete = sectionStatus[section.id]
-                          const previewText = getSectionPreview(section.id, resumeData)
-                          const Icon = section.icon
-                          const isActive = activeStudioSection === section.id
-                          const groupStyles = getGroupStyles(group.label, isActive)
-                          return (
-                            <button key={section.id} type="button" onClick={() => openDrawer(section.id)} className={`w-full text-left group flex items-center gap-3 px-4 py-[10px] min-h-[52px] active:bg-white/[0.05] transition-all cursor-pointer border-l-2 border-b border-b-zinc-800/25 last:border-b-0 ${isActive ? 'border-l-[var(--accent)] bg-[var(--accent-soft)]' : 'border-l-transparent hover:bg-white/[0.03]'}`}>
-                              <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-150"
-                                style={{ 
-                                  background: groupStyles.bg, 
-                                  border: groupStyles.border
-                                }}>
-                                <Icon className={`w-[15px] h-[15px] transition-colors ${groupStyles.icon}`} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white">{section.title}</p>
-                                <p className="text-[11px] text-zinc-500 mt-0.5 truncate leading-normal">{previewText}</p>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                {isComplete ? (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.4)]" title="Complete" />
-                                ) : (
-                                  <span className="w-1.5 h-1.5 rounded-full border border-zinc-600 bg-transparent shrink-0" title="Incomplete" />
-                                )}
-                                <ChevronRight className="w-4 h-4 text-zinc-700 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ))}
+                    <SectionNavList isMobile />
                   </div>
                 </>
               ) : (

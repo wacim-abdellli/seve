@@ -1,554 +1,117 @@
-# Seve — Final 2 Fixes (9.7 → 10.0)
+Full audit summary + DeepSeek agent implementation guide
+Overall verdict: 76/100 — solid B+. The architecture, TypeScript, and ATS engine are genuinely good work. Four critical issues and five warnings need fixing before this is a polished product.
 
-**Read everything before touching any file.**
-**Run the verification block at the bottom when done.**
+Fix 1 — Extract the duplicated sidebar JSX (Critical)
+EditorPage.tsx renders the exact same sectionGroups.map() block twice — once for desktop, once for mobile — around 200 lines of copy-paste. This is the highest-priority refactor.
+Prompt for DeepSeek:
+In src/pages/EditorPage.tsx, the sectionGroups.map() block that renders the section navigation list is copy-pasted identically for desktop (inside the hidden lg:flex div) and mobile (inside the lg:hidden div). 
 
----
+Extract this into a new internal component called SectionNavList, defined at the top of the file:
 
-## FIX 1 — Silence the last lint warning in `SectionDrawer.tsx`
-
-### What the warning says
-```
-SectionDrawer.tsx line 114: React Hook useEffect has a missing dependency: 'onClose'
-```
-
-### Why NOT to add `onClose` to the deps array
-The `useEffect` in this file uses a ref pattern on purpose:
-- `onCloseRef.current = onClose` runs at the top of the effect to keep the ref fresh
-- The event listener uses `onCloseRef.current()` instead of `onClose` directly
-- This means the listener never needs to be re-registered when `onClose` changes
-- Adding `onClose` to the deps array would break this pattern by re-running the whole effect (re-attaching the listener, re-locking scroll, re-focusing) on every render
-
-The solution is to tell ESLint this suppression is intentional with a comment explaining why.
-
-### The fix
-
-Open `src/components/SectionDrawer.tsx`.
-
-Find this exact block (around line 110–115):
-```ts
-    return () => {
-      document.removeEventListener('keydown', handleKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [])
-```
-
-Replace it with:
-```ts
-    return () => {
-      document.removeEventListener('keydown', handleKey)
-      document.body.style.overflow = prevOverflow
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  // onClose intentionally omitted: ref pattern keeps listener stable without re-registering
-  }, [])
-```
-
-That is the entire change — two comment lines added before `}, [])`. Nothing else in the file changes.
-
-### Verify Fix 1
-```bash
-npm run lint
-```
-Expected output:
-```
-✖ 0 problems
-```
-Zero errors, zero warnings. If you still see the warning, the comment is not on the right line — it must be on the line immediately before `}, [])`.
-
----
-
-## FIX 2 — Add tests for `atsReport.ts` (30% → 75%+ coverage)
-
-### Why this matters
-`atsReport.ts` contains the top-level functions that drive everything users see — `evaluateResume()`, `generateAtsReport()`, `calculateTotal()`, `getGrade()`. They are currently at 30% coverage. If these functions have a bug, nothing catches it. This is the most important remaining gap in the codebase.
-
-### Step 1 — Create the test file
-
-Create this file at exactly this path:
-```
-src/utils/__tests__/atsReport.test.ts
-```
-
-Put exactly this content inside it:
-
-```ts
-import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  evaluateResume,
-  calculateTotal,
-  getGrade,
-  generateAtsReport,
-  autoFix,
-} from '../atsReport'
-import { clearResumeTextCache } from '../atsEvaluator'
-import type { ResumeData } from '@/types/resume'
-import type { AtsCategoryScore } from '@/types/resume'
-
-beforeEach(() => clearResumeTextCache())
-
-// ─── Shared fixtures ──────────────────────────────────────────────────────────
-
-const STRONG_RESUME: ResumeData = {
-  contact: {
-    fullName: 'Jane Smith',
-    email: 'jane@example.com',
-    phone: '555-0199',
-    linkedin: 'linkedin.com/in/janesmith',
-    location: 'San Francisco, CA',
-  },
-  summary:
-    'Senior software engineer with 7 years building distributed systems. Led teams of 8+ engineers, reduced infrastructure costs by 35%, and shipped products used by 2M+ users. Expert in React, TypeScript, Node.js, and AWS.',
-  experience: [
-    {
-      id: 'e1',
-      jobTitle: 'Senior Software Engineer',
-      company: 'Stripe',
-      location: 'San Francisco, CA',
-      startDate: '01/2021',
-      endDate: 'Present',
-      current: true,
-      bullets: [
-        'Architected payment pipeline handling $50M/day, reducing latency by 42%',
-        'Led team of 8 engineers through 3 major product launches',
-        'Reduced infrastructure costs by 35% through caching optimization',
-        'Mentored 5 junior engineers, 3 of whom received promotions within 18 months',
-      ],
-    },
-    {
-      id: 'e2',
-      jobTitle: 'Software Engineer',
-      company: 'Datadog',
-      location: 'New York, NY',
-      startDate: '06/2018',
-      endDate: '12/2020',
-      current: false,
-      bullets: [
-        'Built distributed tracing UI handling 10B+ daily spans',
-        'Reduced incident resolution time by 35% through improved alerting',
-      ],
-    },
-  ],
-  education: [
-    {
-      id: 'ed1',
-      degree: 'B.S. Computer Science',
-      school: 'MIT',
-      location: 'Cambridge, MA',
-      graduationDate: '06/2018',
-      gpa: '3.9',
-    },
-  ],
-  skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'PostgreSQL', 'Docker', 'Python', 'Go'],
-  languages: [{ id: 'l1', name: 'English', proficiency: 'Native' }],
-  projects: [
-    {
-      id: 'p1',
-      name: 'Open Source CLI Tool',
-      description: 'Built a CLI tool with 2,000+ GitHub stars for automating deployments',
-      technologies: ['Go', 'Docker'],
-    },
-  ],
-  awards: [],
-  certifications: [],
-  interests: [],
-  publications: [],
-  references: [],
-  volunteer: [],
+interface SectionNavListProps {
+  isMobile?: boolean
 }
 
-const EMPTY_RESUME: ResumeData = {
-  contact: { fullName: '', email: '', phone: '', linkedin: '', location: '' },
-  summary: '',
-  experience: [],
-  education: [],
-  skills: [],
-  languages: [],
-  projects: [],
-  awards: [],
-  certifications: [],
-  interests: [],
-  publications: [],
-  references: [],
-  volunteer: [],
+function SectionNavList({ isMobile = false }: SectionNavListProps) {
+  // move all the sectionGroups.map() logic here
+  // use isMobile to conditionally add `min-h-[52px] active:bg-white/[0.05]` on buttons
 }
 
-const MINIMAL_RESUME: ResumeData = {
-  contact: {
-    fullName: 'Bob Jones',
-    email: 'bob@test.com',
-    phone: '555-0100',
-    linkedin: '',
-    location: 'Austin, TX',
-  },
-  summary: 'Developer with experience in web technologies.',
-  experience: [
-    {
-      id: 'e1',
-      jobTitle: 'Developer',
-      company: 'Acme Corp',
-      location: 'Austin, TX',
-      startDate: '01/2022',
-      endDate: 'Present',
-      current: true,
-      bullets: ['Worked on various projects', 'Helped the team with tasks'],
-    },
-  ],
-  education: [
-    {
-      id: 'ed1',
-      degree: 'B.S. Computer Science',
-      school: 'State University',
-      location: '',
-      graduationDate: '06/2021',
-    },
-  ],
-  skills: ['JavaScript', 'HTML', 'CSS'],
-  languages: [],
-  projects: [],
-  awards: [],
-  certifications: [],
-  interests: [],
-  publications: [],
-  references: [],
-  volunteer: [],
+Then replace both occurrences with <SectionNavList /> and <SectionNavList isMobile />.
+Also replace all 6 hardcoded `13` values with a computed constant:
+const TOTAL_SECTIONS = sectionGroups.flatMap(g => g.sections).length
+
+Fix 2 — Remove the magic number 13 (Critical)
+Prompt for DeepSeek:
+In src/pages/EditorPage.tsx, find all occurrences of the hardcoded number 13 used as the total section count (completedCount === 13, 13 - completedCount, /13, etc.).
+
+Add this constant after the sectionGroups definition:
+const TOTAL_SECTIONS = sectionGroups.flatMap(g => g.sections).length
+
+Replace every hardcoded 13 with TOTAL_SECTIONS. There are 6 occurrences — make sure you catch all of them including both the desktop and mobile sidebar copies.
+
+Fix 3 — Fix the seve_theme_color state desync bug (Critical)
+Prompt for DeepSeek:
+In src/layouts/EditorLayout.tsx, around line 531, there is this line:
+  const themeColor = activeResume?.themeColor || localStorage.getItem('seve_theme_color') || '#b91c1c'
+
+And the setter also writes to localStorage:
+  localStorage.setItem('seve_theme_color', color)
+
+This is a bug: themeColor has two sources of truth. Remove the localStorage fallback entirely. The themeColor should only come from the active resume profile in context (activeResume?.themeColor ?? '#b91c1c'). Also remove the localStorage.setItem('seve_theme_color', color) line from the setter — the theme color is already persisted inside the main seve_state AppState via updateActiveResume.
+
+Fix 4 — Rename computeSemanticRelevance to be honest (Critical)
+Prompt for DeepSeek:
+In src/utils/semanticScorer.ts, rename the function computeSemanticRelevance to computeKeywordOverlapRatio. 
+
+Update all callers:
+- src/utils/atsScoring.ts imports it as computeSemanticRelevance — update the import and the call site
+- The function is called calculateLocalSemanticScore in atsScoring.ts which wraps it — rename that to calculateKeywordOverlapScore
+
+In the ATS checker UI (src/components/ats/AtsScoreHeader.tsx or wherever the "Semantic Score" label appears), change the label from "Semantic" or "Semantic Relevance" to "Keyword Overlap".
+
+This is a naming fix only — do NOT change any logic.
+
+Fix 5 — Fix the aria-modal gap on AiOnboardingModal (Warning)
+Prompt for DeepSeek:
+In src/components/AiOnboardingModal.tsx, find the outermost overlay div rendered via createPortal. Add role="dialog", aria-modal="true", and aria-labelledby pointing to the modal's heading element. 
+
+Pattern to follow — look at how PrintSettingsModal in src/layouts/EditorLayout.tsx already does this correctly:
+  <div role="dialog" aria-labelledby="export-dialog-heading" aria-modal="true" ...>
+    ...
+    <h3 id="export-dialog-heading" ...>Export to PDF</h3>
+
+Apply the same pattern to AiOnboardingModal with a matching heading id like "ai-import-dialog-heading".
+
+Fix 6 — Fix the meta theme-color mismatch (Warning)
+Prompt for DeepSeek:
+In index.html, change:
+  <meta name="theme-color" content="#7c3aed" />
+to:
+  <meta name="theme-color" content="#b91c1c" />
+
+This makes the browser chrome color on Android match the actual app accent color.
+
+Fix 7 — Add a schema version field to AppState (Warning)
+Prompt for DeepSeek:
+In src/types/resume.ts, add a schemaVersion field to the AppState interface:
+
+export interface AppState {
+  schemaVersion?: number   // add this
+  resumes: Record<string, ResumeProfile>
+  selectedResumeId: string
 }
 
-// ─── calculateTotal ───────────────────────────────────────────────────────────
+In src/context/ResumeDataContext.tsx, inside loadInitialState(), after successfully parsing saved data, check if schemaVersion is missing or less than the current version (define CURRENT_SCHEMA_VERSION = 1 as a constant at the top of the file). For now just set it to 1 on the returned state if missing — this creates a migration hook for future use.
 
-describe('calculateTotal', () => {
-  it('returns 0 for empty categories array', () => {
-    expect(calculateTotal([])).toBe(0)
-  })
+Also set schemaVersion: CURRENT_SCHEMA_VERSION when writing to localStorage via the persist effect.
 
-  it('returns 100 when every category scores max', () => {
-    const cats: AtsCategoryScore[] = [
-      { key: 'a', label: 'A', score: 10, max: 10, weight: 1, issues: [], passing: [] },
-      { key: 'b', label: 'B', score: 20, max: 20, weight: 1, issues: [], passing: [] },
-    ]
-    expect(calculateTotal(cats)).toBe(100)
-  })
+Fix 8 — Add dirty-state indicator to the save button (Warning/UX)
+Prompt for DeepSeek:
+In src/layouts/EditorLayout.tsx, find the cloud Save button (it likely shows the Cloud icon and triggers syncToCloud). 
 
-  it('returns 0 when every category scores 0', () => {
-    const cats: AtsCategoryScore[] = [
-      { key: 'a', label: 'A', score: 0, max: 10, weight: 1, issues: [], passing: [] },
-      { key: 'b', label: 'B', score: 0, max: 20, weight: 1, issues: [], passing: [] },
-    ]
-    expect(calculateTotal(cats)).toBe(0)
-  })
+Add a visual dirty-state indicator: compare state (the current AppState) against lastSyncedState. If they differ and cloudStatus is not 'saving', add a small orange/amber dot indicator to the save button (a w-2 h-2 rounded-full bg-amber-400 positioned absolute at top-right of the button).
 
-  it('handles a single category correctly', () => {
-    const cats: AtsCategoryScore[] = [
-      { key: 'a', label: 'A', score: 5, max: 10, weight: 1, issues: [], passing: [] },
-    ]
-    expect(calculateTotal(cats)).toBe(50)
-  })
+The comparison should be lightweight — use the existing computeResumeHash function on both state.resumes and lastSyncedState.resumes and compare the results. If hashes differ, show the dot. If hashes match or cloudStatus === 'synced', hide it.
 
-  it('result is always between 0 and 100', () => {
-    const cats: AtsCategoryScore[] = [
-      { key: 'a', label: 'A', score: 7, max: 10, weight: 2, issues: [], passing: [] },
-      { key: 'b', label: 'B', score: 3, max: 10, weight: 1, issues: [], passing: [] },
-    ]
-    const result = calculateTotal(cats)
-    expect(result).toBeGreaterThanOrEqual(0)
-    expect(result).toBeLessThanOrEqual(100)
-  })
+Fix 9 — Font display optimization (Warning/Performance)
+Prompt for DeepSeek:
+In index.html, the Google Fonts link currently loads 4 font families synchronously. Replace the single <link href="https://fonts.googleapis.com/css2?..."> with a version that uses font-display=swap parameter:
 
-  it('weights heavier categories more', () => {
-    const equalWeight: AtsCategoryScore[] = [
-      { key: 'a', label: 'A', score: 10, max: 10, weight: 1, issues: [], passing: [] },
-      { key: 'b', label: 'B', score: 0, max: 10, weight: 1, issues: [], passing: [] },
-    ]
-    const unequalWeight: AtsCategoryScore[] = [
-      { key: 'a', label: 'A', score: 10, max: 10, weight: 3, issues: [], passing: [] },
-      { key: 'b', label: 'B', score: 0, max: 10, weight: 1, issues: [], passing: [] },
-    ]
-    expect(calculateTotal(unequalWeight)).toBeGreaterThan(calculateTotal(equalWeight))
-  })
-})
+Change the Google Fonts URL to add &display=swap to the end of the URL query string. Also add <link rel="preload"> hints for the most critical font (EB Garamond, used in the logo):
 
-// ─── getGrade ─────────────────────────────────────────────────────────────────
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700&display=swap" />
 
-describe('getGrade', () => {
-  it('returns A / Excellent for score >= 90', () => {
-    expect(getGrade(90)).toEqual({ grade: 'A', gradeLabel: 'Excellent' })
-    expect(getGrade(100)).toEqual({ grade: 'A', gradeLabel: 'Excellent' })
-    expect(getGrade(95)).toEqual({ grade: 'A', gradeLabel: 'Excellent' })
-  })
+This prevents fonts from blocking first contentful paint.
 
-  it('returns B+ / Great for score 80–89', () => {
-    expect(getGrade(80)).toEqual({ grade: 'B+', gradeLabel: 'Great' })
-    expect(getGrade(85)).toEqual({ grade: 'B+', gradeLabel: 'Great' })
-    expect(getGrade(89)).toEqual({ grade: 'B+', gradeLabel: 'Great' })
-  })
+Priority order for your agent
+Run these fixes in this sequence — each is independent but 1 and 2 should go together:
 
-  it('returns B / Good for score 70–79', () => {
-    expect(getGrade(70)).toEqual({ grade: 'B', gradeLabel: 'Good' })
-    expect(getGrade(75)).toEqual({ grade: 'B', gradeLabel: 'Good' })
-  })
-
-  it('returns C+ / Fair for score 60–69', () => {
-    expect(getGrade(60)).toEqual({ grade: 'C+', gradeLabel: 'Fair' })
-    expect(getGrade(65)).toEqual({ grade: 'C+', gradeLabel: 'Fair' })
-  })
-
-  it('returns C / Needs Work for score 50–59', () => {
-    expect(getGrade(50)).toEqual({ grade: 'C', gradeLabel: 'Needs Work' })
-    expect(getGrade(55)).toEqual({ grade: 'C', gradeLabel: 'Needs Work' })
-  })
-
-  it('returns D / Poor for score 40–49', () => {
-    expect(getGrade(40)).toEqual({ grade: 'D', gradeLabel: 'Poor' })
-    expect(getGrade(45)).toEqual({ grade: 'D', gradeLabel: 'Poor' })
-  })
-
-  it('returns F / Critical for score below 40', () => {
-    expect(getGrade(39)).toEqual({ grade: 'F', gradeLabel: 'Critical' })
-    expect(getGrade(0)).toEqual({ grade: 'F', gradeLabel: 'Critical' })
-  })
-
-  it('handles boundary values exactly', () => {
-    expect(getGrade(89).grade).toBe('B+')
-    expect(getGrade(90).grade).toBe('A')
-    expect(getGrade(79).grade).toBe('B')
-    expect(getGrade(80).grade).toBe('B+')
-  })
-})
-
-// ─── evaluateResume ───────────────────────────────────────────────────────────
-
-describe('evaluateResume', () => {
-  it('returns a total score between 0 and 100', () => {
-    const result = evaluateResume(STRONG_RESUME, '')
-    expect(result.total).toBeGreaterThanOrEqual(0)
-    expect(result.total).toBeLessThanOrEqual(100)
-  })
-
-  it('strong resume scores higher than empty resume', () => {
-    const strong = evaluateResume(STRONG_RESUME, '')
-    const empty = evaluateResume(EMPTY_RESUME, '')
-    expect(strong.total).toBeGreaterThan(empty.total)
-  })
-
-  it('returns a grade string', () => {
-    const result = evaluateResume(STRONG_RESUME, '')
-    expect(typeof result.grade).toBe('string')
-    expect(result.grade.length).toBeGreaterThan(0)
-  })
-
-  it('returns a language of en or fr', () => {
-    const result = evaluateResume(STRONG_RESUME, 'React TypeScript engineer')
-    expect(['en', 'fr']).toContain(result.language)
-  })
-
-  it('includes all required section scores', () => {
-    const result = evaluateResume(STRONG_RESUME, '')
-    expect(result.sections).toHaveProperty('sectionCompleteness')
-    expect(result.sections).toHaveProperty('keywordMatch')
-    expect(result.sections).toHaveProperty('formattingSafety')
-    expect(result.sections).toHaveProperty('actionVerbs')
-    expect(result.sections).toHaveProperty('quantifiedResults')
-    expect(result.sections).toHaveProperty('contactInfo')
-    expect(result.sections).toHaveProperty('dateConsistency')
-    expect(result.sections).toHaveProperty('lengthAppropriateness')
-  })
-
-  it('includes passing and failing arrays', () => {
-    const result = evaluateResume(STRONG_RESUME, '')
-    expect(Array.isArray(result.passing)).toBe(true)
-    expect(Array.isArray(result.failing)).toBe(true)
-  })
-
-  it('includes reportV2 with categories', () => {
-    const result = evaluateResume(STRONG_RESUME, 'React TypeScript engineer')
-    expect(result.reportV2).toBeDefined()
-    expect(Array.isArray(result.reportV2.categories)).toBe(true)
-    expect(result.reportV2.categories.length).toBeGreaterThan(0)
-  })
-
-  it('keyword match is higher when JD matches resume skills', () => {
-    const withJD = evaluateResume(STRONG_RESUME, 'React TypeScript Node.js AWS engineer')
-    const withoutJD = evaluateResume(STRONG_RESUME, '')
-    expect(withJD.sections.keywordMatch).toBeGreaterThanOrEqual(withoutJD.sections.keywordMatch)
-  })
-
-  it('empty resume scores below 30', () => {
-    const result = evaluateResume(EMPTY_RESUME, '')
-    expect(result.total).toBeLessThan(30)
-  })
-
-  it('does not crash with empty job description', () => {
-    expect(() => evaluateResume(STRONG_RESUME, '')).not.toThrow()
-  })
-
-  it('does not crash with very long job description', () => {
-    const longJD = 'React TypeScript Node.js '.repeat(200)
-    expect(() => evaluateResume(STRONG_RESUME, longJD)).not.toThrow()
-  })
-
-  it('all section scores are non-negative', () => {
-    const result = evaluateResume(MINIMAL_RESUME, 'developer')
-    for (const [, value] of Object.entries(result.sections)) {
-      expect(value).toBeGreaterThanOrEqual(0)
-    }
-  })
-})
-
-// ─── generateAtsReport ────────────────────────────────────────────────────────
-
-describe('generateAtsReport', () => {
-  it('returns a report with a total between 0 and 100', () => {
-    const report = generateAtsReport(STRONG_RESUME, '')
-    expect(report.total).toBeGreaterThanOrEqual(0)
-    expect(report.total).toBeLessThanOrEqual(100)
-  })
-
-  it('returns categories array with entries', () => {
-    const report = generateAtsReport(STRONG_RESUME, 'React TypeScript')
-    expect(Array.isArray(report.categories)).toBe(true)
-    expect(report.categories.length).toBeGreaterThan(0)
-  })
-
-  it('each category has key, label, score, max, weight', () => {
-    const report = generateAtsReport(STRONG_RESUME, '')
-    for (const cat of report.categories) {
-      expect(typeof cat.key).toBe('string')
-      expect(typeof cat.label).toBe('string')
-      expect(typeof cat.score).toBe('number')
-      expect(typeof cat.max).toBe('number')
-      expect(typeof cat.weight).toBe('number')
-    }
-  })
-
-  it('every category score is between 0 and its max', () => {
-    const report = generateAtsReport(STRONG_RESUME, 'React TypeScript Node.js')
-    for (const cat of report.categories) {
-      expect(cat.score).toBeGreaterThanOrEqual(0)
-      expect(cat.score).toBeLessThanOrEqual(cat.max)
-    }
-  })
-
-  it('returns grade and gradeLabel strings', () => {
-    const report = generateAtsReport(STRONG_RESUME, '')
-    expect(typeof report.grade).toBe('string')
-    expect(typeof report.gradeLabel).toBe('string')
-  })
-
-  it('returns critical, warnings, suggestions arrays', () => {
-    const report = generateAtsReport(EMPTY_RESUME, '')
-    expect(Array.isArray(report.critical)).toBe(true)
-    expect(Array.isArray(report.warnings)).toBe(true)
-    expect(Array.isArray(report.suggestions)).toBe(true)
-  })
-
-  it('empty resume generates critical issues', () => {
-    const report = generateAtsReport(EMPTY_RESUME, '')
-    expect(report.critical.length + report.warnings.length).toBeGreaterThan(0)
-  })
-
-  it('strong resume generates fewer critical issues than empty resume', () => {
-    const strong = generateAtsReport(STRONG_RESUME, 'React TypeScript Node.js engineer')
-    const empty = generateAtsReport(EMPTY_RESUME, '')
-    expect(strong.critical.length).toBeLessThan(empty.critical.length + empty.warnings.length)
-  })
-
-  it('does not crash on empty resume', () => {
-    expect(() => generateAtsReport(EMPTY_RESUME, '')).not.toThrow()
-  })
-
-  it('does not crash on empty job description', () => {
-    expect(() => generateAtsReport(STRONG_RESUME, '')).not.toThrow()
-  })
-
-  it('strong resume with matching JD scores above 70', () => {
-    const report = generateAtsReport(
-      STRONG_RESUME,
-      'Senior software engineer with React TypeScript Node.js AWS experience'
-    )
-    expect(report.total).toBeGreaterThan(70)
-  })
-})
-
-// ─── autoFix ──────────────────────────────────────────────────────────────────
-
-describe('autoFix', () => {
-  it('returns a ResumeData object', () => {
-    const result = autoFix(STRONG_RESUME)
-    expect(result).toBeDefined()
-    expect(typeof result).toBe('object')
-  })
-
-  it('does not mutate the input resume', () => {
-    const original = JSON.parse(JSON.stringify(STRONG_RESUME))
-    autoFix(STRONG_RESUME)
-    expect(STRONG_RESUME).toEqual(original)
-  })
-
-  it('preserves contact info', () => {
-    const result = autoFix(STRONG_RESUME)
-    expect(result.contact.fullName).toBe(STRONG_RESUME.contact.fullName)
-    expect(result.contact.email).toBe(STRONG_RESUME.contact.email)
-  })
-
-  it('handles empty resume without crashing', () => {
-    expect(() => autoFix(EMPTY_RESUME)).not.toThrow()
-  })
-
-  it('handles resume with missing optional arrays without crashing', () => {
-    const sparse: ResumeData = {
-      contact: { fullName: 'Test', email: 't@t.com', phone: '', linkedin: '', location: '' },
-      summary: '',
-      experience: [],
-      education: [],
-      skills: [],
-    }
-    expect(() => autoFix(sparse)).not.toThrow()
-  })
-})
-```
-
-### Step 2 — Run the tests
-
-```bash
-npm test
-```
-
-Expected: all previous 76 tests still pass, plus the new tests from this file also pass. The total should be **76 + new tests** — all green.
-
-If any test fails, read the failure message. It will tell you the exact assertion that failed. Do not change the test — instead check whether the import path is correct:
-- `from '../atsReport'` — correct if the test file is in `src/utils/__tests__/`
-- `from '../atsEvaluator'` — same
-- `from '@/types/resume'` — this alias is configured in `vitest.config.ts` and should work
-
-If you get a TypeScript error about `AtsCategoryScore` not being on `ResumeData`, check the import. It may need to be imported from a different path:
-```ts
-import type { AtsCategoryScore } from '../atsReport'
-```
-or from wherever `AtsCategoryScore` is defined — run `grep -rn "export.*AtsCategoryScore" src/` to find it and fix the import.
-
----
-
-## FINAL VERIFICATION
-
-Run all three commands. All must pass clean.
-
-```bash
-# 1. Zero lint problems
-npm run lint
-# Expected: ✖ 0 problems
-
-# 2. All tests pass (number will be higher than 76 after new tests added)
-npm test
-# Expected: all passed, 0 failed
-
-# 3. Build is clean
-npm run build
-# Expected: built in Xs, no errors
-```
-
-Then commit:
-```bash
-git add -A
-git commit -m "fix: silence SectionDrawer eslint suppression; add atsReport test coverage"
-```
+Fix 1 + Fix 2 (sidebar dedup + magic number) — same file, do together
+Fix 3 (themeColor desync) — standalone
+Fix 6 (theme-color meta) — 1-line change
+Fix 4 (semantic scorer rename) — pure rename, low risk
+Fix 5 (aria-modal) — accessibility
+Fix 7 (schema version) — future-proofing
+Fix 8 (dirty state indicator) — UX polish
+Fix 9 (font preload) — performance
