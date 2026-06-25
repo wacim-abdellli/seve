@@ -8,9 +8,11 @@ interface AuthContextType {
   loading: boolean
   error: string | null
   signInWithGoogle: () => Promise<void>
+  signInWithGoogleToken: (idToken: string) => Promise<void>
   signOut: () => Promise<void>
   clearError: () => void
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -59,6 +61,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const signInWithGoogleToken = useCallback(async (idToken: string) => {
+    if (!isSupabaseConfigured || !supabase) {
+      setError('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sign-in.')
+      return
+    }
+    try {
+      setError(null)
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      })
+      if (error) throw error
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to sign in with Google'
+      setError(msg)
+      throw new Error(msg)
+    }
+  }, [])
+
+
 
   const signOut = useCallback(async () => {
     if (!isSupabaseConfigured || !supabase) {
@@ -77,8 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearError = useCallback(() => setError(null), [])
 
   const value = useMemo(() => ({
-    user, loading, error, signInWithGoogle, signOut, clearError
-  }), [user, loading, error, signInWithGoogle, signOut, clearError])
+    user, loading, error, signInWithGoogle, signInWithGoogleToken, signOut, clearError
+  }), [user, loading, error, signInWithGoogle, signInWithGoogleToken, signOut, clearError])
+
 
   return (
     <AuthContext.Provider value={value}>

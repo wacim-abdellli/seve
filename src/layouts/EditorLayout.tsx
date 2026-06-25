@@ -13,7 +13,7 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
 import ResumeManager from '../components/ResumeManager'
-import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
@@ -502,7 +502,137 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
   )
 }
 
+declare global {
+  interface Window {
+    google?: any
+  }
+}
+
+interface GoogleSignInModalProps {
+  onClose: () => void
+  onSuccess: (idToken: string) => Promise<void>
+}
+
+function GoogleSignInModal({ onClose, onSuccess }: GoogleSignInModalProps) {
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    if (!clientId || clientId === 'your-google-client-id-here.apps.googleusercontent.com') {
+      setError('Google Client ID is not configured in the environment (.env file).')
+      return
+    }
+
+    let isMounted = true;
+    const initGoogle = () => {
+      if (window.google) {
+        if (!isMounted) return;
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: async (response: any) => {
+              setIsLoading(true)
+              setError(null)
+              try {
+                await onSuccess(response.credential)
+                onClose()
+              } catch (err: any) {
+                setError(err?.message || 'Authentication failed. Please try again.')
+              } finally {
+                setIsLoading(false)
+              }
+            },
+          })
+
+          const btnElement = document.getElementById('google-signin-btn-container');
+          if (btnElement) {
+            window.google.accounts.id.renderButton(btnElement, {
+              theme: 'filled_blue',
+              size: 'large',
+              width: 320,
+              shape: 'pill',
+              locale: 'en',
+            })
+          }
+        } catch (err: any) {
+          setError('Failed to initialize Google Sign-in.')
+        }
+      } else {
+        setTimeout(initGoogle, 100)
+      }
+    }
+
+    initGoogle()
+    return () => {
+      isMounted = false;
+    }
+  }, [onSuccess, onClose])
+
+  return createPortal(
+    <div role="dialog" aria-labelledby="signin-dialog-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm no-print">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div ref={containerRef} className="bg-[#0c0d12] border border-zinc-800 rounded-2xl p-6 w-[420px] max-w-full shadow-2xl shadow-rose-950/10 animate-scale-in relative overflow-hidden text-center" onClick={(e) => e.stopPropagation()}>
+        {/* Glow ambient */}
+        <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#b91c1c]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex justify-end mb-2 relative z-10">
+          <button onClick={onClose} aria-label="Close" className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center justify-center space-y-4 pb-4 relative z-10">
+          <div className="w-12 h-12 rounded-full bg-[#b91c1c]/10 border border-[#b91c1c]/30 flex items-center justify-center text-[#b91c1c] shrink-0 mb-2">
+            <Cloud className="w-6 h-6 animate-pulse" />
+          </div>
+          
+          <div>
+            <h3 id="signin-dialog-heading" className="text-base font-extrabold tracking-tight text-white uppercase font-display">Sync with Cloud</h3>
+            <p className="text-[12px] text-zinc-400 mt-1.5 max-w-[320px] mx-auto font-sans leading-relaxed">
+              Sign in with Google to automatically backup your resumes and access them across all of your devices.
+            </p>
+          </div>
+
+          <div className="w-full flex justify-center py-4 relative min-h-[44px]">
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400 animate-pulse">
+                <RefreshCw size={14} className="animate-spin text-[#b91c1c]" /> Authenticating...
+              </div>
+            ) : (
+              <div id="google-signin-btn-container" className="w-[320px] flex justify-center select-none" />
+            )}
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-red-500/5 border border-red-950/30 text-[11px] text-red-400 font-bold max-w-[320px] text-left">
+              <AlertCircle size={14} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <p className="text-[10px] text-zinc-500 max-w-[280px] font-sans leading-normal">
+            By signing in, you agree to our Privacy Policy. We only store your public profile and email.
+          </p>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 export default function EditorLayout() {
+
   const navigate = useNavigate()
   const {
     resumes, selectedResumeId, activeResume, resumeData, selectedTemplate, isSaving, cloudStatus, cloudError, retrySync,
@@ -511,7 +641,46 @@ export default function EditorLayout() {
     saveChangesToCloud, restoreFromBackup,
     undo, redo, canUndo, canRedo,
   } = useResume()
-  const { user, signInWithGoogle, signOut } = useAuth()
+  const { user, signInWithGoogleToken, signOut } = useAuth()
+  const [isGoogleSignInOpen, setIsGoogleSignInOpen] = useState(false)
+
+  // Attempt Google One Tap prompt on mount if user is not authenticated
+  useEffect(() => {
+    if (user) return
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    if (!clientId || clientId === 'your-google-client-id-here.apps.googleusercontent.com') return
+
+    let isMounted = true
+    const initOneTap = () => {
+      if (window.google) {
+        if (!isMounted) return
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: async (response: any) => {
+              try {
+                await signInWithGoogleToken(response.credential)
+              } catch (err) {
+                console.error('One Tap authentication failed:', err)
+              }
+            },
+          })
+          window.google.accounts.id.prompt()
+        } catch (err) {
+          console.error('Failed to initialize Google One Tap:', err)
+        }
+      } else {
+        setTimeout(initOneTap, 100)
+      }
+    }
+
+    initOneTap()
+    return () => {
+      isMounted = false
+    }
+  }, [user, signInWithGoogleToken])
+
 
   const [activeMode, setActiveMode] = useState<'studio' | 'design' | 'preview' | 'analyze'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
@@ -803,13 +972,15 @@ export default function EditorLayout() {
           ) : (
             <button
               type="button"
-              onClick={signInWithGoogle}
-              className="flex items-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-2.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
+              onClick={() => setIsGoogleSignInOpen(true)}
+              className="flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-3 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
               aria-label="Sign in with Google"
             >
-              <Cloud size={12} className="shrink-0" />
+              <LogIn size={12} className="shrink-0" />
+              <span className="hidden sm:inline">Sign In</span>
             </button>
           )}
+
           <button 
             onClick={handlePrint} 
             className="flex items-center justify-center h-9 gap-1.5 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-4 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0 active:scale-95"
@@ -902,6 +1073,16 @@ export default function EditorLayout() {
           <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isGoogleSignInOpen && (
+          <GoogleSignInModal 
+            onClose={() => setIsGoogleSignInOpen(false)} 
+            onSuccess={signInWithGoogleToken} 
+          />
+        )}
+      </AnimatePresence>
     </div>
+
   )
 }
