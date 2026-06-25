@@ -32,8 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null)
       setLoading(false)
 
-      if (window.location.hash) {
-        window.history.replaceState(null, '', window.location.pathname)
+      if (window.location.href.includes('#')) {
+        const urlWithoutHash = window.location.href.split('#')[0]
+        window.history.replaceState(null, '', urlWithoutHash)
       }
     })
 
