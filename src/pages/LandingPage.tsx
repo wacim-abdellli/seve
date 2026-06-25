@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -65,6 +67,29 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
   const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState('classic')
+  const { user } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured || !supabase) {
+      setIsAdmin(false)
+      return
+    }
+    const db = supabase
+
+    const checkAdmin = async () => {
+      try {
+        const { data, error } = await db.rpc('is_admin')
+        if (!error && data) {
+          setIsAdmin(true)
+        }
+      } catch (err) {
+        console.error('Error checking admin status:', err)
+      }
+    }
+
+    checkAdmin()
+  }, [user])
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
@@ -104,6 +129,12 @@ export default function LandingPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Local-First & Private
             </span>
+            {isAdmin && (
+              <Button onClick={() => navigate('/admin')} size="sm" className="font-extrabold text-white bg-rose-950/40 border border-rose-900/60 hover:bg-rose-900/40 hover:border-rose-500 transition-all font-display rounded-lg flex items-center gap-1.5 cursor-pointer">
+                <ShieldCheck size={14} className="text-rose-500" />
+                Admin Panel
+              </Button>
+            )}
             <Button onClick={() => navigate('/editor')} size="sm" className="font-extrabold text-white bg-zinc-950 border border-zinc-800 hover:border-[#b91c1c]/50 hover:bg-zinc-900 transition-all font-display rounded-lg">
               Build Your Resume
             </Button>

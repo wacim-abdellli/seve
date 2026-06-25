@@ -87,6 +87,10 @@ CREATE TABLE IF NOT EXISTS public.page_views (
   visitor_id  TEXT NOT NULL,
   path        TEXT NOT NULL,
   date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  email       TEXT,
+  user_agent  TEXT,
+  referrer    TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -110,13 +114,111 @@ $$;
 REVOKE ALL ON FUNCTION count_distinct_visitors(TIMESTAMPTZ) FROM PUBLIC;
 GRANT  EXECUTE ON FUNCTION count_distinct_visitors(TIMESTAMPTZ) TO anon, authenticated;
 
--- RPC: log a page view (handles duplicates silently)
-CREATE OR REPLACE FUNCTION log_page_view(visitor_id TEXT, path TEXT, view_date DATE DEFAULT CURRENT_DATE)
+-- RPC: log a page view (handles duplicates silently, updates user data on conflict)
+DROP FUNCTION IF EXISTS public.log_page_view(TEXT, TEXT, DATE);
+CREATE OR REPLACE FUNCTION log_page_view(
+  visitor_id TEXT,
+  path TEXT,
+  view_date DATE DEFAULT CURRENT_DATE,
+  user_id UUID DEFAULT NULL,
+  email TEXT DEFAULT NULL,
+  user_agent TEXT DEFAULT NULL,
+  referrer TEXT DEFAULT NULL
+)
 RETURNS void LANGUAGE SQL SECURITY DEFINER SET search_path = public AS $$
-  INSERT INTO public.page_views (visitor_id, path, date)
-  VALUES (visitor_id, path, view_date)
-  ON CONFLICT (visitor_id, path, date) DO NOTHING;
+  INSERT INTO public.page_views (visitor_id, path, date, user_id, email, user_agent, referrer)
+  VALUES (visitor_id, path, view_date, user_id, email, user_agent, referrer)
+  ON CONFLICT (visitor_id, path, date) DO UPDATE
+  SET
+    user_id = COALESCE(EXCLUDED.user_id, page_views.user_id),
+    email = COALESCE(EXCLUDED.email, page_views.email),
+    user_agent = COALESCE(EXCLUDED.user_agent, page_views.user_agent),
+    referrer = COALESCE(EXCLUDED.referrer, page_views.referrer);
 $$;
 
-REVOKE ALL ON FUNCTION log_page_view(TEXT, TEXT, DATE) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION log_page_view(TEXT, TEXT, DATE) TO anon, authenticated;
+REVOKE ALL ON FUNCTION log_page_view(TEXT, TEXT, DATE, UUID, TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION log_page_view(TEXT, TEXT, DATE, UUID, TEXT, TEXT, TEXT) TO anon, authenticated;
+
+-- Admins table (contains list of authorized administrators)
+CREATE TABLE IF NOT EXISTS public.admins (
+  email TEXT PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Seed with primary administrator email
+INSERT INTO public.admins (email) 
+VALUES ('wassimabdello94@gmail.com') 
+ON CONFLICT (email) DO NOTHING;
+
+ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+
+-- RPC: check if the calling user is an admin
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN LANGUAGE SQL SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.admins
+    WHERE email = (auth.jwt() ->> 'email')
+  );
+$$;
+
+REVOKE ALL ON FUNCTION is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION is_admin() TO anon, authenticated;
+
+-- RPC: fetch visitor logs securely for admins
+DROP FUNCTION IF EXISTS public.get_visitor_logs(TEXT[]);
+DROP FUNCTION IF EXISTS public.get_visitor_logs();
+CREATE OR REPLACE FUNCTION get_visitor_logs()
+RETURNS TABLE (
+  visitor_id TEXT,
+  email TEXT,
+  user_id UUID,
+  last_visited_path TEXT,
+  user_agent TEXT,
+  referrer TEXT,
+  total_page_views BIGINT,
+  first_visit TIMESTAMPTZ,
+  last_visit TIMESTAMPTZ
+) LANGUAGE SQL SECURITY DEFINER SET search_path = public AS $$
+  SELECT 
+    pv.visitor_id,
+    MAX(pv.email) as email,
+    MAX(pv.user_id::text)::uuid as user_id,
+    (array_agg(pv.path ORDER BY pv.created_at DESC))[1] as last_visited_path,
+    MAX(pv.user_agent) as user_agent,
+    MAX(pv.referrer) as referrer,
+    COUNT(*) as total_page_views,
+    MIN(pv.created_at) as first_visit,
+    MAX(pv.created_at) as last_visit
+  FROM public.page_views pv
+  WHERE EXISTS (
+    SELECT 1 FROM public.admins
+    WHERE admins.email = (auth.jwt() ->> 'email')
+  )
+  GROUP BY pv.visitor_id
+  ORDER BY last_visit DESC;
+$$;
+
+REVOKE ALL ON FUNCTION get_visitor_logs() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_visitor_logs() TO anon, authenticated;
+
+-- RPC: fetch detailed visitor clickstream securely for admins
+DROP FUNCTION IF EXISTS public.get_visitor_details(TEXT, TEXT[]);
+DROP FUNCTION IF EXISTS public.get_visitor_details(TEXT);
+CREATE OR REPLACE FUNCTION get_visitor_details(target_visitor_id TEXT)
+RETURNS TABLE (
+  id BIGINT,
+  path TEXT,
+  date DATE,
+  created_at TIMESTAMPTZ
+) LANGUAGE SQL SECURITY DEFINER SET search_path = public AS $$
+  SELECT pv.id, pv.path, pv.date, pv.created_at
+  FROM public.page_views pv
+  WHERE pv.visitor_id = target_visitor_id
+  AND EXISTS (
+    SELECT 1 FROM public.admins
+    WHERE admins.email = (auth.jwt() ->> 'email')
+  );
+$$;
+
+REVOKE ALL ON FUNCTION get_visitor_details(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_visitor_details(TEXT) TO anon, authenticated;

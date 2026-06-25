@@ -1,10 +1,12 @@
 import { useState, useEffect, lazy, Suspense, Component, type ErrorInfo, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { usePageTracking } from './hooks/usePageTracking'
 
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const EditorPage = lazy(() => import('./pages/EditorPage'))
 const EditorLayout = lazy(() => import('./layouts/EditorLayout'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -90,6 +92,8 @@ function AppContent() {
     setShowSplash(false)
   }
 
+  usePageTracking()
+
   return (
     <>
       <a
@@ -107,6 +111,7 @@ function AppContent() {
             <Route element={<EditorLayout />}>
               <Route path="/editor" element={<EditorPage />} />
             </Route>
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
