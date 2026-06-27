@@ -17,7 +17,7 @@ import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, Lo
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
-import AiStatusBadge from '../components/ai/AiStatusBadge'
+import AiSettingsModal from '../components/ai/AiSettingsModal'
 
 
 
@@ -748,6 +748,7 @@ export default function EditorLayout() {
 
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [showMobileAiSettings, setShowMobileAiSettings] = useState(false)
 
   const handlePrint = useCallback(() => {
     handlePrintModal(resumeDataRef.current, pageCountRef.current)
@@ -916,20 +917,14 @@ export default function EditorLayout() {
 
         {/* Zone 3 — Right: Primary & Secondary Actions */}
         <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
-          {/* Mobile cloud indicator */}
-          <div className="sm:hidden flex items-center gap-1">
-            {cloudStatus === 'unsaved' && !isSaving && (
-              <button onClick={saveChangesToCloud} className="h-7 px-2 rounded-full bg-[#b91c1c] hover:bg-[#c62828] text-white text-[9px] font-extrabold transition-all cursor-pointer active:scale-95">
-                Save
-              </button>
+          {/* Mobile cloud status — only shows when saving/error, otherwise hidden */}
+          <div className="sm:hidden flex items-center">
+            {(isSaving || cloudStatus === 'syncing') && (
+              <RefreshCw size={13} className="text-amber-400 animate-spin shrink-0" />
             )}
-            <div title={cloudError || cloudStatus}>
-              {cloudStatus === 'error' ? <AlertCircle size={14} className="text-red-400 animate-pulse shrink-0" />
-              : isSaving || cloudStatus === 'syncing' ? <RefreshCw size={14} className="text-amber-400 animate-spin shrink-0" />
-              : cloudStatus === 'synced' ? <Cloud size={14} className="text-emerald-400 shrink-0" />
-              : cloudStatus === 'unsaved' ? <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-              : <HardDrive size={14} className="text-zinc-500 shrink-0" />}
-            </div>
+            {cloudStatus === 'error' && (
+              <AlertCircle size={13} className="text-red-400 animate-pulse shrink-0" />
+            )}
           </div>
 
           {/* AI Fill (Desktop only) */}
@@ -1006,106 +1001,173 @@ export default function EditorLayout() {
             <span>Export PDF</span>
           </button>
 
-          {/* Export PDF (Mobile only - high touch size) */}
-          {/* AI Badge (Mobile only) */}
-          <div className="flex sm:hidden">
-            <AiStatusBadge />
-          </div>
-
-          <button 
-            onClick={handlePrint} 
-            className="flex sm:hidden items-center justify-center w-11 h-11 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-full transition-all cursor-pointer shadow-md active:scale-95 shrink-0"
+          {/* Mobile: Export PDF pill */}
+          <button
+            onClick={handlePrint}
+            className="flex sm:hidden items-center gap-1.5 h-9 px-4 bg-[var(--accent)] text-white font-bold text-[11px] rounded-full transition-all cursor-pointer shadow-md active:scale-95 shrink-0 whitespace-nowrap"
             aria-label="Export PDF"
           >
-            <Download size={16} className="shrink-0" />
+            <Download size={13} className="shrink-0" />
+            <span>Export</span>
           </button>
 
           {/* Overflow Menu Button (Mobile only) */}
-          <button 
+          <button
             type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-            className={`flex sm:hidden items-center justify-center w-11 h-11 rounded-full border border-zinc-800 transition-all cursor-pointer shrink-0 ${isMobileMenuOpen ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400'}`} 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`flex sm:hidden items-center justify-center w-9 h-9 rounded-full border transition-all cursor-pointer shrink-0 ${isMobileMenuOpen ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
             aria-label="More options"
           >
-            <MoreVertical size={16} className="shrink-0" />
+            <MoreVertical size={15} className="shrink-0" />
           </button>
 
-          {/* Floating Mobile Overflow Menu */}
+          {/* Floating Mobile Overflow Menu — premium sectioned panel */}
           {isMobileMenuOpen && createPortal(
             <>
-              <div 
-                className="fixed inset-0 z-[90] bg-transparent no-print" 
-                onClick={() => setIsMobileMenuOpen(false)} 
+              <div
+                className="fixed inset-0 z-[90] no-print"
+                style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+                onClick={() => setIsMobileMenuOpen(false)}
               />
-              <div className="fixed right-3 top-14 bg-zinc-950 border border-zinc-800 rounded-xl p-1.5 shadow-2xl z-[95] min-w-[200px] flex flex-col gap-0.5 animate-fade-in no-print">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAiGuide(true)
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
-                >
-                  <Sparkles size={14} className="text-zinc-500" />
-                  <span>AI Autofill</span>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveMode('analyze')
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
-                >
-                  <CheckCircle2 size={14} className="text-zinc-500" />
-                  <span>ATS Optimization</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowShortcuts(true)
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
-                >
-                  <HelpCircle size={14} className="text-zinc-500" />
-                  <span>Shortcuts Guide</span>
-                </button>
-
-                <div className="h-px bg-zinc-800/80 my-1" />
-
-                {user ? (
-                  <>
-                    <div className="px-3 py-1.5 text-[10px] font-mono text-zinc-500 truncate max-w-[190px]">
-                      {user.email}
-                    </div>
+              <div
+                className="fixed right-3 top-[60px] z-[95] no-print flex flex-col overflow-hidden animate-fade-in"
+                style={{
+                  background: 'linear-gradient(180deg,#141418 0%,#0f0f13 100%)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '18px',
+                  boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+                  minWidth: '220px',
+                }}
+              >
+                {/* Cloud status row */}
+                <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+                    background: cloudStatus === 'synced' ? '#34d399'
+                      : cloudStatus === 'error' ? '#f87171'
+                      : cloudStatus === 'unsaved' || isSaving ? '#fbbf24'
+                      : '#52525b'
+                  }} />
+                  <span className="text-[11px] text-zinc-400 flex-1">
+                    {cloudStatus === 'error' ? 'Sync error'
+                      : isSaving || cloudStatus === 'syncing' ? 'Saving…'
+                      : cloudStatus === 'synced' ? 'Cloud saved'
+                      : cloudStatus === 'unsaved' ? 'Unsaved changes'
+                      : 'Saved locally'}
+                  </span>
+                  {cloudStatus === 'unsaved' && !isSaving && (
                     <button
-                      type="button"
-                      onClick={() => {
-                        signOut()
-                        setIsMobileMenuOpen(false)
-                      }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                      onClick={() => { saveChangesToCloud(); setIsMobileMenuOpen(false) }}
+                      className="text-[10px] font-bold text-[var(--accent)] hover:opacity-80 transition-opacity cursor-pointer"
                     >
-                      <LogOut size={14} />
-                      <span>Sign Out</span>
+                      Save now
                     </button>
-                  </>
-                ) : (
+                  )}
+                </div>
+
+                {/* AI section */}
+                <div className="px-2 pt-2 pb-1">
+                  <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-2 pb-1">AI</p>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsGoogleSignInOpen(true)
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                    onClick={() => { setShowAiGuide(true); setIsMobileMenuOpen(false) }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
                   >
-                    <LogIn size={14} className="text-zinc-500" />
-                    <span>Sign In</span>
+                    <div className="w-7 h-7 rounded-lg bg-[#b91c1c]/10 border border-[#b91c1c]/20 flex items-center justify-center shrink-0">
+                      <Sparkles size={13} className="text-[#b91c1c]" />
+                    </div>
+                    <div>
+                      <div>AI Autofill</div>
+                      <div className="text-[10px] text-zinc-600 font-normal">Import from LinkedIn / PDF</div>
+                    </div>
                   </button>
-                )}
+                  {/* AI Settings row */}
+                  <button
+                    type="button"
+                    onClick={() => { setShowMobileAiSettings(true); setIsMobileMenuOpen(false) }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-[#b91c1c]/10 border border-[#b91c1c]/20 flex items-center justify-center shrink-0">
+                      <Sparkles size={13} className="text-[#b91c1c]" />
+                    </div>
+                    <div>
+                      <div>Seve AI</div>
+                      <div className="text-[10px] text-zinc-600 font-normal">Free · 25 calls/day · Tap to manage</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="h-px bg-white/5 mx-3" />
+
+                {/* Tools section */}
+                <div className="px-2 py-1">
+                  <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-2 pb-1">Tools</p>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveMode('analyze'); setIsMobileMenuOpen(false) }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={13} className="text-zinc-400" />
+                    </div>
+                    ATS Checker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false) }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
+                      <Settings size={13} className="text-zinc-400" />
+                    </div>
+                    Settings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowShortcuts(true); setIsMobileMenuOpen(false) }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
+                      <HelpCircle size={13} className="text-zinc-400" />
+                    </div>
+                    Shortcuts
+                  </button>
+                </div>
+
+                <div className="h-px bg-white/5 mx-3" />
+
+                {/* Account section */}
+                <div className="px-2 pt-1 pb-2">
+                  <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-2 pb-1">Account</p>
+                  {user ? (
+                    <>
+                      <div className="flex items-center gap-2.5 px-3 py-2">
+                        <img src={user.user_metadata?.avatar_url} alt="" className="w-6 h-6 rounded-full shrink-0" referrerPolicy="no-referrer" />
+                        <span className="text-[11px] text-zinc-500 truncate">{user.email}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { signOut(); setIsMobileMenuOpen(false) }}
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 transition-colors cursor-pointer text-left active:bg-rose-500/8"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/8 border border-rose-500/15 flex items-center justify-center shrink-0">
+                          <LogOut size={13} className="text-rose-400" />
+                        </div>
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsGoogleSignInOpen(true); setIsMobileMenuOpen(false) }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
+                        <LogIn size={13} className="text-zinc-400" />
+                      </div>
+                      Sign In
+                    </button>
+                  )}
+                </div>
               </div>
             </>,
             document.body
@@ -1193,6 +1255,12 @@ export default function EditorLayout() {
       <AnimatePresence>
         {showShortcuts && (
           <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMobileAiSettings && (
+          <AiSettingsModal onClose={() => setShowMobileAiSettings(false)} />
         )}
       </AnimatePresence>
 
