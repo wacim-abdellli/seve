@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { getActualSkillsCount } from '../utils/atsUtils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -184,6 +184,13 @@ export default function EditorPage() {
 
   const sectionStatus = useMemo(() => getSectionStatus(resumeData), [resumeData])
   const completedCount = Object.values(sectionStatus).filter(Boolean).length
+
+  const [mobileZoom, setMobileZoom] = useState(85)
+  const zoomStep = 10
+  const zoomMin = 50
+  const zoomMax = 150
+  const canZoomOut = mobileZoom > zoomMin
+  const canZoomIn = mobileZoom < zoomMax
 
   const renderDesignControls = () => {
     return (
@@ -400,7 +407,10 @@ export default function EditorPage() {
 
             {/* A4 Preview Container */}
             <div className={`flex-1 h-full preview-dot-bg overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative scroll-smooth ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
-              <div className="w-full max-w-[858px] pb-16">
+              <div
+                className="w-full max-w-[858px] pb-16 origin-top transition-transform duration-200"
+                style={{ transform: `scale(${mobileZoom / 100})`, transformOrigin: 'top center' }}
+              >
                 {mobileView === 'preview' && (
                   <div className="lg:hidden mb-3 no-print">
                     <button 
@@ -427,6 +437,45 @@ export default function EditorPage() {
                   onTriggerImport={() => setShowAiGuide(true)}
                 />
               </div>
+
+              {/* Mobile Zoom Control — only shown in mobile preview */}
+              {mobileView === 'preview' && (
+                <div className="lg:hidden fixed bottom-[80px] left-1/2 -translate-x-1/2 z-[70] no-print">
+                  <div
+                    className="flex items-center gap-0 rounded-2xl border border-white/10 shadow-xl shadow-black/40 overflow-hidden"
+                    style={{ background: 'rgba(12,12,16,0.92)', backdropFilter: 'blur(16px)' }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setMobileZoom(z => Math.max(zoomMin, z - zoomStep))}
+                      disabled={!canZoomOut}
+                      className="w-11 h-10 flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 disabled:cursor-not-allowed transition-colors active:bg-white/5"
+                      aria-label="Zoom out"
+                    >
+                      <ZoomOut size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileZoom(85)}
+                      className="h-10 px-3 text-xs font-black font-mono tabular-nums border-x border-white/8 transition-colors"
+                      style={{ color: 'var(--accent)' }}
+                      aria-label="Reset zoom"
+                      title="Tap to reset"
+                    >
+                      {mobileZoom}%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileZoom(z => Math.min(zoomMax, z + zoomStep))}
+                      disabled={!canZoomIn}
+                      className="w-11 h-10 flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 disabled:cursor-not-allowed transition-colors active:bg-white/5"
+                      aria-label="Zoom in"
+                    >
+                      <ZoomIn size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
