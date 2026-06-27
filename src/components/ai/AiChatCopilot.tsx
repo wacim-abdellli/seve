@@ -22,18 +22,18 @@ const QUICK_CHIPS = [
 
 export default function AiChatCopilot() {
   const ctx = useContext(ResumeDataContextInternal)
-  const { isConfigured, config } = useAi()
+  const { config, isUsingAppKey } = useAi()
 
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [feedback, setFeedback] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
-  if (!ctx || !isConfigured) return null
+  if (!ctx) return null
   const { resumeData, updateResumeData } = ctx
 
   const handleCommand = async (cmdText: string) => {
-    if (!cmdText.trim() || !config) return
+    if (!cmdText.trim()) return
     setStatus('loading')
     setFeedback('')
 
@@ -214,6 +214,15 @@ export default function AiChatCopilot() {
           <Sparkles className="w-3 h-3 text-[#b91c1c]" />
         </div>
         <span className="text-[10px] font-bold text-white uppercase tracking-wider flex-1">AI Copilot</span>
+        {isUsingAppKey ? (
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(185,28,28,0.12)', color: 'rgba(252,165,165,0.8)', border: '1px solid rgba(185,28,28,0.2)' }}>
+            Seve AI · Free
+          </span>
+        ) : (
+          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider">
+            {config?.provider ?? 'custom'}
+          </span>
+        )}
       </div>
 
       <div className="relative">

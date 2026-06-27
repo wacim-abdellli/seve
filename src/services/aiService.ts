@@ -6,7 +6,10 @@
  * All three providers use the OpenAI-compatible format (except Gemini which has its own).
  */
 
-export type AiProvider = 'groq' | 'nvidia' | 'gemini'
+export type AiProvider = 'groq' | 'nvidia' | 'gemini' | 'app'
+
+// Supabase project URL — read from Vite env at build time
+const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL ?? ''
 
 export interface AiConfig {
   provider: AiProvider
@@ -30,6 +33,14 @@ export interface ProviderMeta {
 }
 
 export const PROVIDER_META: Record<AiProvider, ProviderMeta> = {
+  app: {
+    label: 'Seve AI',
+    model: 'llama-3.3-70b-versatile',
+    freeTier: '25 free calls/day · No setup needed',
+    signupUrl: '',
+    baseUrl: '', // uses Supabase Edge Function
+    placeholder: '',
+  },
   groq: {
     label: 'Groq',
     model: 'llama-3.3-70b-versatile',
@@ -58,7 +69,28 @@ export const PROVIDER_META: Record<AiProvider, ProviderMeta> = {
 
 // ─── Non-streaming completion (for short text, JSON, bullet fixes) ───────────
 
+// ─── App proxy (Supabase Edge Function) ──────────────────────────────────────
+
+async function appProxyComplete(
+  prompt: string,
+  opts?: { maxTokens?: number; temperature?: number }
+): Promise<string> {
+  const url = `${SUPABASE_URL}/functions/v1/ai-proxy`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, maxTokens: opts?.maxTokens ?? 512, temperature: opts?.temperature ?? 0.3 }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error ?? `Proxy error: ${res.status}`)
+  return data.text ?? ''
+}
+
 export async function aiComplete(prompt: string, config: AiConfig): Promise<string> {
+  if (config.provider === 'app') {
+    return appProxyComplete(prompt, { maxTokens: 512, temperature: 0.3 })
+  }
+
   const model = config.model || PROVIDER_META[config.provider].model
 
   if (config.provider === 'gemini') {
@@ -207,6 +239,11 @@ export async function aiStream(
 export async function validateAiKey(config: AiConfig): Promise<{ valid: boolean; model: string; error?: string }> {
   try {
     const model = config.model || PROVIDER_META[config.provider].model
+    if (config.provider === 'app') {
+      // Validate the proxy is reachable
+      const result = await appProxyComplete('Say "ok" and nothing else.')
+      return { valid: !!result, model: 'llama-3.3-70b (Seve AI)' }
+    }
     const result = await aiComplete('Say "ok" and nothing else.', config)
     if (typeof result === 'string') {
       return { valid: true, model }
