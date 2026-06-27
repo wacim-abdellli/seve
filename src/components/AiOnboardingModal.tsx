@@ -13,6 +13,8 @@ import { useAi } from '../hooks/useAi'
 import { aiComplete, PROMPTS } from '../services/aiService'
 import AiSettingsModal from './ai/AiSettingsModal'
 import ResumeDataContextInternal from '../context/resumeDataContextDef'
+import { cleanAndParseJson } from '../utils/jsonParser'
+import { copyToClipboard } from '../utils/clipboard'
 
 interface AiOnboardingModalProps {
   onClose: () => void
@@ -22,17 +24,7 @@ interface AiOnboardingModalProps {
 function makeId() { return Math.random().toString(36).slice(2, 10) }
 
 function parseJson(val: string): ResumeData {
-  let cleaned = val.trim()
-  const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
-  if (match) cleaned = match[1].trim()
-
-  const firstBrace = cleaned.indexOf('{')
-  const lastBrace = cleaned.lastIndexOf('}')
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    cleaned = cleaned.substring(firstBrace, lastBrace + 1)
-  }
-
-  const raw = JSON.parse(cleaned)
+  const raw = cleanAndParseJson(val)
   if (!raw || typeof raw !== 'object') throw new Error('Not a valid JSON object.')
   if (raw.resumes && raw.selectedResumeId) {
     const r = raw.resumes[raw.selectedResumeId] || Object.values(raw.resumes)[0] as any
@@ -46,10 +38,7 @@ function parseJson(val: string): ResumeData {
 
 function safeParseArray(text: string): any[] | null {
   try {
-    let cleaned = text.trim()
-    const m = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (m) cleaned = m[1].trim()
-    const r = JSON.parse(cleaned)
+    const r = cleanAndParseJson(text)
     return Array.isArray(r) ? r : null
   } catch { return null }
 }
@@ -603,7 +592,7 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
               </p>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`Convert my CV below into this JSON structure. Return ONLY valid JSON, no markdown:\n\n${JSON.stringify(TEMPLATE, null, 2)}\n\nMy CV:\n[PASTE YOUR CV TEXT HERE]`)
+                  copyToClipboard(`Convert my CV below into this JSON structure. Return ONLY valid JSON, no markdown:\n\n${JSON.stringify(TEMPLATE, null, 2)}\n\nMy CV:\n[PASTE YOUR CV TEXT HERE]`)
                   setCopiedPrompt(true); setTimeout(() => setCopiedPrompt(false), 2000)
                 }}
                 className={`w-full h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold transition-all cursor-pointer border ${copiedPrompt ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' : 'text-zinc-400 hover:text-white border-white/7'}`}

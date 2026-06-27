@@ -18,6 +18,8 @@ import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
 import AiSettingsModal from '../components/ai/AiSettingsModal'
+import { cleanAndParseJson } from '../utils/jsonParser'
+import { copyToClipboard } from '../utils/clipboard'
 
 
 
@@ -355,7 +357,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
   }, [onClose])
 
   const handleCopyTemplate = () => {
-    navigator.clipboard.writeText(JSON.stringify(EMPTY_RESUME_TEMPLATE, null, 2))
+    copyToClipboard(JSON.stringify(EMPTY_RESUME_TEMPLATE, null, 2))
     setCopied(true)
     setTimeout(() => setCopied(false), 1800)
   }
@@ -409,21 +411,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
 
   const handlePasteImport = () => {
     try {
-      let cleaned = pasteValue.trim()
-      if (!cleaned) {
-        setPasteError('Please paste some JSON code first.')
-        return
-      }
-      const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (match) cleaned = match[1].trim()
-
-      const firstBrace = cleaned.indexOf('{')
-      const lastBrace = cleaned.lastIndexOf('}')
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        cleaned = cleaned.substring(firstBrace, lastBrace + 1)
-      }
-
-      const rawData = JSON.parse(cleaned)
+      const rawData = cleanAndParseJson(pasteValue)
       if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
         throw new Error('Invalid JSON format. Expected an object.')
       }

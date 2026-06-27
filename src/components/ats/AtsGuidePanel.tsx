@@ -5,6 +5,7 @@ import {
   CheckCircle2, XCircle, Check, Copy
 } from 'lucide-react'
 import { POWER_VERBS, FORMATTING_RULES } from '../../utils/atsGuideData'
+import { copyToClipboard as robustCopyToClipboard } from '../../utils/clipboard'
 
 export default function AtsGuidePanel() {
   const [guideTab, setGuideTab] = useState<'formula' | 'verbs' | 'format'>('formula')
@@ -19,7 +20,7 @@ export default function AtsGuidePanel() {
   useEffect(() => () => clearTimeout(copiedTimerRef.current), [])
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {})
+    robustCopyToClipboard(text)
   }
 
   return (
