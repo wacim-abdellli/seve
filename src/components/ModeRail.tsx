@@ -17,7 +17,7 @@ export default function ModeRail({ activeMode, onChangeMode, onSettingsClick }: 
   return (
     <>
       {/* Mobile: bottom nav bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800 flex flex-row justify-around items-center px-2 z-50 no-print">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-zinc-950/95 backdrop-blur-md border-t border-zinc-800/80 flex flex-row justify-around items-center px-1 z-50 no-print" style={{ paddingBottom: 'env(safe-area-inset-bottom)', height: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {items.map((item) => {
           const Icon = item.icon
           const isActive = activeMode === item.id
@@ -27,13 +27,13 @@ export default function ModeRail({ activeMode, onChangeMode, onSettingsClick }: 
               key={item.id}
               type="button"
               onClick={() => onChangeMode(item.id)}
-              className={`flex flex-col items-center gap-0.5 transition-colors ${
-                isActive ? 'font-medium' : 'text-zinc-500 hover:text-zinc-300'
+              className={`flex flex-col items-center justify-center gap-1 min-w-[56px] h-14 px-3 rounded-2xl transition-all active:scale-95 ${
+                isActive ? 'font-medium' : 'text-zinc-500'
               }`}
-              style={{ color: isActive ? 'var(--accent)' : undefined }}
+              style={isActive ? { color: 'var(--accent)', background: 'var(--accent-soft)' } : {}}
             >
               <Icon size={20} className={isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'} />
-              <span className="text-[10px] uppercase tracking-wider font-bold">
+              <span className="text-[10px] uppercase tracking-wider font-bold leading-none">
                 {item.label}
               </span>
             </button>
@@ -43,10 +43,10 @@ export default function ModeRail({ activeMode, onChangeMode, onSettingsClick }: 
         <button
           type="button"
           onClick={onSettingsClick}
-          className="flex flex-col items-center gap-0.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+          className="flex flex-col items-center justify-center gap-1 min-w-[56px] h-14 px-3 rounded-2xl text-zinc-500 transition-all active:scale-95"
         >
           <Settings size={20} className="stroke-[1.5px]" />
-          <span className="text-[10px] uppercase tracking-wider font-bold">Settings</span>
+          <span className="text-[10px] uppercase tracking-wider font-bold leading-none">Settings</span>
         </button>
       </nav>
 

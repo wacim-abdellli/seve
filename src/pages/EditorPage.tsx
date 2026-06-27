@@ -9,6 +9,9 @@ import { templatesList } from '../components/resumePreviewConstants'
 import DesignStylePanel from '../components/DesignStylePanel'
 import { getSectionStatus } from '../utils/completionHelper'
 import AtsChecker from '../components/AtsChecker'
+import AiStatusBadge from '../components/ai/AiStatusBadge'
+import AiResumeAdvisor from '../components/ai/AiResumeAdvisor'
+import AiChatCopilot from '../components/ai/AiChatCopilot'
 import type { EditorContextType } from '../layouts/EditorLayout'
 import type { ResumeData } from '../types/resume'
 import type { SectionType } from '../components/SectionSidebar'
@@ -310,9 +313,12 @@ export default function EditorPage() {
                           {completedCount === TOTAL_SECTIONS ? 'All sections complete ✓' : `${TOTAL_SECTIONS - completedCount} section${TOTAL_SECTIONS - completedCount !== 1 ? 's' : ''} remaining`}
                         </p>
                       </div>
-                      <span className="text-[11px] text-zinc-500 font-mono whitespace-nowrap">
-                        {completedCount}/{TOTAL_SECTIONS}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <AiStatusBadge />
+                        <span className="text-[11px] text-zinc-500 font-mono whitespace-nowrap">
+                          {completedCount}/{TOTAL_SECTIONS}
+                        </span>
+                      </div>
                     </div>
                     <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
                       <div
@@ -322,7 +328,9 @@ export default function EditorPage() {
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel">
+                    <AiChatCopilot />
                     <SectionNavList />
+                    <AiResumeAdvisor />
                   </div>
                 </>
               ) : (
@@ -366,7 +374,9 @@ export default function EditorPage() {
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel pb-16 lg:pb-0">
+                    <AiChatCopilot />
                     <SectionNavList isMobile />
+                    <AiResumeAdvisor />
                   </div>
                 </>
               ) : (
@@ -381,7 +391,7 @@ export default function EditorPage() {
                       <button onClick={() => setActiveMode('studio')} className="font-bold text-xs h-10 px-4 rounded-xl bg-[#b91c1c]/15 border border-[#b91c1c]/35 hover:bg-[#b91c1c]/25 text-[#b91c1c] transition-all cursor-pointer active:scale-95">Done</button>
                     </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-5 form-panel">
+                  <div className="flex-1 overflow-y-auto p-5 form-panel pb-16 lg:pb-0">
                     {renderDesignControls()}
                   </div>
                 </>

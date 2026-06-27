@@ -8,6 +8,8 @@ import {
   ChevronDown
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import AiFixButton from '../ai/AiFixButton'
+import { PROMPTS } from '../../services/aiService'
 
 interface ExperienceFormProps {
   experience: Experience[]
@@ -287,7 +289,7 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden bg-zinc-900 border border-zinc-800 rounded-xl px-4 pb-4"
                     >
                       <div className="pt-4 space-y-4 border-t border-zinc-800 mt-2">
@@ -399,6 +401,15 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
 
                                 {/* Hover Actions */}
                                 <div className="flex gap-1 flex-shrink-0 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                  {/* AI Enhance bullet */}
+                                  <div className="relative">
+                                    <AiFixButton
+                                      prompt={PROMPTS.enhanceBullet(b || 'Responsible for [role duties]', exp.jobTitle || 'Professional', exp.company || 'Company')}
+                                      onAccept={(result) => handleBulletChange(exp.id, bIdx, result)}
+                                      size="xs"
+                                      suggestionLabel="Enhanced Bullet"
+                                    />
+                                  </div>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveBullet(exp.id, bIdx)}
@@ -413,14 +424,40 @@ export default function ExperienceForm({ experience, onChange }: ExperienceFormP
                           })}
                         </div>
 
-                        {/* Add bullet point action */}
-                        <button
-                          type="button"
-                          onClick={() => handleAddBullet(exp.id)}
-                          className="w-full py-2 border border-dashed border-zinc-800 rounded-lg text-[12px] text-zinc-600 hover:text-zinc-400 hover:border-zinc-700 transition-colors cursor-pointer"
-                        >
-                          + Add bullet
-                        </button>
+                        {/* Add bullet + AI Generate row */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleAddBullet(exp.id)}
+                            className="flex-1 py-2 border border-dashed border-zinc-800 rounded-lg text-[12px] text-zinc-600 hover:text-zinc-400 hover:border-zinc-700 transition-colors cursor-pointer"
+                          >
+                            + Add bullet
+                          </button>
+                          {/* Generate 3 bullets from job title */}
+                          <AiFixButton
+                            prompt={PROMPTS.generateBullets(exp.jobTitle || 'Professional', exp.company || 'Company', 3)}
+                            onAccept={(result) => {
+                              // Parse numbered list returned by AI (1. ... 2. ... 3. ...)
+                              const lines = result
+                                .split(/\n/)
+                                .map(l => l.replace(/^\d+\.\s*/, '').trim())
+                                .filter(Boolean)
+                              const existingNonEmpty = experience
+                                .find(e => e.id === exp.id)?.bullets
+                                .filter(b => b.trim()) || []
+                              onChange(
+                                experience.map(e =>
+                                  e.id === exp.id
+                                    ? { ...e, bullets: [...existingNonEmpty, ...lines] }
+                                    : e
+                                )
+                              )
+                            }}
+                            label="Generate Bullets"
+                            size="sm"
+                            suggestionLabel="AI-Generated Bullets (accept to append)"
+                          />
+                        </div>
 
                         {/* STAR Builder Segment */}
                         <div className="border-t border-zinc-800/80 pt-3 mt-2">

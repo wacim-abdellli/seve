@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useDragControls } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import { 
   X, 
@@ -76,6 +76,15 @@ export default function SectionDrawer({
   onClose,
 }: SectionDrawerProps) {
   const { resumeData, updateResumeData: onChange } = useResume()
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  const dragControls = useDragControls()
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Escape key support — use ref to avoid re-attaching on parent re-renders
   const onCloseRef = useRef(onClose)
   const drawerRef = useRef<HTMLDivElement>(null)
@@ -121,24 +130,58 @@ export default function SectionDrawer({
     example: '' 
   }
 
+  const drawerVariants = {
+    hidden: isMobile ? { y: '100%', x: 0, opacity: 0 } : { x: '100%', y: 0, opacity: 0 },
+    visible: { x: 0, y: 0, opacity: 1 },
+  }
+
   return (
     <motion.div
       ref={drawerRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="section-drawer-title"
-      initial={{ x: '100%', opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: '100%', opacity: 0 }}
-      transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-      className="fixed right-0 top-0 h-screen w-full sm:w-[480px] bg-zinc-950 border-l border-zinc-800 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] z-40 flex flex-col no-print select-text"
+      variants={drawerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+      drag={isMobile ? 'y' : false}
+      dragControls={dragControls}
+      dragListener={false}
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={{ top: 0.05, bottom: 0.85 }}
+      onDragEnd={(_, info) => {
+        if (info.offset.y > 140) {
+          onClose()
+        }
+      }}
+      className={`fixed bg-zinc-950 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] z-[60] flex flex-col no-print select-text ${
+        isMobile 
+          ? 'bottom-[72px] left-2 right-2 h-[76vh] max-h-[76vh] w-[calc(100%-16px)] rounded-2xl border border-zinc-800/80' 
+          : 'right-0 top-0 h-screen w-[480px] rounded-none border-l border-zinc-800'
+      }`}
     >
+      {isMobile && (
+        <div 
+          onPointerDown={(e) => dragControls.start(e)}
+          className="w-full pt-3 pb-2 flex-shrink-0 cursor-grab active:cursor-grabbing touch-none flex items-center justify-center"
+        >
+          <div className="w-16 h-1.5 bg-zinc-700/80 rounded-full" />
+        </div>
+      )}
       {/* Drawer Header — Title + Close */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-zinc-800/60 flex-shrink-0">
+      <div 
+        onPointerDown={isMobile ? (e) => dragControls.start(e) : undefined}
+        className={`flex items-center justify-between px-4 h-14 border-b border-zinc-800/60 flex-shrink-0 ${
+          isMobile ? 'cursor-grab active:cursor-grabbing touch-none select-none' : ''
+        }`}
+      >
         <span id="section-drawer-title" className="text-[15px] font-semibold text-white">
           {meta.title}
         </span>
         <button
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
           className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95"
           type="button"
@@ -149,7 +192,7 @@ export default function SectionDrawer({
       </div>
 
       {/* Drawer Body — scrollable */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-5 scrollbar-none">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 pb-6 space-y-5 scrollbar-none">
         
         {/* Compact tips card */}
         {sectionTips[section] && (

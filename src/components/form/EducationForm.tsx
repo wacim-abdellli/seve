@@ -192,7 +192,7 @@ export default function EducationForm({ education, onChange }: EducationFormProp
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden bg-zinc-900 border border-zinc-800 rounded-xl px-4 pb-4"
                     >
                       <div className="pt-4 space-y-4 border-t border-zinc-800 mt-2">

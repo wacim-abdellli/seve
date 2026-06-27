@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShieldAlert, AlertTriangle, Lightbulb,
@@ -7,6 +7,9 @@ import {
 import type { AtsCategoryScore, AtsIssue } from '../../types/resume'
 import { getCategoryTheme } from './AtsCheckerUtils'
 import { ISSUE_EXPLANATIONS } from '../../utils/atsGuideData'
+import AiFixButton from '../ai/AiFixButton'
+import ResumeDataContextInternal from '../../context/resumeDataContextDef'
+import { PROMPTS } from '../../services/aiService'
 
 interface AtsCategorySectionProps {
   categories: AtsCategoryScore[]
@@ -21,6 +24,38 @@ export default function AtsCategorySection({
   onNavigateToSection
 }: AtsCategorySectionProps) {
   const [expandedIssues, setExpandedIssues] = useState<Record<string, boolean>>({})
+  const ctx = useContext(ResumeDataContextInternal)
+
+  // Helper: get the current text for the field the issue refers to
+  const getCurrentText = (issue: AtsIssue): string => {
+    if (!ctx) return ''
+    const { resumeData } = ctx
+    if (issue.section === 'summary') return resumeData.summary || ''
+    if (issue.section === 'experience' && issue.bulletIndex !== undefined) {
+      return resumeData.experience?.[0]?.bullets?.[issue.bulletIndex] || ''
+    }
+    if (issue.section === 'experience') {
+      return resumeData.experience?.[0]?.bullets?.join(' ') || ''
+    }
+    return ''
+  }
+
+  // Helper: apply the AI fix result back into resume data
+  const applyFix = (issue: AtsIssue, result: string) => {
+    if (!ctx) return
+    const { resumeData, updateResumeData } = ctx
+    if (issue.section === 'summary') {
+      updateResumeData({ ...resumeData, summary: result })
+    } else if (issue.section === 'experience' && issue.bulletIndex !== undefined) {
+      const newExp = resumeData.experience.map((exp, eIdx) => {
+        if (eIdx !== 0) return exp
+        const bullets = [...exp.bullets]
+        bullets[issue.bulletIndex!] = result
+        return { ...exp, bullets }
+      })
+      updateResumeData({ ...resumeData, experience: newExp })
+    }
+  }
 
   const toggleExpandIssue = (id: string) => {
     setExpandedIssues(prev => ({ ...prev, [id]: !prev[id] }))
@@ -73,6 +108,18 @@ export default function AtsCategorySection({
               >
                 {type === 'critical' ? 'Fix' : 'Edit'} <ArrowRight size={10} />
               </button>
+            )}
+            {/* AI Fix button — shown when issue has a section we can patch */}
+            {(issue.section === 'summary' || (issue.section === 'experience' && issue.bulletIndex !== undefined)) && (
+              <div onClick={e => e.stopPropagation()}>
+                <AiFixButton
+                  prompt={PROMPTS.fixAtsIssue(issue.issue, issue.fix, getCurrentText(issue))}
+                  onAccept={(result) => applyFix(issue, result)}
+                  label="AI Fix"
+                  size="sm"
+                  suggestionLabel="AI-Suggested Fix"
+                />
+              </div>
             )}
             {hasHelpOrDetails && (
               <div className="text-zinc-500 hover:text-white transition-colors">

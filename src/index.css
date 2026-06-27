@@ -363,6 +363,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Eliminate 300ms tap delay on mobile for all interactive elements */
+button, [role="button"], a, input, textarea, select, label {
+  touch-action: manipulation;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
 }
@@ -1008,21 +1013,35 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   font-size: 13px !important;
   color: #ffffff !important; /* text-white */
   border: 1px solid #27272a !important; /* border-zinc-800 */
-  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
 }
 @media (max-width: 640px) {
   .drawer-input {
     font-size: 16px !important; /* prevents iOS zoom on focus */
     min-height: 44px !important;
   }
+  /* Prevent iOS auto-zoom on ALL form inputs globally */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+.drawer-input:hover:not(:disabled) {
+  border-color: #3f3f46 !important; /* zinc-700 hover border */
 }
 .drawer-input:focus {
-  border-color: rgba(185, 28, 28, 0.5) !important; /* border-rose-500/50 */
+  border-color: var(--accent) !important;
   outline: none;
-  box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.1) !important; /* ring-rose-500/10 */
+  box-shadow: 0 0 0 2px var(--accent-soft) !important;
 }
 .drawer-input:focus-visible {
-  outline: 2px solid rgba(185, 28, 28, 0.5);
+  outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 .drawer-input::placeholder {

@@ -13,7 +13,7 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
 import ResumeManager from '../components/ResumeManager'
-import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo, MoreVertical, HelpCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
@@ -389,6 +389,9 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
             onRestoreBackup(rawData.data)
           } else if (rawData?.resumes && rawData?.selectedResumeId) {
             onRestoreBackup(rawData)
+          } else if (rawData?.resumeData) {
+            const data = normalizeResumeData(rawData.resumeData)
+            onImportResume(data)
           } else {
             const data = normalizeResumeData(rawData)
             onImportResume(data)
@@ -412,6 +415,13 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
       }
       const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
       if (match) cleaned = match[1].trim()
+
+      const firstBrace = cleaned.indexOf('{')
+      const lastBrace = cleaned.lastIndexOf('}')
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1)
+      }
+
       const rawData = JSON.parse(cleaned)
       if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
         throw new Error('Invalid JSON format. Expected an object.')
@@ -420,6 +430,9 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
         onRestoreBackup(rawData.data)
       } else if (rawData?.resumes && rawData?.selectedResumeId) {
         onRestoreBackup(rawData)
+      } else if (rawData?.resumeData) {
+        const data = normalizeResumeData(rawData.resumeData)
+        onImportResume(data)
       } else {
         const data = normalizeResumeData(rawData)
         onImportResume(data)
@@ -431,8 +444,8 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
   }
 
   return createPortal(
-    <div role="dialog" aria-labelledby="settings-dialog-heading" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
-      <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-6 w-[460px] max-w-full shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
+    <div role="dialog" aria-labelledby="settings-dialog-heading" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
+      <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-5 sm:p-6 w-full max-w-[460px] max-h-[90vh] overflow-y-auto shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#b91c1c]/10 border border-[#b91c1c]/30 flex items-center justify-center shrink-0">
@@ -443,7 +456,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
               <p className="text-[11px] text-zinc-400">Manage your resume configuration</p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close settings" className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer">
+          <button onClick={onClose} aria-label="Close settings" className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer active:scale-95">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -729,6 +742,7 @@ export default function EditorLayout() {
 
   const { activeWarnings, showPrintModal, handlePrint: handlePrintModal, dismissWarnings, exportAnyway, dismissPrintModal, confirmPrint } = usePrintResume()
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
@@ -791,7 +805,14 @@ export default function EditorLayout() {
   ])
 
   return (
-    <div className="select-none h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+    <div 
+      className="select-none h-screen bg-background text-foreground flex flex-col relative overflow-hidden"
+      style={{
+        '--accent': themeColor,
+        '--accent-soft': `${themeColor}1a`,
+        '--accent-hover': themeColor,
+      } as React.CSSProperties}
+    >
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 no-print">
         <div className="absolute inset-0 premium-grid opacity-30" />
         <div className="absolute inset-0 noise-overlay" />
@@ -807,7 +828,7 @@ export default function EditorLayout() {
             <ArrowLeft size={13} className="shrink-0" />
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="flex items-center gap-2 shrink-0 min-w-0">
+          <div className="hidden sm:flex items-center gap-2 shrink-0 min-w-0">
             <div className="flex items-center select-none">
               <span className="relative font-serif text-sm font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
                 S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#b91c1c]" />
@@ -910,13 +931,7 @@ export default function EditorLayout() {
             </div>
           </div>
 
-          <button 
-            onClick={() => setShowAiGuide(true)} 
-            className="flex sm:hidden items-center justify-center w-8 h-8 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full transition-all cursor-pointer shrink-0"
-            aria-label="AI Fill"
-          >
-            <Sparkles size={12} className="shrink-0" />
-          </button>
+          {/* AI Fill (Desktop only) */}
           <button 
             onClick={() => setShowAiGuide(true)} 
             className="hidden sm:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0"
@@ -924,13 +939,8 @@ export default function EditorLayout() {
             <Sparkles size={12} className="shrink-0" />
             <span className="hidden lg:inline">AI Fill</span>
           </button>
-          <button 
-            onClick={() => setActiveMode('analyze')} 
-            className={`flex md:hidden items-center justify-center w-8 h-8 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full transition-all cursor-pointer shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-800 border-zinc-600 text-white' : ''}`}
-            aria-label="ATS Analysis"
-          >
-            <CheckCircle2 size={12} className="shrink-0" />
-          </button>
+          
+          {/* ATS (Desktop only) */}
           <button 
             onClick={() => setActiveMode('analyze')} 
             className={`hidden md:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-800 border-zinc-600 text-white' : ''}`}
@@ -938,16 +948,20 @@ export default function EditorLayout() {
             <CheckCircle2 size={12} className="shrink-0" />
             <span className="hidden lg:inline">ATS</span>
           </button>
+          
+          {/* Settings (Desktop only) */}
           <button 
             onClick={() => setIsSettingsOpen(true)} 
             aria-label="Settings"
-            className="flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
+            className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
             title="Settings"
           >
             <Settings size={14} className="shrink-0" />
           </button>
+          
+          {/* User profile (Desktop only) */}
           {user ? (
-            <div className="relative shrink-0">
+            <div className="hidden sm:block relative shrink-0">
               <button 
                 type="button"
                 onClick={() => setShowUserMenu(!showUserMenu)} 
@@ -973,7 +987,7 @@ export default function EditorLayout() {
             <button
               type="button"
               onClick={() => setIsGoogleSignInOpen(true)}
-              className="flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-3 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
+              className="hidden sm:flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-3 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
               aria-label="Sign in with Google"
             >
               <LogIn size={12} className="shrink-0" />
@@ -981,13 +995,115 @@ export default function EditorLayout() {
             </button>
           )}
 
+          {/* Export PDF (Desktop only) */}
           <button 
             onClick={handlePrint} 
-            className="flex items-center justify-center h-9 gap-1.5 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-4 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0 active:scale-95"
+            className="hidden sm:flex items-center justify-center h-9 gap-1.5 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-4 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0 active:scale-95"
+            style={{ backgroundColor: 'var(--accent)', transition: 'background-color 150ms' }}
           >
             <Download size={13} className="shrink-0" />
-            <span className="hidden sm:inline">Export PDF</span>
+            <span>Export PDF</span>
           </button>
+
+          {/* Export PDF (Mobile only - high touch size) */}
+          <button 
+            onClick={handlePrint} 
+            className="flex sm:hidden items-center justify-center w-11 h-11 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-full transition-all cursor-pointer shadow-md active:scale-95 shrink-0"
+            aria-label="Export PDF"
+          >
+            <Download size={16} className="shrink-0" />
+          </button>
+
+          {/* Overflow Menu Button (Mobile only) */}
+          <button 
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            className={`flex sm:hidden items-center justify-center w-11 h-11 rounded-full border border-zinc-800 transition-all cursor-pointer shrink-0 ${isMobileMenuOpen ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400'}`} 
+            aria-label="More options"
+          >
+            <MoreVertical size={16} className="shrink-0" />
+          </button>
+
+          {/* Floating Mobile Overflow Menu */}
+          {isMobileMenuOpen && createPortal(
+            <>
+              <div 
+                className="fixed inset-0 z-[90] bg-transparent no-print" 
+                onClick={() => setIsMobileMenuOpen(false)} 
+              />
+              <div className="fixed right-3 top-14 bg-zinc-950 border border-zinc-800 rounded-xl p-1.5 shadow-2xl z-[95] min-w-[200px] flex flex-col gap-0.5 animate-fade-in no-print">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAiGuide(true)
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                >
+                  <Sparkles size={14} className="text-zinc-500" />
+                  <span>AI Autofill</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveMode('analyze')
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                >
+                  <CheckCircle2 size={14} className="text-zinc-500" />
+                  <span>ATS Optimization</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowShortcuts(true)
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                >
+                  <HelpCircle size={14} className="text-zinc-500" />
+                  <span>Shortcuts Guide</span>
+                </button>
+
+                <div className="h-px bg-zinc-800/80 my-1" />
+
+                {user ? (
+                  <>
+                    <div className="px-3 py-1.5 text-[10px] font-mono text-zinc-500 truncate max-w-[190px]">
+                      {user.email}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        signOut()
+                        setIsMobileMenuOpen(false)
+                      }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                    >
+                      <LogOut size={14} />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGoogleSignInOpen(true)
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 rounded-lg transition-colors cursor-pointer text-left"
+                  >
+                    <LogIn size={14} className="text-zinc-500" />
+                    <span>Sign In</span>
+                  </button>
+                )}
+              </div>
+            </>,
+            document.body
+          )}
         </div>
       </header>
 
@@ -1002,7 +1118,7 @@ export default function EditorLayout() {
       <AnimatePresence>
         {activeStudioSection && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeDrawer} className="fixed inset-0 z-30 bg-black/30 backdrop-blur-[2px] pointer-events-auto no-print" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeDrawer} className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm pointer-events-auto no-print" />
             <SectionDrawer section={activeStudioSection} onClose={closeDrawer} />
           </>
         )}
