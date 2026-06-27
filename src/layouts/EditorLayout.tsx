@@ -17,6 +17,7 @@ import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, Lo
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
+import AiStatusBadge from '../components/ai/AiStatusBadge'
 
 
 
@@ -1006,6 +1007,11 @@ export default function EditorLayout() {
           </button>
 
           {/* Export PDF (Mobile only - high touch size) */}
+          {/* AI Badge (Mobile only) */}
+          <div className="flex sm:hidden">
+            <AiStatusBadge />
+          </div>
+
           <button 
             onClick={handlePrint} 
             className="flex sm:hidden items-center justify-center w-11 h-11 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-full transition-all cursor-pointer shadow-md active:scale-95 shrink-0"
