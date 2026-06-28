@@ -5,6 +5,7 @@ import ResumeDataContextInternal from '../../context/resumeDataContextDef'
 import { useAi } from '../../hooks/useAi'
 import { aiComplete, PROMPTS } from '../../services/aiService'
 import AiSettingsModal from './AiSettingsModal'
+import { cleanAndParseJson } from '../../utils/jsonParser'
 
 /**
  * Post-import advisor: scans resume for empty sections and offers
@@ -15,10 +16,7 @@ function makeId() { return Math.random().toString(36).slice(2, 10) }
 
 function safeParseArray(text: string): any[] | null {
   try {
-    let c = text.trim()
-    const m = c.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (m) c = m[1].trim()
-    const r = JSON.parse(c)
+    const r = cleanAndParseJson(text)
     return Array.isArray(r) ? r : null
   } catch { return null }
 }

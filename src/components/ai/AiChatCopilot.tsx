@@ -4,6 +4,7 @@ import { Sparkles, Loader2, Send, Check, AlertCircle } from 'lucide-react'
 import ResumeDataContextInternal from '../../context/resumeDataContextDef'
 import { useAi } from '../../hooks/useAi'
 import { aiComplete, PROMPTS } from '../../services/aiService'
+import { cleanAndParseJson } from '../../utils/jsonParser'
 
 function makeId() { return Math.random().toString(36).slice(2, 10) }
 
@@ -43,12 +44,7 @@ export default function AiChatCopilot() {
         config
       )
 
-      // Parse JSON from code fence if any
-      let cleaned = responseText.trim()
-      const m = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (m) cleaned = m[1].trim()
-
-      const res: CopilotResponse = JSON.parse(cleaned)
+      const res: CopilotResponse = cleanAndParseJson(responseText)
 
       if (res.action === 'unknown') {
         setStatus('error')
