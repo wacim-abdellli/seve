@@ -4,7 +4,7 @@ import { Sparkles, Loader2, Send, Check, AlertCircle } from 'lucide-react'
 import ResumeDataContextInternal from '../../context/resumeDataContextDef'
 import { useAi } from '../../hooks/useAi'
 import { aiComplete, PROMPTS } from '../../services/aiService'
-import { cleanAndParseJson } from '../../utils/jsonParser'
+import { extractAllJsonObjects } from '../../utils/jsonParser'
 
 function makeId() { return Math.random().toString(36).slice(2, 10) }
 
@@ -44,139 +44,155 @@ export default function AiChatCopilot() {
         config
       )
 
-      const res: CopilotResponse = cleanAndParseJson(responseText)
+      const actions: CopilotResponse[] = extractAllJsonObjects(responseText)
 
-      if (res.action === 'unknown') {
+      if (actions.length === 0) {
+        throw new Error('Failed to parse command response from AI.')
+      }
+
+      // If the only action is 'unknown', show the conversational message
+      if (actions.length === 1 && actions[0].action === 'unknown') {
         setStatus('error')
-        setFeedback(res.message || "I didn't quite understand that command. Try asking to add a project, certification, volunteer experience, language, or to update your summary.")
+        setFeedback(actions[0].message || "I didn't quite understand that command. Try asking to add a project, certification, volunteer experience, language, or to update your summary.")
         return
       }
 
-      // Handle actions
+      // Handle all actions sequentially on the same state
       const updated = { ...resumeData }
-      let actionLabel = ''
+      const labels: string[] = []
 
-      switch (res.action) {
-        case 'add_project':
-          if (res.data) {
-            updated.projects = [...(updated.projects || []), {
-              id: makeId(),
-              name: res.data.name || 'New Project',
-              description: res.data.description || '',
-              technologies: Array.isArray(res.data.technologies) ? res.data.technologies : [],
-              link: res.data.link || '',
-            }]
-            actionLabel = `Added Project: "${res.data.name}" ✓`
-          }
-          break
+      for (const res of actions) {
+        if (res.action === 'unknown') continue
 
-        case 'add_certification':
-          if (res.data) {
-            updated.certifications = [...(updated.certifications || []), {
-              id: makeId(),
-              title: res.data.title || 'Certification',
-              issuer: res.data.issuer || '',
-              date: res.data.date || '',
-              description: res.data.description || '',
-            }]
-            actionLabel = `Added Certification: "${res.data.title}" ✓`
-          }
-          break
-
-        case 'add_award':
-          if (res.data) {
-            updated.awards = [...(updated.awards || []), {
-              id: makeId(),
-              title: res.data.title || 'Award',
-              awarder: res.data.awarder || '',
-              date: res.data.date || '',
-              description: res.data.description || '',
-            }]
-            actionLabel = `Added Award: "${res.data.title}" ✓`
-          }
-          break
-
-        case 'add_volunteer':
-          if (res.data) {
-            updated.volunteer = [...(updated.volunteer || []), {
-              id: makeId(),
-              organization: res.data.organization || 'Volunteer Organization',
-              location: res.data.location || '',
-              period: res.data.period || '',
-              description: res.data.description || '',
-            }]
-            actionLabel = `Added Volunteer role at ${res.data.organization} ✓`
-          }
-          break
-
-        case 'add_language':
-          if (res.data) {
-            updated.languages = [...(updated.languages || []), {
-              id: makeId(),
-              name: res.data.name || 'Language',
-              proficiency: res.data.proficiency || 'Professional',
-            }]
-            actionLabel = `Added Language: ${res.data.name} ✓`
-          }
-          break
-
-        case 'update_summary':
-          if (typeof res.data === 'string') {
-            updated.summary = res.data
-            actionLabel = 'Updated profile summary ✓'
-          }
-          break
-
-        case 'add_experience':
-          if (res.data) {
-            updated.experience = [...(updated.experience || []), {
-              id: makeId(),
-              jobTitle: res.data.jobTitle || 'Role',
-              company: res.data.company || '',
-              location: res.data.location || '',
-              startDate: res.data.startDate || '',
-              endDate: res.data.endDate || '',
-              current: res.data.current ?? true,
-              bullets: Array.isArray(res.data.bullets) ? res.data.bullets : [],
-            }]
-            actionLabel = `Added Experience at ${res.data.company} ✓`
-          }
-          break
-
-        case 'add_skills':
-          if (Array.isArray(res.data)) {
-            const currentSkills = new Set(updated.skills || [])
-            res.data.forEach(s => currentSkills.add(String(s).trim()))
-            updated.skills = Array.from(currentSkills)
-            actionLabel = `Added skills: ${res.data.join(', ')} ✓`
-          }
-          break
-
-        case 'add_interest':
-          if (res.data) {
-            updated.interests = [...(updated.interests || []), {
-              id: makeId(),
-              name: res.data.name || 'Interest',
-              keywords: Array.isArray(res.data.keywords) ? res.data.keywords : [],
-            }]
-            actionLabel = `Added Interest: ${res.data.name} ✓`
-          }
-          break
-
-        case 'update_contact':
-          if (res.data) {
-            updated.contact = {
-              ...(updated.contact || { fullName: '', email: '', phone: '', location: '', linkedin: '', website: '' }),
-              ...res.data
+        switch (res.action) {
+          case 'add_project':
+            if (res.data) {
+              updated.projects = [...(updated.projects || []), {
+                id: makeId(),
+                name: res.data.name || 'New Project',
+                description: res.data.description || '',
+                technologies: Array.isArray(res.data.technologies) ? res.data.technologies : [],
+                link: res.data.link || '',
+              }]
+              labels.push(`Added Project: "${res.data.name}"`)
             }
-            const fieldsList = Object.keys(res.data).join(', ')
-            actionLabel = `Updated contact details (${fieldsList}) ✓`
-          }
-          break
+            break
 
-        default:
-          throw new Error('Unsupported action parsed')
+          case 'add_certification':
+            if (res.data) {
+              updated.certifications = [...(updated.certifications || []), {
+                id: makeId(),
+                title: res.data.title || 'Certification',
+                issuer: res.data.issuer || '',
+                date: res.data.date || '',
+                description: res.data.description || '',
+              }]
+              labels.push(`Added Certification: "${res.data.title}"`)
+            }
+            break
+
+          case 'add_award':
+            if (res.data) {
+              updated.awards = [...(updated.awards || []), {
+                id: makeId(),
+                title: res.data.title || 'Award',
+                awarder: res.data.awarder || '',
+                date: res.data.date || '',
+                description: res.data.description || '',
+              }]
+              labels.push(`Added Award: "${res.data.title}"`)
+            }
+            break
+
+          case 'add_volunteer':
+            if (res.data) {
+              updated.volunteer = [...(updated.volunteer || []), {
+                id: makeId(),
+                organization: res.data.organization || 'Volunteer Organization',
+                location: res.data.location || '',
+                period: res.data.period || '',
+                description: res.data.description || '',
+              }]
+              labels.push(`Added Volunteer role at ${res.data.organization}`)
+            }
+            break
+
+          case 'add_language':
+            if (res.data) {
+              updated.languages = [...(updated.languages || []), {
+                id: makeId(),
+                name: res.data.name || 'Language',
+                proficiency: res.data.proficiency || 'Professional',
+              }]
+              labels.push(`Added Language: ${res.data.name}`)
+            }
+            break
+
+          case 'update_summary':
+            if (typeof res.data === 'string') {
+              updated.summary = res.data
+              labels.push('Updated profile summary')
+            }
+            break
+
+          case 'add_experience':
+            if (res.data) {
+              updated.experience = [...(updated.experience || []), {
+                id: makeId(),
+                jobTitle: res.data.jobTitle || 'Role',
+                company: res.data.company || '',
+                location: res.data.location || '',
+                startDate: res.data.startDate || '',
+                endDate: res.data.endDate || '',
+                current: res.data.current ?? true,
+                bullets: Array.isArray(res.data.bullets) ? res.data.bullets : [],
+              }]
+              labels.push(`Added Experience at ${res.data.company}`)
+            }
+            break
+
+          case 'add_skills':
+            if (Array.isArray(res.data)) {
+              const currentSkills = new Set(updated.skills || [])
+              res.data.forEach(s => currentSkills.add(String(s).trim()))
+              updated.skills = Array.from(currentSkills)
+              labels.push(`Added skills: ${res.data.join(', ')}`)
+            }
+            break
+
+          case 'add_interest':
+            if (res.data) {
+              updated.interests = [...(updated.interests || []), {
+                id: makeId(),
+                name: res.data.name || 'Interest',
+                keywords: Array.isArray(res.data.keywords) ? res.data.keywords : [],
+              }]
+              labels.push(`Added Interest: ${res.data.name}`)
+            }
+            break
+
+          case 'update_contact':
+            if (res.data) {
+              updated.contact = {
+                ...(updated.contact || { fullName: '', email: '', phone: '', location: '', linkedin: '', website: '' }),
+                ...res.data
+              }
+              const fieldsList = Object.keys(res.data).join(', ')
+              labels.push(`Updated contact details (${fieldsList})`)
+            }
+            break
+
+          default:
+            // Skip unsupported actions silently or throw
+            break
+        }
       }
+
+      if (labels.length === 0) {
+        throw new Error('No valid actions could be parsed from AI response.')
+      }
+
+      const actionLabel = labels.join(', ') + ' ✓'
 
       updateResumeData(updated)
       setStatus('success')
