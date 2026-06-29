@@ -14,13 +14,6 @@ interface CopilotResponse {
   message?: string
 }
 
-const QUICK_CHIPS = [
-  { label: 'Add AWS Cert', cmd: 'Add AWS Solutions Architect certification' },
-  { label: 'Add React Project', cmd: 'Add a React & Tailwind e-commerce portfolio project' },
-  { label: 'Add Open Source Volunteer', cmd: 'Add volunteer work contributing to open source projects' },
-  { label: 'Suggest Interests', cmd: 'Suggest professional interests for a modern software engineer' },
-]
-
 export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
   const ctx = useContext(ResumeDataContextInternal)
   const { config, isUsingAppKey } = useAi()
@@ -270,21 +263,6 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
           )}
         </button>
       </div>
-
-      {/* Suggestion Chips */}
-      {status !== 'loading' && !feedback && (
-        <div className="flex gap-1.5 pt-1 overflow-x-auto scrollbar-none pb-1 -mx-3.5 px-3.5">
-          {QUICK_CHIPS.map(chip => (
-            <button
-              key={chip.label}
-              onClick={() => { setInput(chip.cmd); handleCommand(chip.cmd) }}
-              className="text-[10px] font-bold text-zinc-500 hover:text-zinc-300 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer active:scale-95 flex-shrink-0 whitespace-nowrap"
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Status Feedback */}
       <AnimatePresence>
