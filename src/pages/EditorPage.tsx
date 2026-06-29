@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { getActualSkillsCount } from '../utils/atsUtils'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ArrowLeft, Type, ZoomOut, ZoomIn } from 'lucide-react'
+import { ChevronRight, ArrowLeft, Type, ZoomOut, ZoomIn, Sparkles } from 'lucide-react'
 import { useResume } from '../hooks/useResume'
 import ResumePreview from '../components/ResumePreview'
 import { templatesList } from '../components/resumePreviewConstants'
@@ -169,8 +169,8 @@ const getGroupStyles = (label: string, isActive: boolean) => {
     case 'OPTIONAL':
     default:
       return {
-        bg: 'rgba(251, 1TOTAL_SECTIONS, TOTAL_SECTIONS3, 0.06)',
-        border: '1px solid rgba(251, 1TOTAL_SECTIONS, TOTAL_SECTIONS3, 0.15)',
+        bg: 'rgba(251, 113, 133, 0.06)',
+        border: '1px solid rgba(251, 113, 133, 0.15)',
         icon: 'text-rose-400/90 group-hover:text-rose-300',
       }
   }
@@ -185,12 +185,31 @@ export default function EditorPage() {
   const sectionStatus = useMemo(() => getSectionStatus(resumeData), [resumeData])
   const completedCount = Object.values(sectionStatus).filter(Boolean).length
 
-  const [mobileZoom, setMobileZoom] = useState(85)
+  const [mobileZoom, setMobileZoom] = useState(100)
   const zoomStep = 10
   const zoomMin = 50
   const zoomMax = 150
   const canZoomOut = mobileZoom > zoomMin
   const canZoomIn = mobileZoom < zoomMax
+
+  const previewContainerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+
+  useEffect(() => {
+    const el = previewContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      setContainerWidth(entries[0].contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const A4_WIDTH = 858
+  const PADDING = 24
+  const autoFitScale = containerWidth > 0
+    ? Math.min(1, (containerWidth - PADDING) / A4_WIDTH)
+    : 1
 
   const renderDesignControls = () => {
     return (
@@ -379,11 +398,21 @@ export default function EditorPage() {
                         style={{ width: `${(completedCount / TOTAL_SECTIONS) * 100}%`, backgroundColor: 'var(--accent)' }}
                       />
                     </div>
+                    {completedCount === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAiGuide(true)}
+                        className="mt-3 w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[11px] font-bold text-[var(--accent)] cursor-pointer active:scale-95 transition-all"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <span>Import from LinkedIn or PDF to start fast →</span>
+                      </button>
+                    )}
                   </div>
                   <div className="flex-1 overflow-y-auto form-panel pb-16 lg:pb-0">
-                    <AiChatCopilot />
+                    <AiChatCopilot defaultCollapsed />
                     <SectionNavList isMobile />
-                    <AiResumeAdvisor />
+                    <AiResumeAdvisor defaultCollapsed />
                   </div>
                 </>
               ) : (
@@ -406,10 +435,10 @@ export default function EditorPage() {
             </div>
 
             {/* A4 Preview Container */}
-            <div className={`flex-1 h-full preview-dot-bg overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative scroll-smooth ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+            <div ref={previewContainerRef} className={`flex-1 h-full preview-dot-bg overflow-auto p-3 sm:p-6 flex items-start justify-center print-block min-w-0 relative scroll-smooth ${mobileView === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
               <div
                 className="w-full max-w-[858px] pb-16 origin-top transition-transform duration-200"
-                style={{ transform: `scale(${mobileZoom / 100})`, transformOrigin: 'top center' }}
+                style={{ transform: `scale(${mobileView === 'preview' && containerWidth > 0 ? (mobileZoom / 100) * autoFitScale : mobileZoom / 100})`, transformOrigin: 'top center' }}
               >
                 {mobileView === 'preview' && (
                   <div className="lg:hidden mb-3 no-print">

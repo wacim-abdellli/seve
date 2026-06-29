@@ -1,6 +1,6 @@
 import { useState, useContext, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Loader2, Send, Check, AlertCircle } from 'lucide-react'
+import { Sparkles, Loader2, Send, Check, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import ResumeDataContextInternal from '../../context/resumeDataContextDef'
 import { useAi } from '../../hooks/useAi'
 import { aiComplete, PROMPTS } from '../../services/aiService'
@@ -21,10 +21,11 @@ const QUICK_CHIPS = [
   { label: 'Suggest Interests', cmd: 'Suggest professional interests for a modern software engineer' },
 ]
 
-export default function AiChatCopilot() {
+export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
   const ctx = useContext(ResumeDataContextInternal)
   const { config, isUsingAppKey } = useAi()
 
+  const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [feedback, setFeedback] = useState('')
@@ -221,11 +222,12 @@ export default function AiChatCopilot() {
         border: '1px solid rgba(255,255,255,0.05)'
       }}
     >
-      <div className="flex items-center gap-2">
+      <button onClick={() => setCollapsed(v => !v)} className="flex items-center gap-2 w-full text-left">
         <div className="w-5 h-5 rounded-md bg-[#b91c1c]/10 border border-[#b91c1c]/25 flex items-center justify-center">
           <Sparkles className="w-3 h-3 text-[#b91c1c]" />
         </div>
         <span className="text-[10px] font-bold text-white uppercase tracking-wider flex-1">AI Copilot</span>
+        {collapsed ? <ChevronDown className="w-3 h-3 text-zinc-500" /> : <ChevronUp className="w-3 h-3 text-zinc-500" />}
         {isUsingAppKey ? (
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(185,28,28,0.12)', color: 'rgba(252,165,165,0.8)', border: '1px solid rgba(185,28,28,0.2)' }}>
             Seve AI · Free
@@ -235,8 +237,9 @@ export default function AiChatCopilot() {
             {config?.provider ?? 'custom'}
           </span>
         )}
-      </div>
+      </button>
 
+      {!collapsed && (<>
       <div className="relative">
         <textarea
           value={input}
@@ -249,9 +252,9 @@ export default function AiChatCopilot() {
           onFocus={e => (e.currentTarget.style.borderColor = 'rgba(185,28,28,0.3)')}
           onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)')}
           onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
               e.preventDefault()
-              handleCommand(input)
+              handleCommand(input.trim())
             }
           }}
         />
@@ -270,12 +273,12 @@ export default function AiChatCopilot() {
 
       {/* Suggestion Chips */}
       {status !== 'loading' && !feedback && (
-        <div className="flex flex-wrap gap-1.5 pt-1">
+        <div className="flex gap-1.5 pt-1 overflow-x-auto scrollbar-none pb-1 -mx-3.5 px-3.5">
           {QUICK_CHIPS.map(chip => (
             <button
               key={chip.label}
               onClick={() => { setInput(chip.cmd); handleCommand(chip.cmd) }}
-              className="text-[10px] font-bold text-zinc-500 hover:text-zinc-300 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer active:scale-95"
+              className="text-[10px] font-bold text-zinc-500 hover:text-zinc-300 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer active:scale-95 flex-shrink-0 whitespace-nowrap"
             >
               {chip.label}
             </button>
@@ -305,6 +308,7 @@ export default function AiChatCopilot() {
           </motion.div>
         )}
       </AnimatePresence>
+      </>)}
     </div>
   )
 }

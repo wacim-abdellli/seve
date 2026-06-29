@@ -1,6 +1,6 @@
 import { useState, useContext, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Sparkles, Loader2, Check, ChevronRight, X } from 'lucide-react'
+import { Sparkles, Loader2, Check, ChevronRight, ChevronDown, ChevronUp, X } from 'lucide-react'
 import ResumeDataContextInternal from '../../context/resumeDataContextDef'
 import { useAi } from '../../hooks/useAi'
 import { aiComplete, PROMPTS } from '../../services/aiService'
@@ -29,9 +29,10 @@ interface SuggestionTask {
   run: () => Promise<void>
 }
 
-export default function AiResumeAdvisor() {
+export default function AiResumeAdvisor({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
   const ctx = useContext(ResumeDataContextInternal)
   const { isConfigured, config } = useAi()
+  const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const [loading, setLoading] = useState<string | null>(null)
   const [done, setDone] = useState<string[]>([])
   const [dismissed, setDismissed] = useState<string[]>([])
@@ -164,14 +165,15 @@ export default function AiResumeAdvisor() {
     <>
       <div className="mx-3 mb-3 rounded-xl overflow-hidden" style={{ background: 'rgba(185,28,28,0.04)', border: '1px solid rgba(185,28,28,0.12)' }}>
         {/* Header */}
-        <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[#b91c1c]/10">
+        <button onClick={() => setCollapsed(v => !v)} className="flex items-center gap-2 px-3 py-2.5 border-b border-[#b91c1c]/10 w-full text-left">
           <Sparkles className="w-3.5 h-3.5 text-[#b91c1c]" />
           <span className="text-[10px] font-bold text-white uppercase tracking-wide flex-1">AI Resume Advisor</span>
+          {collapsed ? <ChevronDown className="w-3 h-3 text-zinc-500" /> : <ChevronUp className="w-3 h-3 text-zinc-500" />}
           <span className="text-[9px] text-[#b91c1c] font-bold">{visibleTasks.length} tip{visibleTasks.length > 1 ? 's' : ''}</span>
-        </div>
+        </button>
 
         {/* Tasks */}
-        <div className="divide-y divide-white/[0.03]">
+        {!collapsed && (<div className="divide-y divide-white/[0.03]">
           {visibleTasks.slice(0, 3).map(task => (
             <div key={task.id} className="flex items-center gap-2 px-3 py-2.5">
               <div className="flex-1 min-w-0">
@@ -206,6 +208,7 @@ export default function AiResumeAdvisor() {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       <AnimatePresence>

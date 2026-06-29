@@ -13,11 +13,12 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
 import ResumeManager from '../components/ResumeManager'
-import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo, MoreVertical, HelpCircle } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo, MoreVertical } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
 import AiSettingsModal from '../components/ai/AiSettingsModal'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { cleanAndParseJson } from '../utils/jsonParser'
 import { copyToClipboard } from '../utils/clipboard'
 
@@ -314,12 +315,13 @@ interface SimpleSettingsModalProps {
   onImportResume: (data: ResumeData) => void
   onClose: () => void
   onResetSpace: () => void
+  onRequestReset?: () => void
   resumes: Record<string, ResumeProfile>
   selectedResumeId: string
   onRestoreBackup: (backup: AppState) => void
 }
 
-function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResume, onClose, onResetSpace, resumes, selectedResumeId, onRestoreBackup }: SimpleSettingsModalProps) {
+function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResume, onClose, onResetSpace, onRequestReset, resumes, selectedResumeId, onRestoreBackup }: SimpleSettingsModalProps) {
   const [showPasteBox, setShowPasteBox] = useState(false)
   const [pasteValue, setPasteValue] = useState('')
   const [pasteError, setPasteError] = useState<string | null>(null)
@@ -493,7 +495,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
             )}
           </div>
           <div className="pt-3 border-t border-zinc-800/80">
-            <button onClick={() => { if (window.confirm('Reset all resume data for this version? This cannot be undone.')) { onResetSpace(); onClose() } }} className="w-full h-10 rounded-xl bg-red-500/5 border border-red-950/30 hover:bg-red-500/10 text-red-450 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+            <button onClick={() => { onRequestReset?.() }} className="w-full h-10 rounded-xl bg-red-500/5 border border-red-950/30 hover:bg-red-500/10 text-red-450 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
               <RefreshCw className="w-3.5 h-3.5" /> Reset Resume Data
             </button>
           </div>
@@ -683,6 +685,15 @@ export default function EditorLayout() {
     }
   }, [user, signInWithGoogleToken])
 
+  useEffect(() => {
+    if (!localStorage.getItem('seve_mobile_onboarded')) {
+      localStorage.setItem('seve_mobile_onboarded', '1')
+      if (window.innerWidth < 1024) {
+        setTimeout(() => setShowAiGuide(true), 800)
+      }
+    }
+  }, [])
+
 
   const [activeMode, setActiveMode] = useState<'studio' | 'design' | 'preview' | 'analyze'>('studio')
   const [activeStudioSection, setActiveStudioSection] = useState<SectionType | null>(null)
@@ -737,6 +748,8 @@ export default function EditorLayout() {
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [showMobileAiSettings, setShowMobileAiSettings] = useState(false)
+  const [confirmReset1, setConfirmReset1] = useState(false)
+  const [confirmReset2, setConfirmReset2] = useState(false)
 
   const handlePrint = useCallback(() => {
     handlePrintModal(resumeDataRef.current, pageCountRef.current)
@@ -770,9 +783,12 @@ export default function EditorLayout() {
 
 
   const resetResume = () => {
-    if (window.confirm('Are you sure you want to reset this resume version? All your current data for this version will be lost.')) {
-      importResumeData({ contact: { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' }, summary: '', experience: [], education: [], skills: [], languages: [], projects: [] })
-    }
+    setConfirmReset2(true)
+  }
+
+  const executeResetResume = () => {
+    importResumeData({ contact: { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' }, summary: '', experience: [], education: [], skills: [], languages: [], projects: [] })
+    setConfirmReset2(false)
   }
 
   const editorContext = useMemo<EditorContextType>(() => ({
@@ -796,7 +812,7 @@ export default function EditorLayout() {
 
   return (
     <div 
-      className="select-none h-screen bg-background text-foreground flex flex-col relative overflow-hidden"
+      className="select-none h-[100dvh] bg-background text-foreground flex flex-col relative overflow-hidden"
       style={{
         '--accent': themeColor,
         '--accent-soft': `${themeColor}1a`,
@@ -1109,16 +1125,7 @@ export default function EditorLayout() {
                     </div>
                     Settings
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowShortcuts(true); setIsMobileMenuOpen(false) }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
-                      <HelpCircle size={13} className="text-zinc-400" />
-                    </div>
-                    Shortcuts
-                  </button>
+
                 </div>
 
                 <div className="h-px bg-white/5 mx-3" />
@@ -1188,6 +1195,7 @@ export default function EditorLayout() {
             onImportResume={importResumeData}
             onClose={() => setIsSettingsOpen(false)}
             onResetSpace={resetResume}
+            onRequestReset={() => setConfirmReset1(true)}
             resumes={resumes}
             selectedResumeId={selectedResumeId}
             onRestoreBackup={restoreFromBackup}
@@ -1260,6 +1268,27 @@ export default function EditorLayout() {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={confirmReset1}
+        title="Reset Resume?"
+        description="Reset all resume data for this version? This cannot be undone."
+        confirmLabel="Reset"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={() => { resetResume(); setIsSettingsOpen(false); setConfirmReset1(false) }}
+        onCancel={() => setConfirmReset1(false)}
+      />
+      <ConfirmDialog
+        open={confirmReset2}
+        title="Reset Resume Version?"
+        description="All your current data for this version will be lost."
+        confirmLabel="Reset"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={executeResetResume}
+        onCancel={() => setConfirmReset2(false)}
+      />
     </div>
 
   )

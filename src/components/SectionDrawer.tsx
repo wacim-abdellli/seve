@@ -76,11 +76,11 @@ export default function SectionDrawer({
   onClose,
 }: SectionDrawerProps) {
   const { resumeData, updateResumeData: onChange } = useResume()
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
   const dragControls = useDragControls()
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    const handleResize = () => setIsMobile(window.innerWidth < 1024)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -150,9 +150,9 @@ export default function SectionDrawer({
       dragControls={dragControls}
       dragListener={false}
       dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={{ top: 0.05, bottom: 0.85 }}
+      dragElastic={{ top: 0.02, bottom: 0.5 }}
       onDragEnd={(_, info) => {
-        if (info.offset.y > 140) {
+        if (info.offset.y > 220 || info.velocity.y > 600) {
           onClose()
         }
       }}

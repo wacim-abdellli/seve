@@ -103,7 +103,7 @@ function AppContent() {
         Skip to content
       </a>
       {showSplash && <SplashScreen onDone={handleSplashDone} />}
-      <div style={{ display: showSplash ? 'none' : 'block', height: '100vh' }}>
+      <div style={{ display: showSplash ? 'none' : 'block', height: '100dvh' }}>
         <Suspense fallback={<div className="flex items-center justify-center h-full bg-zinc-950 text-zinc-400 text-sm">Loading...</div>}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

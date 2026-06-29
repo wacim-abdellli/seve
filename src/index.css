@@ -448,6 +448,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* Form Panel Scrollbar Styling (Rule 9) */
 .form-panel {
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;  /* IE and Edge */
 }
@@ -1054,20 +1055,26 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 
 /* Scrollbar none utility — visible on hover/focus for accessibility */
 .scrollbar-none {
-  scrollbar-width: thin !important;
-  -ms-overflow-style: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 .scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-none:hover::-webkit-scrollbar,
+.scrollbar-none:focus-within::-webkit-scrollbar {
+  display: block !important;
   width: 4px !important;
   height: 4px !important;
-}
-.scrollbar-none::-webkit-scrollbar-thumb {
-  background: transparent !important;
-  border-radius: 4px !important;
 }
 .scrollbar-none:hover::-webkit-scrollbar-thumb,
 .scrollbar-none:focus-within::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 4px !important;
+}
+.scrollbar-none:hover::-webkit-scrollbar-track,
+.scrollbar-none:focus-within::-webkit-scrollbar-track {
+  background: transparent !important;
 }
 
 /* Screen-only page styling */

@@ -124,7 +124,7 @@ export default function ResumeForm({ resumeData, onChange, activeSection }: Resu
       </div>
 
       {/* Form Content body (Rule 9) */}
-      <div className="p-5 overflow-y-auto flex-1 max-h-[calc(100vh-210px)] form-panel">
+      <div className="p-5 overflow-y-auto flex-1 max-h-[calc(100dvh-210px)] form-panel">
         {activeSubTab === 'contact' && (
           <ContactForm
             contact={resumeData.contact}
