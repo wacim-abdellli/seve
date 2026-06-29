@@ -855,9 +855,9 @@ export default function EditorLayout() {
         </div>
 
         {/* Zone 2 — Center: Cloud Status & History Controls */}
-        <div className="hidden sm:flex flex-1 items-center justify-center gap-3.5 min-w-0">
-          {/* History (Undo / Redo) Buttons */}
-          <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-full p-0.5">
+        <div className="flex flex-1 items-center justify-center gap-2 sm:gap-3.5 min-w-0">
+          {/* History (Undo / Redo) Buttons — desktop only */}
+          <div className="hidden sm:flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-full p-0.5">
             <button
               onClick={undo}
               disabled={!canUndo}
@@ -879,7 +879,7 @@ export default function EditorLayout() {
           </div>
 
           <div
-            className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 w-[140px] justify-center ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-full border text-[9px] sm:text-[10px] font-semibold tracking-wide transition-all duration-500 sm:w-[140px] justify-center ${
               cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
               : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
               : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
@@ -907,12 +907,12 @@ export default function EditorLayout() {
                 : 'Local'}
             </span>
             {cloudStatus === 'error' && (
-              <button onClick={retrySync} className="shrink-0 underline underline-offset-2 hover:text-white transition-colors cursor-pointer">
+              <button onClick={retrySync} className="shrink-0 underline underline-offset-2 hover:text-white transition-colors cursor-pointer hidden sm:inline">
                 Retry
               </button>
             )}
             {cloudStatus === 'unsaved' && !isSaving && (
-              <button onClick={saveChangesToCloud} className="shrink-0 text-white hover:text-zinc-200 transition-colors cursor-pointer font-bold ml-0.5" title="Save now">
+              <button onClick={saveChangesToCloud} className="shrink-0 text-white hover:text-zinc-200 transition-colors cursor-pointer font-bold ml-0.5 hidden sm:inline-flex items-center" title="Save now">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 align-middle" />Save
               </button>
             )}
@@ -921,16 +921,6 @@ export default function EditorLayout() {
 
         {/* Zone 3 — Right: Primary & Secondary Actions */}
         <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
-          {/* Mobile cloud status — only shows when saving/error, otherwise hidden */}
-          <div className="sm:hidden flex items-center">
-            {(isSaving || cloudStatus === 'syncing') && (
-              <RefreshCw size={13} className="text-amber-400 animate-spin shrink-0" />
-            )}
-            {cloudStatus === 'error' && (
-              <AlertCircle size={13} className="text-red-400 animate-pulse shrink-0" />
-            )}
-          </div>
-
           {/* AI Fill (Desktop only) */}
           <button 
             onClick={() => setShowAiGuide(true)} 
