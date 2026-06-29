@@ -247,8 +247,8 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
           placeholder="Ask Seve to add a project, certification, interest, summary rewrite..."
           rows={3}
           disabled={status === 'loading'}
-          className="w-full rounded-xl pl-3.5 pr-9 py-2.5 text-[11px] leading-relaxed text-zinc-200 placeholder-zinc-700 outline-none resize-none transition-all custom-scrollbar"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', fontSize: '16px' }}
+          className="w-full rounded-xl pl-3.5 pr-9 py-2.5 text-[16px] lg:text-[11px] leading-relaxed text-zinc-200 placeholder-zinc-700 outline-none resize-none transition-all custom-scrollbar"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
           onFocus={e => (e.currentTarget.style.borderColor = 'rgba(185,28,28,0.3)')}
           onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)')}
           onKeyDown={e => {
