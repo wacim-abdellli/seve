@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') ?? ''
-const GROQ_MODEL = 'deepseek-r1-distill-llama-70b'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 // Simple in-memory rate limit per IP (resets on cold start — good enough for free tier)

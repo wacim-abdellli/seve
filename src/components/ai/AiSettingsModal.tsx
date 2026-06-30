@@ -98,7 +98,7 @@ export default function AiSettingsModal({ onClose }: AiSettingsModalProps) {
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
           <div>
             <h2 id="ai-settings-heading" className="text-sm font-bold text-white">AI Settings</h2>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Powered by DeepSeek R1 · Groq</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Powered by Llama 3.3 70B · Groq</p>
           </div>
           <button
             onClick={onClose}

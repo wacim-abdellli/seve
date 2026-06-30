@@ -36,7 +36,7 @@ export interface ProviderMeta {
 export const PROVIDER_META: Record<AiProvider, ProviderMeta> = {
   app: {
     label: 'Seve AI',
-    model: 'deepseek-r1-distill-llama-70b',
+    model: 'llama-3.3-70b-versatile',
     freeTier: '25 free calls/day · No setup needed',
     signupUrl: '',
     baseUrl: '',
@@ -44,7 +44,7 @@ export const PROVIDER_META: Record<AiProvider, ProviderMeta> = {
   },
   groq: {
     label: 'Groq',
-    model: 'deepseek-r1-distill-llama-70b',
+    model: 'llama-3.3-70b-versatile',
     freeTier: '14,400 req/day · Free forever',
     signupUrl: 'https://console.groq.com',
     baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
