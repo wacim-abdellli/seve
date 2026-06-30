@@ -1048,33 +1048,37 @@ export default function EditorLayout() {
             <MoreVertical size={16} className="shrink-0" />
           </button>
 
-          {/* Floating Mobile Overflow Menu — premium sectioned panel */}
+          {/* Floating Mobile Overflow Menu — premium glass panel */}
           {isMobileMenuOpen && createPortal(
             <>
+              {/* Backdrop */}
               <div
                 className="fixed inset-0 z-[90] no-print"
-                style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+                style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
                 onClick={() => setIsMobileMenuOpen(false)}
               />
+              {/* Menu panel */}
               <div
-                className="fixed right-3 top-[60px] z-[95] no-print flex flex-col overflow-hidden animate-fade-in"
+                className="fixed right-2 top-[56px] z-[95] no-print flex flex-col overflow-hidden animate-fade-in"
                 style={{
-                  background: 'linear-gradient(180deg,#141418 0%,#0f0f13 100%)',
+                  background: 'linear-gradient(180deg, rgba(20,20,24,0.95) 0%, rgba(15,15,19,0.98) 100%)',
                   border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '18px',
-                  boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
-                  minWidth: '220px',
+                  borderRadius: '20px',
+                  boxShadow: '0 32px 64px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05) inset',
+                  minWidth: '240px',
+                  backdropFilter: 'blur(20px)',
                 }}
               >
                 {/* Cloud status row */}
-                <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.06]">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{
                     background: cloudStatus === 'synced' ? '#34d399'
                       : cloudStatus === 'error' ? '#f87171'
                       : cloudStatus === 'unsaved' || isSaving ? '#fbbf24'
-                      : '#52525b'
+                      : '#52525b',
+                    boxShadow: cloudStatus === 'synced' ? '0 0 8px rgba(52,211,153,0.4)' : 'none'
                   }} />
-                  <span className="text-[11px] text-zinc-400 flex-1">
+                  <span className="text-[11px] text-zinc-400 flex-1 font-medium">
                     {cloudStatus === 'error' ? 'Sync error'
                       : isSaving || cloudStatus === 'syncing' ? 'Saving…'
                       : cloudStatus === 'synced' ? 'Cloud saved'
@@ -1092,83 +1096,81 @@ export default function EditorLayout() {
                 </div>
 
                 {/* AI section */}
-                <div className="px-2 pt-2 pb-1">
-                  <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-2 pb-1">AI</p>
+                <div className="px-2.5 pt-3 pb-1.5">
+                  <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] px-2.5 pb-1.5">AI</p>
                   <button
                     type="button"
                     onClick={() => { setShowAiGuide(true); setIsMobileMenuOpen(false) }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer text-left active:scale-[0.98]"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-[#b91c1c]/10 border border-[#b91c1c]/20 flex items-center justify-center shrink-0">
-                      <Sparkles size={13} className="text-[#b91c1c]" />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(185,28,28,0.15), rgba(185,28,28,0.05))', border: '1px solid rgba(185,28,28,0.2)' }}>
+                      <Sparkles size={14} className="text-[var(--accent)]" />
                     </div>
-                    <div>
-                      <div>AI Autofill</div>
-                      <div className="text-[10px] text-zinc-600 font-normal">Import from LinkedIn / PDF</div>
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-semibold">AI Autofill</div>
+                      <div className="text-[10px] text-zinc-500 font-normal">Import from LinkedIn / PDF</div>
                     </div>
                   </button>
-                  {/* AI Settings row */}
                   <button
                     type="button"
                     onClick={() => { setShowMobileAiSettings(true); setIsMobileMenuOpen(false) }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer text-left active:scale-[0.98]"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-[#b91c1c]/10 border border-[#b91c1c]/20 flex items-center justify-center shrink-0">
-                      <Sparkles size={13} className="text-[#b91c1c]" />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(185,28,28,0.15), rgba(185,28,28,0.05))', border: '1px solid rgba(185,28,28,0.2)' }}>
+                      <Sparkles size={14} className="text-[var(--accent)]" />
                     </div>
-                    <div>
-                      <div>Seve AI</div>
-                      <div className="text-[10px] text-zinc-600 font-normal">Free · 25 calls/day · Tap to manage</div>
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-semibold">Seve AI</div>
+                      <div className="text-[10px] text-zinc-500 font-normal">Free · 25 calls/day · Tap to manage</div>
                     </div>
                   </button>
                 </div>
 
-                <div className="h-px bg-white/5 mx-3" />
+                <div className="h-px bg-white/[0.06] mx-4" />
 
                 {/* Tools section */}
-                <div className="px-2 py-1">
-                  <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-2 pb-1">Tools</p>
+                <div className="px-2.5 py-1.5">
+                  <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] px-2.5 pb-1.5">Tools</p>
                   <button
                     type="button"
                     onClick={() => { setActiveMode('analyze'); setIsMobileMenuOpen(false) }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer text-left active:scale-[0.98]"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
-                      <CheckCircle2 size={13} className="text-zinc-400" />
+                    <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={14} className="text-zinc-400" />
                     </div>
                     ATS Checker
                   </button>
                   <button
                     type="button"
                     onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false) }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer text-left active:scale-[0.98]"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
-                      <Settings size={13} className="text-zinc-400" />
+                    <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
+                      <Settings size={14} className="text-zinc-400" />
                     </div>
                     Settings
                   </button>
-
                 </div>
 
-                <div className="h-px bg-white/5 mx-3" />
+                <div className="h-px bg-white/[0.06] mx-4" />
 
                 {/* Account section */}
-                <div className="px-2 pt-1 pb-2">
-                  <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-2 pb-1">Account</p>
+                <div className="px-2.5 pt-1.5 pb-3">
+                  <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] px-2.5 pb-1.5">Account</p>
                   {user ? (
                     <>
-                      <div className="flex items-center gap-2.5 px-3 py-2">
-                        <img src={user.user_metadata?.avatar_url} alt="" className="w-6 h-6 rounded-full shrink-0" referrerPolicy="no-referrer" />
-                        <span className="text-[11px] text-zinc-500 truncate">{user.email}</span>
+                      <div className="flex items-center gap-3 px-3 py-2.5">
+                        <img src={user.user_metadata?.avatar_url} alt="" className="w-7 h-7 rounded-full shrink-0 ring-2 ring-white/[0.06]" referrerPolicy="no-referrer" />
+                        <span className="text-[11px] text-zinc-400 truncate font-medium">{user.email}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => { signOut(); setIsMobileMenuOpen(false) }}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 transition-colors cursor-pointer text-left active:bg-rose-500/8"
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl text-[12px] font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/[0.06] transition-all cursor-pointer text-left active:scale-[0.98]"
                       >
-                        <div className="w-7 h-7 rounded-lg bg-rose-500/8 border border-rose-500/15 flex items-center justify-center shrink-0">
-                          <LogOut size={13} className="text-rose-400" />
+                        <div className="w-8 h-8 rounded-xl bg-rose-500/[0.08] border border-rose-500/[0.12] flex items-center justify-center shrink-0">
+                          <LogOut size={14} className="text-rose-400" />
                         </div>
                         Sign Out
                       </button>
@@ -1177,10 +1179,10 @@ export default function EditorLayout() {
                     <button
                       type="button"
                       onClick={() => { setIsGoogleSignInOpen(true); setIsMobileMenuOpen(false) }}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left active:bg-white/8"
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl text-[12px] font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer text-left active:scale-[0.98]"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-white/4 border border-white/8 flex items-center justify-center shrink-0">
-                        <LogIn size={13} className="text-zinc-400" />
+                      <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
+                        <LogIn size={14} className="text-zinc-400" />
                       </div>
                       Sign In
                     </button>
