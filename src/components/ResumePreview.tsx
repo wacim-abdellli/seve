@@ -154,7 +154,7 @@ export default function ResumePreview({
       return
     }
 
-    const pages = Math.max(1, Math.ceil(height / A4_SCREEN_THRESHOLD))
+    const pages = Math.max(1, Math.ceil((height - 8) / A4_SCREEN_THRESHOLD))
     setPageCount(pages)
     if (onPageCountChangeRef.current) onPageCountChangeRef.current(pages)
   }, [])
@@ -187,7 +187,7 @@ export default function ResumePreview({
     const scrollHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
 
     // Reset to default if it naturally fits (or user called it accidentally)
-    if (scrollHeight <= A4_PX) {
+    if (scrollHeight <= A4_PX + 8) {
       onChangeFontSize(10)
       showToast('Resume naturally fits on 1 page', 'success')
       return
@@ -197,7 +197,7 @@ export default function ResumePreview({
     const contentHeight = scrollHeight - TEMPLATE_VERTICAL_PADDING
     const targetContentArea = A4_PX - TEMPLATE_VERTICAL_PADDING // 1026px
     const scale = targetContentArea / contentHeight
-    const targetFontSize = Math.floor(10 * scale * 10) / 10
+    const targetFontSize = Math.floor(templateFontSize * scale * 10) / 10
     const MIN_FONT_SIZE = 8.5
 
     const newFontSize = Math.max(MIN_FONT_SIZE, targetFontSize)
