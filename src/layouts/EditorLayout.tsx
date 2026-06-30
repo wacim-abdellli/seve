@@ -749,11 +749,6 @@ export default function EditorLayout() {
   return (
     <div 
       className="select-none h-[100dvh] bg-background text-foreground flex flex-col relative overflow-hidden"
-      style={{
-        '--accent': themeColor,
-        '--accent-soft': `${themeColor}1a`,
-        '--accent-hover': themeColor,
-      } as React.CSSProperties}
     >
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 no-print">
         <div className="absolute inset-0 premium-grid opacity-30" />
@@ -776,7 +771,7 @@ export default function EditorLayout() {
           <div className="hidden sm:flex items-center gap-2 shrink-0 min-w-0">
             <div className="flex items-center select-none">
               <span className="relative font-serif text-sm font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
-                S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#b91c1c]" />
               </span>
               <span className="font-serif text-sm font-bold text-white leading-none pl-1.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>eve</span>
             </div>
