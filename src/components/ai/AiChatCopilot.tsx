@@ -32,6 +32,13 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
   const [selectedTone, setSelectedTone] = useState('Professional')
   const [selectedLevel, setSelectedLevel] = useState('Senior')
   const [selectedFocus, setSelectedFocus] = useState<string[]>(['Technical Skills'])
+
+  // Dynamic clarification state
+  const [clarification, setClarification] = useState<{
+    question: string
+    options: string[]
+    pendingCommand: string
+  } | null>(null)
   
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -68,6 +75,17 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
 
       if (actions.length === 0) {
         throw new Error('No valid actions could be parsed from AI response.')
+      }
+
+      // Handle clarification action
+      if (actions.length === 1 && actions[0].action === 'clarify' && actions[0].data) {
+        setClarification({
+          question: actions[0].data.question || 'Could you clarify your request?',
+          options: Array.isArray(actions[0].data.options) ? actions[0].data.options : [],
+          pendingCommand: cmdText
+        })
+        setStatus('idle')
+        return
       }
 
       // If the only action is 'unknown', show the conversational message
@@ -448,6 +466,59 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
               <Play className="w-3.5 h-3.5 fill-current" />
               Generate Profile Summary
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clarification Multiple-Choice Selector */}
+      <AnimatePresence>
+        {clarification && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="border border-[#b91c1c]/25 bg-black/40 rounded-xl p-3.5 space-y-3 shadow-xl"
+            style={{ background: 'linear-gradient(180deg, rgba(185,28,28,0.04) 0%, rgba(17,17,22,0.98) 100%)' }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-zinc-300 leading-tight pr-4">
+                {clarification.question}
+              </span>
+              <span className="text-[8px] text-[#b91c1c] font-bold uppercase tracking-wider bg-[#b91c1c]/10 px-1.5 py-0.5 rounded shrink-0">
+                Clarifying
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              {clarification.options.map((opt, idx) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    const nextCmd = `${clarification.pendingCommand} (Selection Context: ${opt})`
+                    setClarification(null)
+                    handleCommand(nextCmd)
+                  }}
+                  className="w-full text-left px-3 py-2 bg-white/[0.01] border border-white/5 hover:border-[#b91c1c]/30 hover:bg-[#b91c1c]/5 rounded-lg text-[10px] font-medium text-zinc-400 hover:text-white transition-all flex items-center gap-2.5 group cursor-pointer"
+                >
+                  <span className="w-5 h-5 rounded-md bg-white/5 group-hover:bg-[#b91c1c]/10 text-zinc-500 group-hover:text-[#b91c1c] text-[9px] font-bold flex items-center justify-center shrink-0 border border-white/5 transition-colors">
+                    {idx + 1}
+                  </span>
+                  <span className="truncate">{opt}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[9px] text-zinc-600">
+                Or reply directly below...
+              </span>
+              <button
+                onClick={() => setClarification(null)}
+                className="text-[9px] font-bold text-zinc-500 hover:text-white px-2 py-1 rounded bg-white/5 border border-white/5 transition-all cursor-pointer active:scale-95"
+              >
+                Skip
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

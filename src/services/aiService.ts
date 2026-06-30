@@ -427,12 +427,14 @@ Available actions and exact data shapes:
 - "update_contact": {"action":"update_contact","data":{"fullName":"if updating","email":"if updating","phone":"if updating","location":"if updating","linkedin":"if updating","website":"if updating"}}
 - "update_experience": {"action":"update_experience","data":{"id":"REQUIRED_ID_FROM_CONTEXT","jobTitle":"string","company":"string","bullets":["Action verb + achievement","Action verb + achievement"]}} — use this to rewrite or improve existing experience bullets or details.
 - "update_project": {"action":"update_project","data":{"id":"REQUIRED_ID_FROM_CONTEXT","name":"string","description":"string","technologies":["string"]}} — use this to update existing projects.
+- "clarify": {"action":"clarify","data":{"question":"string","options":["string","string","string","string"]}} — use this when the user's request is broad, ambiguous, or lacks key details (e.g., "add a project" without specifying what it is, "find a project idea", or "write a summary" with no context). Ask a polite clarifying question with 3-4 options.
 - "unknown": {"action":"unknown","message":"Brief explanation of what you can do"}
 
 Rules for updating / improving existing content:
 - Find the matching experience or project in the resume context below.
 - Copy its "id" and put it in the "id" field of data.
 - If requested to "improve vocabulary" or "improve resume wording/quality", rewrite the "summary" (using update_summary) AND rewrite the bullets for each experience entry (using update_experience with their respective IDs) to start with strong action verbs and include metrics.
+- If a request is ambiguous, ALWAYS choose "clarify" to ask for details instead of guessing or failing.
 
 Few-shot examples:
 - User says "add a Python project" (Software Developer candidate) →
@@ -459,6 +461,40 @@ Few-shot examples:
     {"action":"update_summary","data":"[Polished, professional summary matching the candidate's actual industry and years of experience strictly. Do not mention software or writing unless the candidate is in that industry.]"},
     {"action":"update_experience","data":{"id":"job-id-1","company":"[Actual company 1 from context]","bullets":["[Polished bullet 1 matching actual job duties]","[Polished bullet 2 matching actual job duties]"]}},
     {"action":"update_experience","data":{"id":"job-id-2","company":"[Actual company 2 from context]","bullets":["[Polished bullet 1]","[Polished bullet 2]"]}}
+  ]
+}
+- User says "help me to find a strong project idea" →
+{
+  "actions": [
+    {
+      "action": "clarify",
+      "data": {
+        "question": "What is this project idea for?",
+        "options": [
+          "Academic Coursework / Studies",
+          "Personal Portfolio / GitHub Boost",
+          "Startup MVP / Product Launch",
+          "Freelance Client Work"
+        ]
+      }
+    }
+  ]
+}
+- User says "write a summary for me" (without specifying anything else) →
+{
+  "actions": [
+    {
+      "action": "clarify",
+      "data": {
+        "question": "What industry or key focus area should your profile summary target?",
+        "options": [
+          "Technical & Development skills",
+          "Leadership, Management & Strategy",
+          "Client Relations & Account Growth",
+          "Creative, Design & Branding"
+        ]
+      }
+    }
   ]
 }
 
