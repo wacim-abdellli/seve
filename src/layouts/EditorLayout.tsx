@@ -824,30 +824,35 @@ export default function EditorLayout() {
         <div className="absolute inset-0 noise-overlay" />
       </div>
 
-      <header className="relative z-40 flex items-center justify-between gap-2 px-2 sm:px-6 h-14 bg-zinc-950/80 backdrop-blur-md border-b border-border no-print flex-shrink-0 overflow-visible">
+      <header className="relative z-40 flex items-center justify-between gap-2 px-2 sm:px-5 h-[52px] sm:h-14 bg-zinc-950/90 backdrop-blur-xl border-b border-white/[0.06] no-print flex-shrink-0 overflow-visible">
         {/* Zone 1 — Left: Navigation & Identity */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 min-w-0">
+          {/* Back button */}
           <button 
             onClick={() => navigate('/')} 
-            className="flex items-center justify-center w-9 h-9 sm:h-8 sm:w-auto sm:gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 sm:px-2.5 rounded-xl sm:rounded-full transition-all cursor-pointer shrink-0"
+            className="flex items-center justify-center w-9 h-9 sm:h-8 sm:w-auto sm:gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] sm:px-2.5 rounded-2xl sm:rounded-full transition-all cursor-pointer shrink-0 active:scale-95"
           >
             <ArrowLeft size={15} className="shrink-0" />
             <span className="hidden sm:inline">Back</span>
           </button>
+
+          {/* Logo — desktop only */}
           <div className="hidden sm:flex items-center gap-2 shrink-0 min-w-0">
             <div className="flex items-center select-none">
               <span className="relative font-serif text-sm font-bold text-white leading-none" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
-                S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[#b91c1c]" />
+                S<span className="absolute top-0 -right-1 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
               </span>
               <span className="font-serif text-sm font-bold text-white leading-none pl-1.5" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>eve</span>
             </div>
           </div>
+
+          {/* Resume name pill */}
           <button 
             onClick={() => setIsResumeManagerOpen(true)} 
-            className="flex items-center h-9 sm:h-8 gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2 sm:px-2.5 rounded-xl sm:rounded-full transition-all cursor-pointer hover:border-zinc-700 min-w-0 shrink-0 max-w-[140px] sm:max-w-[200px]"
+            className="flex items-center h-9 sm:h-8 gap-1.5 text-[11px] sm:text-xs font-bold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] px-2.5 sm:px-3 rounded-2xl sm:rounded-full transition-all cursor-pointer hover:border-white/[0.1] min-w-0 shrink-0 max-w-[140px] sm:max-w-[200px] active:scale-[0.98]"
           >
             <span className="truncate">{activeResume?.title || 'My Resume'}</span>
-            <span className="hidden sm:inline-flex px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono shrink-0 min-w-4 h-4 items-center justify-center">
+            <span className="hidden sm:inline-flex px-1.5 py-0.5 text-[9px] bg-white/[0.06] text-zinc-400 rounded-full border border-white/[0.06] font-mono shrink-0 min-w-4 h-4 items-center justify-center">
               {Object.keys(resumes || {}).length}
             </span>
             <ChevronDown size={11} className="shrink-0 text-zinc-500" />
@@ -855,15 +860,15 @@ export default function EditorLayout() {
         </div>
 
         {/* Zone 2 — Center: Cloud Status (Desktop: pill, Mobile: icon) */}
-        <div className="flex flex-1 items-center justify-center sm:gap-3.5 min-w-0">
+        <div className="flex flex-1 items-center justify-center sm:gap-3 min-w-0">
           {/* Desktop: Undo/Redo + Cloud Pill */}
-          <div className="hidden sm:flex items-center gap-3.5">
-            <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-full p-0.5">
+          <div className="hidden sm:flex items-center gap-3">
+            <div className="flex items-center gap-0.5 bg-white/[0.04] border border-white/[0.06] rounded-full p-0.5">
               <button
                 onClick={undo}
                 disabled={!canUndo}
                 aria-label="Undo"
-                className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-white/[0.06] disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
                 title="Undo (Ctrl+Z)"
               >
                 <Undo size={13} />
@@ -872,19 +877,19 @@ export default function EditorLayout() {
                 onClick={redo}
                 disabled={!canRedo}
                 aria-label="Redo"
-                className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-white/[0.06] disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
                 title="Redo (Ctrl+Y)"
               >
                 <Redo size={13} />
               </button>
             </div>
             <div
-              className={`flex items-center gap-2 px-3.5 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 w-[140px] justify-center ${
-                cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
-                : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
-                : cloudStatus === 'unsaved' ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
-                : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+              className={`flex items-center gap-2 px-3.5 h-8 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 w-[140px] justify-center ${
+                cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/20 text-amber-400'
+                : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/20 text-emerald-400'
+                : cloudStatus === 'unsaved' ? 'bg-amber-500/8 border-amber-500/20 text-amber-400'
+                : 'bg-white/[0.03] border-white/[0.06] text-zinc-500'
               }`}
             >
               {cloudStatus === 'error' ? (
@@ -919,14 +924,14 @@ export default function EditorLayout() {
             </div>
           </div>
 
-          {/* Mobile: Cloud status icon only */}
+          {/* Mobile: Cloud status — glass icon */}
           <div
-            className={`flex sm:hidden items-center justify-center w-7 h-7 rounded-full transition-all duration-300 ${
-              cloudStatus === 'error' ? 'text-red-400'
-              : isSaving || cloudStatus === 'syncing' ? 'text-amber-400'
-              : cloudStatus === 'synced' ? 'text-emerald-400'
-              : cloudStatus === 'unsaved' ? 'text-amber-400'
-              : 'text-zinc-600'
+            className={`flex sm:hidden items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${
+              cloudStatus === 'error' ? 'bg-red-500/10 text-red-400'
+              : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/10 text-amber-400'
+              : cloudStatus === 'synced' ? 'bg-emerald-500/10 text-emerald-400'
+              : cloudStatus === 'unsaved' ? 'bg-amber-500/10 text-amber-400'
+              : 'bg-white/[0.04] text-zinc-500'
             }`}
             title={cloudStatus === 'synced' ? 'Cloud saved' : cloudStatus === 'error' ? 'Sync error' : isSaving ? 'Saving…' : 'Local'}
           >
@@ -945,11 +950,11 @@ export default function EditorLayout() {
         </div>
 
         {/* Zone 3 — Right: Primary & Secondary Actions */}
-        <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0">
           {/* AI Fill (Desktop only) */}
           <button 
             onClick={() => setShowAiGuide(true)} 
-            className="hidden sm:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0"
+            className="hidden sm:flex items-center justify-center h-8 gap-1 border border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0"
           >
             <Sparkles size={12} className="shrink-0" />
             <span className="hidden lg:inline">AI Fill</span>
@@ -958,7 +963,7 @@ export default function EditorLayout() {
           {/* ATS (Desktop only) */}
           <button 
             onClick={() => setActiveMode('analyze')} 
-            className={`hidden md:flex items-center justify-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0 ${activeMode === 'analyze' ? 'bg-zinc-800 border-zinc-600 text-white' : ''}`}
+            className={`hidden md:flex items-center justify-center h-8 gap-1 border border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white font-bold text-[11px] px-3 rounded-full transition-all cursor-pointer shrink-0 ${activeMode === 'analyze' ? 'bg-white/[0.08] border-white/[0.12] text-white' : ''}`}
           >
             <CheckCircle2 size={12} className="shrink-0" />
             <span className="hidden lg:inline">ATS</span>
@@ -968,7 +973,7 @@ export default function EditorLayout() {
           <button 
             onClick={() => setIsSettingsOpen(true)} 
             aria-label="Settings"
-            className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
+            className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full border border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer shrink-0" 
             title="Settings"
           >
             <Settings size={14} className="shrink-0" />
@@ -984,7 +989,7 @@ export default function EditorLayout() {
                 aria-haspopup="menu"
                 aria-expanded={showUserMenu}
                 aria-label="Open account menu"
-                className="flex items-center h-8 gap-1 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-1.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
+                className="flex items-center h-8 gap-1 border border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08] text-[11px] font-extrabold px-1.5 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
               >
                 <img src={user.user_metadata?.avatar_url} alt="" className="w-5 h-5 rounded-full shrink-0" referrerPolicy="no-referrer" />
                 <ChevronDown size={10} className={`transition-transform shrink-0 hidden sm:inline ${showUserMenu ? 'rotate-180' : ''}`} />
@@ -1002,7 +1007,7 @@ export default function EditorLayout() {
             <button
               type="button"
               onClick={() => setIsGoogleSignInOpen(true)}
-              className="hidden sm:flex items-center h-8 gap-1.5 border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-[11px] font-extrabold px-3 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
+              className="hidden sm:flex items-center h-8 gap-1.5 border border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08] text-[11px] font-extrabold px-3 rounded-full text-zinc-300 hover:text-white transition-all cursor-pointer shrink-0"
               aria-label="Sign in with Google"
             >
               <LogIn size={12} className="shrink-0" />
@@ -1013,31 +1018,34 @@ export default function EditorLayout() {
           {/* Export PDF (Desktop only) */}
           <button 
             onClick={handlePrint} 
-            className="hidden sm:flex items-center justify-center h-9 gap-1.5 bg-[#b91c1c] hover:bg-[#c62828] text-white font-extrabold text-[11px] px-4 rounded-full transition-all cursor-pointer shadow-md shadow-rose-950/20 whitespace-nowrap shrink-0 active:scale-95"
-            style={{ backgroundColor: 'var(--accent)', transition: 'background-color 150ms' }}
+            className="hidden sm:flex items-center justify-center h-9 gap-1.5 bg-[var(--accent)] hover:brightness-110 text-white font-extrabold text-[11px] px-4 rounded-full transition-all cursor-pointer shadow-lg shadow-[var(--accent)]/20 whitespace-nowrap shrink-0 active:scale-95"
           >
             <Download size={13} className="shrink-0" />
             <span>Export PDF</span>
           </button>
 
-          {/* Mobile: Export icon button */}
+          {/* Mobile: Export — accent glass button */}
           <button
             onClick={handlePrint}
-            className="flex sm:hidden items-center justify-center w-9 h-9 rounded-xl sm:rounded-full transition-all cursor-pointer shrink-0 active:scale-95"
-            style={{ backgroundColor: 'var(--accent)' }}
+            className="flex sm:hidden items-center justify-center w-9 h-9 rounded-2xl transition-all cursor-pointer shrink-0 active:scale-90 shadow-lg"
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent))', boxShadow: '0 4px 12px rgba(var(--accent), 0.3)' }}
             aria-label="Export PDF"
           >
             <Download size={15} className="text-white" />
           </button>
 
-          {/* Overflow Menu Button (Mobile only) */}
+          {/* Mobile: Overflow — glass dot menu */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`flex sm:hidden items-center justify-center w-9 h-9 rounded-xl sm:rounded-full border transition-all cursor-pointer shrink-0 ${isMobileMenuOpen ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+            className={`flex sm:hidden items-center justify-center w-9 h-9 rounded-2xl border transition-all cursor-pointer shrink-0 active:scale-90 ${
+              isMobileMenuOpen 
+                ? 'bg-white/[0.1] border-white/[0.12] text-white' 
+                : 'bg-white/[0.04] border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+            }`}
             aria-label="More options"
           >
-            <MoreVertical size={15} className="shrink-0" />
+            <MoreVertical size={16} className="shrink-0" />
           </button>
 
           {/* Floating Mobile Overflow Menu — premium sectioned panel */}
