@@ -824,14 +824,14 @@ export default function EditorLayout() {
         <div className="absolute inset-0 noise-overlay" />
       </div>
 
-      <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-6 h-14 bg-zinc-950/80 backdrop-blur-md border-b border-border no-print flex-shrink-0 overflow-visible">
+      <header className="relative z-40 flex items-center justify-between gap-2 px-2 sm:px-6 h-14 bg-zinc-950/80 backdrop-blur-md border-b border-border no-print flex-shrink-0 overflow-visible">
         {/* Zone 1 — Left: Navigation & Identity */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 min-w-0">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
           <button 
             onClick={() => navigate('/')} 
-            className="flex items-center h-8 gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2.5 rounded-full transition-all cursor-pointer shrink-0"
+            className="flex items-center justify-center w-9 h-9 sm:h-8 sm:w-auto sm:gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 sm:px-2.5 rounded-xl sm:rounded-full transition-all cursor-pointer shrink-0"
           >
-            <ArrowLeft size={13} className="shrink-0" />
+            <ArrowLeft size={15} className="shrink-0" />
             <span className="hidden sm:inline">Back</span>
           </button>
           <div className="hidden sm:flex items-center gap-2 shrink-0 min-w-0">
@@ -844,84 +844,108 @@ export default function EditorLayout() {
           </div>
           <button 
             onClick={() => setIsResumeManagerOpen(true)} 
-            className="flex items-center h-8 gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2.5 rounded-full transition-all cursor-pointer hover:border-zinc-700 min-w-0 shrink-0 max-w-[200px]"
+            className="flex items-center h-9 sm:h-8 gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950/40 hover:bg-zinc-900 border border-zinc-800 px-2 sm:px-2.5 rounded-xl sm:rounded-full transition-all cursor-pointer hover:border-zinc-700 min-w-0 shrink-0 max-w-[140px] sm:max-w-[200px]"
           >
             <span className="truncate">{activeResume?.title || 'My Resume'}</span>
-            <span className="px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono shrink-0 min-w-4 h-4 flex items-center justify-center">
+            <span className="hidden sm:inline-flex px-1.5 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-400 rounded-full border border-zinc-700 font-mono shrink-0 min-w-4 h-4 items-center justify-center">
               {Object.keys(resumes || {}).length}
             </span>
             <ChevronDown size={11} className="shrink-0 text-zinc-500" />
           </button>
         </div>
 
-        {/* Zone 2 — Center: Cloud Status & History Controls */}
-        <div className="flex flex-1 items-center justify-center gap-2 sm:gap-3.5 min-w-0">
-          {/* History (Undo / Redo) Buttons — desktop only */}
-          <div className="hidden sm:flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-full p-0.5">
-            <button
-              onClick={undo}
-              disabled={!canUndo}
-              aria-label="Undo"
-              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
-              title="Undo (Ctrl+Z)"
+        {/* Zone 2 — Center: Cloud Status (Desktop: pill, Mobile: icon) */}
+        <div className="flex flex-1 items-center justify-center sm:gap-3.5 min-w-0">
+          {/* Desktop: Undo/Redo + Cloud Pill */}
+          <div className="hidden sm:flex items-center gap-3.5">
+            <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded-full p-0.5">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label="Undo"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+                title="Undo (Ctrl+Z)"
+              >
+                <Undo size={13} />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                aria-label="Redo"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+                title="Redo (Ctrl+Y)"
+              >
+                <Redo size={13} />
+              </button>
+            </div>
+            <div
+              className={`flex items-center gap-2 px-3.5 py-1 rounded-full border text-[10px] font-semibold tracking-wide transition-all duration-500 w-[140px] justify-center ${
+                cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
+                : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
+                : cloudStatus === 'unsaved' ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
+                : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+              }`}
             >
-              <Undo size={13} />
-            </button>
-            <button
-              onClick={redo}
-              disabled={!canRedo}
-              aria-label="Redo"
-              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white disabled:text-zinc-700 hover:bg-zinc-800 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
-              title="Redo (Ctrl+Y)"
-            >
-              <Redo size={13} />
-            </button>
+              {cloudStatus === 'error' ? (
+                <AlertCircle size={11} className="shrink-0" />
+              ) : isSaving || cloudStatus === 'syncing' ? (
+                <RefreshCw size={11} className="shrink-0 animate-spin" />
+              ) : cloudStatus === 'synced' ? (
+                <Cloud size={11} className="shrink-0" />
+              ) : cloudStatus === 'unsaved' ? (
+                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+              ) : (
+                <HardDrive size={11} className="shrink-0" />
+              )}
+              <span className="leading-none truncate" title={cloudError ?? undefined}>
+                {cloudStatus === 'error'
+                  ? (cloudError ? 'Error' : 'Sync failed')
+                  : isSaving || cloudStatus === 'syncing' ? 'Saving…'
+                  : cloudStatus === 'synced' ? 'Cloud saved'
+                  : cloudStatus === 'unsaved' ? 'Unsaved'
+                  : 'Local'}
+              </span>
+              {cloudStatus === 'error' && (
+                <button onClick={retrySync} className="shrink-0 underline underline-offset-2 hover:text-white transition-colors cursor-pointer">
+                  Retry
+                </button>
+              )}
+              {cloudStatus === 'unsaved' && !isSaving && (
+                <button onClick={saveChangesToCloud} className="shrink-0 text-white hover:text-zinc-200 transition-colors cursor-pointer font-bold ml-0.5 inline-flex items-center" title="Save now">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 align-middle" />Save
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Cloud Status Pill */}
+          {/* Mobile: Cloud status icon only */}
           <div
-            className={`flex items-center gap-2 h-8 px-3 sm:px-3.5 rounded-full border text-[11px] sm:text-[10px] font-semibold tracking-wide transition-all duration-500 sm:w-[140px] justify-center ${
-              cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
-              : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
-              : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
-              : cloudStatus === 'unsaved' ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
-              : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+            className={`flex sm:hidden items-center justify-center w-7 h-7 rounded-full transition-all duration-300 ${
+              cloudStatus === 'error' ? 'text-red-400'
+              : isSaving || cloudStatus === 'syncing' ? 'text-amber-400'
+              : cloudStatus === 'synced' ? 'text-emerald-400'
+              : cloudStatus === 'unsaved' ? 'text-amber-400'
+              : 'text-zinc-600'
             }`}
+            title={cloudStatus === 'synced' ? 'Cloud saved' : cloudStatus === 'error' ? 'Sync error' : isSaving ? 'Saving…' : 'Local'}
           >
             {cloudStatus === 'error' ? (
-              <AlertCircle size={12} className="shrink-0" />
+              <AlertCircle size={15} />
             ) : isSaving || cloudStatus === 'syncing' ? (
-              <RefreshCw size={12} className="shrink-0 animate-spin" />
+              <RefreshCw size={15} className="animate-spin" />
             ) : cloudStatus === 'synced' ? (
-              <Cloud size={12} className="shrink-0" />
+              <Cloud size={15} />
             ) : cloudStatus === 'unsaved' ? (
-              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
             ) : (
-              <HardDrive size={12} className="shrink-0" />
-            )}
-            <span className="leading-none truncate" title={cloudError ?? undefined}>
-              {cloudStatus === 'error'
-                ? (cloudError ? 'Error' : 'Sync failed')
-                : isSaving || cloudStatus === 'syncing' ? 'Saving…'
-                : cloudStatus === 'synced' ? 'Saved'
-                : cloudStatus === 'unsaved' ? 'Unsaved'
-                : 'Local'}
-            </span>
-            {cloudStatus === 'error' && (
-              <button onClick={retrySync} className="shrink-0 underline underline-offset-2 hover:text-white transition-colors cursor-pointer hidden sm:inline">
-                Retry
-              </button>
-            )}
-            {cloudStatus === 'unsaved' && !isSaving && (
-              <button onClick={saveChangesToCloud} className="shrink-0 text-white hover:text-zinc-200 transition-colors cursor-pointer font-bold ml-0.5 hidden sm:inline-flex items-center" title="Save now">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 align-middle" />Save
-              </button>
+              <HardDrive size={15} />
             )}
           </div>
         </div>
 
         {/* Zone 3 — Right: Primary & Secondary Actions */}
-        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
           {/* AI Fill (Desktop only) */}
           <button 
             onClick={() => setShowAiGuide(true)} 
@@ -996,21 +1020,21 @@ export default function EditorLayout() {
             <span>Export PDF</span>
           </button>
 
-          {/* Mobile: Export PDF pill */}
+          {/* Mobile: Export icon button */}
           <button
             onClick={handlePrint}
-            className="flex sm:hidden items-center gap-1.5 h-9 px-4 bg-[var(--accent)] text-white font-bold text-[11px] rounded-full transition-all cursor-pointer shadow-md active:scale-95 shrink-0 whitespace-nowrap"
+            className="flex sm:hidden items-center justify-center w-9 h-9 rounded-xl sm:rounded-full transition-all cursor-pointer shrink-0 active:scale-95"
+            style={{ backgroundColor: 'var(--accent)' }}
             aria-label="Export PDF"
           >
-            <Download size={13} className="shrink-0" />
-            <span>Export</span>
+            <Download size={15} className="text-white" />
           </button>
 
           {/* Overflow Menu Button (Mobile only) */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`flex sm:hidden items-center justify-center w-9 h-9 rounded-full border transition-all cursor-pointer shrink-0 ${isMobileMenuOpen ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+            className={`flex sm:hidden items-center justify-center w-9 h-9 rounded-xl sm:rounded-full border transition-all cursor-pointer shrink-0 ${isMobileMenuOpen ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
             aria-label="More options"
           >
             <MoreVertical size={15} className="shrink-0" />
