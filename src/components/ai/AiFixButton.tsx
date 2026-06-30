@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Loader2, Check, X, RefreshCw } from 'lucide-react'
 import { useAi } from '../../hooks/useAi'
@@ -15,6 +15,7 @@ interface AiFixButtonProps {
   mode?: 'complete' | 'stream'
   className?: string
   suggestionLabel?: string
+  parentExpanded?: boolean
 }
 
 export default function AiFixButton({
@@ -25,6 +26,7 @@ export default function AiFixButton({
   mode = 'complete',
   className = '',
   suggestionLabel = 'AI Suggestion',
+  parentExpanded,
 }: AiFixButtonProps) {
   const { isConfigured, config } = useAi()
   const [status, setStatus] = useState<Status>('idle')
@@ -32,6 +34,15 @@ export default function AiFixButton({
   const [streamedText, setStreamedText] = useState('')
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  useEffect(() => {
+    if (parentExpanded === false) {
+      setStatus('idle')
+      setSuggestion('')
+      setStreamedText('')
+      setErrorMsg('')
+    }
+  }, [parentExpanded])
 
   const run = useCallback(async () => {
     if (!config) return

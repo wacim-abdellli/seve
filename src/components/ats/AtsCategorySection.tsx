@@ -118,6 +118,7 @@ export default function AtsCategorySection({
                   label="AI Fix"
                   size="sm"
                   suggestionLabel="AI-Suggested Fix"
+                  parentExpanded={isExpanded}
                 />
               </div>
             )}
