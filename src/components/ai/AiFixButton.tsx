@@ -131,7 +131,7 @@ export default function AiFixButton({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.2 }}
-            className="absolute left-0 top-full mt-1.5 z-50 w-72 rounded-xl overflow-hidden shadow-2xl shadow-black/50"
+            className="absolute right-0 top-full mt-1.5 z-50 w-72 rounded-xl overflow-hidden shadow-2xl shadow-black/50"
             style={{ background: '#111116', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             {/* Header */}

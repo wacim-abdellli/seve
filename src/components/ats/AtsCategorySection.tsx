@@ -74,11 +74,11 @@ export default function AtsCategorySection({
     return (
       <div
         key={issue.id}
-        className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl overflow-hidden transition-colors duration-200 border-l-4"
+        className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-colors duration-200 border-l-4"
         style={{ borderLeftColor: type === 'critical' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#6366f1' }}
       >
         <div
-          className={`p-4 flex gap-3.5 justify-between items-start ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-800/20' : ''}`}
+          className={`p-4 flex gap-3.5 justify-between items-start rounded-t-xl ${!isExpanded ? 'rounded-b-xl' : ''} ${hasHelpOrDetails ? 'cursor-pointer select-none hover:bg-zinc-800/20' : ''}`}
           onClick={() => hasHelpOrDetails && toggleExpandIssue(issue.id)}
           role={hasHelpOrDetails ? 'button' : undefined}
           tabIndex={hasHelpOrDetails ? 0 : undefined}
@@ -139,7 +139,7 @@ export default function AtsCategorySection({
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="p-4 bg-zinc-950/65 border-t border-zinc-900/60 space-y-4">
+              <div className="p-4 bg-zinc-950/65 border-t border-zinc-900/60 space-y-4 rounded-b-xl">
                 {help && (
                   <div className="space-y-3">
                     <div>
