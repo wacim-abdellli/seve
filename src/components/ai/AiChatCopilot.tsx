@@ -49,6 +49,7 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
     if (!cmdText.trim()) return
     setStatus('loading')
     setFeedback('')
+    setClarification(null) // clear clarification on direct send
 
     try {
       const { prompt, systemPrompt } = PROMPTS.copilotCommand(cmdText.trim(), JSON.stringify(resumeData))
@@ -498,12 +499,12 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
                     setClarification(null)
                     handleCommand(nextCmd)
                   }}
-                  className="w-full text-left px-3 py-2 bg-white/[0.01] border border-white/5 hover:border-[#b91c1c]/30 hover:bg-[#b91c1c]/5 rounded-lg text-[10px] font-medium text-zinc-400 hover:text-white transition-all flex items-center gap-2.5 group cursor-pointer"
+                  className="w-full text-left px-3 py-2.5 bg-white/[0.02] border border-white/5 hover:border-[#b91c1c]/30 hover:bg-[#b91c1c]/5 rounded-lg text-[10px] font-medium text-zinc-300 hover:text-white transition-all flex items-start gap-2.5 group cursor-pointer"
                 >
-                  <span className="w-5 h-5 rounded-md bg-white/5 group-hover:bg-[#b91c1c]/10 text-zinc-500 group-hover:text-[#b91c1c] text-[9px] font-bold flex items-center justify-center shrink-0 border border-white/5 transition-colors">
+                  <span className="w-5 h-5 rounded-full bg-white/5 group-hover:bg-[#b91c1c]/15 text-zinc-400 group-hover:text-[#b91c1c] text-[9px] font-bold flex items-center justify-center shrink-0 border border-white/5 transition-colors mt-0.5">
                     {idx + 1}
                   </span>
-                  <span className="truncate">{opt}</span>
+                  <span className="leading-relaxed break-words pr-2">{opt}</span>
                 </button>
               ))}
             </div>
