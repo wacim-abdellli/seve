@@ -13,14 +13,12 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
 import ResumeManager from '../components/ResumeManager'
-import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Copy, Sparkles, Upload, Undo, Redo, MoreVertical } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Sparkles, Upload, Undo, Redo, MoreVertical } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
 import AiSettingsModal from '../components/ai/AiSettingsModal'
 import ConfirmDialog from '../components/ConfirmDialog'
-import { cleanAndParseJson } from '../utils/jsonParser'
-import { copyToClipboard } from '../utils/clipboard'
 
 
 
@@ -293,22 +291,6 @@ function ExportWarningModal({ warnings, onClose, onExportAnyway }: ExportWarning
   )
 }
 
-const EMPTY_RESUME_TEMPLATE: ResumeData = {
-  contact: { fullName: '', email: '', phone: '', linkedin: '', location: '', website: '' },
-  summary: '',
-  experience: [{ id: '', jobTitle: '', company: '', location: '', startDate: '', endDate: '', current: false, bullets: [''] }],
-  education: [{ id: '', degree: '', school: '', location: '', graduationDate: '', gpa: '' }],
-  skills: [''],
-  languages: [{ id: '', name: '', proficiency: '' }],
-  projects: [{ id: '', name: '', description: '', technologies: [''] }],
-  awards: [{ id: '', title: '', awarder: '', date: '', description: '' }],
-  certifications: [{ id: '', title: '', issuer: '', date: '', description: '' }],
-  interests: [{ id: '', name: '', keywords: [''] }],
-  publications: [{ id: '', title: '', publisher: '', date: '', description: '' }],
-  references: [{ id: '', name: '', position: '', phone: '', description: '' }],
-  volunteer: [{ id: '', organization: '', location: '', period: '', description: '' }],
-}
-
 interface SimpleSettingsModalProps {
   selectedTemplate: Template
   onUpdateTemplate: (template: Template) => void
@@ -318,14 +300,10 @@ interface SimpleSettingsModalProps {
   resumes: Record<string, ResumeProfile>
   selectedResumeId: string
   onRestoreBackup: (backup: AppState) => void
+  onOpenJsonPaste: () => void
 }
 
-function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResume, onClose, onRequestReset, resumes, selectedResumeId, onRestoreBackup }: SimpleSettingsModalProps) {
-  const [showPasteBox, setShowPasteBox] = useState(false)
-  const [pasteValue, setPasteValue] = useState('')
-  const [pasteError, setPasteError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-
+function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResume, onClose, onRequestReset, resumes, selectedResumeId, onRestoreBackup, onOpenJsonPaste }: SimpleSettingsModalProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -356,12 +334,6 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
-
-  const handleCopyTemplate = () => {
-    copyToClipboard(JSON.stringify(EMPTY_RESUME_TEMPLATE, null, 2))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
-  }
 
   const handleExport = () => {
     const backup = {
@@ -410,29 +382,6 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
     input.click()
   }
 
-  const handlePasteImport = () => {
-    try {
-      const rawData = cleanAndParseJson(pasteValue)
-      if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
-        throw new Error('Invalid JSON format. Expected an object.')
-      }
-      if (rawData?.version === 1 && rawData?.type === 'seve-full-backup' && rawData?.data) {
-        onRestoreBackup(rawData.data)
-      } else if (rawData?.resumes && rawData?.selectedResumeId) {
-        onRestoreBackup(rawData)
-      } else if (rawData?.resumeData) {
-        const data = normalizeResumeData(rawData.resumeData)
-        onImportResume(data)
-      } else {
-        const data = normalizeResumeData(rawData)
-        onImportResume(data)
-      }
-      onClose()
-    } catch (err: unknown) {
-      setPasteError(err instanceof Error ? err.message : 'Invalid JSON syntax.')
-    }
-  }
-
   return createPortal(
     <div role="dialog" aria-labelledby="settings-dialog-heading" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
       <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="bg-[#12131a] border border-[#b91c1c]/20 rounded-2xl p-5 sm:p-6 w-full max-w-[460px] max-h-[90vh] overflow-y-auto shadow-2xl shadow-[#b91c1c]/5 animate-scale-in">
@@ -468,30 +417,17 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
           </div>
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-display">Data Management</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Download className="w-3.5 h-3.5 text-zinc-400" /> Backup
               </button>
               <button onClick={handleImport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Upload className="w-3.5 h-3.5 text-zinc-400" /> Import File
               </button>
-              <button onClick={() => { setShowPasteBox(!showPasteBox); setPasteError(null) }} className={`h-10 rounded-xl border font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${showPasteBox ? 'bg-[#b91c1c]/10 border-[#b91c1c]/35 text-[#b91c1c]' : 'bg-zinc-950/40 border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white'}`}>
-                <FileCode className="w-3.5 h-3.5" /> Paste Code
-              </button>
-              <button onClick={handleCopyTemplate} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
-                <Copy className="w-3.5 h-3.5 text-zinc-400" /> {copied ? 'Copied!' : 'Template'}
+              <button onClick={onOpenJsonPaste} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
+                <FileCode className="w-3.5 h-3.5 text-zinc-400" /> Paste JSON
               </button>
             </div>
-            {showPasteBox && (
-              <div className="space-y-2.5 pt-2.5 border-t border-zinc-900/60 animate-fade-in">
-                <textarea value={pasteValue} onChange={(e) => { setPasteValue(e.target.value); setPasteError(null) }} placeholder="Paste your resume JSON code here..." className="w-full h-32 bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#b91c1c]/50 resize-none font-mono custom-scrollbar" />
-                {pasteError && <p className="text-[10px] text-red-400 font-bold">{pasteError}</p>}
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => { setShowPasteBox(false); setPasteValue(''); setPasteError(null) }} className="px-3 py-1.5 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white text-[11px] font-bold transition-all cursor-pointer">Cancel</button>
-                  <button onClick={handlePasteImport} className="px-3.5 py-1.5 rounded-lg bg-[#b91c1c] hover:bg-[#c62828] text-white text-[11px] font-bold transition-all cursor-pointer shadow-lg shadow-rose-950/25">Import Code</button>
-                </div>
-              </div>
-            )}
           </div>
           <div className="pt-3 border-t border-zinc-800/80">
             <button onClick={() => { onRequestReset?.() }} className="w-full h-10 rounded-xl bg-red-500/5 border border-red-950/30 hover:bg-red-500/10 text-red-450 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
@@ -746,6 +682,7 @@ export default function EditorLayout() {
 
   const [isResumeManagerOpen, setIsResumeManagerOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [aiOnboardingTab, setAiOnboardingTab] = useState<'wizard' | 'json'>('wizard')
   const [showMobileAiSettings, setShowMobileAiSettings] = useState(false)
   const [confirmReset1, setConfirmReset1] = useState(false)
   const [confirmReset2, setConfirmReset2] = useState(false)
@@ -1105,7 +1042,7 @@ export default function EditorLayout() {
                         <div className="space-y-2">
                           <button
                             type="button"
-                            onClick={() => { setShowAiGuide(true); setIsMobileMenuOpen(false) }}
+                            onClick={() => { setAiOnboardingTab('wizard'); setShowAiGuide(true); setIsMobileMenuOpen(false) }}
                             className="flex items-center gap-4 w-full px-4 py-3 rounded-2xl text-[13px] font-bold text-zinc-300 hover:text-white bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-900/60 transition-all cursor-pointer text-left active:scale-[0.98]"
                           >
                             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(185,28,28,0.15), rgba(185,28,28,0.05))', border: '1px solid rgba(185,28,28,0.2)' }}>
@@ -1247,6 +1184,11 @@ export default function EditorLayout() {
             resumes={resumes}
             selectedResumeId={selectedResumeId}
             onRestoreBackup={restoreFromBackup}
+            onOpenJsonPaste={() => {
+              setIsSettingsOpen(false)
+              setAiOnboardingTab('json')
+              setShowAiGuide(true)
+            }}
           />
         )}
       </AnimatePresence>
@@ -1292,6 +1234,7 @@ export default function EditorLayout() {
           <AiOnboardingModal
             onClose={() => setShowAiGuide(false)}
             onImport={(data) => importResumeData(data)}
+            initialTab={aiOnboardingTab}
           />
         )}
       </AnimatePresence>

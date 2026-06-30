@@ -19,6 +19,7 @@ import { copyToClipboard } from '../utils/clipboard'
 interface AiOnboardingModalProps {
   onClose: () => void
   onImport: (data: ResumeData) => void
+  initialTab?: 'wizard' | 'json'
 }
 
 function makeId() { return Math.random().toString(36).slice(2, 10) }
@@ -59,7 +60,7 @@ function Field({ label, value, onChange, placeholder, type = 'text', hint, requi
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete="off"
-        className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-700 outline-none transition-all"
+        className="w-full rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-zinc-700 outline-none transition-all"
         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
         onFocus={e => (e.currentTarget.style.borderColor = 'rgba(185,28,28,0.45)')}
         onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
@@ -72,13 +73,17 @@ function Field({ label, value, onChange, placeholder, type = 'text', hint, requi
 const LANG_SUGGESTIONS = ['English', 'French', 'Arabic', 'Spanish', 'German', 'Chinese', 'Portuguese']
 
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingModalProps) {
+export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wizard' }: AiOnboardingModalProps) {
   const { isConfigured, config } = useAi()
   const ctx = useContext(ResumeDataContextInternal)
   const existing = ctx?.resumeData
 
-  const [tab, setTab] = useState<'wizard' | 'json'>('wizard')
+  const [tab, setTab] = useState<'wizard' | 'json'>(initialTab)
   const [showSetupModal, setShowSetupModal] = useState(false)
+
+  useEffect(() => {
+    setTab(initialTab)
+  }, [initialTab])
 
   type Step = 'contact' | 'role' | 'extras' | 'building'
   const [step, setStep] = useState<Step>('contact')
@@ -315,7 +320,64 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
     catch (err) { setParsedData(null); setPasteError(err instanceof Error ? err.message : 'Invalid JSON') }
   }
 
-  const TEMPLATE = { contact: { fullName: '', email: '', phone: '', linkedin: '', location: '' }, summary: '', experience: [{ id: 'e1', jobTitle: '', company: '', location: '', startDate: '', endDate: '', current: false, bullets: [] }], education: [{ id: 'd1', degree: '', school: '', location: '', graduationDate: '' }], skills: [] }
+  const TEMPLATE = {
+    contact: {
+      fullName: "Sarah Mitchell",
+      email: "sarah.m@example.com",
+      phone: "+1-555-0199",
+      linkedin: "linkedin.com/in/sarahmitchell",
+      location: "New York, NY"
+    },
+    summary: "Senior Software Engineer with 6+ years of experience in front-end development, specializing in React and design systems.",
+    experience: [
+      {
+        id: "e1",
+        jobTitle: "Lead Front-end Developer",
+        company: "Vortex Analytics",
+        location: "New York, NY",
+        startDate: "2021-08",
+        endDate: "Present",
+        current: true,
+        bullets: [
+          "Spearheaded redesign of the core web app, reducing page load times by 40%.",
+          "Mentored 4 junior engineers and introduced automated testing processes."
+        ]
+      }
+    ],
+    education: [
+      {
+        id: "d1",
+        degree: "B.Sc. in Computer Science",
+        school: "Columbia University",
+        location: "New York, NY",
+        graduationDate: "2018"
+      }
+    ],
+    skills: ["JavaScript", "TypeScript", "React", "Tailwind CSS", "Node.js", "Vite"],
+    projects: [
+      {
+        id: "p1",
+        name: "Component Library",
+        description: "An open-source responsive design system library",
+        technologies: ["TypeScript", "Tailwind"]
+      }
+    ],
+    languages: [
+      {
+        id: "l1",
+        name: "English",
+        proficiency: "Native"
+      }
+    ],
+    certifications: [
+      {
+        id: "c1",
+        title: "AWS Certified Cloud Practitioner",
+        issuer: "Amazon Web Services",
+        date: "2023"
+      }
+    ]
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return createPortal(
@@ -387,8 +449,8 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
                 {step === 'contact' && (
                   <motion.div key="contact" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-3">
                     <p className="text-[11px] text-zinc-500 mb-1">The basics — takes 30 seconds.</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2"><Field label="Full Name" value={name} onChange={setName} placeholder="Sarah Mitchell" required /></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="col-span-1 sm:col-span-2"><Field label="Full Name" value={name} onChange={setName} placeholder="Sarah Mitchell" required /></div>
                       <Field label="Email" value={email} onChange={setEmail} placeholder="sarah@email.com" type="email" required />
                       <Field label="Phone" value={phone} onChange={setPhone} placeholder="+1 555 000 1234" />
                       <Field label="City, Country" value={location} onChange={setLocation} placeholder="New York, US" />
@@ -401,7 +463,7 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
                 {step === 'role' && (
                   <motion.div key="role" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-3">
                     <Field label="Job Title" value={jobTitle} onChange={setJobTitle} placeholder="Senior Software Engineer" required />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Field label="Company" value={company} onChange={setCompany} placeholder="Google" />
                       <Field label="Years of experience" value={years} onChange={setYears} placeholder="4" />
                     </div>
@@ -416,7 +478,7 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
                         onChange={e => setWins(e.target.value)}
                         placeholder={"e.g. Reduced API load time by 40%, led team of 5, shipped mobile app with 50k users, cut infra costs by $20k/yr"}
                         rows={3}
-                        className="w-full rounded-xl px-3.5 py-2.5 text-[12px] text-white placeholder-zinc-700 outline-none resize-none transition-all custom-scrollbar"
+                        className="w-full rounded-xl px-3.5 py-2.5 text-base sm:text-[12px] text-white placeholder-zinc-700 outline-none resize-none transition-all custom-scrollbar"
                         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
                         onFocus={e => (e.currentTarget.style.borderColor = 'rgba(185,28,28,0.45)')}
                         onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
@@ -435,7 +497,7 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
                         <GraduationCap className="w-3 h-3" /> Education <span className="text-zinc-700 font-normal normal-case">(optional)</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <Field label="Degree" value={degree} onChange={setDegree} placeholder="B.Sc. Computer Science" />
                         <Field label="School" value={school} onChange={setSchool} placeholder="MIT" />
                       </div>
@@ -451,7 +513,7 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
                         onChange={e => setSkillsRaw(e.target.value)}
                         placeholder="React, TypeScript, Node.js, PostgreSQL, AWS, Docker..."
                         rows={2}
-                        className="w-full rounded-xl px-3.5 py-2.5 text-[12px] text-white placeholder-zinc-700 outline-none resize-none transition-all"
+                        className="w-full rounded-xl px-3.5 py-2.5 text-base sm:text-[12px] text-white placeholder-zinc-700 outline-none resize-none transition-all"
                         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
                         onFocus={e => (e.currentTarget.style.borderColor = 'rgba(185,28,28,0.45)')}
                         onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
@@ -490,7 +552,7 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
                     {isConfigured && (
                       <div className="rounded-xl p-3.5 space-y-2.5" style={{ background: 'rgba(185,28,28,0.03)', border: '1px solid rgba(185,28,28,0.10)' }}>
                         <p className="text-[10px] font-bold text-[#b91c1c] uppercase tracking-widest">AI Auto-Build Options</p>
-                        <div className="grid grid-cols-2 gap-2 pt-0.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
                           {[
                             { id: 'projects', label: 'Sample Projects', val: autoGenProjects, set: setAutoGenProjects, hint: 'Build 2 projects' },
                             { id: 'certs', label: 'Relevant Certs', val: autoGenCerts, set: setAutoGenCerts, hint: 'Suggest 2 certs' },
@@ -587,24 +649,70 @@ export default function AiOnboardingModal({ onClose, onImport }: AiOnboardingMod
         {tab === 'json' && (
           <>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 custom-scrollbar">
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
-                Use ChatGPT or Claude to convert your existing CV to JSON. Copy the prompt, paste your CV, paste the result here.
+              <p className="text-[11.5px] text-zinc-400 leading-relaxed font-bold">
+                Import resume using AI or raw JSON:
               </p>
+              <ol className="text-[11px] text-zinc-500 space-y-1 list-decimal pl-4 mb-2 leading-relaxed">
+                <li>Click the button below to copy the custom AI Prompt.</li>
+                <li>Paste it into ChatGPT or Claude alongside your current CV text.</li>
+                <li>Copy the resulting JSON response and paste it in the box below.</li>
+              </ol>
               <button
                 onClick={() => {
-                  copyToClipboard(`Convert my CV below into this JSON structure. Return ONLY valid JSON, no markdown:\n\n${JSON.stringify(TEMPLATE, null, 2)}\n\nMy CV:\n[PASTE YOUR CV TEXT HERE]`)
+                  copyToClipboard(`Analyze the CV text provided below and convert it into a single, clean, valid JSON object matching the JSON structure template.
+
+RULES:
+1. Ensure the JSON is 100% syntactically correct.
+2. Group all details exactly into: contact, summary, experience, education, skills, projects, languages, and certifications.
+3. Map experience bullets as an array of short, impactful, metric-driven achievements.
+4. Keep all date ranges clear (e.g. "Jun 2021 - Present" or "2018 - 2022").
+
+JSON TEMPLATE:
+${JSON.stringify(TEMPLATE, null, 2)}
+
+CV TEXT TO CONVERT:
+[PASTE YOUR CV TEXT HERE]`)
                   setCopiedPrompt(true); setTimeout(() => setCopiedPrompt(false), 2000)
                 }}
                 className={`w-full h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold transition-all cursor-pointer border ${copiedPrompt ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' : 'text-zinc-400 hover:text-white border-white/7'}`}
                 style={copiedPrompt ? {} : { background: 'rgba(255,255,255,0.03)' }}
               >
-                {copiedPrompt ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy Prompt for ChatGPT/Claude</>}
+                {copiedPrompt ? <><Check className="w-3.5 h-3.5" /> Copied AI Prompt!</> : <><Copy className="w-3.5 h-3.5" /> Copy Prompt for ChatGPT/Claude</>}
               </button>
               <textarea
                 value={pasteValue} onChange={e => handlePasteChange(e.target.value)}
-                placeholder='{"contact":{"fullName":"..."},...}'
+                placeholder={JSON.stringify({
+                  contact: {
+                    fullName: "Sarah Mitchell",
+                    email: "sarah.m@example.com",
+                    phone: "+1-555-0199",
+                    linkedin: "linkedin.com/in/sarahmitchell",
+                    location: "New York, NY"
+                  },
+                  summary: "Senior Software Engineer...",
+                  experience: [
+                    {
+                      jobTitle: "Lead Front-end Developer",
+                      company: "Vortex Analytics",
+                      bullets: [
+                        "Redesigned the core web app...",
+                        "Mentored junior developers..."
+                      ]
+                    }
+                  ],
+                  education: [
+                    {
+                      degree: "B.Sc. in Computer Science",
+                      school: "Columbia University"
+                    }
+                  ],
+                  skills: ["React", "TypeScript", "Tailwind CSS"],
+                  projects: [],
+                  languages: [],
+                  certifications: []
+                }, null, 2)}
                 rows={8}
-                className="w-full rounded-xl px-3 py-2.5 text-[11px] text-zinc-200 placeholder-zinc-700 outline-none resize-none font-mono custom-scrollbar"
+                className="w-full rounded-xl px-3 py-2.5 text-base sm:text-[11px] text-zinc-200 placeholder-zinc-700 outline-none resize-none font-mono custom-scrollbar"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
               />
               {pasteError && <div className="flex items-start gap-2 text-[10px] text-red-400"><AlertCircle className="w-3 h-3 mt-0.5 shrink-0" /><span>{pasteError}</span></div>}
