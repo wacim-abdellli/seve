@@ -878,8 +878,9 @@ export default function EditorLayout() {
             </button>
           </div>
 
+          {/* Cloud Status Pill */}
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-full border text-[9px] sm:text-[10px] font-semibold tracking-wide transition-all duration-500 sm:w-[140px] justify-center ${
+            className={`flex items-center gap-2 h-8 px-3 sm:px-3.5 rounded-full border text-[11px] sm:text-[10px] font-semibold tracking-wide transition-all duration-500 sm:w-[140px] justify-center ${
               cloudStatus === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400'
               : isSaving || cloudStatus === 'syncing' ? 'bg-amber-500/8 border-amber-500/25 text-amber-400'
               : cloudStatus === 'synced' ? 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400'
@@ -888,21 +889,21 @@ export default function EditorLayout() {
             }`}
           >
             {cloudStatus === 'error' ? (
-              <AlertCircle size={11} className="shrink-0" />
+              <AlertCircle size={12} className="shrink-0" />
             ) : isSaving || cloudStatus === 'syncing' ? (
-              <RefreshCw size={11} className="shrink-0 animate-spin" />
+              <RefreshCw size={12} className="shrink-0 animate-spin" />
             ) : cloudStatus === 'synced' ? (
-              <Cloud size={11} className="shrink-0" />
+              <Cloud size={12} className="shrink-0" />
             ) : cloudStatus === 'unsaved' ? (
               <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
             ) : (
-              <HardDrive size={11} className="shrink-0" />
+              <HardDrive size={12} className="shrink-0" />
             )}
             <span className="leading-none truncate" title={cloudError ?? undefined}>
               {cloudStatus === 'error'
                 ? (cloudError ? 'Error' : 'Sync failed')
                 : isSaving || cloudStatus === 'syncing' ? 'Saving…'
-                : cloudStatus === 'synced' ? 'Cloud saved'
+                : cloudStatus === 'synced' ? 'Saved'
                 : cloudStatus === 'unsaved' ? 'Unsaved'
                 : 'Local'}
             </span>
