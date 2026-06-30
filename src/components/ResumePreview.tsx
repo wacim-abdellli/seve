@@ -62,6 +62,10 @@ export default function ResumePreview({
   const { showToast } = useToast()
   const [atsMode, setAtsMode] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const zoomRef = useRef(zoom)
+  useEffect(() => {
+    zoomRef.current = zoom
+  }, [zoom])
   const [isManualZoom, setIsManualZoom] = useState(false)
   const isManualZoomRef = useRef(false)
   const [dismissed, setDismissed] = useState(false)
@@ -132,6 +136,7 @@ export default function ResumePreview({
     if (!resumeContentRef.current) return
 
     const pageEls = resumeContentRef.current.querySelectorAll('.resume-page')
+    const currentZoom = zoomRef.current || 1
 
     let height = 0
     if (pageEls.length > 0) {
@@ -145,7 +150,10 @@ export default function ResumePreview({
         resumeContentRef.current
       height = measureTarget.scrollHeight
     }
-    setContentHeight(height)
+    
+    // Scale height back to true unzoomed pixels
+    const unscaledHeight = height / currentZoom
+    setContentHeight(unscaledHeight)
 
     if (pageEls.length > 1) {
       const count = pageEls.length
@@ -154,7 +162,7 @@ export default function ResumePreview({
       return
     }
 
-    const pages = Math.max(1, Math.ceil((height - 8) / A4_SCREEN_THRESHOLD))
+    const pages = Math.max(1, Math.ceil((unscaledHeight - 8) / A4_SCREEN_THRESHOLD))
     setPageCount(pages)
     if (onPageCountChangeRef.current) onPageCountChangeRef.current(pages)
   }, [])
@@ -184,7 +192,11 @@ export default function ResumePreview({
   const fitToOnePage = () => {
     if (!resumeContentRef.current) return
     const contentEl = resumeContentRef.current.querySelector('.resume-template-wrapper')
-    const scrollHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
+    const rawScrollHeight = contentEl ? contentEl.scrollHeight : resumeContentRef.current.scrollHeight
+    
+    // Scale height back to true unzoomed pixels
+    const currentZoom = zoomRef.current || 1
+    const scrollHeight = rawScrollHeight / currentZoom
 
     // Reset to default if it naturally fits (or user called it accidentally)
     if (scrollHeight <= A4_PX + 8) {

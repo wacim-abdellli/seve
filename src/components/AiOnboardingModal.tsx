@@ -456,11 +456,11 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
                   <motion.div key="contact" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-3">
                     <p className="text-[11px] text-zinc-500 mb-1">The basics — takes 30 seconds.</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="col-span-1 sm:col-span-2"><Field label="Full Name" value={name} onChange={setName} placeholder="Sarah Mitchell" required /></div>
-                      <Field label="Email" value={email} onChange={setEmail} placeholder="sarah@email.com" type="email" required />
+                      <div className="col-span-1 sm:col-span-2"><Field label="Full Name" value={name} onChange={setName} placeholder="Your Full Name" required /></div>
+                      <Field label="Email" value={email} onChange={setEmail} placeholder="your.email@gmail.com" type="email" required />
                       <Field label="Phone" value={phone} onChange={setPhone} placeholder="+1 555 000 1234" />
-                      <Field label="City, Country" value={location} onChange={setLocation} placeholder="New York, US" />
-                      <Field label="LinkedIn URL" value={linkedin} onChange={setLinkedin} placeholder="linkedin.com/in/sarah" />
+                      <Field label="City, Country" value={location} onChange={setLocation} placeholder="City, Country" />
+                      <Field label="LinkedIn URL" value={linkedin} onChange={setLinkedin} placeholder="linkedin.com/in/username" />
                     </div>
                   </motion.div>
                 )}
@@ -468,10 +468,10 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
                 {/* STEP 2: Role */}
                 {step === 'role' && (
                   <motion.div key="role" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-3">
-                    <Field label="Job Title" value={jobTitle} onChange={setJobTitle} placeholder="Senior Software Engineer" required />
+                    <Field label="Job Title" value={jobTitle} onChange={setJobTitle} placeholder="e.g. Software Engineer" required />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Field label="Company" value={company} onChange={setCompany} placeholder="Google" />
-                      <Field label="Years of experience" value={years} onChange={setYears} placeholder="4" />
+                      <Field label="Company" value={company} onChange={setCompany} placeholder="e.g. Google" />
+                      <Field label="Years of experience" value={years} onChange={setYears} placeholder="e.g. 5" />
                     </div>
 
                     {/* KEY field: real wins */}
