@@ -84,7 +84,7 @@ export default function ResumeManager({
   }
 
   const modalContent = (
-    <div role="dialog" aria-labelledby="resume-manager-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm no-print">
+    <div role="dialog" aria-labelledby="resume-manager-heading" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print">
       {/* Backdrop close area */}
       <div className="absolute inset-0" onClick={onClose} />
 
@@ -94,7 +94,7 @@ export default function ResumeManager({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.25 }}
-        className="relative bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-[640px] max-w-full shadow-2xl flex flex-col max-h-[90vh] z-10"
+        className="relative bg-zinc-950 border border-zinc-800 rounded-2xl p-4 sm:p-6 w-[640px] max-w-full shadow-2xl flex flex-col max-h-[90vh] z-10"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-800/40">
@@ -117,23 +117,22 @@ export default function ResumeManager({
         </div>
 
         {/* Create new resume form */}
-        <form onSubmit={handleCreate} className="flex gap-2 mt-4 pb-4 border-b border-zinc-800/40">
+        <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-2 mt-4 pb-4 border-b border-zinc-800/40">
           <input
             type="text"
             placeholder="e.g. Software Engineer (React), Product Manager..."
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500/60 transition-colors"
+            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500/60 transition-colors min-w-0"
           />
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="px-3 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl flex items-center gap-1 transition-colors shadow-lg shadow-rose-500/10 cursor-pointer flex-shrink-0"
+            className="px-3 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1 transition-colors shadow-lg shadow-rose-500/10 cursor-pointer flex-shrink-0 w-full sm:w-auto"
           >
             <Plus className="w-3.5 h-3.5" />
             New Version
           </button>
-          
         </form>
 
         {/* Resumes List */}
@@ -152,14 +151,14 @@ export default function ResumeManager({
             return (
               <div
                 key={profile.id}
-                className={`p-4 rounded-xl border transition-all flex items-center justify-between gap-4 ${
+                className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${
                   isSelected
                     ? 'bg-rose-500/5 border-rose-500/30 shadow-[0_0_15px_rgba(185,28,28,0.05)]'
                     : 'bg-zinc-900/40 border-zinc-800 hover:bg-zinc-900/80 hover:border-zinc-700/60'
                 }`}
               >
                 {/* Left side: title and details */}
-                <div className="flex-1 min-w-0">
+                <div className="w-full sm:flex-1 min-w-0">
                   {isEditing ? (
                     <div className="flex items-center gap-2 max-w-full">
                       <input
@@ -176,14 +175,14 @@ export default function ResumeManager({
                       <button
                         type="button"
                         onClick={() => saveRename(profile.id)}
-                        className="p-1.5 text-emerald-400 hover:text-emerald-300 rounded hover:bg-zinc-800 cursor-pointer"
+                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-emerald-400 hover:text-emerald-300 rounded-lg hover:bg-zinc-800 border border-zinc-800/40 transition-colors cursor-pointer shrink-0"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="p-1.5 text-zinc-400 hover:text-white rounded hover:bg-zinc-800 cursor-pointer"
+                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800/40 transition-colors cursor-pointer shrink-0"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -229,12 +228,12 @@ export default function ResumeManager({
                 </div>
 
                 {/* Right side Actions */}
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0 border-t border-zinc-800/40 pt-2.5 sm:border-t-0 sm:pt-0 shrink-0">
                   {!isSelected && !isEditing && (
                     <button
                       type="button"
                       onClick={() => onSelect(profile.id)}
-                      className="h-8 px-2.5 rounded-lg border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-semibold text-[10px] transition-colors cursor-pointer"
+                      className="h-9 px-3 rounded-lg border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-semibold text-[11px] transition-colors cursor-pointer flex items-center justify-center flex-1 sm:flex-initial"
                     >
                       Activate
                     </button>
@@ -245,7 +244,7 @@ export default function ResumeManager({
                       type="button"
                       onClick={() => startRename(profile.id, profile.title)}
                       title="Rename"
-                      className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800/40 transition-colors cursor-pointer"
+                      className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800/40 transition-colors cursor-pointer shrink-0"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -255,7 +254,7 @@ export default function ResumeManager({
                     type="button"
                     onClick={() => onDuplicate(profile.id)}
                     title="Duplicate"
-                    className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800/40 transition-colors cursor-pointer"
+                    className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800/40 transition-colors cursor-pointer shrink-0"
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
@@ -265,7 +264,7 @@ export default function ResumeManager({
                       type="button"
                       onClick={() => setConfirmDeleteId(profile.id)}
                       title="Delete"
-                      className="p-1.5 text-zinc-400 hover:text-red-400 rounded-lg hover:bg-red-500/5 border border-zinc-800/40 transition-colors cursor-pointer"
+                      className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-zinc-400 hover:text-red-400 rounded-lg hover:bg-red-500/5 border border-zinc-800/40 transition-colors cursor-pointer shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
