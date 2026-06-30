@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') ?? ''
-const GROQ_MODEL = 'llama-3.3-70b-versatile'
+const GROQ_MODEL = 'deepseek-r1-distill-llama-70b'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 // Simple in-memory rate limit per IP (resets on cold start — good enough for free tier)
@@ -72,14 +72,16 @@ serve(async (req) => {
   }
 
   let prompt: string
-  let maxTokens = 512
+  let maxTokens = 1024
   let temperature = 0.3
+  let jsonMode = false
 
   try {
     const body = await req.json()
     prompt = body.prompt
     if (typeof body.maxTokens === 'number') maxTokens = Math.min(body.maxTokens, 2048)
     if (typeof body.temperature === 'number') temperature = body.temperature
+    if (typeof body.jsonMode === 'boolean') jsonMode = body.jsonMode
     if (!prompt || typeof prompt !== 'string') throw new Error('Missing prompt')
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid request body' }), {
@@ -89,19 +91,23 @@ serve(async (req) => {
   }
 
   try {
+    const reqBody: any = {
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature,
+      max_tokens: maxTokens,
+      stream: false,
+    }
+    if (jsonMode) {
+      reqBody.response_format = { type: 'json_object' }
+    }
     const groqRes = await fetch(GROQ_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature,
-        max_tokens: maxTokens,
-        stream: false,
-      }),
+      body: JSON.stringify(reqBody),
     })
 
     if (!groqRes.ok) {

@@ -1,12 +1,13 @@
-/**
+﻿/**
  * aiService.ts — Multi-provider AI client for Seve
  *
- * Supports Groq, NVIDIA NIM, and Google Gemini using their REST APIs.
+ * Supports Groq, NVIDIA NIM, Google Gemini, and OpenRouter using their REST APIs.
  * No external SDKs — pure fetch() only. Works entirely in the browser.
- * All three providers use the OpenAI-compatible format (except Gemini which has its own).
+ * Groq, NVIDIA, and OpenRouter use the OpenAI-compatible format.
+ * Gemini uses its own REST format.
  */
 
-export type AiProvider = 'groq' | 'nvidia' | 'gemini' | 'app'
+export type AiProvider = 'groq' | 'nvidia' | 'gemini' | 'openrouter' | 'app'
 
 // Supabase project URL — read from Vite env at build time
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL ?? ''
@@ -35,15 +36,15 @@ export interface ProviderMeta {
 export const PROVIDER_META: Record<AiProvider, ProviderMeta> = {
   app: {
     label: 'Seve AI',
-    model: 'llama-3.3-70b-versatile',
+    model: 'deepseek-r1-distill-llama-70b',
     freeTier: '25 free calls/day · No setup needed',
     signupUrl: '',
-    baseUrl: '', // uses Supabase Edge Function
+    baseUrl: '',
     placeholder: '',
   },
   groq: {
     label: 'Groq',
-    model: 'llama-3.3-70b-versatile',
+    model: 'deepseek-r1-distill-llama-70b',
     freeTier: '14,400 req/day · Free forever',
     signupUrl: 'https://console.groq.com',
     baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
@@ -60,48 +61,84 @@ export const PROVIDER_META: Record<AiProvider, ProviderMeta> = {
   gemini: {
     label: 'Google Gemini',
     model: 'gemini-1.5-flash',
-    freeTier: '15 req/min · Free forever',
+    freeTier: '1,500 req/day · Free forever',
     signupUrl: 'https://aistudio.google.com/apikey',
-    baseUrl: '', // built dynamically
+    baseUrl: '',
     placeholder: 'AIzaSy...',
+  },
+  openrouter: {
+    label: 'OpenRouter',
+    model: 'meta-llama/llama-3.3-70b-instruct:free',
+    freeTier: '20+ free models · No credit card',
+    signupUrl: 'https://openrouter.ai',
+    baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    placeholder: 'sk-or-...',
   },
 }
 
-// ─── Non-streaming completion (for short text, JSON, bullet fixes) ───────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildMessages(
+  systemPrompt: string,
+  userContent: string,
+): { role: string; content: string }[] {
+  return [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userContent },
+  ]
+}
 
 // ─── App proxy (Supabase Edge Function) ──────────────────────────────────────
 
 async function appProxyComplete(
   prompt: string,
-  opts?: { maxTokens?: number; temperature?: number }
+  opts?: { maxTokens?: number; temperature?: number; jsonMode?: boolean },
 ): Promise<string> {
   const url = `${SUPABASE_URL}/functions/v1/ai-proxy`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, maxTokens: opts?.maxTokens ?? 512, temperature: opts?.temperature ?? 0.3 }),
+    body: JSON.stringify({
+      prompt,
+      maxTokens: opts?.maxTokens ?? 1024,
+      temperature: opts?.temperature ?? 0.3,
+      jsonMode: opts?.jsonMode ?? false,
+    }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data?.error ?? `Proxy error: ${res.status}`)
   return data.text ?? ''
 }
 
-export async function aiComplete(prompt: string, config: AiConfig): Promise<string> {
+// ─── Non-streaming completion ─────────────────────────────────────────────────
+
+export async function aiComplete(
+  prompt: string,
+  config: AiConfig,
+  opts?: { maxTokens?: number; jsonMode?: boolean; systemPrompt?: string },
+): Promise<string> {
+  const maxTokens = opts?.maxTokens ?? 1024
+  const jsonMode = opts?.jsonMode ?? false
+
   if (config.provider === 'app') {
-    return appProxyComplete(prompt, { maxTokens: 512, temperature: 0.3 })
+    return appProxyComplete(prompt, { maxTokens, temperature: 0.3, jsonMode })
   }
 
   const model = config.model || PROVIDER_META[config.provider].model
 
   if (config.provider === 'gemini') {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`
+    const body: any = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3, maxOutputTokens: maxTokens },
+    }
+    if (jsonMode) {
+      body.generationConfig.responseMimeType = 'application/json'
+    }
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 512 },
-      }),
+      body: JSON.stringify(body),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
@@ -111,22 +148,35 @@ export async function aiComplete(prompt: string, config: AiConfig): Promise<stri
     return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
   }
 
-  // Groq + NVIDIA (OpenAI-compatible)
+  // Groq, NVIDIA, OpenRouter (OpenAI-compatible)
   const url = PROVIDER_META[config.provider].baseUrl
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 512,
-      stream: false,
-    }),
-  })
+  const messages = opts?.systemPrompt
+    ? buildMessages(opts.systemPrompt, prompt)
+    : [{ role: 'user', content: prompt }]
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${config.apiKey}`,
+  }
+
+  if (config.provider === 'openrouter') {
+    headers['HTTP-Referer'] = 'https://seve.live'
+    headers['X-Title'] = 'Seve Resume Builder'
+  }
+
+  const body: any = {
+    model,
+    messages,
+    temperature: 0.3,
+    max_tokens: maxTokens,
+    stream: false,
+  }
+
+  if (jsonMode && (config.provider === 'groq' || config.provider === 'openrouter')) {
+    body.response_format = { type: 'json_object' }
+  }
+
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err?.error?.message || `${config.provider} error: ${res.status}`)
@@ -135,19 +185,19 @@ export async function aiComplete(prompt: string, config: AiConfig): Promise<stri
   return data.choices?.[0]?.message?.content?.trim() ?? ''
 }
 
-// ─── Streaming completion (for long-form: summary, cover letter) ──────────────
+// ─── Streaming completion ─────────────────────────────────────────────────────
 
 export async function aiStream(
   prompt: string,
   config: AiConfig,
-  callbacks: AiStreamCallbacks
+  callbacks: AiStreamCallbacks,
+  opts?: { systemPrompt?: string },
 ): Promise<void> {
   const model = config.model || PROVIDER_META[config.provider].model
   let fullText = ''
 
   try {
     if (config.provider === 'gemini') {
-      // Gemini uses a different streaming format
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`
       const res = await fetch(url, {
         method: 'POST',
@@ -168,37 +218,36 @@ export async function aiStream(
         const { done, value } = await reader.read()
         if (done) break
         const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-        for (const line of lines) {
+        for (const line of chunk.split('\n')) {
           if (!line.startsWith('data: ')) continue
           const jsonStr = line.slice(6).trim()
           if (!jsonStr || jsonStr === '[DONE]') continue
           try {
             const parsed = JSON.parse(jsonStr)
             const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-            if (text) {
-              fullText += text
-              callbacks.onChunk(text)
-            }
+            if (text) { fullText += text; callbacks.onChunk(text) }
           } catch { /* skip malformed */ }
         }
       }
     } else {
-      // Groq + NVIDIA (OpenAI SSE format)
       const url = PROVIDER_META[config.provider].baseUrl
+      const messages = opts?.systemPrompt
+        ? buildMessages(opts.systemPrompt, prompt)
+        : [{ role: 'user', content: prompt }]
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey}`,
+      }
+      if (config.provider === 'openrouter') {
+        headers['HTTP-Referer'] = 'https://seve.live'
+        headers['X-Title'] = 'Seve Resume Builder'
+      }
+
       const res = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.4,
-          max_tokens: 1024,
-          stream: true,
-        }),
+        headers,
+        body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 1024, stream: true }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -211,18 +260,14 @@ export async function aiStream(
         const { done, value } = await reader.read()
         if (done) break
         const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-        for (const line of lines) {
+        for (const line of chunk.split('\n')) {
           if (!line.startsWith('data: ')) continue
           const jsonStr = line.slice(6).trim()
           if (!jsonStr || jsonStr === '[DONE]') continue
           try {
             const parsed = JSON.parse(jsonStr)
             const text = parsed.choices?.[0]?.delta?.content ?? ''
-            if (text) {
-              fullText += text
-              callbacks.onChunk(text)
-            }
+            if (text) { fullText += text; callbacks.onChunk(text) }
           } catch { /* skip malformed */ }
         }
       }
@@ -234,20 +279,19 @@ export async function aiStream(
   }
 }
 
-// ─── Key validation (ping with a minimal prompt) ─────────────────────────────
+// ─── Key validation ───────────────────────────────────────────────────────────
 
-export async function validateAiKey(config: AiConfig): Promise<{ valid: boolean; model: string; error?: string }> {
+export async function validateAiKey(
+  config: AiConfig,
+): Promise<{ valid: boolean; model: string; error?: string }> {
   try {
     const model = config.model || PROVIDER_META[config.provider].model
     if (config.provider === 'app') {
-      // Validate the proxy is reachable
       const result = await appProxyComplete('Say "ok" and nothing else.')
-      return { valid: !!result, model: 'llama-3.3-70b (Seve AI)' }
+      return { valid: !!result, model: 'DeepSeek R1 (Seve AI)' }
     }
     const result = await aiComplete('Say "ok" and nothing else.', config)
-    if (typeof result === 'string') {
-      return { valid: true, model }
-    }
+    if (typeof result === 'string') return { valid: true, model }
     return { valid: false, model, error: 'Unexpected response format' }
   } catch (err) {
     return {
@@ -260,9 +304,13 @@ export async function validateAiKey(config: AiConfig): Promise<{ valid: boolean;
 
 // ─── Prompt Templates ────────────────────────────────────────────────────────
 
+const JSON_SYSTEM = 'You are a structured data extractor. Respond ONLY with raw, valid JSON — no markdown, no code fences, no explanation, no trailing text.'
+const RESUME_SYSTEM = 'You are an expert ATS resume writer with 15 years of experience. Follow instructions exactly. Be concise and impactful.'
+
 export const PROMPTS = {
-  enhanceBullet: (bullet: string, jobTitle: string, company: string) => `
-You are an expert ATS resume writer. Enhance this bullet point for a ${jobTitle} role at ${company}.
+  enhanceBullet: (bullet: string, jobTitle: string, company: string) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Enhance this resume bullet point for a ${jobTitle} role at ${company}.
 
 Original: "${bullet}"
 
@@ -270,23 +318,25 @@ Rules:
 - Start with a strong action verb (Led, Built, Reduced, Grew, Architected, Delivered, etc.)
 - Add a realistic metric placeholder in [square brackets] if no number exists (e.g. [25%], [3x], [$50K])
 - Maximum 20 words
-- ATS-safe language only — no tables, symbols, or special characters
-- Return ONLY the enhanced bullet point — no explanation, no list, no quotes.
-`.trim(),
+- ATS-safe language only
+- Return ONLY the enhanced bullet point — no explanation, no list, no quotes.`,
+  }),
 
-  generateBullets: (jobTitle: string, company: string, count = 3) => `
-You are an expert ATS resume writer. Generate ${count} professional, ATS-optimized resume bullet points for a ${jobTitle} role at ${company}.
+  generateBullets: (jobTitle: string, company: string, count = 3) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Generate ${count} professional, ATS-optimized resume bullet points for a ${jobTitle} role at ${company}.
 
 Rules:
 - Each bullet starts with a strong action verb (Led, Built, Designed, Reduced, Grew, etc.)
 - Do NOT invent fake percentages or numbers — write strong qualitative achievement statements instead
 - Each bullet must be under 20 words
 - ATS-safe language only
-- Return ONLY a numbered list (1. ... 2. ... 3. ...), nothing else.
-`.trim(),
+- Return ONLY a numbered list (1. ... 2. ... 3. ...), nothing else.`,
+  }),
 
-  generateBulletsFromWins: (jobTitle: string, company: string, wins: string) => `
-You are an expert ATS resume writer. Turn these real achievements into 3 polished resume bullet points for a ${jobTitle} at ${company}.
+  generateBulletsFromWins: (jobTitle: string, company: string, wins: string) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Turn these real achievements into 3 polished resume bullet points for a ${jobTitle} at ${company}.
 
 User's actual achievements: "${wins}"
 
@@ -294,72 +344,73 @@ Rules:
 - Start each with a strong action verb
 - Use the user's REAL wins — do NOT invent numbers they didn't mention
 - If they mention a metric (%, $, users, time), include it naturally
-- If no metric is mentioned, describe the achievement with strong impact words instead
 - Max 20 words each
 - ATS-safe language only
-- Return ONLY a numbered list (1. ... 2. ... 3. ...), nothing else.
-`.trim(),
+- Return ONLY a numbered list (1. ... 2. ... 3. ...), nothing else.`,
+  }),
 
-  suggestSectionContent: (section: string, jobTitle: string, skills: string[]) => `
-You are an expert career coach. Suggest realistic content for the "${section}" section of a resume for a ${jobTitle} professional with skills in ${skills.slice(0, 5).join(', ')}.
+  suggestSectionContent: (section: string, jobTitle: string, skills: string[]) => ({
+    systemPrompt: JSON_SYSTEM,
+    prompt: `Suggest realistic "${section}" section content for a ${jobTitle} professional with skills in ${skills.slice(0, 5).join(', ')}.
 
-Rules:
-- Return a JSON array of objects matching the section type
-- For "languages": [{"name": "English", "proficiency": "Professional"}, ...] — suggest 1-2 realistic languages
-- For "certifications": [{"title": "...", "issuer": "...", "date": ""  , "description": ""}] — suggest 1-2 relevant certs
-- For "projects": [{"name": "...", "description": "one sentence, action verb start", "technologies": [...]}] — suggest 1 relevant project
-- For "volunteer": [{"organization": "...", "location": "...", "period": "...", "description": "..."}] — suggest 1 relevant volunteer exp
-- For "awards": [{"title": "...", "awarder": "...", "date": "...", "description": "..."}] — suggest 1 award
-- For "interests": [{"name": "...", "keywords": [...]}] — suggest 1 relevant interest
-- For "publications": [{"title": "...", "publisher": "...", "date": "...", "description": "..."}] — suggest 1 pub
-- For "references": [{"name": "...", "position": "...", "phone": "...", "description": "..."}] — suggest 1 dummy reference
-- Return ONLY valid JSON array, no markdown, no explanation.
-`.trim(),
+Return a JSON array matching the schema for "${section}":
+- "languages": [{"name":"string","proficiency":"Native|Fluent|Professional|Conversational"}] — 1-2 items
+- "certifications": [{"title":"string","issuer":"string","date":"YYYY","description":""}] — 1-2 items
+- "projects": [{"name":"string","description":"one sentence starting with action verb","technologies":["string"]}] — 1 item
+- "volunteer": [{"organization":"string","location":"string","period":"string","description":"string"}] — 1 item
+- "awards": [{"title":"string","awarder":"string","date":"YYYY","description":"string"}] — 1 item
+- "interests": [{"name":"string","keywords":["string"]}] — 1 item
+- "publications": [{"title":"string","publisher":"string","date":"YYYY","description":"string"}] — 1 item
+- "references": [{"name":"string","position":"string","phone":"","description":"string"}] — 1 item
 
-  copilotCommand: (command: string, resumeJson: string) => `
-You are an expert AI resume copilot. Your task is to interpret a user's natural language command and decide how to update their resume.
+Return the array directly. No wrapper object. No markdown. No explanation.`,
+  }),
 
-Current Resume JSON:
-${resumeJson}
+  copilotCommand: (command: string, resumeJson: string) => ({
+    systemPrompt: `${JSON_SYSTEM}
 
-User's Command: "${command}"
+You are an AI resume copilot. Return a SINGLE JSON object with "action" and optional "data" keys.
 
-Available Actions:
-1. "add_project": Add a project. Return: { "action": "add_project", "data": { "name": "...", "description": "...", "technologies": ["...", "..."], "link": "..." } }
-2. "add_certification": Add a certification. Return: { "action": "add_certification", "data": { "title": "...", "issuer": "...", "date": "", "description": "" } }
-3. "add_award": Add an award or honor. Return: { "action": "add_award", "data": { "title": "...", "awarder": "...", "date": "", "description": "" } }
-4. "add_volunteer": Add a volunteer experience. Return: { "action": "add_volunteer", "data": { "organization": "...", "location": "", "period": "", "description": "" } }
-5. "add_language": Add a language. Return: { "action": "add_language", "data": { "name": "...", "proficiency": "Professional" } }
-6. "update_summary": Rewrite the summary. Return: { "action": "update_summary", "data": "New summary text here" }
-7. "add_experience": Add a work experience role. Return: { "action": "add_experience", "data": { "jobTitle": "...", "company": "...", "location": "", "startDate": "", "endDate": "", "current": true, "bullets": ["...", "..."] } }
-8. "add_skills": Add skills to the skill list. Return: { "action": "add_skills", "data": ["skill1", "skill2"] }
-9. "add_interest": Add an interest. Return: { "action": "add_interest", "data": { "name": "...", "keywords": ["..."] } }
-10. "update_contact": Update contact details (such as name/fullName, email, phone, location, linkedin, website). Return: { "action": "update_contact", "data": { "fullName": "...", "email": "...", "phone": "...", "location": "...", "linkedin": "...", "website": "..." } } (only include fields that need to be updated).
-11. "unknown": If the command cannot be mapped to any of the actions above or is conversational. Return: { "action": "unknown", "message": "Helpful response explaining what you can do (e.g. 'I can add projects, certifications, volunteer experience, languages, skills, update contact info, or update your summary.')" }
+Actions:
+- "add_project": data = {"name":"string","description":"string","technologies":["string"],"link":""}
+- "add_certification": data = {"title":"string","issuer":"string","date":"","description":""}
+- "add_award": data = {"title":"string","awarder":"string","date":"","description":""}
+- "add_volunteer": data = {"organization":"string","location":"","period":"","description":""}
+- "add_language": data = {"name":"string","proficiency":"Professional"}
+- "update_summary": data = "New summary text string"
+- "add_experience": data = {"jobTitle":"string","company":"string","location":"","startDate":"","endDate":"","current":true,"bullets":["string"]}
+- "add_skills": data = ["skill1","skill2"]
+- "add_interest": data = {"name":"string","keywords":["string"]}
+- "update_contact": data = {only fields to update: "fullName","email","phone","location","linkedin","website"}
+- "unknown": message = "Brief explanation of what you can do"
 
-Rules:
-- Infer details smartly. If the user says "add a React project named Taskify", make up a high-quality bullet-like description using React and associated tech.
-- Return ONLY valid, minified JSON object matching the structures above. No markdown code blocks, no trailing text, no extra spaces.
-`.trim(),
+Infer details smartly. Generate high-quality, realistic content.`,
+    prompt: `Current resume: ${resumeJson}
 
-  generateSummary: (jobTitle: string, skills: string[], yearsExp: number) => `
-Write a professional ATS-optimized resume summary for:
+Command: "${command}"`,
+  }),
+
+  generateSummary: (jobTitle: string, skills: string[], yearsExp: number) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Write a professional ATS-optimized resume summary.
+
 Role: ${jobTitle}
 Top Skills: ${skills.slice(0, 5).join(', ')}
 Years of Experience: ${yearsExp}+
 
 Rules:
-- 3–4 sentences, 300–500 characters total
+- 3-4 sentences, 300-500 characters total
 - Never use "I" or first-person pronouns
 - First sentence: job title + years of experience
 - Second/third: core strengths and key achievements
 - Final: career goal or value to employer
 - ATS-safe language only
-- Return ONLY the summary text, no labels or explanation.
-`.trim(),
+- Return ONLY the summary text, no labels or explanation.`,
+  }),
 
-  fixAtsIssue: (issueText: string, fixInstruction: string, currentText: string) => `
-You are an expert ATS resume writer. Fix the following resume issue.
+  fixAtsIssue: (issueText: string, fixInstruction: string, currentText: string) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Fix the following resume issue.
 
 Issue: "${issueText}"
 How to fix: "${fixInstruction}"
@@ -371,11 +422,12 @@ Rules:
 - Add a metric placeholder in [square brackets] if a number is missing
 - Keep it under 20 words if it's a bullet; up to 4 sentences if it's a summary
 - ATS-safe language only
-- Return ONLY the fixed text — no explanation, no quotes, no labels.
-`.trim(),
+- Return ONLY the fixed text — no explanation, no quotes, no labels.`,
+  }),
 
-  suggestProjectDescription: (projectName: string, technologies: string[]) => `
-Write a one-sentence ATS-optimized resume description for this project:
+  suggestProjectDescription: (projectName: string, technologies: string[]) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Write a one-sentence ATS-optimized resume description for this project.
 Project: "${projectName}"
 Technologies: ${technologies.join(', ')}
 
@@ -384,14 +436,14 @@ Rules:
 - Mention the tech stack naturally
 - End with the purpose or impact
 - Maximum 25 words
-- Return ONLY the description sentence, nothing else.
-`.trim(),
+- Return ONLY the description sentence, nothing else.`,
+  }),
 
-  importFromText: (rawText: string, schema: string) => `
-Extract all resume details from the following text and format them to match this exact JSON schema.
+  importFromText: (rawText: string, schema: string) => ({
+    systemPrompt: JSON_SYSTEM,
+    prompt: `Extract all resume details from the text below and format them to match the exact JSON schema provided.
 
-IMPORTANT:
-- Return ONLY valid JSON — no markdown backticks, no explanation, no extra text outside the JSON
+Rules:
 - Fill every field you can extract from the text
 - For bullets: write them as short, clean sentences (do not add metrics, just extract what's there)
 - For dates: use MM/YYYY format where possible
@@ -401,6 +453,6 @@ JSON Schema:
 ${schema}
 
 Resume Text:
-${rawText}
-`.trim(),
+${rawText}`,
+  }),
 }

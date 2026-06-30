@@ -173,7 +173,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         // 1. Summary
         log('Writing professional summary...')
         try {
-          summary = await aiComplete(PROMPTS.generateSummary(jobTitle, skillsList, parseInt(years) || 3), config)
+          const { prompt: pSum, systemPrompt: sSum } = PROMPTS.generateSummary(jobTitle, skillsList, parseInt(years) || 3)
+          summary = await aiComplete(pSum, config, { systemPrompt: sSum, maxTokens: 1024 })
           updateLast('Summary written ✓', 'done')
         } catch { updateLast('Summary skipped — write it later', 'warn') }
 
@@ -181,10 +182,10 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         if (jobTitle) {
           log(`Crafting achievement bullets for ${company || jobTitle}...`)
           try {
-            const prompt = wins.trim()
+            const pd = wins.trim()
               ? PROMPTS.generateBulletsFromWins(jobTitle, company || 'Company', wins.trim())
               : PROMPTS.generateBullets(jobTitle, company || 'Company', 3)
-            const raw = await aiComplete(prompt, config)
+            const raw = await aiComplete(pd.prompt, config, { systemPrompt: pd.systemPrompt, maxTokens: 1024 })
             bullets = raw.split('\n')
               .map(l => l.replace(/^\d+\.\s*/, '').replace(/^[-•]\s*/, '').trim())
               .filter(Boolean).slice(0, 3)
@@ -196,7 +197,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         if (autoGenProjects && skillsList.length > 0) {
           log('Generating sample projects...')
           try {
-            const raw = await aiComplete(PROMPTS.suggestSectionContent('projects', jobTitle, skillsList), config)
+            const { prompt: pPrj, systemPrompt: sPrj } = PROMPTS.suggestSectionContent('projects', jobTitle, skillsList)
+            const raw = await aiComplete(pPrj, config, { systemPrompt: sPrj, jsonMode: true, maxTokens: 1024 })
             const arr = safeParseArray(raw)
             if (arr) {
               extraProjects = arr.slice(0, 2).map((p: any) => ({
@@ -211,7 +213,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         if (autoGenCerts && skillsList.length > 0) {
           log('Finding certifications...')
           try {
-            const raw = await aiComplete(PROMPTS.suggestSectionContent('certifications', jobTitle, skillsList), config)
+            const { prompt: pCrt, systemPrompt: sCrt } = PROMPTS.suggestSectionContent('certifications', jobTitle, skillsList)
+            const raw = await aiComplete(pCrt, config, { systemPrompt: sCrt, jsonMode: true, maxTokens: 1024 })
             const arr = safeParseArray(raw)
             if (arr) {
               extraCerts = arr.slice(0, 2).map((c: any) => ({
@@ -226,7 +229,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         if (autoGenAwards) {
           log('Generating awards...')
           try {
-            const raw = await aiComplete(PROMPTS.suggestSectionContent('awards', jobTitle, skillsList), config)
+            const { prompt: pAwd, systemPrompt: sAwd } = PROMPTS.suggestSectionContent('awards', jobTitle, skillsList)
+            const raw = await aiComplete(pAwd, config, { systemPrompt: sAwd, jsonMode: true, maxTokens: 1024 })
             const arr = safeParseArray(raw)
             if (arr) {
               extraAwards = arr.slice(0, 1).map((a: any) => ({
@@ -241,7 +245,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         if (autoGenVolunteer) {
           log('Generating volunteer work...')
           try {
-            const raw = await aiComplete(PROMPTS.suggestSectionContent('volunteer', jobTitle, skillsList), config)
+            const { prompt: pVol, systemPrompt: sVol } = PROMPTS.suggestSectionContent('volunteer', jobTitle, skillsList)
+            const raw = await aiComplete(pVol, config, { systemPrompt: sVol, jsonMode: true, maxTokens: 1024 })
             const arr = safeParseArray(raw)
             if (arr) {
               extraVolunteer = arr.slice(0, 1).map((v: any) => ({
@@ -256,7 +261,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         if (autoGenInterests) {
           log('Suggesting tech interests...')
           try {
-            const raw = await aiComplete(PROMPTS.suggestSectionContent('interests', jobTitle, skillsList), config)
+            const { prompt: pInt, systemPrompt: sInt } = PROMPTS.suggestSectionContent('interests', jobTitle, skillsList)
+            const raw = await aiComplete(pInt, config, { systemPrompt: sInt, jsonMode: true, maxTokens: 1024 })
             const arr = safeParseArray(raw)
             if (arr) {
               extraInterests = arr.slice(0, 2).map((i: any) => ({

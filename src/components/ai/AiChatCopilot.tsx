@@ -33,9 +33,11 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
     setFeedback('')
 
     try {
+      const { prompt, systemPrompt } = PROMPTS.copilotCommand(cmdText.trim(), JSON.stringify(resumeData))
       const responseText = await aiComplete(
-        PROMPTS.copilotCommand(cmdText.trim(), JSON.stringify(resumeData)),
-        config
+        prompt,
+        config,
+        { systemPrompt, jsonMode: true, maxTokens: 1024 },
       )
 
       const actions: CopilotResponse[] = extractAllJsonObjects(responseText)

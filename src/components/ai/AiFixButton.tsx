@@ -7,8 +7,11 @@ import AiSettingsModal from './AiSettingsModal'
 
 type Status = 'idle' | 'loading' | 'done' | 'error'
 
+// Accepts either a plain string or a structured { prompt, systemPrompt } object
+export type PromptInput = string | { prompt: string; systemPrompt: string }
+
 interface AiFixButtonProps {
-  prompt: string
+  prompt: PromptInput
   onAccept: (result: string) => void
   label?: string
   size?: 'xs' | 'sm' | 'md'
@@ -16,6 +19,11 @@ interface AiFixButtonProps {
   className?: string
   suggestionLabel?: string
   parentExpanded?: boolean
+}
+
+function resolvePrompt(p: PromptInput): { prompt: string; systemPrompt?: string } {
+  if (typeof p === 'string') return { prompt: p }
+  return p
 }
 
 export default function AiFixButton({
@@ -51,16 +59,17 @@ export default function AiFixButton({
     setSuggestion('')
     setErrorMsg('')
 
+    const { prompt: promptText, systemPrompt } = resolvePrompt(prompt)
     try {
       if (mode === 'stream') {
         setStatus('done')
-        await aiStream(prompt, config, {
+        await aiStream(promptText, config, {
           onChunk: (chunk) => setStreamedText(prev => prev + chunk),
           onDone: (full) => { setSuggestion(full); setStreamedText('') },
           onError: (err) => { setStatus('error'); setErrorMsg(err.message) },
-        })
+        }, systemPrompt ? { systemPrompt } : undefined)
       } else {
-        const result = await aiComplete(prompt, config)
+        const result = await aiComplete(promptText, config, { systemPrompt })
         setSuggestion(result.trim())
         setStatus('done')
       }

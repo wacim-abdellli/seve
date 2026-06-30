@@ -69,7 +69,8 @@ export default function AiResumeAdvisor({ defaultCollapsed = false }: { defaultC
       atsBoost: 4,
       run: async () => {
         if (!config) return
-        const raw = await aiComplete(PROMPTS.suggestSectionContent('languages', jobTitle, skillsList), config)
+        const { prompt: p1, systemPrompt: s1 } = PROMPTS.suggestSectionContent('languages', jobTitle, skillsList)
+        const raw = await aiComplete(p1, config, { systemPrompt: s1, jsonMode: true, maxTokens: 1024 })
         const arr = safeParseArray(raw)
         const langs = arr
           ? arr.slice(0, 3).map((l: any) => ({ id: makeId(), name: l.name || 'English', proficiency: l.proficiency || 'Professional' }))
@@ -88,7 +89,8 @@ export default function AiResumeAdvisor({ defaultCollapsed = false }: { defaultC
       atsBoost: 6,
       run: async () => {
         if (!config) return
-        const raw = await aiComplete(PROMPTS.suggestSectionContent('projects', jobTitle, skillsList), config)
+        const { prompt: p2, systemPrompt: s2 } = PROMPTS.suggestSectionContent('projects', jobTitle, skillsList)
+        const raw = await aiComplete(p2, config, { systemPrompt: s2, jsonMode: true, maxTokens: 1024 })
         const arr = safeParseArray(raw)
         if (arr?.[0]) {
           const p = arr[0]
@@ -110,7 +112,8 @@ export default function AiResumeAdvisor({ defaultCollapsed = false }: { defaultC
       atsBoost: 7,
       run: async () => {
         if (!config) return
-        const raw = await aiComplete(PROMPTS.suggestSectionContent('certifications', jobTitle, skillsList), config)
+        const { prompt: p3, systemPrompt: s3 } = PROMPTS.suggestSectionContent('certifications', jobTitle, skillsList)
+        const raw = await aiComplete(p3, config, { systemPrompt: s3, jsonMode: true, maxTokens: 1024 })
         const arr = safeParseArray(raw)
         if (arr) {
           const certs = arr.slice(0, 2).map((c: any) => ({
@@ -131,7 +134,8 @@ export default function AiResumeAdvisor({ defaultCollapsed = false }: { defaultC
       atsBoost: 8,
       run: async () => {
         if (!config) return
-        const result = await aiComplete(PROMPTS.generateSummary(jobTitle, skillsList, 3), config)
+        const { prompt, systemPrompt } = PROMPTS.generateSummary(jobTitle, skillsList, 3)
+        const result = await aiComplete(prompt, config, { systemPrompt, maxTokens: 1024 })
         updateResumeData({ ...resumeData, summary: result.trim() })
       }
     })
@@ -147,7 +151,8 @@ export default function AiResumeAdvisor({ defaultCollapsed = false }: { defaultC
       atsBoost: 10,
       run: async () => {
         if (!config) return
-        const raw = await aiComplete(PROMPTS.generateBullets(firstExp.jobTitle, firstExp.company || 'Company', 3), config)
+        const { prompt, systemPrompt } = PROMPTS.generateBullets(firstExp.jobTitle, firstExp.company || 'Company', 3)
+        const raw = await aiComplete(prompt, config, { systemPrompt, maxTokens: 1024 })
         const bullets = raw.split('\n')
           .map((l: string) => l.replace(/^\d+\.\s*/, '').replace(/^[-•]\s*/, '').trim())
           .filter(Boolean).slice(0, 3)
