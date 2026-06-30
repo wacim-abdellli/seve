@@ -322,59 +322,59 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
 
   const TEMPLATE = {
     contact: {
-      fullName: "Sarah Mitchell",
-      email: "sarah.m@example.com",
+      fullName: "Jane Doe",
+      email: "jane.doe@email.com",
       phone: "+1-555-0199",
-      linkedin: "linkedin.com/in/sarahmitchell",
+      linkedin: "linkedin.com/in/janedoe",
       location: "New York, NY"
     },
-    summary: "Senior Software Engineer with 6+ years of experience in front-end development, specializing in React and design systems.",
+    summary: "Professional summary describing key experience, stack, and achievements.",
     experience: [
       {
         id: "e1",
-        jobTitle: "Lead Front-end Developer",
-        company: "Vortex Analytics",
-        location: "New York, NY",
-        startDate: "2021-08",
+        jobTitle: "Job Title",
+        company: "Company Name",
+        location: "City, State",
+        startDate: "YYYY-MM",
         endDate: "Present",
         current: true,
         bullets: [
-          "Spearheaded redesign of the core web app, reducing page load times by 40%.",
-          "Mentored 4 junior engineers and introduced automated testing processes."
+          "Key achievement 1 with action verb and metric.",
+          "Key achievement 2 with action verb and metric."
         ]
       }
     ],
     education: [
       {
         id: "d1",
-        degree: "B.Sc. in Computer Science",
-        school: "Columbia University",
-        location: "New York, NY",
-        graduationDate: "2018"
+        degree: "Degree Name",
+        school: "University Name",
+        location: "City, State",
+        graduationDate: "YYYY"
       }
     ],
-    skills: ["JavaScript", "TypeScript", "React", "Tailwind CSS", "Node.js", "Vite"],
+    skills: ["Skill 1", "Skill 2", "Skill 3"],
     projects: [
       {
         id: "p1",
-        name: "Component Library",
-        description: "An open-source responsive design system library",
-        technologies: ["TypeScript", "Tailwind"]
+        name: "Project Name",
+        description: "Short project description...",
+        technologies: ["Tech 1", "Tech 2"]
       }
     ],
     languages: [
       {
         id: "l1",
-        name: "English",
-        proficiency: "Native"
+        name: "Language Name",
+        proficiency: "Proficiency Level"
       }
     ],
     certifications: [
       {
         id: "c1",
-        title: "AWS Certified Cloud Practitioner",
-        issuer: "Amazon Web Services",
-        date: "2023"
+        title: "Certification Title",
+        issuer: "Issuing Organization",
+        date: "YYYY"
       }
     ]
   }
@@ -683,27 +683,27 @@ CV TEXT TO CONVERT:
                 value={pasteValue} onChange={e => handlePasteChange(e.target.value)}
                 placeholder={JSON.stringify({
                   contact: {
-                    fullName: "Sarah Mitchell",
-                    email: "sarah.m@example.com",
+                    fullName: "Jane Doe",
+                    email: "jane.doe@email.com",
                     phone: "+1-555-0199",
-                    linkedin: "linkedin.com/in/sarahmitchell",
+                    linkedin: "linkedin.com/in/janedoe",
                     location: "New York, NY"
                   },
-                  summary: "Senior Software Engineer...",
+                  summary: "Professional summary...",
                   experience: [
                     {
-                      jobTitle: "Lead Front-end Developer",
-                      company: "Vortex Analytics",
+                      jobTitle: "Job Title",
+                      company: "Company Name",
                       bullets: [
-                        "Redesigned the core web app...",
-                        "Mentored junior developers..."
+                        "Key achievement 1 with action verb and metric...",
+                        "Key achievement 2 with action verb and metric..."
                       ]
                     }
                   ],
                   education: [
                     {
-                      degree: "B.Sc. in Computer Science",
-                      school: "Columbia University"
+                      degree: "Degree Name",
+                      school: "University Name"
                     }
                   ],
                   skills: ["React", "TypeScript", "Tailwind CSS"],
