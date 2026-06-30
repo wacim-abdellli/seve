@@ -427,6 +427,8 @@ Available actions and exact data shapes:
 - "update_contact": {"action":"update_contact","data":{"fullName":"if updating","email":"if updating","phone":"if updating","location":"if updating","linkedin":"if updating","website":"if updating"}}
 - "update_experience": {"action":"update_experience","data":{"id":"REQUIRED_ID_FROM_CONTEXT","jobTitle":"string","company":"string","bullets":["Action verb + achievement","Action verb + achievement"]}} — use this to rewrite or improve existing experience bullets or details.
 - "update_project": {"action":"update_project","data":{"id":"REQUIRED_ID_FROM_CONTEXT","name":"string","description":"string","technologies":["string"]}} — use this to update existing projects.
+- "remove_section": {"action":"remove_section","data":"references|certifications|awards|volunteer|languages|projects|interests|publications"} — use this to completely empty or remove a section.
+- "delete_item": {"action":"delete_item","data":{"section":"experience|projects|certifications|awards|volunteer|languages|interests|publications","id":"REQUIRED_ID_FROM_CONTEXT"}} — use this to delete a specific item from a section.
 - "clarify": {"action":"clarify","data":{"question":"string","options":["string","string","string","string"]}} — use this when the user's request is broad, ambiguous, or lacks key details (e.g., "add a project" without specifying what it is, "find a project idea", or "write a summary" with no context). Ask a polite clarifying question with 3-4 options.
 - "unknown": {"action":"unknown","message":"Brief explanation of what you can do"}
 
@@ -497,6 +499,19 @@ Few-shot examples:
     }
   ]
 }
+- User says "remove references" →
+{
+  "actions": [
+    {"action":"remove_section","data":"references"}
+  ]
+}
+- User says "delete my interest in photography" →
+{
+  "actions": [
+    {"action":"delete_item","data":{"section":"interests","id":"interest-id-from-context"}}
+  ]
+}
+
 
 IMPORTANT: Infer realistic, high-quality details from the user's command and their resume context. Never leave fields as generic placeholders like \"string\".`,
     prompt: `Resume context:

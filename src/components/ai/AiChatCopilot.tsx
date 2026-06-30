@@ -1,6 +1,6 @@
 import { useState, useContext, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Loader2, Send, Check, AlertCircle, ChevronDown, ChevronUp, Sliders, Play } from 'lucide-react'
+import { Sparkles, Loader2, Send, Check, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import ResumeDataContextInternal from '../../context/resumeDataContextDef'
 import { useAi } from '../../hooks/useAi'
 import { aiComplete, PROMPTS } from '../../services/aiService'
@@ -14,10 +14,6 @@ interface CopilotResponse {
   message?: string
 }
 
-const TONE_OPTIONS = ['Professional', 'Bold & Confident', 'Creative', 'Direct & Minimal']
-const LEVEL_OPTIONS = ['Junior', 'Mid-level', 'Senior', 'Lead / Executive']
-const FOCUS_OPTIONS = ['Technical Skills', 'Team Leadership', 'Metrics & Outcomes', 'Project Delivery', 'Revenue/Sales Growth']
-
 export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
   const ctx = useContext(ResumeDataContextInternal)
   const { config, isUsingAppKey } = useAi()
@@ -26,12 +22,6 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [feedback, setFeedback] = useState('')
-  
-  // Wizard state parameters
-  const [showWizard, setShowWizard] = useState(false)
-  const [selectedTone, setSelectedTone] = useState('Professional')
-  const [selectedLevel, setSelectedLevel] = useState('Senior')
-  const [selectedFocus, setSelectedFocus] = useState<string[]>(['Technical Skills'])
 
   // Dynamic clarification state
   const [clarification, setClarification] = useState<{
@@ -266,6 +256,30 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
             }
             break
 
+          case 'remove_section':
+            if (typeof res.data === 'string') {
+              const sec = res.data.toLowerCase().trim()
+              if (sec === 'references') { updated.references = []; labels.push('Removed References') }
+              else if (sec === 'certifications') { updated.certifications = []; labels.push('Removed Certifications') }
+              else if (sec === 'awards') { updated.awards = []; labels.push('Removed Awards') }
+              else if (sec === 'volunteer') { updated.volunteer = []; labels.push('Removed Volunteer work') }
+              else if (sec === 'languages') { updated.languages = []; labels.push('Removed Languages') }
+              else if (sec === 'projects') { updated.projects = []; labels.push('Removed Projects') }
+              else if (sec === 'interests') { updated.interests = []; labels.push('Removed Interests') }
+              else if (sec === 'publications') { updated.publications = []; labels.push('Removed Publications') }
+            }
+            break
+
+          case 'delete_item':
+            if (res.data && res.data.section && res.data.id) {
+              const sec = res.data.section
+              if (Array.isArray((updated as any)[sec])) {
+                (updated as any)[sec] = (updated as any)[sec].filter((item: any) => item.id !== res.data.id)
+                labels.push(`Deleted item from ${sec}`)
+              }
+            }
+            break
+
           default:
             // Skip unsupported actions silently or throw
             break
@@ -296,51 +310,7 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
     }
   }
 
-  const handleWizardGenerate = async () => {
-    setStatus('loading')
-    setFeedback('')
-    try {
-      const jobTitle = resumeData.experience?.[0]?.jobTitle || 'Professional'
-      const skillsList = resumeData.skills || []
-      const yearsExp = Math.max(1, resumeData.experience?.length || 1)
 
-      const { prompt, systemPrompt } = (PROMPTS as any).generateSummaryWithOptions(
-        jobTitle,
-        skillsList,
-        yearsExp,
-        selectedTone,
-        selectedFocus,
-        selectedLevel
-      )
-
-      const result = await aiComplete(prompt, config, { systemPrompt, maxTokens: 1024 })
-      
-      updateResumeData({
-        ...resumeData,
-        summary: result.trim()
-      })
-
-      setStatus('success')
-      setFeedback('Profile Summary updated via Wizard ✓')
-      setShowWizard(false)
-      
-      setTimeout(() => {
-        setFeedback(prev => prev === 'Profile Summary updated via Wizard ✓' ? '' : prev)
-        setStatus(prev => prev === 'success' ? 'idle' : prev)
-      }, 4000)
-
-    } catch (err: any) {
-      console.error(err)
-      setStatus('error')
-      setFeedback(err?.message || 'Wizard failed to generate summary.')
-    }
-  }
-
-  const toggleFocus = (focus: string) => {
-    setSelectedFocus(prev => 
-      prev.includes(focus) ? prev.filter(f => f !== focus) : [...prev, focus]
-    )
-  }
 
   return (
     <div
@@ -371,105 +341,7 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
       {!collapsed && (<>
       
       {/* Wizard Bento Toggle/Panel */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setShowWizard(w => !w)}
-          disabled={status === 'loading'}
-          className={`flex-1 py-1.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            showWizard 
-              ? 'bg-[#b91c1c]/10 border-[#b91c1c]/35 text-[#b91c1c]' 
-              : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:border-white/10'
-          }`}
-        >
-          <Sliders className="w-3 h-3" />
-          {showWizard ? 'Close Wizard' : 'Summary Wizard'}
-        </button>
-      </div>
 
-      <AnimatePresence>
-        {showWizard && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border border-white/5 bg-white/[0.01] rounded-xl p-3.5 space-y-4"
-          >
-            {/* Tone Selector */}
-            <div className="space-y-1.5">
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Tone of Voice</span>
-              <div className="flex flex-wrap gap-1">
-                {TONE_OPTIONS.map(tone => (
-                  <button
-                    key={tone}
-                    onClick={() => setSelectedTone(tone)}
-                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold border transition-colors cursor-pointer ${
-                      selectedTone === tone
-                        ? 'bg-[#b91c1c]/10 border-[#b91c1c]/30 text-white'
-                        : 'bg-transparent border-white/5 text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    {tone}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Level Selector */}
-            <div className="space-y-1.5">
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Experience Level</span>
-              <div className="flex flex-wrap gap-1">
-                {LEVEL_OPTIONS.map(lvl => (
-                  <button
-                    key={lvl}
-                    onClick={() => setSelectedLevel(lvl)}
-                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold border transition-colors cursor-pointer ${
-                      selectedLevel === lvl
-                        ? 'bg-[#b91c1c]/10 border-[#b91c1c]/30 text-white'
-                        : 'bg-transparent border-white/5 text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    {lvl}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Focus Checklist */}
-            <div className="space-y-1.5">
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Focus Areas (Select all that apply)</span>
-              <div className="grid grid-cols-2 gap-1.5">
-                {FOCUS_OPTIONS.map(focus => {
-                  const active = selectedFocus.includes(focus)
-                  return (
-                    <button
-                      key={focus}
-                      onClick={() => toggleFocus(focus)}
-                      className={`px-2 py-1.5 rounded-lg border text-left text-[9px] font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                        active
-                          ? 'bg-[#b91c1c]/10 border-[#b91c1c]/25 text-white'
-                          : 'bg-transparent border-white/5 text-zinc-600 hover:text-zinc-400'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${active ? 'bg-[#b91c1c]' : 'bg-zinc-800'}`} />
-                      <span className="truncate">{focus}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              onClick={handleWizardGenerate}
-              disabled={status === 'loading'}
-              className="w-full py-2 bg-[#b91c1c] hover:bg-[#c62828] active:scale-[0.98] transition-all text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-rose-950/20"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              Generate Profile Summary
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Clarification Multiple-Choice Selector */}
       <AnimatePresence>
