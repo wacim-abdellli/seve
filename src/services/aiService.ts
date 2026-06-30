@@ -318,9 +318,10 @@ const JSON_SYSTEM = [
 ].join(' ')
 
 const RESUME_SYSTEM = [
-  'You are an elite ATS resume writer with 15+ years of experience helping candidates land jobs at top companies.',
-  'Your writing is precise, impactful, and keyword-optimized.',
-  'Follow every instruction exactly. Be concise. No preamble, no explanation, no extra text.',
+  'You are an expert ATS resume optimizer. Your task is to rewrite, enhance, and structure resume content for candidates in various fields (tech, sales, marketing, finance, HR, healthcare, etc.).',
+  'CRITICAL: Align your outputs strictly with the candidate\'s existing domain and experience level.',
+  'Never describe yourself, and never refer to yourself as a "writer" or say you love "creative writing" — do not leak your own identity into the candidate\'s profile.',
+  'Your writing is precise, impact-driven, and ATS-optimized. No preamble, no explanation, no extra text.',
 ].join(' ')
 
 export const PROMPTS = {
@@ -434,24 +435,30 @@ Rules for updating / improving existing content:
 - If requested to "improve vocabulary" or "improve resume wording/quality", rewrite the "summary" (using update_summary) AND rewrite the bullets for each experience entry (using update_experience with their respective IDs) to start with strong action verbs and include metrics.
 
 Few-shot examples:
-- User says "add a Python project" →
+- User says "add a Python project" (Software Developer candidate) →
 {
   "actions": [
     {"action":"add_project","data":{"name":"Python Data Pipeline","description":"Built an automated ETL pipeline processing 1M+ records daily using Python and Apache Airflow.","technologies":["Python","Apache Airflow","PostgreSQL"],"link":""}}
   ]
 }
-- User says "improve the vocabulary of my Stripe experience" →
+- User says "improve the vocabulary of my Stripe experience" (Software Developer candidate) →
 {
   "actions": [
     {"action":"update_experience","data":{"id":"stripe-exp-123","company":"Stripe","bullets":["Architected event-driven microservices processing [1M+] transactions daily with [99.99%] availability","Optimized SQL database query speeds by [45%] through indexing and partitioning"]}}
   ]
 }
-- User says "improve vocabulary of the CV" →
+- User says "improve the vocabulary of my sales experience" (Sales Representative candidate) →
 {
   "actions": [
-    {"action":"update_summary","data":"[Polished, metric-driven summary]"},
-    {"action":"update_experience","data":{"id":"job-id-1","company":"Stripe","bullets":["...","..."]}},
-    {"action":"update_experience","data":{"id":"job-id-2","company":"Datadog","bullets":["...","..."]}}
+    {"action":"update_experience","data":{"id":"sales-exp-456","company":"SalesCorp","bullets":["Spearheaded outbound sales campaigns generating [$150K] in new pipeline within [3 months]","Maintained a [94%] client retention rate by establishing strategic account management workflows"]}}
+  ]
+}
+- User says "improve vocabulary of the CV" (General candidate) →
+{
+  "actions": [
+    {"action":"update_summary","data":"[Polished, professional summary matching the candidate's actual industry and years of experience strictly. Do not mention software or writing unless the candidate is in that industry.]"},
+    {"action":"update_experience","data":{"id":"job-id-1","company":"[Actual company 1 from context]","bullets":["[Polished bullet 1 matching actual job duties]","[Polished bullet 2 matching actual job duties]"]}},
+    {"action":"update_experience","data":{"id":"job-id-2","company":"[Actual company 2 from context]","bullets":["[Polished bullet 1]","[Polished bullet 2]"]}}
   ]
 }
 
