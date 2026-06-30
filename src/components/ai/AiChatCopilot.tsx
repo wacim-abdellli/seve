@@ -40,10 +40,23 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
         { systemPrompt, jsonMode: true, maxTokens: 1024 },
       )
 
-      const actions: CopilotResponse[] = extractAllJsonObjects(responseText)
+      const rawObjects = extractAllJsonObjects(responseText)
+      if (rawObjects.length === 0) {
+        throw new Error('Failed to parse command response from AI.')
+      }
+
+      // Flatten actions: extract nested actions if the model wraps them in an object
+      const actions: CopilotResponse[] = []
+      for (const obj of rawObjects) {
+        if (obj && Array.isArray(obj.actions)) {
+          actions.push(...obj.actions)
+        } else if (obj && obj.action) {
+          actions.push(obj)
+        }
+      }
 
       if (actions.length === 0) {
-        throw new Error('Failed to parse command response from AI.')
+        throw new Error('No valid actions could be parsed from AI response.')
       }
 
       // If the only action is 'unknown', show the conversational message
