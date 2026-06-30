@@ -104,7 +104,7 @@ export default function AiFixButton({
   const sizeClass = size === 'xs' ? 'w-7 h-7' : size === 'sm' ? 'h-7 px-2.5 text-[10px]' : 'h-8 px-3 text-xs'
 
   return (
-    <div className="relative">
+    <div className={`relative ${status === 'done' || status === 'error' ? 'z-30' : 'z-0'}`}>
       <button
         type="button"
         onClick={status === 'idle' || status === 'error' ? run : undefined}
