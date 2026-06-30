@@ -75,6 +75,7 @@ serve(async (req) => {
   let maxTokens = 1024
   let temperature = 0.3
   let jsonMode = false
+  let systemPrompt = ''
 
   try {
     const body = await req.json()
@@ -82,6 +83,9 @@ serve(async (req) => {
     if (typeof body.maxTokens === 'number') maxTokens = Math.min(body.maxTokens, 2048)
     if (typeof body.temperature === 'number') temperature = body.temperature
     if (typeof body.jsonMode === 'boolean') jsonMode = body.jsonMode
+    if (typeof body.systemPrompt === 'string') systemPrompt = body.systemPrompt
+    // Lower temperature automatically for JSON tasks — reduces hallucination
+    if (jsonMode) temperature = Math.min(temperature, 0.15)
     if (!prompt || typeof prompt !== 'string') throw new Error('Missing prompt')
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid request body' }), {
@@ -91,9 +95,16 @@ serve(async (req) => {
   }
 
   try {
+    const messages = systemPrompt
+      ? [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ]
+      : [{ role: 'user', content: prompt }]
+
     const reqBody: any = {
       model: GROQ_MODEL,
-      messages: [{ role: 'user', content: prompt }],
+      messages,
       temperature,
       max_tokens: maxTokens,
       stream: false,

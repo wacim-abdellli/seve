@@ -1,4 +1,4 @@
-﻿/**
+/**
  * aiService.ts — Multi-provider AI client for Seve
  *
  * Supports Groq, NVIDIA NIM, Google Gemini, and OpenRouter using their REST APIs.
@@ -92,7 +92,7 @@ function buildMessages(
 
 async function appProxyComplete(
   prompt: string,
-  opts?: { maxTokens?: number; temperature?: number; jsonMode?: boolean },
+  opts?: { maxTokens?: number; temperature?: number; jsonMode?: boolean; systemPrompt?: string },
 ): Promise<string> {
   const url = `${SUPABASE_URL}/functions/v1/ai-proxy`
   const res = await fetch(url, {
@@ -103,6 +103,7 @@ async function appProxyComplete(
       maxTokens: opts?.maxTokens ?? 1024,
       temperature: opts?.temperature ?? 0.3,
       jsonMode: opts?.jsonMode ?? false,
+      systemPrompt: opts?.systemPrompt ?? '',
     }),
   })
   const data = await res.json()
@@ -119,9 +120,11 @@ export async function aiComplete(
 ): Promise<string> {
   const maxTokens = opts?.maxTokens ?? 1024
   const jsonMode = opts?.jsonMode ?? false
+  // Lower temperature for structured/JSON tasks = less hallucination
+  const temperature = jsonMode ? 0.15 : 0.3
 
   if (config.provider === 'app') {
-    return appProxyComplete(prompt, { maxTokens, temperature: 0.3, jsonMode })
+    return appProxyComplete(prompt, { maxTokens, temperature, jsonMode, systemPrompt: opts?.systemPrompt })
   }
 
   const model = config.model || PROVIDER_META[config.provider].model
@@ -167,7 +170,7 @@ export async function aiComplete(
   const body: any = {
     model,
     messages,
-    temperature: 0.3,
+    temperature,
     max_tokens: maxTokens,
     stream: false,
   }
@@ -182,7 +185,9 @@ export async function aiComplete(
     throw new Error(err?.error?.message || `${config.provider} error: ${res.status}`)
   }
   const data = await res.json()
-  return data.choices?.[0]?.message?.content?.trim() ?? ''
+  // Strip DeepSeek R1 <think>...</think> reasoning blocks from output
+  const raw = data.choices?.[0]?.message?.content?.trim() ?? ''
+  return raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
 }
 
 // ─── Streaming completion ─────────────────────────────────────────────────────
@@ -266,7 +271,9 @@ export async function aiStream(
           if (!jsonStr || jsonStr === '[DONE]') continue
           try {
             const parsed = JSON.parse(jsonStr)
-            const text = parsed.choices?.[0]?.delta?.content ?? ''
+            let text = parsed.choices?.[0]?.delta?.content ?? ''
+            // Strip any <think> partial tags that leak into stream chunks
+            text = text.replace(/<think>[\s\S]*?<\/think>/gi, '')
             if (text) { fullText += text; callbacks.onChunk(text) }
           } catch { /* skip malformed */ }
         }
@@ -304,49 +311,78 @@ export async function validateAiKey(
 
 // ─── Prompt Templates ────────────────────────────────────────────────────────
 
-const JSON_SYSTEM = 'You are a structured data extractor. Respond ONLY with raw, valid JSON — no markdown, no code fences, no explanation, no trailing text.'
-const RESUME_SYSTEM = 'You are an expert ATS resume writer with 15 years of experience. Follow instructions exactly. Be concise and impactful.'
+const JSON_SYSTEM = [
+  'You are a precise structured data extractor for a resume builder app.',
+  'CRITICAL: Respond ONLY with raw, valid JSON — no markdown, no ```json fences, no explanation, no text before or after the JSON.',
+  'Never add fields not listed in the schema. Never wrap the result in extra objects.',
+].join(' ')
+
+const RESUME_SYSTEM = [
+  'You are an elite ATS resume writer with 15+ years of experience helping candidates land jobs at top companies.',
+  'Your writing is precise, impactful, and keyword-optimized.',
+  'Follow every instruction exactly. Be concise. No preamble, no explanation, no extra text.',
+].join(' ')
 
 export const PROMPTS = {
   enhanceBullet: (bullet: string, jobTitle: string, company: string) => ({
     systemPrompt: RESUME_SYSTEM,
-    prompt: `Enhance this resume bullet point for a ${jobTitle} role at ${company}.
+    prompt: `Rewrite this resume bullet for a ${jobTitle} at ${company} to be stronger and more impactful.
 
 Original: "${bullet}"
 
 Rules:
-- Start with a strong action verb (Led, Built, Reduced, Grew, Architected, Delivered, etc.)
-- Add a realistic metric placeholder in [square brackets] if no number exists (e.g. [25%], [3x], [$50K])
+- Start with a powerful action verb (Led, Built, Reduced, Automated, Delivered, Scaled, Architected, etc.)
+- If no metric exists, add a realistic placeholder in [brackets] like [30%], [3x], [$50K], [10+ team]
 - Maximum 20 words
-- ATS-safe language only
-- Return ONLY the enhanced bullet point — no explanation, no list, no quotes.`,
+- No first-person pronouns, no articles at the start
+- ATS keywords only — no symbols or special characters
+
+Examples of good bullets:
+✓ "Reduced API response time by [40%] through query optimization and caching layer implementation"
+✓ "Led cross-functional team of [8] engineers to ship redesigned checkout flow, increasing conversions by [22%]"
+✓ "Automated deployment pipeline cutting release cycle from 2 weeks to [2 days]"
+
+Return ONLY the rewritten bullet — no quotes, no explanation, no numbering.`,
   }),
 
   generateBullets: (jobTitle: string, company: string, count = 3) => ({
     systemPrompt: RESUME_SYSTEM,
-    prompt: `Generate ${count} professional, ATS-optimized resume bullet points for a ${jobTitle} role at ${company}.
+    prompt: `Write ${count} powerful resume bullet points for a ${jobTitle} at ${company}.
 
-Rules:
-- Each bullet starts with a strong action verb (Led, Built, Designed, Reduced, Grew, etc.)
-- Do NOT invent fake percentages or numbers — write strong qualitative achievement statements instead
-- Each bullet must be under 20 words
-- ATS-safe language only
-- Return ONLY a numbered list (1. ... 2. ... 3. ...), nothing else.`,
+Each bullet must:
+- Start with a different strong action verb (Led, Built, Reduced, Designed, Automated, Delivered, Scaled, Improved, etc.)
+- Describe a real, plausible achievement — NOT generic responsibilities
+- Include a realistic metric placeholder in [brackets] if no number is natural
+- Be 15-20 words maximum
+- Use ATS-friendly language only
+
+Format: numbered list, one bullet per line.
+1. [bullet]
+2. [bullet]
+3. [bullet]
+
+Return ONLY the numbered list — no intro, no explanation, no extra text.`,
   }),
 
   generateBulletsFromWins: (jobTitle: string, company: string, wins: string) => ({
     systemPrompt: RESUME_SYSTEM,
-    prompt: `Turn these real achievements into 3 polished resume bullet points for a ${jobTitle} at ${company}.
+    prompt: `Transform these raw achievements into 3 polished resume bullets for a ${jobTitle} at ${company}.
 
-User's actual achievements: "${wins}"
+User's achievements: "${wins}"
 
 Rules:
-- Start each with a strong action verb
-- Use the user's REAL wins — do NOT invent numbers they didn't mention
-- If they mention a metric (%, $, users, time), include it naturally
-- Max 20 words each
-- ATS-safe language only
-- Return ONLY a numbered list (1. ... 2. ... 3. ...), nothing else.`,
+- Start each bullet with a strong action verb
+- Use ONLY numbers/metrics the user actually mentioned — never invent them
+- If no metric exists, describe the impact with strong qualitative words (critical, company-wide, 0-to-1, etc.)
+- 15-20 words each
+- No first-person pronouns
+
+Format: numbered list only.
+1. [bullet]
+2. [bullet]
+3. [bullet]
+
+Return ONLY the numbered list.`,
   }),
 
   suggestSectionContent: (section: string, jobTitle: string, skills: string[]) => ({
@@ -369,60 +405,80 @@ Return the array directly. No wrapper object. No markdown. No explanation.`,
   copilotCommand: (command: string, resumeJson: string) => ({
     systemPrompt: `${JSON_SYSTEM}
 
-You are an AI resume copilot. Return a SINGLE JSON object with "action" and optional "data" keys.
+You are an intelligent AI resume copilot. The user gives you a natural language command to modify their resume.
+You MUST return a single JSON object with an "action" key and a "data" key.
 
-Actions:
-- "add_project": data = {"name":"string","description":"string","technologies":["string"],"link":""}
-- "add_certification": data = {"title":"string","issuer":"string","date":"","description":""}
-- "add_award": data = {"title":"string","awarder":"string","date":"","description":""}
-- "add_volunteer": data = {"organization":"string","location":"","period":"","description":""}
-- "add_language": data = {"name":"string","proficiency":"Professional"}
-- "update_summary": data = "New summary text string"
-- "add_experience": data = {"jobTitle":"string","company":"string","location":"","startDate":"","endDate":"","current":true,"bullets":["string"]}
-- "add_skills": data = ["skill1","skill2"]
-- "add_interest": data = {"name":"string","keywords":["string"]}
-- "update_contact": data = {only fields to update: "fullName","email","phone","location","linkedin","website"}
-- "unknown": message = "Brief explanation of what you can do"
+Available actions and exact data shapes:
+- "add_project": {"action":"add_project","data":{"name":"string","description":"one sentence starting with action verb","technologies":["string"],"link":""}}
+- "add_certification": {"action":"add_certification","data":{"title":"string","issuer":"string","date":"YYYY","description":""}}
+- "add_award": {"action":"add_award","data":{"title":"string","awarder":"string","date":"YYYY","description":"string"}}
+- "add_volunteer": {"action":"add_volunteer","data":{"organization":"string","location":"City, Country","period":"Month YYYY - Month YYYY","description":"one sentence impact statement"}}
+- "add_language": {"action":"add_language","data":{"name":"string","proficiency":"Native|Fluent|Professional|Conversational"}}
+- "update_summary": {"action":"update_summary","data":"Full new summary paragraph here. 3-4 sentences. No I/my."}
+- "add_experience": {"action":"add_experience","data":{"jobTitle":"string","company":"string","location":"","startDate":"Mon YYYY","endDate":"Present","current":true,"bullets":["Action verb + achievement","Action verb + achievement"]}}
+- "add_skills": {"action":"add_skills","data":["Skill1","Skill2","Skill3"]}
+- "add_interest": {"action":"add_interest","data":{"name":"string","keywords":["string"]}}
+- "update_contact": {"action":"update_contact","data":{"fullName":"if updating","email":"if updating","phone":"if updating","location":"if updating","linkedin":"if updating","website":"if updating"}}
+- "unknown": {"action":"unknown","message":"I can help you add projects, certifications, languages, skills, volunteer work, awards, experience, or update your summary and contact info. What would you like to add?"}
 
-Infer details smartly. Generate high-quality, realistic content.`,
-    prompt: `Current resume: ${resumeJson}
+Few-shot examples:
+- User says "add a Python project" → {"action":"add_project","data":{"name":"Python Data Pipeline","description":"Built an automated ETL pipeline processing 1M+ records daily using Python and Apache Airflow.","technologies":["Python","Apache Airflow","PostgreSQL"],"link":""}}
+- User says "I speak French" → {"action":"add_language","data":{"name":"French","proficiency":"Professional"}}
+- User says "add AWS certification" → {"action":"add_certification","data":{"title":"AWS Solutions Architect – Associate","issuer":"Amazon Web Services","date":"2024","description":""}}
+- User says "rewrite my summary" → {"action":"update_summary","data":"[Generate a 3-4 sentence summary from the resume context provided]"}
+- User says "hello" → {"action":"unknown","message":"I can help you add projects, certifications, languages, skills, volunteer work, awards, experience, or update your summary and contact info. What would you like to add?"}
 
-Command: "${command}"`,
+IMPORTANT: Infer realistic, high-quality details from the user's command and their resume context. Never leave fields as generic placeholders like \"string\".`,
+    prompt: `Resume context:
+${resumeJson}
+
+User command: "${command}"
+
+Respond with the JSON action object:`,
   }),
 
   generateSummary: (jobTitle: string, skills: string[], yearsExp: number) => ({
     systemPrompt: RESUME_SYSTEM,
-    prompt: `Write a professional ATS-optimized resume summary.
+    prompt: `Write a compelling, ATS-optimized professional resume summary.
 
 Role: ${jobTitle}
-Top Skills: ${skills.slice(0, 5).join(', ')}
+Top Skills: ${skills.slice(0, 6).join(', ') || 'not specified'}
 Years of Experience: ${yearsExp}+
 
-Rules:
-- 3-4 sentences, 300-500 characters total
-- Never use "I" or first-person pronouns
-- First sentence: job title + years of experience
-- Second/third: core strengths and key achievements
-- Final: career goal or value to employer
-- ATS-safe language only
-- Return ONLY the summary text, no labels or explanation.`,
+Structure (follow exactly):
+1. Opening: "[X]+ years of experience as a [Job Title]..." — state role and years
+2. Middle: 1-2 sentences on core strengths, technical skills, and biggest achievement area
+3. Close: 1 sentence on value to employer or career direction
+
+Quality rules:
+- Total: 3-4 sentences, 350-500 characters
+- Never use "I", "my", "me", or any first-person pronouns
+- No clichés: "hard worker", "team player", "passionate", "self-motivated"
+- Concrete language: tools, domains, outcomes
+- ATS keywords from the skills list should appear naturally
+
+Example of a GREAT summary:
+"Software Engineer with 6+ years building high-traffic web applications using React and Node.js. Led architecture of a real-time data platform serving 2M+ users, improving latency by 35%. Deep expertise in cloud-native design (AWS, Docker, Kubernetes). Seeking senior roles where technical depth drives measurable product impact."
+
+Return ONLY the summary paragraph — no labels, no explanation, no quotes.`,
   }),
 
   fixAtsIssue: (issueText: string, fixInstruction: string, currentText: string) => ({
     systemPrompt: RESUME_SYSTEM,
-    prompt: `Fix the following resume issue.
+    prompt: `You are fixing a specific ATS resume issue. Rewrite the given text to fix the issue described.
 
-Issue: "${issueText}"
-How to fix: "${fixInstruction}"
-Current text: "${currentText}"
+ISSUE DETECTED: "${issueText}"
+HOW TO FIX IT: "${fixInstruction}"
+CURRENT TEXT TO REWRITE: "${currentText}"
 
-Rules:
-- Rewrite ONLY the text provided
-- Use a strong action verb if it's a bullet point
-- Add a metric placeholder in [square brackets] if a number is missing
-- Keep it under 20 words if it's a bullet; up to 4 sentences if it's a summary
-- ATS-safe language only
-- Return ONLY the fixed text — no explanation, no quotes, no labels.`,
+Strict rules:
+- Rewrite ONLY the current text — do not add new sections or unrelated content
+- If it is a bullet point: start with a strong action verb, add [metric] placeholder if no number exists, max 20 words
+- If it is a summary: 3-4 sentences, no first-person pronouns, 300-500 characters
+- ATS-safe language, no symbols or special characters
+- Apply the fix instruction precisely
+
+Return ONLY the rewritten text. No quotes. No explanation. No labels.`,
   }),
 
   suggestProjectDescription: (projectName: string, technologies: string[]) => ({
