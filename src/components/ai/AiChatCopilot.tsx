@@ -178,6 +178,51 @@ export default function AiChatCopilot({ defaultCollapsed = false }: { defaultCol
             }
             break
 
+          case 'update_experience':
+            if (res.data) {
+              const expIdx = updated.experience.findIndex(
+                e => (res.data.id && e.id === res.data.id) ||
+                     (res.data.company && e.company.toLowerCase().includes(res.data.company.toLowerCase())) ||
+                     (res.data.jobTitle && e.jobTitle.toLowerCase().includes(res.data.jobTitle.toLowerCase()))
+              )
+              if (expIdx !== -1) {
+                updated.experience = updated.experience.map((e, idx) => {
+                  if (idx === expIdx) {
+                    return {
+                      ...e,
+                      ...res.data,
+                      id: e.id, // preserve original ID
+                    }
+                  }
+                  return e
+                })
+                labels.push(`Updated Experience at ${updated.experience[expIdx].company}`)
+              }
+            }
+            break
+
+          case 'update_project':
+            if (res.data) {
+              const prjIdx = (updated.projects || []).findIndex(
+                p => (res.data.id && p.id === res.data.id) ||
+                     (res.data.name && p.name.toLowerCase().includes(res.data.name.toLowerCase()))
+              )
+              if (prjIdx !== -1 && updated.projects) {
+                updated.projects = updated.projects.map((p, idx) => {
+                  if (idx === prjIdx) {
+                    return {
+                      ...p,
+                      ...res.data,
+                      id: p.id, // preserve original ID
+                    }
+                  }
+                  return p
+                })
+                labels.push(`Updated Project: "${updated.projects[prjIdx].name}"`)
+              }
+            }
+            break
+
           default:
             // Skip unsupported actions silently or throw
             break

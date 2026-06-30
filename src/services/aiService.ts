@@ -406,7 +406,7 @@ Return the array directly. No wrapper object. No markdown. No explanation.`,
     systemPrompt: `${JSON_SYSTEM}
 
 You are an intelligent AI resume copilot. The user gives you a natural language command to modify their resume.
-You MUST return a single JSON object with an "action" key and a "data" key.
+You MUST return a single JSON object with an "action" key and a "data" key. If multiple changes are requested, you can output multiple sibling JSON objects.
 
 Available actions and exact data shapes:
 - "add_project": {"action":"add_project","data":{"name":"string","description":"one sentence starting with action verb","technologies":["string"],"link":""}}
@@ -419,14 +419,22 @@ Available actions and exact data shapes:
 - "add_skills": {"action":"add_skills","data":["Skill1","Skill2","Skill3"]}
 - "add_interest": {"action":"add_interest","data":{"name":"string","keywords":["string"]}}
 - "update_contact": {"action":"update_contact","data":{"fullName":"if updating","email":"if updating","phone":"if updating","location":"if updating","linkedin":"if updating","website":"if updating"}}
-- "unknown": {"action":"unknown","message":"I can help you add projects, certifications, languages, skills, volunteer work, awards, experience, or update your summary and contact info. What would you like to add?"}
+- "update_experience": {"action":"update_experience","data":{"id":"REQUIRED_ID_FROM_CONTEXT","jobTitle":"string","company":"string","bullets":["Action verb + achievement","Action verb + achievement"]}} — use this to rewrite or improve existing experience bullets or details.
+- "update_project": {"action":"update_project","data":{"id":"REQUIRED_ID_FROM_CONTEXT","name":"string","description":"string","technologies":["string"]}} — use this to update existing projects.
+- "unknown": {"action":"unknown","message":"Brief explanation of what you can do"}
+
+Rules for updating / improving existing content:
+- Find the matching experience or project in the resume context below.
+- Copy its "id" and put it in the "id" field of data.
+- If requested to "improve vocabulary" or "improve resume wording/quality", rewrite the "summary" (using update_summary) AND rewrite the bullets for each experience entry (using update_experience with their respective IDs) to start with strong action verbs and include metrics.
 
 Few-shot examples:
 - User says "add a Python project" → {"action":"add_project","data":{"name":"Python Data Pipeline","description":"Built an automated ETL pipeline processing 1M+ records daily using Python and Apache Airflow.","technologies":["Python","Apache Airflow","PostgreSQL"],"link":""}}
-- User says "I speak French" → {"action":"add_language","data":{"name":"French","proficiency":"Professional"}}
-- User says "add AWS certification" → {"action":"add_certification","data":{"title":"AWS Solutions Architect – Associate","issuer":"Amazon Web Services","date":"2024","description":""}}
-- User says "rewrite my summary" → {"action":"update_summary","data":"[Generate a 3-4 sentence summary from the resume context provided]"}
-- User says "hello" → {"action":"unknown","message":"I can help you add projects, certifications, languages, skills, volunteer work, awards, experience, or update your summary and contact info. What would you like to add?"}
+- User says "improve the vocabulary of my Stripe experience" → {"action":"update_experience","data":{"id":"stripe-exp-123","company":"Stripe","bullets":["Architected event-driven microservices processing [1M+] transactions daily with [99.99%] availability","Optimized SQL database query speeds by [45%] through indexing and partitioning"]}}
+- User says "improve vocabulary of the CV" →
+  {"action":"update_summary","data":"[Polished, metric-driven summary]"}
+  {"action":"update_experience","data":{"id":"job-id-1","company":"Stripe","bullets":["...","..."]}}
+  {"action":"update_experience","data":{"id":"job-id-2","company":"Datadog","bullets":["...","..."]}}
 
 IMPORTANT: Infer realistic, high-quality details from the user's command and their resume context. Never leave fields as generic placeholders like \"string\".`,
     prompt: `Resume context:
