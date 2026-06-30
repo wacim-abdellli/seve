@@ -497,6 +497,30 @@ Example of a GREAT summary:
 Return ONLY the summary paragraph — no labels, no explanation, no quotes.`,
   }),
 
+  generateSummaryWithOptions: (jobTitle: string, skills: string[], yearsExp: number, tone: string, focus: string[], level: string) => ({
+    systemPrompt: RESUME_SYSTEM,
+    prompt: `Write a professional ATS-optimized resume summary.
+
+Candidate Profile:
+- Target Role: ${level} ${jobTitle}
+- Years of Experience: ${yearsExp}+
+- Top Skills: ${skills.slice(0, 6).join(', ') || 'not specified'}
+
+STRICT STYLING PARAMETERS:
+- Tone of Voice: ${tone} (e.g. bold, professional, direct, creative)
+- Focus Areas: ${focus.join(', ')} (emphasize these specific domains/strengths)
+
+Structure:
+1. Opening: State target role and years of experience.
+2. Middle: Highlight key focus areas and core skills.
+3. Close: Finish with an impactful statement on your career direction.
+
+Quality rules:
+- Total: 3-4 sentences, 350-500 characters
+- Never use "I", "my", "me", or any first-person pronouns
+- Return ONLY the summary paragraph — no labels, no explanation, no quotes.`,
+  }),
+
   fixAtsIssue: (issueText: string, fixInstruction: string, currentText: string) => ({
     systemPrompt: RESUME_SYSTEM,
     prompt: `You are fixing a specific ATS resume issue. Rewrite the given text to fix the issue described.
