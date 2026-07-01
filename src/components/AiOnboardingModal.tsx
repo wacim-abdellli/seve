@@ -127,6 +127,8 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
   const [pasteError, setPasteError] = useState<string | null>(null)
   const [parsedData, setParsedData] = useState<ResumeData | null>(null)
   const [copiedPrompt, setCopiedPrompt] = useState(false)
+  const [copiedTemplate, setCopiedTemplate] = useState(false)
+  const [copiedSample, setCopiedSample] = useState(false)
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss() }
@@ -382,6 +384,150 @@ export default function AiOnboardingModal({ onClose, onImport, initialTab = 'wiz
         issuer: "Issuing Organization",
         date: "YYYY"
       }
+    ]
+  }
+
+  const EMPTY_TEMPLATE = {
+    contact: { fullName: "", email: "", phone: "", linkedin: "", location: "", website: "" },
+    summary: "",
+    experience: [],
+    education: [],
+    skills: [],
+    languages: [],
+    projects: [],
+    awards: [],
+    certifications: [],
+    interests: [],
+    publications: [],
+    volunteer: [],
+    references: []
+  }
+
+  const HIGH_SCORING_SAMPLE = {
+    contact: {
+      fullName: "Alex Chen",
+      email: "alex.chen@gmail.com",
+      phone: "+1-415-555-0192",
+      linkedin: "linkedin.com/in/alexchen",
+      location: "San Francisco, CA",
+      website: "alexchen.dev"
+    },
+    summary: "Senior full-stack engineer with 8+ years of experience building scalable web applications and leading cross-functional engineering teams. Proficient in React, TypeScript, Node.js, Go, and AWS. Designed a real-time analytics platform that reduced infrastructure costs by 35% and improved page load times by 60%. Passionate about clean architecture, performance optimization, and mentoring junior developers.",
+    experience: [
+      {
+        id: "exp1",
+        jobTitle: "Senior Software Engineer",
+        company: "Stripe",
+        location: "San Francisco, CA",
+        startDate: "2022-01",
+        endDate: "",
+        current: true,
+        bullets: [
+          "Architected payment pipeline migration to event-driven microservices on AWS EKS, cutting p99 latency by 42% while maintaining 99.99% uptime across 10M+ daily transactions",
+          "Designed fraud detection system that flags $12M+ in annual fraudulent charges, yielding 50M+ daily transactions processed with 99.7% accuracy",
+          "Mentored 6 engineers through structured growth plans, yielding 3 internal promotions within 18 months",
+          "Led migration from monolithic Rails app to Go microservices, reducing deployment time from 45 minutes to under 3 minutes"
+        ]
+      },
+      {
+        id: "exp2",
+        jobTitle: "Software Engineer",
+        company: "Datadog",
+        location: "New York, NY",
+        startDate: "2019-06",
+        endDate: "2021-12",
+        current: false,
+        bullets: [
+          "Built distributed tracing UI handling 10B+ daily spans with React and D3.js, cutting incident resolution time by 35%",
+          "Engineered custom query engine in Go and ElastiSearch for sub-second search across 5PB of log data",
+          "Implemented real-time dashboard streaming via WebSocket, reducing dashboard load time from 8s to under 1s"
+        ]
+      },
+      {
+        id: "exp3",
+        jobTitle: "Junior Developer",
+        company: "Startup Inc",
+        location: "Austin, TX",
+        startDate: "2017-03",
+        endDate: "2019-05",
+        current: false,
+        bullets: [
+          "Developed customer-facing React dashboard used by 500+ enterprise clients, increasing user engagement by 28%",
+          "Built RESTful API with Node.js and PostgreSQL serving 1M+ requests per day with 99.5% uptime"
+        ]
+      }
+    ],
+    education: [
+      {
+        id: "edu1",
+        degree: "Bachelor of Science in Computer Science",
+        school: "University of Texas at Austin",
+        location: "Austin, TX",
+        graduationDate: "2017",
+        gpa: "3.8"
+      }
+    ],
+    skills: [
+      "React", "TypeScript", "Node.js", "Go", "Python", "AWS", "Docker", "Kubernetes",
+      "PostgreSQL", "MongoDB", "Redis", "GraphQL", "REST APIs", "CI/CD", "Terraform",
+      "Microservices", "System Design", "Performance Optimization"
+    ],
+    languages: [
+      { id: "lang1", name: "English", proficiency: "Native" },
+      { id: "lang2", name: "Mandarin", proficiency: "Fluent" },
+      { id: "lang3", name: "Spanish", proficiency: "Intermediate" }
+    ],
+    projects: [
+      {
+        id: "proj1",
+        name: "OpenTrace",
+        description: "Open-source distributed tracing library for Node.js with 2.3K GitHub stars. Implements OpenTelemetry standard with custom采样 strategies.",
+        technologies: ["TypeScript", "OpenTelemetry", "gRPC", "Redis"],
+        link: "github.com/alexchen/opentrace"
+      },
+      {
+        id: "proj2",
+        name: "DevPulse",
+        description: "Developer productivity dashboard that aggregates GitHub, Jira, and CI/CD metrics. Built with Next.js and D3.js visualizations.",
+        technologies: ["Next.js", "D3.js", "PostgreSQL", "Tailwind CSS"],
+        link: "devpulse.alexchen.dev"
+      }
+    ],
+    certifications: [
+      {
+        id: "cert1",
+        title: "AWS Solutions Architect Professional",
+        issuer: "Amazon Web Services",
+        date: "2023"
+      },
+      {
+        id: "cert2",
+        title: "Certified Kubernetes Administrator",
+        issuer: "Cloud Native Computing Foundation",
+        date: "2022"
+      }
+    ],
+    awards: [
+      {
+        id: "award1",
+        title: "Engineering Excellence Award",
+        awarder: "Stripe",
+        date: "2023",
+        description: "Awarded for leading the payment pipeline migration that saved $2M annually in infrastructure costs"
+      }
+    ],
+    volunteer: [
+      {
+        id: "vol1",
+        organization: "Code for America",
+        location: "San Francisco, CA",
+        period: "2022 - Present",
+        description: "Contributing to open-source civic tech tools that improve government service accessibility"
+      }
+    ],
+    interests: [
+      { id: "int1", name: "Open Source", keywords: ["GitHub", "Community", "Mentoring"] },
+      { id: "int2", name: "System Design", keywords: ["Architecture", "Scalability", "Performance"] }
     ]
   }
 
@@ -685,6 +831,28 @@ CV TEXT TO CONVERT:
               >
                 {copiedPrompt ? <><Check className="w-3.5 h-3.5" /> Copied AI Prompt!</> : <><Copy className="w-3.5 h-3.5" /> Copy Prompt for ChatGPT/Claude</>}
               </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    copyToClipboard(JSON.stringify(EMPTY_TEMPLATE, null, 2))
+                    setCopiedTemplate(true); setTimeout(() => setCopiedTemplate(false), 2000)
+                  }}
+                  className={`h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold transition-all cursor-pointer border ${copiedTemplate ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' : 'text-zinc-400 hover:text-white border-white/7'}`}
+                  style={copiedTemplate ? {} : { background: 'rgba(255,255,255,0.03)' }}
+                >
+                  {copiedTemplate ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><FileCode className="w-3.5 h-3.5" /> Empty Template</>}
+                </button>
+                <button
+                  onClick={() => {
+                    copyToClipboard(JSON.stringify(HIGH_SCORING_SAMPLE, null, 2))
+                    setCopiedSample(true); setTimeout(() => setCopiedSample(false), 2000)
+                  }}
+                  className={`h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold transition-all cursor-pointer border ${copiedSample ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' : 'text-zinc-400 hover:text-white border-white/7'}`}
+                  style={copiedSample ? {} : { background: 'rgba(255,255,255,0.03)' }}
+                >
+                  {copiedSample ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><FileCode className="w-3.5 h-3.5" /> Sample (95+ ATS)</>}
+                </button>
+              </div>
               <textarea
                 value={pasteValue} onChange={e => handlePasteChange(e.target.value)}
                 placeholder={JSON.stringify({

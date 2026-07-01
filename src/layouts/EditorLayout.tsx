@@ -13,7 +13,8 @@ import SectionDrawer from '../components/SectionDrawer'
 import TemplateRenderer from '../components/TemplateRenderer'
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal'
 import ResumeManager from '../components/ResumeManager'
-import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Sparkles, Upload, Undo, Redo, MoreVertical } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle2, Settings, RefreshCw, X, FileCode, LogOut, LogIn, ChevronDown, Cloud, HardDrive, AlertCircle, Sparkles, Upload, Undo, Redo, MoreVertical, Copy } from 'lucide-react'
+import { copyToClipboard } from '../utils/clipboard'
 import { useAuth } from '../context/AuthContext'
 import { normalizeResumeData } from '../utils/resumeNormalizer'
 import AiOnboardingModal from '../components/AiOnboardingModal'
@@ -417,7 +418,7 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
           </div>
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-display">Data Management</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button onClick={handleExport} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <Download className="w-3.5 h-3.5 text-zinc-400" /> Backup
               </button>
@@ -426,6 +427,12 @@ function SimpleSettingsModal({ selectedTemplate, onUpdateTemplate, onImportResum
               </button>
               <button onClick={onOpenJsonPaste} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                 <FileCode className="w-3.5 h-3.5 text-zinc-400" /> Paste JSON
+              </button>
+              <button onClick={() => {
+                const tpl = { contact: { fullName: "", email: "", phone: "", linkedin: "", location: "", website: "" }, summary: "", experience: [], education: [], skills: [], languages: [], projects: [], awards: [], certifications: [], interests: [], publications: [], volunteer: [], references: [] }
+                copyToClipboard(JSON.stringify(tpl, null, 2))
+              }} className="h-10 rounded-xl bg-zinc-950/40 border border-zinc-800 hover:bg-zinc-900/60 text-zinc-300 hover:text-white font-bold text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer">
+                <Copy className="w-3.5 h-3.5 text-zinc-400" /> Copy Template
               </button>
             </div>
           </div>
