@@ -317,6 +317,35 @@ describe('evaluateResume', () => {
       expect(value).toBeGreaterThanOrEqual(0)
     }
   })
+
+  it('blends AI audit sub-scores into final categories and total score', () => {
+    const aiAudit = {
+      spellingScore: 90,
+      parserScore: 50,
+      roleFitScore: 40,
+      skillsDepthScore: 30,
+      grammarIssuesCount: 3,
+      issues: [
+        {
+          id: 'ai-spelling-0',
+          type: 'critical' as const,
+          category: 'formatting' as const,
+          issue: 'Typo found',
+          fix: 'Fix it',
+          severityScore: 80,
+          autoFixable: false
+        }
+      ]
+    }
+    
+    const result = evaluateResume(STRONG_RESUME, 'software engineer', 10, aiAudit)
+    
+    // Local formatting safety is normally 10/10. Blended with parserScore 50/100 should be 0.4*10 + 0.6*5 = 7/10
+    expect(result.reportV2.categories.find(c => c.key === 'formatting')?.score).toBe(7)
+    
+    // Check that spelling issues from AI are merged
+    expect(result.reportV2.critical.some(i => i.id === 'ai-spelling-0')).toBe(true)
+  })
 })
 
 // ─── generateAtsReport ────────────────────────────────────────────────────────

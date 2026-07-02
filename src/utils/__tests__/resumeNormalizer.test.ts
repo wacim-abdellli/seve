@@ -47,6 +47,17 @@ describe('normalizeResumeData', () => {
     expect(normalized.skills).toEqual(['React', 'TypeScript'])
   })
 
+  it('enforces unique IDs for section items with duplicate IDs', () => {
+    const data = {
+      experience: [
+        { id: 'duplicate-id', jobTitle: 'Stripe Engineer' },
+        { id: 'duplicate-id', jobTitle: 'Datadog Engineer' }
+      ]
+    }
+    const normalized = normalizeResumeData(data)
+    expect(normalized.experience[0].id).not.toBe(normalized.experience[1].id)
+  })
+
   it('normalizes experience with missing optional fields', () => {
     const data = {
       contact: { fullName: 'Jane', email: 'j@j.com', phone: '', linkedin: '', location: '' },

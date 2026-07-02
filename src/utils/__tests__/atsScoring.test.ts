@@ -5,6 +5,7 @@ import {
   scoreReadability, scoreContentDepth, scoreSemantic,
   extractMeaningfulKeywords, weightKeyword, evaluateSectionAts,
   clearResumeTextCache,
+  scoreHrRedFlags,
 } from '../atsEvaluator'
 import type { ResumeData } from '@/types/resume'
 
@@ -247,5 +248,33 @@ describe('score bounds', () => {
   it('empty resume scores low on completeness', () => {
     const result = scoreCompleteness(EMPTY_RESUME, 'en')
     expect(result.score).toBeLessThan(result.max)
+  })
+})
+
+describe('scoreHrRedFlags', () => {
+  it('returns perfect score of 10 when no bias keywords are present', () => {
+    const res = scoreHrRedFlags(BASE_RESUME, 'en')
+    expect(res.score).toBe(10)
+    expect(res.issues.length).toBe(0)
+  })
+
+  it('deducts points and flags issues when marital status is present', () => {
+    const resumeWithBias: ResumeData = {
+      ...BASE_RESUME,
+      summary: 'Marital status: married, age 32',
+    }
+    const res = scoreHrRedFlags(resumeWithBias, 'en')
+    expect(res.score).toBeLessThan(10)
+    expect(res.issues.some(i => i.id.includes('marital-status') || i.id.includes('married'))).toBe(true)
+  })
+
+  it('deducts points and flags issues when date of birth/dob is present', () => {
+    const resumeWithAgeBias: ResumeData = {
+      ...BASE_RESUME,
+      summary: 'Born 1994, DOB: 12/12/1994',
+    }
+    const res = scoreHrRedFlags(resumeWithAgeBias, 'en')
+    expect(res.score).toBeLessThan(10)
+    expect(res.issues.some(i => i.id.includes('dob'))).toBe(true)
   })
 })

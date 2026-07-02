@@ -56,6 +56,6 @@ export function computeDomainPenalty(resumeDomain: RoleDomain, jdDomain: RoleDom
     marketing_communications: ['product_management', 'sales'],
     sales: ['marketing_communications', 'operations'],
   }
-  if (adjacent[resumeDomain]?.includes(jdDomain)) return -15 // soft mismatch
-  return -35 // hard mismatch — e.g. software engineer vs comms manager
+  if (adjacent[resumeDomain]?.includes(jdDomain)) return -5 // soft mismatch
+  return -10 // hard mismatch — e.g. software engineer vs comms manager
 }

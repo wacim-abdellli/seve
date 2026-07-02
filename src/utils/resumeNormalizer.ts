@@ -46,24 +46,35 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const pickArray = (item: JsonRecord | undefined, key: string): unknown[] =>
     isRecord(item) ? asArray(item[key]) : []
 
+  const seenIds = new Set<string>()
+  const ensureUniqueId = (id: string): string => {
+    if (!id || seenIds.has(id)) {
+      const newId = crypto.randomUUID()
+      seenIds.add(newId)
+      return newId
+    }
+    seenIds.add(id)
+    return id
+  }
+
   const experience = asArray(root.experience).map((exp: unknown) => {
     const e = isRecord(exp) ? exp : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       jobTitle: pickStr(e, 'jobTitle'),
       company: pickStr(e, 'company'),
       location: pickStr(e, 'location'),
       startDate: pickStr(e, 'startDate'),
       endDate: pickStr(e, 'endDate'),
       current: pickBool(e, 'current'),
-      bullets: pickArray(e, 'bullets').map((b: unknown) => asString(b)).filter(Boolean),
+      bullets: pickArray(e, 'bullets').map((b: unknown) => asString(b)),
     }
   })
 
   const education = asArray(root.education).map((edu: unknown) => {
     const e = isRecord(edu) ? edu : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       degree: pickStr(e, 'degree'),
       school: pickStr(e, 'school'),
       location: pickStr(e, 'location'),
@@ -77,7 +88,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const languages = asArray(root.languages).map((l: unknown) => {
     const e = isRecord(l) ? l : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       name: pickStr(e, 'name'),
       proficiency: pickStr(e, 'proficiency') as LanguageProficiency,
     }
@@ -86,7 +97,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const projects = asArray(root.projects).map((p: unknown) => {
     const e = isRecord(p) ? p : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       name: pickStr(e, 'name'),
       description: pickStr(e, 'description'),
       technologies: pickArray(e, 'technologies').map((t: unknown) => asString(t)).filter(Boolean),
@@ -100,7 +111,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const awards = asArray(root.awards).map((a: unknown) => {
     const e = isRecord(a) ? a : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       title: pickStr(e, 'title'),
       awarder: pickStr(e, 'awarder'),
       date: pickStr(e, 'date'),
@@ -111,7 +122,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const certifications = asArray(root.certifications).map((c: unknown) => {
     const e = isRecord(c) ? c : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       title: pickStr(e, 'title'),
       issuer: pickStr(e, 'issuer'),
       date: pickStr(e, 'date'),
@@ -122,7 +133,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const interests = asArray(root.interests).map((i: unknown) => {
     const e = isRecord(i) ? i : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       name: pickStr(e, 'name'),
       keywords: pickArray(e, 'keywords').map((k: unknown) => asString(k)).filter(Boolean),
     }
@@ -131,7 +142,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const publications = asArray(root.publications).map((p: unknown) => {
     const e = isRecord(p) ? p : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       title: pickStr(e, 'title'),
       publisher: pickStr(e, 'publisher'),
       date: pickStr(e, 'date'),
@@ -142,7 +153,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const references = asArray(root.references).map((r: unknown) => {
     const e = isRecord(r) ? r : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       name: pickStr(e, 'name'),
       position: pickStr(e, 'position'),
       phone: pickStr(e, 'phone'),
@@ -153,7 +164,7 @@ export function normalizeResumeData(importedData: unknown): ResumeData {
   const volunteer = asArray(root.volunteer).map((v: unknown) => {
     const e = isRecord(v) ? v : undefined
     return {
-      id: pickStr(e, 'id') || crypto.randomUUID(),
+      id: ensureUniqueId(pickStr(e, 'id')),
       organization: pickStr(e, 'organization'),
       location: pickStr(e, 'location'),
       period: pickStr(e, 'period'),

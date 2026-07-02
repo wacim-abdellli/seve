@@ -254,6 +254,14 @@ export interface AtsReport {
   resumeDomain?: string
   jdDomain?: string
   breakdown: { key: string; label: string; score: number; max: number }[]
+  aiAudit?: {
+    spellingScore: number
+    parserScore: number
+    roleFitScore?: number
+    skillsDepthScore?: number
+    grammarIssuesCount: number
+    issues: AtsIssue[]
+  }
 }
 
 export type AtsRating = 'safe' | 'warning' | 'danger'

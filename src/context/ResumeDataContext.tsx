@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } fro
 import type { ResumeData, ResumeProfile, ResumeStylePreferences, AppState, Template } from '../types/resume'
 import { DEFAULT_STYLE_PREFS } from '../types/resume'
 import { clearResumeTextCache } from '../utils/atsUtils'
+import { normalizeResumeData } from '../utils/resumeNormalizer'
 import { DEFAULT_SECTION_ORDER } from './constants'
 import ResumeDataContextInternal from './resumeDataContextDef'
 
@@ -26,29 +27,7 @@ const INITIAL_RESUME_DATA: ResumeData = {
 }
 
 function sanitizeResumeData(raw: Record<string, unknown> | null): ResumeData {
-  const contact = (raw?.contact as Record<string, unknown> | undefined) || {}
-  return {
-    contact: {
-      fullName: typeof contact.fullName === 'string' ? contact.fullName : '',
-      email: typeof contact.email === 'string' ? contact.email : '',
-      phone: typeof contact.phone === 'string' ? contact.phone : '',
-      linkedin: typeof contact.linkedin === 'string' ? contact.linkedin : '',
-      location: typeof contact.location === 'string' ? contact.location : '',
-      website: typeof contact.website === 'string' ? contact.website : '',
-    },
-    summary: typeof raw?.summary === 'string' ? raw.summary : '',
-    experience: Array.isArray(raw?.experience) ? raw.experience : [],
-    education: Array.isArray(raw?.education) ? raw.education : [],
-    skills: Array.isArray(raw?.skills) ? raw.skills : [],
-    languages: Array.isArray(raw?.languages) ? raw.languages : [],
-    projects: Array.isArray(raw?.projects) ? raw.projects : [],
-    awards: Array.isArray(raw?.awards) ? raw.awards : [],
-    certifications: Array.isArray(raw?.certifications) ? raw.certifications : [],
-    interests: Array.isArray(raw?.interests) ? raw.interests : [],
-    publications: Array.isArray(raw?.publications) ? raw.publications : [],
-    references: Array.isArray(raw?.references) ? raw.references : [],
-    volunteer: Array.isArray(raw?.volunteer) ? raw.volunteer : [],
-  }
+  return normalizeResumeData(raw)
 }
 
 function createDefaultResume(): ResumeProfile {

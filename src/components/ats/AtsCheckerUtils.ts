@@ -1,5 +1,5 @@
 import type { ResumeData } from '../../types/resume'
-import { CheckCircle2, Target, FileText, Zap, TrendingUp, Briefcase, AlertTriangle, FileCode, Shield } from 'lucide-react'
+import { CheckCircle2, Target, FileText, Zap, TrendingUp, Briefcase, AlertTriangle, FileCode, Shield, ShieldAlert } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export function getCategoryTheme(id: string) {
@@ -80,6 +80,16 @@ export function getCategoryTheme(id: string) {
       icon: AlertTriangle as LucideIcon
     }
   }
+  if (id.startsWith('hrRedFlags') || id.startsWith('hr-redflag')) {
+    return {
+      ...common,
+      label: 'HR Red Flags',
+      text: 'text-red-400',
+      leftAccent: 'border-l-4 border-l-red-500',
+      bg: 'bg-red-500/5',
+      icon: ShieldAlert as LucideIcon
+    }
+  }
   if (id.startsWith('length') || id.startsWith('page2')) {
     return {
       ...common,
@@ -117,23 +127,31 @@ export function getResumeHash(data: ResumeData): string {
 export const SECTION_LABELS: Record<string, string> = {
   completeness: 'Core Structure',
   keywords: 'Keyword Match',
+  semantic: 'Keyword Overlap',
   formatting: 'Parser Formatting',
   actionVerbs: 'Action Verbs',
   quantifiedResults: 'Metrics & Data',
   contactInfo: 'Contact Info',
   dateConsistency: 'Date Consistency',
   length: 'Optimal Length',
+  bulletQuality: 'Bullet Quality',
+  readability: 'Readability',
+  contentDepth: 'Content Depth',
 }
 
 export const BAR_COLORS: Record<string, string> = {
   completeness: 'bg-gradient-to-r from-indigo-600 to-indigo-400',
   keywords: 'bg-gradient-to-r from-emerald-600 to-emerald-400',
+  semantic: 'bg-gradient-to-r from-teal-600 to-teal-400',
   formatting: 'bg-gradient-to-r from-cyan-600 to-cyan-400',
   actionVerbs: 'bg-gradient-to-r from-violet-600 to-violet-400',
   quantifiedResults: 'bg-gradient-to-r from-pink-600 to-pink-400',
   contactInfo: 'bg-gradient-to-r from-blue-600 to-blue-400',
   dateConsistency: 'bg-gradient-to-r from-amber-600 to-amber-400',
   length: 'bg-gradient-to-r from-orange-600 to-orange-400',
+  bulletQuality: 'bg-gradient-to-r from-fuchsia-600 to-fuchsia-400',
+  readability: 'bg-gradient-to-r from-sky-600 to-sky-400',
+  contentDepth: 'bg-gradient-to-r from-rose-600 to-rose-400',
 }
 
 export const SCAN_STAGES = [

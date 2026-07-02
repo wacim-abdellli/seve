@@ -19,7 +19,9 @@ import {
   JD_STOPWORDS,
   EN_PRONOUNS_REGEX,
   FR_PRONOUNS_REGEX,
-  USABLE_PER_PAGE
+  USABLE_PER_PAGE,
+  STOPWORDS,
+  FR_STOPWORDS
 } from './atsConstants'
 
 export function calculateKeywordOverlapScore(resumeText: string, jobDescription: string): number {
@@ -415,11 +417,30 @@ export function scoreFormatting(resume: ResumeData, lang: string): AtsCategorySc
     issues.push(...skillIssues)
   }
 
-  // Word repetition check — flag words used 3+ times across resume text
-  const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || []
+  // Word repetition check — ignore stopwords, common resume terms, and technical skills
+  const stopWords = lang === 'fr' ? FR_STOPWORDS : STOPWORDS
+  const commonResumeWords = new Set([
+    'team', 'work', 'project', 'client', 'using', 'through', 'about', 'other', 'their', 
+    'this', 'that', 'these', 'those', 'both', 'each', 'some', 'many', 'such', 'than', 
+    'then', 'very', 'also', 'well', 'more', 'most', 'only', 'same', 'data', 'system', 
+    'design', 'build', 'lead', 'manage', 'develop', 'support', 'collaborate', 'ensure',
+    'role', 'experience', 'company', 'industry', 'business', 'process', 'solution',
+    'service', 'customer', 'user', 'product', 'result', 'key', 'main', 'first',
+    // French equivalents
+    'projet', 'travail', 'client', 'equipe', 'équipe', 'système', 'systeme', 'données',
+    'donnees', 'processus', 'solution', 'service', 'utilisateur', 'produit', 'resultat',
+    'résultat', 'role', 'rôle', 'experience', 'expérience'
+  ])
+  const skillSet = new Set((resume.skills || []).map(s => s.toLowerCase().trim()))
+
+  const words = text.toLowerCase().match(/\b[a-z\u00C0-\u00FF]{4,}\b/g) || []
   const freq: Record<string, number> = {}
-  for (const w of words) freq[w] = (freq[w] || 0) + 1
-  const repeated = Object.entries(freq).filter(([, n]) => n >= 3).sort(([, a], [, b]) => b - a).slice(0, 5)
+  for (const w of words) {
+    if (stopWords.has(w) || commonResumeWords.has(w) || skillSet.has(w)) continue
+    freq[w] = (freq[w] || 0) + 1
+  }
+  const repeated = Object.entries(freq).filter(([, n]) => n >= 6).sort(([, a], [, b]) => b - a).slice(0, 5)
+
   if (repeated.length > 0) {
     score -= 3
     const top = repeated.slice(0, 3).map(([w, n]) => `${w} (${n}x)`).join(', ')
@@ -1099,4 +1120,52 @@ export function scoreAtsParseability(resume: ResumeData): { score: number; issue
   }
 
   return { score: Math.max(0, Math.min(100, score)), issues }
+}
+
+export function scoreHrRedFlags(resume: ResumeData, lang: string): AtsCategoryScore {
+  const issues: AtsIssue[] = []
+  const max = 10
+  let score = 10
+
+  const text = extractResumeText(resume).toLowerCase()
+  
+  // Keywords indicating personal details or details that risk hiring bias
+  const flags = [
+    { key: 'marital status', label: lang === 'fr' ? 'état civil' : 'marital status', type: 'critical' as const, severity: 75, fix: lang === 'fr' ? 'Supprimez les mentions de votre état civil (célibataire, marié, etc.) car cela peut induire des biais de recrutement.' : 'Remove marital status references (single, married) to avoid hiring bias.' },
+    { key: 'single', label: lang === 'fr' ? 'célibataire' : 'single', type: 'warning' as const, severity: 50, fix: lang === 'fr' ? 'Supprimez la mention "célibataire".' : 'Remove "single" to avoid bias.' },
+    { key: 'married', label: lang === 'fr' ? 'marié' : 'married', type: 'warning' as const, severity: 50, fix: lang === 'fr' ? 'Supprimez la mention "marié".' : 'Remove "married" to avoid bias.' },
+    { key: 'date of birth', label: lang === 'fr' ? 'date de naissance' : 'date of birth', type: 'critical' as const, severity: 75, fix: lang === 'fr' ? 'Supprimez votre date de naissance. L\'âge ne doit pas figurer sur un CV professionnel.' : 'Remove your date of birth. Age should not be visible on a professional resume.' },
+    { key: 'birth date', label: lang === 'fr' ? 'date de naissance' : 'birth date', type: 'critical' as const, severity: 75, fix: lang === 'fr' ? 'Supprimez votre date de naissance.' : 'Remove your birth date to avoid age bias.' },
+    { key: 'dob', label: lang === 'fr' ? 'date de naissance' : 'dob', type: 'critical' as const, severity: 75, fix: lang === 'fr' ? 'Supprimez "dob".' : 'Remove DOB references to avoid age bias.' },
+    { key: 'nationality', label: lang === 'fr' ? 'nationalité' : 'nationality', type: 'warning' as const, severity: 60, fix: lang === 'fr' ? 'La nationalité n\'est pas requise sur un CV (sauf visa spécifique à mentionner dans les projets/compétences).' : 'Nationality is not required on a resume. Avoid listing national origin.' },
+    { key: 'passport', label: lang === 'fr' ? 'passeport' : 'passport', type: 'warning' as const, severity: 50, fix: lang === 'fr' ? 'Supprimez les détails du passeport.' : 'Remove passport numbers or details unless specifically requested.' },
+    { key: 'visa status', label: lang === 'fr' ? 'statut de visa' : 'visa status', type: 'warning' as const, severity: 40, fix: lang === 'fr' ? 'Mentionnez plutôt votre autorisation de travail de façon professionnelle.' : 'Provide work authorization status professionally if needed, rather than generic visa details.' },
+    { key: 'social security number', label: lang === 'fr' ? 'numéro de sécurité sociale' : 'social security number', type: 'critical' as const, severity: 95, fix: 'NEVER list your SSN or personal identification numbers on your resume.' },
+    { key: 'ssn', label: lang === 'fr' ? 'ssn' : 'ssn', type: 'critical' as const, severity: 95, fix: 'NEVER list your SSN or personal identification numbers on your resume.' },
+  ]
+
+  const detectedKeys = new Set<string>()
+
+  for (const flag of flags) {
+    if (detectedKeys.has(flag.key)) continue
+    
+    const regex = new RegExp(`\\b${flag.key}\\b`, 'i')
+    if (regex.test(text)) {
+      detectedKeys.add(flag.key)
+      score = Math.max(0, score - 3)
+      issues.push({
+        id: `hr-redflag-${flag.key.replace(/\s+/g, '-')}`,
+        type: flag.type,
+        category: 'formatting',
+        issue: lang === 'fr' 
+          ? `Biais potentiel : "${flag.label}" détecté` 
+          : `HR Red Flag: "${flag.key}" details detected`,
+        fix: flag.fix,
+        severityScore: flag.severity,
+        autoFixable: false,
+      })
+    }
+  }
+
+  return { key: 'hrRedFlags', label: 'HR Red Flags', score, max, weight: DIMENSION_WEIGHTS.hrRedFlags, issues }
 }

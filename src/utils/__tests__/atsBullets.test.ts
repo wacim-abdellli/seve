@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { auditBullets, scoreActionVerbs, scoreQuantifiedResults, getAlternativeStarters } from '../atsEvaluator'
+import { auditBullets, scoreActionVerbs, scoreQuantifiedResults, getAlternativeStarters, scoreBulletQuality } from '../atsEvaluator'
 import type { ResumeData } from '@/types/resume'
 
 describe('auditBullets', () => {
@@ -117,5 +117,31 @@ describe('getAlternativeStarters', () => {
   it('returns alternatives for French starters', () => {
     const alts = getAlternativeStarters('dirigé', 'fr')
     expect(alts.length).toBeGreaterThan(0)
+  })
+})
+
+describe('scoreBulletQuality - Punctuation Consistency', () => {
+  const makeBulletsResume = (bullets: string[]): ResumeData => ({
+    contact: { fullName: 'Test', email: 't@t.com', phone: '', linkedin: '', location: '' },
+    summary: '',
+    experience: [{ id: '1', jobTitle: 'Eng', company: 'Acme', location: '', startDate: '', endDate: '', current: true, bullets }],
+    education: [],
+    skills: [],
+  })
+
+  it('is consistent when all bullets end with a period', () => {
+    const res = scoreBulletQuality(makeBulletsResume(['Created a feature.', 'Improved speed.']), 'en')
+    expect(res.issues.some(i => i.id === 'bullet-period-inconsistency')).toBe(false)
+  })
+
+  it('is consistent when no bullets end with a period', () => {
+    const res = scoreBulletQuality(makeBulletsResume(['Created a feature', 'Improved speed']), 'en')
+    expect(res.issues.some(i => i.id === 'bullet-period-inconsistency')).toBe(false)
+  })
+
+  it('is inconsistent when some bullets end with a period and some do not', () => {
+    const res = scoreBulletQuality(makeBulletsResume(['Created a feature.', 'Improved speed']), 'en')
+    expect(res.issues.some(i => i.id === 'bullet-period-inconsistency')).toBe(true)
+    expect(res.score).toBeLessThan(5)
   })
 })

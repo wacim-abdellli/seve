@@ -23,7 +23,8 @@ import {
   scoreReadability,
   scoreContentDepth,
   scoreAtsParseability,
-  calculateKeywordOverlapScore
+  calculateKeywordOverlapScore,
+  scoreHrRedFlags
 } from './atsScoring'
 import {
   scoreBulletQuality,
@@ -36,9 +37,14 @@ import {
   WEAK_TO_STRONG_FR
 } from './atsConstants'
 
-export function evaluateResume(resume: ResumeData, jobDescription: string, fontSize: number = 10): AtsScore & { language: 'en' | 'fr'; reportV2: AtsReport } {
+export function evaluateResume(
+  resume: ResumeData,
+  jobDescription: string,
+  fontSize: number = 10,
+  aiAudit?: AtsReport['aiAudit']
+): AtsScore & { language: 'en' | 'fr'; reportV2: AtsReport } {
   clearResumeTextCache()
-  const report = generateAtsReportV2(resume, jobDescription, null, fontSize)
+  const report = generateAtsReportV2(resume, jobDescription, null, fontSize, aiAudit)
   
   // Map categories back to the V1 "sections" format
   const sections = {
@@ -355,11 +361,12 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   const bulletQuality = scoreBulletQuality(resume, lang)
   const readability = scoreReadability(resume, lang)
   const contentDepth = scoreContentDepth(resume, lang)
+  const hrRedFlags = scoreHrRedFlags(resume, lang)
 
   const categories = [
     completeness, keywords, semantic, formatting, actionVerbs,
     quantifiedResults, contactInfo, dateConsistency, length,
-    bulletQuality, readability, contentDepth,
+    bulletQuality, readability, contentDepth, hrRedFlags,
   ]
 
   let total = calculateTotal(categories)
@@ -367,9 +374,6 @@ export function generateAtsReport(resume: ResumeData, jd: string): AtsReport {
   const jdClassification = classifyDomain(jd)
   const domainPenalty = computeDomainPenalty(resumeClassification.domain, jdClassification.domain)
   total = Math.max(0, total + domainPenalty)
-  if (domainPenalty <= -35) {
-    total = Math.min(total, 55)
-  }
 
   // Global minimum-content gate
   const globalContentWords = countContentWords(resume)
@@ -502,7 +506,8 @@ export function generateAtsReportV2(
   resume: ResumeData,
   jd: string,
   previousReport?: AtsReport | null,
-  fontSize: number = 10
+  fontSize: number = 10,
+  aiAudit?: AtsReport['aiAudit']
 ): AtsReport {
   clearResumeTextCache()
   const text = extractResumeText(resume)
@@ -523,11 +528,12 @@ export function generateAtsReportV2(
   const bulletQuality = scoreBulletQuality(resume, lang)
   const readability = scoreReadability(resume, lang)
   const contentDepth = scoreContentDepth(resume, lang)
+  const hrRedFlags = scoreHrRedFlags(resume, lang)
 
   let categories: AtsCategoryScore[] = [
     completeness, keywords, semantic, formatting, actionVerbs,
     quantifiedResults, contactInfo, dateConsistency, length,
-    bulletQuality, readability, contentDepth,
+    bulletQuality, readability, contentDepth, hrRedFlags,
   ]
 
   // Apply industry-specific weight adjustments (but don't revive zero-weight dimensions)
@@ -558,17 +564,44 @@ export function generateAtsReportV2(
     }
   })
 
+  // Blending AI-audited sub-scores if present
+  if (aiAudit) {
+    categories = categories.map(cat => {
+      if (cat.key === 'formatting' && aiAudit.parserScore !== undefined) {
+        // Blend local formatting safety score with AI layout parsing safety score (40% local, 60% AI)
+        return {
+          ...cat,
+          score: Math.round(0.4 * cat.score + 0.6 * (aiAudit.parserScore / 10))
+        }
+      }
+      if (cat.key === 'semantic' && aiAudit.roleFitScore !== undefined && jd.trim()) {
+        // Blend local semantic overlap score with AI career alignment/role fit score (30% local, 70% AI)
+        return {
+          ...cat,
+          score: Math.round(0.3 * cat.score + 0.7 * (aiAudit.roleFitScore / 10))
+        }
+      }
+      if (cat.key === 'keywords' && aiAudit.skillsDepthScore !== undefined && jd.trim()) {
+        // Blend local keyword match with AI skill depth/proof check (50% local, 50% AI)
+        return {
+          ...cat,
+          score: Math.round(0.5 * cat.score + 0.5 * (aiAudit.skillsDepthScore / 10))
+        }
+      }
+      return cat
+    })
+  }
+
   let total = calculateTotal(categories)
   const resumeClassification = classifyDomain(text)
   const jdClassification = classifyDomain(jd)
   const domainPenalty = computeDomainPenalty(resumeClassification.domain, jdClassification.domain)
   total = Math.max(0, total + domainPenalty)
-  if (domainPenalty <= -35) {
-    total = Math.min(total, 55)
-  }
-  // Without a job description, cap at 75 — a resume can't be fully evaluated without a target role
-  if (!jd.trim() && total > 75) {
-    total = 75
+
+  if (aiAudit) {
+    // Proportional deduction for spelling/grammar quality
+    const aiPenalty = Math.min(25, 100 - aiAudit.spellingScore)
+    total = Math.max(0, total - aiPenalty)
   }
 
   // ── Global minimum-content gate ──
@@ -588,6 +621,7 @@ export function generateAtsReportV2(
   const allIssues = [
     ...categories.flatMap(c => c.issues),
     ...parseabilityIssues,
+    ...(aiAudit ? aiAudit.issues : [])
   ]
   const critical = allIssues.filter(i => i.type === 'critical')
   const warnings = allIssues.filter(i => i.type === 'warning')
@@ -658,5 +692,6 @@ export function generateAtsReportV2(
     resumeDomain: resumeClassification.domain,
     jdDomain: jdClassification.domain,
     breakdown: categories.map(c => ({ key: c.key, label: c.label, score: c.score, max: c.max })),
+    aiAudit,
   }
 }

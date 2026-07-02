@@ -4,6 +4,9 @@ import { BarChart3, CheckCircle2, Target, Sparkles, FileCode, XCircle } from 'lu
 import type { ResumeData } from '../types/resume'
 import { evaluateResume, calculateSkillsMatrix } from '../utils/atsEvaluator'
 import { getResumeHash, SCAN_STAGES } from './ats/AtsCheckerUtils'
+import { useAi } from '../hooks/useAi'
+import { aiComplete } from '../services/aiService'
+import { cleanAndParseJson } from '../utils/jsonParser'
 
 import AtsScoreHeader from './ats/AtsScoreHeader'
 import AtsCategorySection from './ats/AtsCategorySection'
@@ -25,6 +28,23 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   const [activeTab, setActiveTab] = useState<'overview' | 'audit' | 'keywords'>('overview')
   const [showJdInput, setShowJdInput] = useState(false)
   const [jdDraft, setJdDraft] = useState(jobDescription)
+  
+  const { isConfigured, config } = useAi()
+
+  const [aiAuditResult, setAiAuditResult] = useState<any>(() => {
+    try {
+      const hash = getResumeHash(resumeData)
+      const cached = localStorage.getItem(`seve-ai-audit-${hash}`)
+      return cached ? JSON.parse(cached) : null
+    } catch { return null }
+  })
+  const [aiAuditHash, setAiAuditHash] = useState<string>(() => {
+    try {
+      const hash = getResumeHash(resumeData)
+      const cached = localStorage.getItem(`seve-ai-audit-hash-${hash}`)
+      return cached || ''
+    } catch { return '' }
+  })
   const [isScanning, setIsScanning] = useState(() => {
     try {
       const rHash = localStorage.getItem(LAST_AUDITED_RESUME_KEY)
@@ -38,6 +58,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
   })
   const [lastAudited, setLastAudited] = useState(new Date())
   const [scanStage, setScanStage] = useState(0)
+  const [scanPercent, setScanPercent] = useState(0)
   const [resumeScanVersion, setResumeScanVersion] = useState(1)
   const [scanLogs, setScanLogs] = useState<string[]>([])
 
@@ -65,7 +86,210 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
 
   const hashResume = useCallback((data: ResumeData): string => getResumeHash(data), [])
 
-  const atsScore = useMemo(() => evaluateResume(resumeData, jobDescription, templateFontSize), [resumeData, jobDescription, templateFontSize])
+  const currentHash = useMemo(() => hashResume(resumeData), [resumeData, hashResume])
+
+  const activeAiAudit = useMemo(() => {
+    if (aiAuditResult && aiAuditHash === currentHash) {
+      return aiAuditResult
+    }
+    return null
+  }, [aiAuditResult, aiAuditHash, currentHash])
+
+  const atsScore = useMemo(() => {
+    return evaluateResume(resumeData, jobDescription, templateFontSize, activeAiAudit)
+  }, [resumeData, jobDescription, templateFontSize, activeAiAudit])
+
+  const runAiAudit = useCallback(async () => {
+    if (!isConfigured || !config) return
+    try {
+      const systemPrompt = "You are an expert ATS auditor, layout parser checker, and senior recruiter. Analyze the resume and job description. Return ONLY a JSON object and nothing else."
+      
+      const promptText = `Analyze the following resume JSON and the target Job Description (if provided).
+Resume JSON:
+"""
+${JSON.stringify(resumeData, null, 2)}
+"""
+
+Target Job Description:
+"""
+${jobDescription || 'N/A'}
+"""
+
+Perform a comprehensive recruiter screening and ATS parsing audit. You MUST return a single JSON object matching this schema. Do NOT wrap in markdown fences or add any explanation text.
+{
+  "spellingScore": 100, // starts at 100, deduct 8 points per spelling/grammar mistake (min 0)
+  "parserScore": 100, // starts at 100, deduct 10-15 points for any layout, date format inconsistency, column reading issues, or contact section misalignment
+  "roleFitScore": 100, // (only if JD provided) starts at 100, deduct 15-20 points for gaps in career scope, seniority fit, or strategic vs tactical alignment
+  "skillsDepthScore": 100, // (only if JD provided) starts at 100, deduct 15 points for key skills listed in skills list but not proven in experience bullets (keyword stuffing)
+  
+  "spellingIssues": [
+    {
+      "issue": "Spelling mistake: 'Enginer' instead of 'Engineer'",
+      "fix": "Change 'Enginer' to 'Engineer'",
+      "section": "experience" // summary, experience, skills, education, contact, projects
+    }
+  ],
+  "parserIssues": [
+    {
+      "issue": "Inconsistent date format",
+      "fix": "Ensure all dates use MM/YYYY format to prevent parsing errors.",
+      "section": "experience"
+    }
+  ],
+  "roleFitIssues": [
+    // only if JD provided and mismatch exists
+    {
+      "issue": "Tactical execution vs Strategic PM role",
+      "fix": "The target role requires strategic roadmap ownership, but experience bullets focus heavily on task coordination. Rewrite bullet points to include conversion, user discovery, and product lifecycle strategy.",
+      "section": "summary"
+    }
+  ],
+  "unprovenSkills": [
+    // only if JD provided and mismatch exists
+    {
+      "skill": "AWS",
+      "fix": "Add a bullet point under Stripe or Datadog showing how you deployed or optimized AWS cloud infrastructure.",
+      "section": "skills"
+    }
+  ],
+  "bulletRewrites": [
+    // Identify 2-3 weak bullets that lack quantifiable impact (metrics, scale, or results) or action verbs, and suggest rewrites
+    {
+      "original": "Worked on payment features and helped with deployment",
+      "rewritten": "Co-developed API payment integrations that processed $10M/day, reducing checkout failures by 14%",
+      "reason": "Missing action verb impact, scope scale, and result metrics.",
+      "section": "experience"
+    }
+  ]
+}`
+
+      const response = await aiComplete(promptText, config, { systemPrompt, jsonMode: true, maxTokens: 2000 })
+      const parsed = cleanAndParseJson(response)
+      
+      if (parsed && typeof parsed.spellingScore === 'number' && typeof parsed.parserScore === 'number') {
+        const mappedIssues: any[] = []
+        
+        // 1. spellingIssues -> formatting
+        if (Array.isArray(parsed.spellingIssues)) {
+          parsed.spellingIssues.forEach((item: any, idx: number) => {
+            mappedIssues.push({
+              id: `ai-spelling-${idx}`,
+              type: 'critical',
+              category: 'formatting',
+              issue: item.issue,
+              fix: item.fix,
+              section: item.section || 'experience',
+              severityScore: 80,
+              autoFixable: false
+            })
+          })
+        }
+        
+        // 2. parserIssues -> formatting
+        if (Array.isArray(parsed.parserIssues)) {
+          parsed.parserIssues.forEach((item: any, idx: number) => {
+            mappedIssues.push({
+              id: `ai-parser-${idx}`,
+              type: 'warning',
+              category: 'formatting',
+              issue: item.issue,
+              fix: item.fix,
+              section: item.section || 'experience',
+              severityScore: 60,
+              autoFixable: false
+            })
+          })
+        }
+        
+        // 3. roleFitIssues -> semantic
+        if (Array.isArray(parsed.roleFitIssues)) {
+          parsed.roleFitIssues.forEach((item: any, idx: number) => {
+            mappedIssues.push({
+              id: `ai-rolefit-${idx}`,
+              type: 'warning',
+              category: 'semantic',
+              issue: item.issue,
+              fix: item.fix,
+              section: item.section || 'summary',
+              severityScore: 70,
+              autoFixable: false
+            })
+          })
+        }
+
+        // 4. unprovenSkills -> keywords
+        if (Array.isArray(parsed.unprovenSkills)) {
+          parsed.unprovenSkills.forEach((item: any, idx: number) => {
+            mappedIssues.push({
+              id: `ai-unproven-${idx}`,
+              type: 'warning',
+              category: 'keywords',
+              issue: `Unproven skill: '${item.skill}' has no context in your work history.`,
+              fix: item.fix,
+              section: item.section || 'skills',
+              severityScore: 50,
+              autoFixable: false
+            })
+          })
+        }
+
+        // 5. bulletRewrites -> bulletQuality
+        if (Array.isArray(parsed.bulletRewrites)) {
+          parsed.bulletRewrites.forEach((item: any, idx: number) => {
+            mappedIssues.push({
+              id: `ai-bulletrewrite-${idx}`,
+              type: 'suggestion',
+              category: 'bulletQuality',
+              issue: `Weak bullet point: lacks STAR metrics or results.`,
+              fix: `Consider this AI rewrite: "${item.rewritten}"`,
+              section: item.section || 'experience',
+              severityScore: 40,
+              autoFixable: false,
+              details: [
+                `Original Bullet: "${item.original}"`,
+                `Suggested Rewrite: "${item.rewritten}"`,
+                `Reason: ${item.reason}`
+              ]
+            })
+          })
+        }
+
+        const finalResult = {
+          spellingScore: parsed.spellingScore,
+          parserScore: parsed.parserScore,
+          roleFitScore: parsed.roleFitScore ?? 100,
+          skillsDepthScore: parsed.skillsDepthScore ?? 100,
+          grammarIssuesCount: (parsed.spellingIssues?.length || 0) + (parsed.parserIssues?.length || 0) + (parsed.roleFitIssues?.length || 0) + (parsed.unprovenSkills?.length || 0) + (parsed.bulletRewrites?.length || 0),
+          issues: mappedIssues
+        }
+
+        setAiAuditResult(finalResult)
+        setAiAuditHash(currentHash)
+        localStorage.setItem(`seve-ai-audit-${currentHash}`, JSON.stringify(finalResult))
+        localStorage.setItem(`seve-ai-audit-hash-${currentHash}`, currentHash)
+      } else {
+        throw new Error("Invalid response format from AI")
+      }
+    } catch (e) {
+      console.error("AI Audit failed:", e)
+      alert("AI Audit failed. Please verify your AI API key and connection.")
+    }
+  }, [resumeData, config, isConfigured, currentHash, jobDescription])
+
+  const runAiAuditRef = useRef(runAiAudit)
+  useEffect(() => {
+    runAiAuditRef.current = runAiAudit
+  }, [runAiAudit])
+
+  const isConfiguredRef = useRef(isConfigured)
+  const configRef = useRef(config)
+  const aiAuditResultRef = useRef(aiAuditResult)
+  const aiAuditHashRef = useRef(aiAuditHash)
+
+  useEffect(() => { isConfiguredRef.current = isConfigured }, [isConfigured])
+  useEffect(() => { configRef.current = config }, [config])
+  useEffect(() => { aiAuditResultRef.current = aiAuditResult }, [aiAuditResult])
+  useEffect(() => { aiAuditHashRef.current = aiAuditHash }, [aiAuditHash])
 
   useEffect(() => {
     if (dataRef.current !== null) {
@@ -79,47 +303,76 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
     scanTimer.current = setTimeout(() => {
       const currentVersion = ++scanVersionRef.current
       setIsScanning(true)
+      setScanPercent(0)
+      setScanStage(0)
       dataRef.current = { rHash: hashResume(resumeData), j: jobDescription }
       setResumeScanVersion(v => v + 1)
       setScanLogs([])
       scanTimeouts.current = []
 
-      const isEditReScan = hasInitializedRef.current
-      if (!isEditReScan) {
-        let d = 0; const delays = [180, 150, 120]
-        delays.forEach((ms, i) => {
-          d += ms
-          const t = setTimeout(() => {
-            if (scanVersionRef.current !== currentVersion) return
-            setScanStage(i + 1)
-            if (i === delays.length - 1) {
-              const finalTimer = setTimeout(() => {
-                if (scanVersionRef.current !== currentVersion) return
-                setIsScanning(false); setLastAudited(new Date())
-                try { localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData)); localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription) } catch { /* ignore */ }
-              }, 80)
-              scanTimeouts.current.push(finalTimer)
-            }
-          }, d)
-          scanTimeouts.current.push(t)
-        })
-      } else {
-        setScanStage(3)
-        const finalTimer = setTimeout(() => {
-          if (scanVersionRef.current !== currentVersion) return
-          setIsScanning(false); setLastAudited(new Date())
-          try { localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData)); localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription) } catch { /* ignore */ }
-        }, 80)
-        scanTimeouts.current.push(finalTimer)
+      // Trigger AI audit immediately at the start of the scan so it completes in the background
+      // while the 6-second loader is cooking. This prevents the final score from jumping or
+      // decreasing by itself after the loader finishes.
+      const hasResult = aiAuditResultRef.current && aiAuditHashRef.current === currentHash
+      if (isConfiguredRef.current && configRef.current && !hasResult) {
+        runAiAuditRef.current()
       }
 
+      const duration = 6000
+      const intervalMs = 30
+      let elapsed = 0
+      let lastPct = 0
+
       if (scanInterval.current) clearInterval(scanInterval.current)
-      if (!isEditReScan) {
-        scanInterval.current = setInterval(() => {
-          if (scanVersionRef.current !== currentVersion) { clearInterval(scanInterval.current!); return }
-          setScanLogs(prev => { const idx = prev.length; if (idx >= SCAN_STAGES.length) return prev; return [...prev, SCAN_STAGES[idx].log].slice(-5) })
-        }, 120)
-      }
+      scanInterval.current = setInterval(() => {
+        if (scanVersionRef.current !== currentVersion) {
+          clearInterval(scanInterval.current!)
+          return
+        }
+        elapsed += intervalMs
+        
+        if (elapsed >= duration) {
+          clearInterval(scanInterval.current!)
+          setScanPercent(100)
+          setScanStage(3)
+          const finalTimer = setTimeout(() => {
+            if (scanVersionRef.current !== currentVersion) return
+            setIsScanning(false)
+            setLastAudited(new Date())
+            try {
+              localStorage.setItem(LAST_AUDITED_RESUME_KEY, hashResume(resumeData))
+              localStorage.setItem(LAST_AUDITED_JD_KEY, jobDescription)
+            } catch { /* ignore */ }
+          }, 300)
+          scanTimeouts.current.push(finalTimer)
+          return
+        }
+
+        const t = elapsed / duration
+        const ease = 1 - Math.pow(1 - t, 3)
+        const targetPct = ease * 100
+        
+        const noise = (Math.random() * 2 - 1) * 0.6
+        let nextPct = Math.round(targetPct + noise)
+        
+        nextPct = Math.max(lastPct, Math.min(99, nextPct))
+        lastPct = nextPct
+        setScanPercent(nextPct)
+
+        if (nextPct < 20) setScanStage(0)
+        else if (nextPct < 50) setScanStage(1)
+        else if (nextPct < 85) setScanStage(2)
+        else setScanStage(3)
+
+        setScanLogs(() => {
+          const expectedLogsCount = Math.floor(nextPct / 25) + 1
+          const activeLogs: string[] = []
+          for (let i = 0; i < Math.min(expectedLogsCount, SCAN_STAGES.length); i++) {
+            activeLogs.push(SCAN_STAGES[i].log)
+          }
+          return activeLogs.slice(-5)
+        })
+      }, intervalMs)
     }, 500)
 
     return () => {
@@ -127,7 +380,7 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
       scanTimeouts.current.forEach(clearTimeout)
       if (scanInterval.current) clearInterval(scanInterval.current)
     }
-  }, [resumeData, jobDescription, hashResume])
+  }, [resumeData, jobDescription, hashResume, currentHash])
 
   const report = atsScore.reportV2
   const resumeDomain = report?.resumeDomain || 'unknown'
@@ -280,17 +533,17 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                           <circle cx="48" cy="48" r="42" fill="none" stroke="rgb(24 24 27)" strokeWidth="4" />
                           <motion.circle cx="48" cy="48" r="42" fill="none" stroke="#2dd4bf" strokeWidth="4" strokeLinecap="round"
                             strokeDasharray={`${2 * Math.PI * 42}`}
-                            animate={{ strokeDashoffset: `${2 * Math.PI * 42 * (1 - SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].pct / 100)}` }}
-                            transition={{ duration: 0.6, ease: 'easeOut' }}
+                            animate={{ strokeDashoffset: `${2 * Math.PI * 42 * (1 - scanPercent / 100)}` }}
+                            transition={{ duration: 0.05, ease: 'linear' }}
                             style={{ filter: 'drop-shadow(0 0 6px rgba(45, 212, 191, 0.35))' }}
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <motion.span key={SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].pct}
+                          <motion.span key={scanPercent}
                             className="text-xl font-bold text-white tabular-nums leading-none"
-                            initial={{ y: 4, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.2 }}
+                            initial={{ y: 2, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.03 }}
                           >
-                            {SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].pct}<span className="text-[10px] text-zinc-500">%</span>
+                            {scanPercent}<span className="text-[10px] text-zinc-500">%</span>
                           </motion.span>
                         </div>
                       </div>
@@ -302,8 +555,8 @@ export default function AtsChecker({ resumeData, jobDescription, onUpdateJobDesc
                       </div>
                       <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
                         <motion.div className="h-full rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
-                          animate={{ width: `${SCAN_STAGES[Math.min(scanStage, SCAN_STAGES.length - 1)].pct}%` }}
-                          transition={{ duration: 0.5, ease: 'easeOut' }}
+                          animate={{ width: `${scanPercent}%` }}
+                          transition={{ duration: 0.05, ease: 'linear' }}
                         />
                       </div>
                       <div className="w-full bg-zinc-950 rounded-lg border border-zinc-800/20 p-3 min-h-[72px]" aria-live="polite" aria-atomic="true">

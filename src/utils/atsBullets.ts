@@ -234,8 +234,36 @@ export function scoreBulletQuality(resume: ResumeData, lang: 'en' | 'fr' = 'en')
     })
   })
 
+  const allBullets = [
+    ...resume.experience.flatMap(exp => exp.bullets),
+    ...(resume.projects ?? []).map(p => p.description || '')
+  ].filter(b => b.trim().length > 0)
+  
+  const totalCount = allBullets.length
+  const countPeriod = allBullets.filter(b => /[.!?]$/.test(b.trim())).length
+  const ratio = totalCount > 0 ? countPeriod / totalCount : 0
+  const isPunctuationInconsistent = totalCount > 1 && ratio > 0.15 && ratio < 0.85
+
+  if (isPunctuationInconsistent) {
+    issues.push({
+      id: 'bullet-period-inconsistency',
+      type: 'suggestion',
+      category: 'formatting',
+      issue: lang === 'fr' ? 'Ponctuation de fin de puce incohérente' : 'Inconsistent bullet punctuation endings',
+      fix: lang === 'fr' 
+        ? 'Terminez soit toutes vos puces par un point, soit aucune (soyez uniforme).' 
+        : 'Ensure all bullet points consistently end with a period, or none do (be uniform).',
+      section: 'experience',
+      severityScore: 25,
+      autoFixable: false,
+    })
+  }
+
   const issueCount = issues.filter(i => i.type === 'warning').length * 2 + issues.filter(i => i.type === 'suggestion').length
-  const raw = Math.max(0, max - issueCount * 0.5)
+  let raw = Math.max(0, max - issueCount * 0.5)
+  if (isPunctuationInconsistent) {
+    raw = Math.max(0, raw - 1.5)
+  }
   const score = Math.round(Math.max(0, Math.min(max, raw)))
 
   return { key: 'bulletQuality', label: lang === 'fr' ? 'Qualité des puces' : 'Bullet Quality', score, max, weight: DIMENSION_WEIGHTS.bulletQuality, issues }

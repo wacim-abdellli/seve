@@ -120,9 +120,10 @@ export const DIMENSION_WEIGHTS: Record<string, number> = {
   contactInfo: 0.03,
   dateConsistency: 0.04,
   length: 0.05,
-  bulletQuality: 0.00,
+  bulletQuality: 0.08,
   readability: 0.03,
   contentDepth: 0.15,
+  hrRedFlags: 0.05,
 }
 
 export const JD_STOPWORDS = new Set([
